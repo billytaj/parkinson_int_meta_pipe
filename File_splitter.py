@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-
+# Oct 16, 2017
+# -------------------------------------------------
+# this module looks to be responsible for splitting up the 
 import sys
 import os
 import os.path
