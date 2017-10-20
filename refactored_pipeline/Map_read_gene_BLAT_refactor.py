@@ -15,13 +15,14 @@ def sortbyscore(line):
     return line[11]
 	
 	
-def gene_map(tsv, unmapped):
+def gene_map(tsv, unmapped, read_seqs, gene2read_map, contig2read_map, mapped_reads):
         with open(tsv, "r") as tabfile:
             query = ""
             identity_cutoff = 85
             length_cutoff = 0.65
             score_cutoff = 60
             Hits = []
+			b_contig_hit = False
             for line in tabfile:
                 if len(line) < 2:
                     continue
@@ -30,9 +31,9 @@ def gene_map(tsv, unmapped):
             Sorted_Hits = sorted(Hits, key = sortbyscore)
             for line in Sorted_Hits:
                 if query in contig2read_map:
-                    contig = True
+                    b_contig_hit = True
                 else:
-                    contig = False
+                    b_contig_hit = False
                 if query == line[0]:
                     continue
                 else:
@@ -45,18 +46,18 @@ def gene_map(tsv, unmapped):
                     if align_len > len(read_seqs[query].seq) * length_cutoff:
                         if float(score) > float(score_cutoff):
                             if db_match in gene2read_map:
-                                if contig:
+                                if b_contig_hit:
                                     for read in contig2read_map[query]:
                                         if read not in gene2read_map[db_match]:
                                             if read not in mapped_reads:
                                                 gene2read_map[db_match].append(read)
                                                 mapped_reads.add(read)
-                                elif not contig:
+                                else:
                                     if query not in gene2read_map[db_match]:
                                         gene2read_map[db_match].append(query)
                                         mapped_reads.add(query)
                             else:
-                                if contig:
+                                if b_contig_hit:
                                     read_count = 0
                                     for read in contig2read_map[query]:
                                         if read not in mapped_reads:
@@ -66,7 +67,7 @@ def gene_map(tsv, unmapped):
                                                 gene2read_map[db_match] = [read]
                                             elif read_count > 1:
                                                 gene2read_map[db_match].append(read)
-                                elif not contig:
+                                else:
                                     gene2read_map[db_match] = [query]
                                     mapped_reads.add(query)
                             continue
@@ -99,7 +100,25 @@ def main():
 			
 			read_seqs = SeqIO.index(contigs_not_BWA_path, os.path.splitext(contigs_not_BWA_path)[1][1:])
 			
+			with open(contig_to_read_path, "r") as mapping:
+			for line in mapping:
+				if len(line) > 5:
+					entry = line.strip("\n").split("\t")
+					contig2read_map[entry[0]] = entry[2:]
+
+			gene2read_map = {}
+			mapped_reads = set()
+
+			with open(gene2read_file, "r") as mapping:
+				for line in mapping:
+					if len(line) > 5:
+						entry = line.split("\t")
+						gene2read_map[entry[0]] = entry[3:]
+			
+			
 			gene_map(BLAT_tab_file, unmapped_reads)
+			
+			
 			# for each seq in the not_BWA section...
 			for read in read_seqs:
 				if read not in unmapped_reads:
