@@ -49,7 +49,7 @@ def gene_map(tsv, unmapped, read_seqs, gene2read_map, contig2read_map, mapped_re
                     print("sorted hit out:", line)
                     sys.exit()
                 if float(seq_identity) > float(identity_cutoff):
-                    if align_len > len(read_seqs[query].seq) * length_cutoff:
+                    if float(align_len) > len(read_seqs[query].seq) * length_cutoff:
                         if float(score) > float(score_cutoff):
                             if db_match in gene2read_map:
                                 if b_contig_hit:
