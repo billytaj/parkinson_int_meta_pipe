@@ -132,6 +132,7 @@ def main():
             end_gene_map_time = time.clock()
             
             # for each seq in the not_BWA section...
+            start_first_write_time = time.clock()
             for read in read_seqs:
                 if read not in unmapped_reads:
                     for gene in gene2read_map:
@@ -145,6 +146,7 @@ def main():
                 
             with open(contig_not_aligned_path, "w") as outfile:
                 SeqIO.write(unmapped_seqs, outfile, "fasta")
+            end_first_write_time = time.clock()    
                 
             start_write_time = time.clock()    
             #this is the problem area
@@ -167,84 +169,11 @@ def main():
             print("output file:", final_name)
             print("read contig time:", end_read_contig_time - start_read_contig_time, "s")
             print("final gene map time", end_gene_map_time - start_gene_map_time, "seconds")
-            print("write time:", end_write_time - start_write_time, "s")
+            print("contig not aligned write time:", end_first_write_time - start_first_write_time, "s")
+            print("gene map write time:", end_write_time - start_write_time, "s")
             
         else:
             print("not accepted")
-    
-    elif(len(sys.argv) > 3):
-        #old way of doing stuff
-        DNA_DB = sys.argv[1]
-        contig2read_file = sys.argv[2]
-        gene2read_file = sys.argv[3]
-        gene_file = sys.argv[4]
-
-        contig2read_map = {}
-
-        with open(contig2read_file, "r") as mapping:
-            for line in mapping:
-                if len(line) > 5:
-                    entry = line.strip("\n").split("\t")
-                    contig2read_map[entry[0]] = entry[2:]
-
-        gene2read_map = {}
-        mapped_reads = set()
-
-        with open(gene2read_file, "r") as mapping:
-            for line in mapping:
-                if len(line) > 5:
-                    entry = line.split("\t")
-                    gene2read_map[entry[0]] = entry[3:]
-        
-        # for each grouping
-        for x in range((len(sys.argv) - 5) / 3):
-            read_file = sys.argv[3 * x + 5]
-            read_seqs = SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
-            BLAT_tab_file = sys.argv[3 * x + 6]
-            output_file = sys.argv[3 * x + 7]
-
-            unmapped_reads = set()
-            unmapped_seqs = []
-
-            
-
-            gene_map(BLAT_tab_file, unmapped_reads)
-            # for each seq in the not_BWA section...
-            for read in read_seqs:
-                if read not in unmapped_reads:
-                    for gene in gene2read_map:
-                        if read in gene2read_map[gene]:
-                            break
-                    else:
-                        unmapped_reads.add(read)
-
-            for read in unmapped_reads:
-                unmapped_seqs.append(read_seqs[read])
-            with open(output_file, "w") as outfile:
-                SeqIO.write(unmapped_seqs, outfile, "fasta")
-
-        reads_count = 0
-        gene_map_key_count = len(gene2read_map)
-        genes = []
-        with open(gene2read_file, "w") as out_map:
-            for record in SeqIO.parse(DNA_DB, "fasta"):
-                if record.id in gene2read_map:
-                    genes.append(record)
-                    out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
-                    for read in gene2read_map[record.id]:
-                        out_map.write("\t" + read.strip("\n"))
-                        reads_count += 1
-                    else:
-                        out_map.write("\n")
-                if(reads_count >= gene_map_key_count):
-                    print("found all the keys.  stopping the loop")
-                    break
-        with open(gene_file, "w") as outfile:
-            SeqIO.write(genes, outfile, "fasta")
-
-        print (str(reads_count) + " reads were mapped with BWA and BLAT")
-        print ("Reads mapped to " + str(len(genes)) + " genes.")
-        
     else:
         print("not enough args")
 
