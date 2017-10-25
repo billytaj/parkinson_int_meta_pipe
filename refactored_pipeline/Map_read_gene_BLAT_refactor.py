@@ -16,23 +16,26 @@ def sortbyscore(line):
     
     
 def gene_map(tsv, unmapped, read_seqs, gene2read_map, contig2read_map, mapped_reads):
-    #don't bother with stupid conventions right now.  Just make sure all the input vars line up
     start_internal_gene_map_time = time.clock()
-    print("are you ok?")
+    
+    align_len = 0
+    seq_identity = 0
+    score = 0
     with open(tsv, "r") as tabfile:
         query = ""
-        identity_cutoff = 85
+        identity_cutoff = 85.0
         length_cutoff = 0.65
-        score_cutoff = 60
+        score_cutoff = 60.0
         Hits = []
         b_contig_hit = False
         
-        print("we're ok up until here")
+        
         for line in tabfile:
             if len(line) < 2:
                 continue
             else:
                 Hits.append(line.split("\t"))
+                
         Sorted_Hits = sorted(Hits, key = sortbyscore)
         for line in Sorted_Hits:
             if query in contig2read_map:
@@ -44,21 +47,21 @@ def gene_map(tsv, unmapped, read_seqs, gene2read_map, contig2read_map, mapped_re
             else:
                 query = line[0]
                 db_match = line[1]
-                seq_identity = line[2]
-                align_len = line[3]
-                score = line[11]
+                seq_identity = float(line[2])
+                align_len = float(line[3])
+                score = float(line[11])
                 #print("sorted hit out:", line)
                 #sys.exit()
-            if ((float(seq_identity) > float(identity_cutoff)) 
-            and (float(align_len) > (len(read_seqs[query].seq) * length_cutoff)) 
-            and (float(score) > float(score_cutoff))):
+            if ((seq_identity > identity_cutoff) 
+            and (align_len > (len(read_seqs[query].seq) * length_cutoff)) 
+            and (score > score_cutoff)):
                 if db_match in gene2read_map:
                     if b_contig_hit:
                         for read in contig2read_map[query]:
-                            if ((read not in gene2read_map[db_match]) 
-                            and (read not in mapped_reads)):                            
+                            mapped_reads.add(read)
+                            if (read not in gene2read_map[db_match]):
                                 gene2read_map[db_match].append(read)
-                                mapped_reads.add(read)
+                                
                     else:
                         if query not in gene2read_map[db_match]:
                             gene2read_map[db_match].append(query)
@@ -67,13 +70,12 @@ def gene_map(tsv, unmapped, read_seqs, gene2read_map, contig2read_map, mapped_re
                     if b_contig_hit:
                         read_count = 0
                         for read in contig2read_map[query]:
-                            if read not in mapped_reads:
-                                mapped_reads.add(read)
-                                read_count += 1
-                                if read_count == 1:
-                                    gene2read_map[db_match] = [read]
-                                elif read_count > 1:
-                                    gene2read_map[db_match].append(read)
+                            mapped_reads.add(read)
+                            read_count += 1
+                            if read_count == 1:
+                                gene2read_map[db_match] = [read]
+                            elif read_count > 1:
+                                gene2read_map[db_match].append(read)
                     else:
                         gene2read_map[db_match] = [query]
                         mapped_reads.add(query)
@@ -126,7 +128,7 @@ def main():
                         entry = line.split("\t")
                         gene2read_map[entry[0]] = entry[3:]
             end_read_gene_map = time.clock()
-            #print("hhhuuuuuuuhhhhh")
+          
             start_gene_map_time = time.clock()
             gene_map(blat_results, unmapped_reads, read_seqs, gene2read_map, contig2read_map, mapped_reads)
             end_gene_map_time = time.clock()
@@ -134,13 +136,9 @@ def main():
             # for each seq in the not_BWA section...
             start_first_write_time = time.clock()
             for read in read_seqs:
-                if read not in unmapped_reads:
-                    for gene in gene2read_map:
-                        if read in gene2read_map[gene]:
-                            break
-                    else:
-                        unmapped_reads.add(read)
-
+                unmapped_reads.add(read)
+                
+            
             for read in unmapped_reads:
                 unmapped_seqs.append(read_seqs[read])
                 
