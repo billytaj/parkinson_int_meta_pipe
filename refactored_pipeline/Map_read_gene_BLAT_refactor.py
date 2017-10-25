@@ -49,35 +49,35 @@ def gene_map(tsv, unmapped, read_seqs, gene2read_map, contig2read_map, mapped_re
                 score = line[11]
                 #print("sorted hit out:", line)
                 #sys.exit()
-            if float(seq_identity) > float(identity_cutoff):
-                if float(align_len) > len(read_seqs[query].seq) * length_cutoff:
-                    if float(score) > float(score_cutoff):
-                        if db_match in gene2read_map:
-                            if b_contig_hit:
-                                for read in contig2read_map[query]:
-                                    if read not in gene2read_map[db_match]:
-                                        if read not in mapped_reads:
-                                            gene2read_map[db_match].append(read)
-                                            mapped_reads.add(read)
-                            else:
-                                if query not in gene2read_map[db_match]:
-                                    gene2read_map[db_match].append(query)
-                                    mapped_reads.add(query)
-                        else:
-                            if b_contig_hit:
-                                read_count = 0
-                                for read in contig2read_map[query]:
-                                    if read not in mapped_reads:
-                                        mapped_reads.add(read)
-                                        read_count += 1
-                                        if read_count == 1:
-                                            gene2read_map[db_match] = [read]
-                                        elif read_count > 1:
-                                            gene2read_map[db_match].append(read)
-                            else:
-                                gene2read_map[db_match] = [query]
-                                mapped_reads.add(query)
-                        continue
+            if ((float(seq_identity) > float(identity_cutoff)) 
+            and (float(align_len) > (len(read_seqs[query].seq) * length_cutoff)) 
+            and (float(score) > float(score_cutoff))):
+                if db_match in gene2read_map:
+                    if b_contig_hit:
+                        for read in contig2read_map[query]:
+                            if ((read not in gene2read_map[db_match]) 
+                            and (read not in mapped_reads)):                            
+                                gene2read_map[db_match].append(read)
+                                mapped_reads.add(read)
+                    else:
+                        if query not in gene2read_map[db_match]:
+                            gene2read_map[db_match].append(query)
+                            mapped_reads.add(query)
+                else:
+                    if b_contig_hit:
+                        read_count = 0
+                        for read in contig2read_map[query]:
+                            if read not in mapped_reads:
+                                mapped_reads.add(read)
+                                read_count += 1
+                                if read_count == 1:
+                                    gene2read_map[db_match] = [read]
+                                elif read_count > 1:
+                                    gene2read_map[db_match].append(read)
+                    else:
+                        gene2read_map[db_match] = [query]
+                        mapped_reads.add(query)
+                continue
             unmapped.add(query) 
     end_internal_gene_map_time = time.clock()
     print("internal gene map time:", end_internal_gene_map_time - start_internal_gene_map_time, "s")
