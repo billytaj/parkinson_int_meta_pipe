@@ -10,7 +10,7 @@ def main(input_file):
         split_filepath = input_file.split('\\') #assumes 1 layer down
         export_filepath = split_filepath[0] + "\sorted_" + split_filepath[1]
     else:
-        export_filepath = "sorted_" + input_fastq
+        export_filepath = "sorted_" + input_file
     
     start_total_call = time.clock()
     df = pd.read_csv(input_file, header=None, names=[None])
