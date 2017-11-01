@@ -5,6 +5,13 @@ import numpy as np
 
 
 input_fastq = sys.argv[1]
+export_filepath = ""
+if "\\" in input_fastq:
+    split_filepath = input_fastq.split('\\') #assumes 1 layer down
+    export_filepath = split_filepath[0] + "\sorted_" + split_filepath[1]
+else:
+    export_filepath = "sorted_" + input_fastq
+    
 
 start_total_call = time.clock()
 df = pd.read_csv(input_fastq, header=None, names=[None])
@@ -15,13 +22,14 @@ df = df.values.reshape(int(len(df)/4), 4)
 #print(full_df[0:10])
 new_df = pd.DataFrame(df)
 new_df.columns = ["ID", "sequences", "junk", "quality"]
+new_df["sort_ID"] = new_df["ID"]
+new_df["sort_ID"] = new_df["sort_ID"].str.replace('@ERR', '')
+
 #new_df = new_df.drop(['junk'], axis = 1)
 new_df = new_df.sort_values(by=['ID'])
 end_df_time = time.clock()
 print("dataframe interpret time:", end_df_time - end_read_time, "s")
-#print(new_df)
-export_filename = "sorted_" + input_fastq
-new_df.to_csv(export_filename, sep='\n', mode = 'w+', header=False, index=False)
+print(new_df)
+new_df.to_csv(export_filepath, sep='\n', mode = 'w+', header=False, index=False)
 end_total_call = time.clock()
 print("total runtime:", end_total_call - start_total_call, "s")
-
