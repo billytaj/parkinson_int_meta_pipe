@@ -43,6 +43,7 @@ def gene_map(blat_results, unmapped, read_seqs, gene2read_map, contig2read_map, 
                 b_contig_hit = True
             else:
                 b_contig_hit = False
+                
             if query == line[0]:
                 continue
             else:
