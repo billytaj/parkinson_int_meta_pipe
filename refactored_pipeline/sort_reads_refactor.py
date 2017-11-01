@@ -3,10 +3,13 @@ import sys
 import time
 import numpy as np
 
-def main(input_file):
+def main(input_file, scinet_flag):
 
     export_filepath = ""
-    if "\\" in input_file:
+    if(scinet_flag):
+        export_filepath = "/scratch/j/jparkins/billyc59/sorted_" +  input_file.split('/')[-1]
+        
+    elif "\\" in input_file:
         split_filepath = input_file.split('\\') #assumes 1 layer down
         export_filepath = split_filepath[0] + "\sorted_" + split_filepath[1]
     else:
@@ -43,5 +46,13 @@ def main(input_file):
 
     
 if __name__ == "__main__":
-    input_fastq_path = sys.argv[1]
-    main(input_fastq_path)
+    scinet_flag = False
+    if(len(sys.argv) < 2):
+        print("missing launch mode flag (\"scinet\") or something else")
+        sys.exit()
+    else:
+        input_fastq_path = sys.argv[1]
+        launch_mode = sys.argv[2]
+    if(launch_mode == "scinet"):
+        scinet_flag = True
+    main(input_fastq_path, scinet_flag)
