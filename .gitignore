@@ -1,21 +1,8 @@
 
-unsorted_data/
-
-transcriptomics/unsorted/
-
+*.fastq
 
 *.fasta
 
-*.fastq
-
-*.tsv
-
-*.blatout
-
-*.fna
-
 refactored_pipeline/blat_pp_test_data/
 
-refactored_pipeline/arg_list
-
-refactored_pipeline/blat_pp_test_data\.rar
+*.rar
