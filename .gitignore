@@ -1,8 +1,6 @@
 
 *.fastq
 
-*.fasta
-
 refactored_pipeline/blat_pp_test_data/
 
 *.rar
