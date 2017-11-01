@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-
+# this sorts the reads (they may come jumbled, or sparse), 
+# IN: raw reads
+# OUT: sorted reads (how? that's in the code)
 import sys
 import os
 import os.path
