@@ -20,25 +20,24 @@ def main(input_file, scinet_flag):
     end_read_time = time.clock()
     
     # reshaping, aka: unflattening the 1-D array into something meaningful to us
-    df = df.values.reshape(int(len(df)/4), 4)
+    df = pd.DataFrame(df.values.reshape(int(len(df)/4), 4))
 
-    new_df = pd.DataFrame(df)
-    new_df.columns = ["ID", "sequences", "junk", "quality"]
-    new_df["sort_ID"] = new_df["ID"]
-    new_df["sort_ID"] = new_df["sort_ID"].str.replace('@ERR', '')
+    df.columns = ["ID", "sequences", "junk", "quality"]
+    df["sort_ID"] = df["ID"]
+    df["sort_ID"] = df["sort_ID"].str.replace('@ERR', '')
     # can be done in a single line.  
     # what's happening: we're extracting the read number from the ID column, and making a new column out of it.
-    new_df["sort_ID"] = new_df["sort_ID"].str.split(' ', n=1, expand=True)[0]
-    new_df["sort_ID"] = new_df["sort_ID"].str.split('.', n=1, expand=True)[1].astype('int')
+    df["sort_ID"] = df["sort_ID"].str.split(' ', n=1, expand=True)[0]
+    df["sort_ID"] = df["sort_ID"].str.split('.', n=1, expand=True)[1].astype('int')
     # next, we'll sort the dataframe with the extract read number
-    new_df = new_df.sort_values(by=['sort_ID'])
+    df = df.sort_values(by=['sort_ID'])
     # since we don't need it in the final output, we're erasing the column
-    new_df = new_df.drop(['sort_ID'], axis=1)
+    df = df.drop(['sort_ID'], axis=1)
     end_df_time = time.clock()
-    new_df.to_csv(export_filepath, sep='\n', mode = 'w+', header=False, index=False)
+    df.to_csv(export_filepath, sep='\n', mode = 'w+', header=False, index=False)
     end_total_call = time.clock()
     #-------------------------------------------------------------------------------------------
-    print(new_df)
+    
     print("import csv time:", end_read_time - start_total_call, "s")
     print("dataframe interpret time:", end_df_time - end_read_time, "s")
     print("write time:", end_total_call - end_df_time, "s")
