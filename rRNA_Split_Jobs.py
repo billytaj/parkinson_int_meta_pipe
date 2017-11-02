@@ -7,6 +7,9 @@ import shutil
 import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from time import clock as clock
+
+start_all = clock()
 
 Input_File = sys.argv[1]
 Input_Path = os.path.dirname(Input_File)
@@ -66,3 +69,9 @@ for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_F
         Preprocess_jobs.append(JobIDy.strip("\n"))
 
 print ":".join(Preprocess_jobs[-10:])
+
+end_all = clock()
+
+print("rRNA split job")
+print("============================================")
+print("total runtime:", end_all - start_all, "s")

@@ -7,6 +7,9 @@ import shutil
 import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from time import clock as clock
+
+start_all = clock()
 
 Read1_file = sys.argv[1]
 Read1_seqs = SeqIO.index(Read1_file, "fastq")
@@ -72,4 +75,8 @@ if len(Unpaired_seqs) > 0:
     with open(Unpaired_file, "a") as out:
         SeqIO.write(Unpaired_seqs, out, "fastq")
 
+end_all = clock()
+print("Paired reads filter")
+print("===========================================")
+print("total run time:", end_all - start_all, "s")
 

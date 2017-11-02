@@ -8,7 +8,9 @@ import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import re
+from time import clock as clock
 
+start_all = clock()
 DNA_DB = sys.argv[1]
 contig2read_file = sys.argv[2]
 gene2read_file = sys.argv[3]
@@ -132,3 +134,7 @@ with open(gene_file, "w") as outfile:
 
 print str(reads_count) + " reads were mapped with BWA and BLAT"
 print "Reads mapped to " + str(len(genes)) + " genes."
+
+print("Map read gene BLAT")
+print("=================================")
+print("total runtime:", end_all - start_all, "s")

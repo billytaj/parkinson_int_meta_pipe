@@ -7,7 +7,9 @@ import shutil
 import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from time import clock as clock
 
+start_all = clock()
 paired_file1 = sys.argv[1]
 paired1_seqs = SeqIO.index(paired_file1, "fastq")
 paired_file2 = sys.argv[2]
@@ -65,3 +67,8 @@ with open(output_file, "w") as outfile:
             outfile.write("\t" + read)
         else:
             outfile.write("\n")
+
+end_all = clock()
+print("Map read contigs")
+print("===========================")
+print("total runtime:", end_all - start_all, "s")            

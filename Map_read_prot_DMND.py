@@ -8,6 +8,9 @@ import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import re
+from time import clock as clock
+
+start_all = clock()
 
 Prot_DB = sys.argv[1]
 contig2read_file = sys.argv[2]
@@ -153,3 +156,8 @@ with open(prot_file, "w") as out_prot:
 
 print str(reads_count) + " reads were mapped with Diamond"
 print "Reads mapped to " + str(len(proteins)) + " proteins."
+
+end_all = clock()
+print("map read protein DIAMOND")
+print("==============================================")
+print("total run time:", end_all - start_all, "s")

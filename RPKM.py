@@ -4,6 +4,9 @@ import os
 import os.path
 import sys
 import shutil
+from time import clock as clock
+
+start_all = clock()
 
 nodes = sys.argv[1]
 read2taxid = sys.argv[2]
@@ -172,3 +175,9 @@ with open(Cytoscape, "w") as Cytoscape_out:
     Cytoscape_out.write("EC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tPiechart\n")
     for entry in Cytoscape_dict:
         Cytoscape_out.write(entry + "\t" + "\t".join(str(x) for x in Cytoscape_dict[entry]) + "\n")
+        
+        
+end_all = clock()
+print("RPKM")
+print("================================")
+print("total runtime:", end_all - start_all, "s")        

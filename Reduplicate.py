@@ -7,7 +7,9 @@ import shutil
 import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from time import clock as clock
 
+start_all = clock()
 Barrnap = "/home/j/jparkins/mobolaji/Tools/Barrnap/bin/barrnap"
 Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmsearch"
 Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
@@ -47,3 +49,8 @@ reduplicated_seqs = [reference_sequences[seq_id] for seq_id in sorted(reduplicat
 
 with open(reduplicated_file, "w") as out:
     SeqIO.write(reduplicated_seqs, out, "fastq")
+    
+end_all = clock()
+print("Reduplicate")
+print("================================")
+print("total runtime:", end_all - start_all, "s")    

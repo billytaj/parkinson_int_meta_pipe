@@ -7,6 +7,9 @@ import shutil
 import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
+from time import clock as clock
+
+start_all = clock()
 
 Barrnap = "/home/j/jparkins/mobolaji/Tools/Barrnap/bin/barrnap"
 Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmsearch"
@@ -100,3 +103,8 @@ if len(sys.argv) > 4:
         SeqIO.write(list(rRNA_seqs), out, "fastq")
 
 ### ADD PERCENT ID FILTER 90%
+
+end_all = clock()
+print("rRNA filter")
+print("============================================")
+print("total runtime", end_all - start_all, "s")

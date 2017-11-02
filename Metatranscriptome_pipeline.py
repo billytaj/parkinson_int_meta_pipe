@@ -5,6 +5,9 @@ import os
 import os.path
 import subprocess
 import multiprocessing
+from time import clock as clock
+
+start_all = clock()
 
 cdhit_dup = "/home/j/jparkins/mobolaji/Tools/CDHIT/cd-hit-v4.6.6-2016-0711/cd-hit-auxtools/cd-hit-dup"
 Timmomatic = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/trimmomatic-0.36.jar"
@@ -131,8 +134,12 @@ for genome in sorted(os.listdir(input_folder)):
                 os.mkdir(os.path.join(input_folder, genome_name))
             except:
                 pass
+            start_file_splitter_call_time = clock()
             subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome), os.path.join(input_folder, genome_name)])
             subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome_name + "2.fastq"), os.path.join(input_folder, genome_name)])
+            end_file_splitter_call_time = clock()
+            
+            start_file_joiner = clock()
             for genome_split in os.listdir(os.path.join(input_folder, genome_name)):
                 if genome_split.endswith("_1.fastq"):
                     name = os.path.join(input_folder,  genome_name, genome_split[:-7])
@@ -153,8 +160,12 @@ for genome in sorted(os.listdir(input_folder)):
                             os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "2.fastq")
                     except:
                         pass
+            end_file_joiner = clock()            
         else:
             file_list.append(os.path.join(input_folder, genome_name))
+            
+            
+            
         for item in file_list:
             original = item
             base_name = os.path.splitext(os.path.basename(item))[0]
@@ -684,3 +695,9 @@ for genome in sorted(os.listdir(input_folder)):
                     break
                 PBS_script_out.write(line + "\n")
         JobID_Join = subprocess.check_output(["qsub", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "-W", "depend=afterok:" + ":".join(Network_list)])
+        
+        
+ end_all = clock()       
+ print("Meta transcriptnomics pipeline")
+ print("=====================================")
+ print("total runtime:", end_all - start_all, "s")
