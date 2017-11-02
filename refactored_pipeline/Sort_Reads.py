@@ -21,6 +21,7 @@ with open(input_file, "r") as infile:
     seq_found = False
     seq_id = ""
     skip_plus = True
+    line_count = 0
     for line in infile:
         if line.startswith("@") and not seq_found:
             seq_id = line[1:].split(" ")[0].strip("\n")
@@ -34,6 +35,13 @@ with open(input_file, "r") as infile:
             seqs[seq_id][1] = line.strip("\n")
             seq_found = False
             skip_plus = True
+        line_count += 1
+        #if(line_count > 10):
+        #    continue
+            #sys.exit()
+        #else:
+        #    print(seq_id)
+            
 end_import_time = time.clock()
 print("read file time:", end_import_time - start_import_time, "s")
 

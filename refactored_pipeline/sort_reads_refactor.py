@@ -23,16 +23,20 @@ def main(input_file, scinet_flag):
     df = pd.DataFrame(df.values.reshape(int(len(df)/4), 4))
 
     df.columns = ["ID", "sequences", "junk", "quality"]
-    df["sort_ID"] = df["ID"]
-    df["sort_ID"] = df["sort_ID"].str.replace('@ERR', '')
+    #df["sort_ID"] = df["ID"]
+    #df["sort_ID"] = df["sort_ID"].str.replace('@ERR', '')
     # can be done in a single line.  
     # what's happening: we're extracting the read number from the ID column, and making a new column out of it.
-    df["sort_ID"] = df["sort_ID"].str.split(' ', n=1, expand=True)[0]
-    df["sort_ID"] = df["sort_ID"].str.split('.', n=1, expand=True)[1].astype('int')
+    #df["sort_ID"] = df["sort_ID"].str.split(' ', n=1, expand=True)[0]
+    #df["sort_ID"] = df["sort_ID"].str.split('.', n=1, expand=True)[1].astype('int')
     # next, we'll sort the dataframe with the extract read number
-    df = df.sort_values(by=['sort_ID'])
+    #df = df.sort_values(by=['sort_ID'])
     # since we don't need it in the final output, we're erasing the column
-    df = df.drop(['sort_ID'], axis=1)
+    #df = df.drop(['sort_ID'], axis=1)
+    
+    # old code just strips away the original ID, and writes that 
+    df["ID"] = df["ID"].str.split(' ', n=1, expand=True)[0]
+    df = df.sort_values(by=['ID'])
     end_df_time = time.clock()
     df.to_csv(export_filepath, sep='\n', mode = 'w+', header=False, index=False)
     end_total_call = time.clock()
@@ -46,7 +50,7 @@ def main(input_file, scinet_flag):
     
 if __name__ == "__main__":
     scinet_flag = False
-    if(len(sys.argv) < 2):
+    if(len(sys.argv) < 3):
         print("missing launch mode flag (\"scinet\") or something else")
         sys.exit()
     else:
