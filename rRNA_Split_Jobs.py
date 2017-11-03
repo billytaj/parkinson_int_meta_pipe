@@ -1,3 +1,5 @@
+# This is actually the infernal stage
+
 #!/usr/bin/env python
 
 import sys

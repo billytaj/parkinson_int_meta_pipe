@@ -162,10 +162,11 @@ for genome in sorted(os.listdir(input_folder)):
                         pass
             end_file_joiner = clock()            
         else:
+            start_secondary_file_joiner = clock()
             file_list.append(os.path.join(input_folder, genome_name))
+            end_secondary_file_joiner = clock()
             
-            
-            
+        #This is the heart of the code.  The external program calls.  
         for item in file_list:
             original = item
             base_name = os.path.splitext(os.path.basename(item))[0]
@@ -202,6 +203,7 @@ for genome in sorted(os.listdir(input_folder)):
             Host_Contaminants = Input_Filepath + "_host_contaminants_seq.fasta"
             Vector_Contaminants = Input_Filepath + "_vector_contaminants_seq.fasta"
             # Preprocessing
+            # This section looks like it's forcing all the commands into a list.  
             COMMANDS_Pre = [
             #Python + " " + Sort_Reads + " " + original + "1.fastq" + " " + os.path.join(output_folder, base_name + "1.fastq"),
             #Python + " " + Sort_Reads + " " + original + "2.fastq" + " " + os.path.join(output_folder, base_name + "2.fastq"),
@@ -260,7 +262,11 @@ for genome in sorted(os.listdir(input_folder)):
             Python + " " + File_splitter + " " + "10000" + " " + Input_File1 + "_paired_n_contaminants.fastq" + " " + os.path.splitext(Input_FName)[0] + "_paired_n_contaminants",
             Python + " " + File_splitter + " " + "10000" + " " + Input_File2 + "_paired_n_contaminants.fastq" + " " + os.path.splitext(Input_FName)[0] + "_paired_n_contaminants"
             ]
-
+            
+            #this part creates the preprocessing pbsm and runs it, with check_output()
+            # adapter removal stage.  how do we know this?  it's the order of the list. This part must change.  it's just annoying.
+            # note: check_output waits for the call's output.  by definition, it must wait
+            start_giant_preprocess = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Preprocess.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
@@ -270,11 +276,13 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Pre = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Preprocess.pbs"])
-
+            end_giant_preprocess = clock()
+            
             COMMANDS_rRNA = [
             "JOBS=$(" + Python + " " + rRNA_Split_Jobs + " " + Input_File + " " + JobID_Pre.strip("\n") + ");" + "qalter -W depend=afterok:$JOBS $JOB2"
             ]
-
+            
+            start_infernal_stage = clock()
             with open(os.path.splitext(Input_FName)[0] + "_rRNA_Submit.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
@@ -284,7 +292,8 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_rRNA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_rRNA_Submit.pbs", "-W", "depend=afterok:" + JobID_Pre.strip("\n")])
-
+            end_infernal_stage = clock()
+            
             COMMANDS_Combine = [
             "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_Filepath + "_mRNA_unpaired.fastq",
             "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_Filepath + "_rRNA_unpaired.fastq",
@@ -296,7 +305,8 @@ for genome in sorted(os.listdir(input_folder)):
             Python + " " + Reduplicate + " " + Input_File1 + "_paired_quality.fastq" + " " + Input_File1 + "_mRNA.fastq" + " " + Input_Filepath + "_paired.clstr" + " " + Input_File1 + "_all_mRNA.fastq",
             Python + " " + Reduplicate + " " + Input_File2 + "_paired_quality.fastq" + " " + Input_File2 + "_mRNA.fastq" + " " + Input_Filepath + "_paired.clstr" + " " + Input_File2 + "_all_mRNA.fastq"
             ]
-
+            
+            start_combine_0 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Combine.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
@@ -306,9 +316,12 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Combine = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Combine.pbs", "-W", "depend=afterok:" + JobID_rRNA.strip("\n")])
-
+            end_combine_0 = clock()
+            
+            start_qalter_0 = clock()
             subprocess.call(["qalter", "-v", "JOB2=" + JobID_Combine.strip("\n").split(".")[0], JobID_rRNA.strip("\n")])
-
+            end_qalter_0 = clock()
+            
             #BIGG Database, AGORA Nature paper, Additional functionality
             # Transcript Assembly
             Contigs = os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_SpadesOut", "contigs.fasta")
@@ -321,7 +334,7 @@ for genome in sorted(os.listdir(input_folder)):
             BWA + " mem -t " + Threads + " -B 40 -O 60 -E 10 -L 50 " + Contigs + " " + Input_Filepath + "_all_mRNA_unpaired.fastq | " + SAMTOOLS + " view > " + Input_Filepath + "_contig_unpaired.sam",
             Python + " " + Map_reads_contigs + " " + Input_File1 + "_all_mRNA.fastq" + " " + Input_File2 + "_all_mRNA.fastq" + " " + Input_Filepath + "_all_mRNA_unpaired.fastq" + " " + Input_Filepath + "_contig_paired.sam" + " " + Input_Filepath + "_contig_unpaired.sam" + " " + Input_Filepath + "_contig_map.tsv"
             ]
-
+            start_transcript_assembly = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Assemble.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
@@ -331,7 +344,8 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Assemble = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Assemble.pbs", "-W", "depend=afterok:" + JobID_Combine.strip("\n")])
-
+            end_transcript_assembly = clock()
+            
             # Protein Annotation BWA
             COMMANDS_Annotate_BWA = [
             BWA + " mem -t " + Threads + " " + DNA_DB + " " + Contigs + " | " + SAMTOOLS + " view > " + Input_Filepath + "_contigs_BWA.sam",
@@ -340,6 +354,7 @@ for genome in sorted(os.listdir(input_folder)):
             Python + " " + Map_reads_gene_BWA + " " + DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Contigs + " " + Input_Filepath + "_contigs_BWA.sam" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " " + Input_Filepath + "_unpaired_unmapped_BWA.sam" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_File1 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File2 + "_unmapped_n_BWA.fasta",
             ]
 
+            start_protein_bwa_annotation = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BWA.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
@@ -349,7 +364,8 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BWA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BWA.pbs", "-W", "depend=afterok:" + JobID_Assemble.strip("\n")])
-
+            end_protein_bwa_annotation = clock()
+            
             # Protein Annotation BLAT 1
             COMMANDS_Annotate_BLAT1 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_1" + ".blatout",
@@ -359,7 +375,8 @@ for genome in sorted(os.listdir(input_folder)):
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_5" + ".blatout",
             "cat " + Input_Filepath + "_contigs" + "_[1-5]" + ".blatout" + " > " + Input_Filepath + "_contigs" + ".blatout"
             ]
-
+            
+            start_protein_blat_annotation_0 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
@@ -369,7 +386,8 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT1 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_0 = clock()
+            
             # Protein Annotation BLAT 2
             COMMANDS_Annotate_BLAT2 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_unpaired" + "_1" + ".blatout",
@@ -380,6 +398,7 @@ for genome in sorted(os.listdir(input_folder)):
             "cat " + Input_Filepath + "_unpaired" + "_[1-5]" + ".blatout" + " > " + Input_Filepath + "_unpaired" + ".blatout"
             ]
 
+            start_protein_blat_annotation_1 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
@@ -389,7 +408,8 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT2 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_1 = clock()
+            
             # Protein Annotation BLAT 3
             COMMANDS_Annotate_BLAT3 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_1" + ".blatout",
@@ -399,7 +419,7 @@ for genome in sorted(os.listdir(input_folder)):
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_5" + ".blatout",
             "cat " + Input_File1 + "_paired" + "_[1-5]" + ".blatout" + " > " + Input_File1 + "_paired" + ".blatout"
             ]
-
+            start_protein_blat_annotation_2 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
@@ -409,7 +429,8 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT3 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_2 = clock()
+            
             # Protein Annotation BLAT 4
             COMMANDS_Annotate_BLAT4 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File2 + "_paired" + "_1" + ".blatout",
@@ -420,6 +441,7 @@ for genome in sorted(os.listdir(input_folder)):
             "cat " + Input_File2 + "_paired" + "_[1-5]" + ".blatout" + " > " + Input_File2 + "_paired" + ".blatout"
             ]
 
+            start_protein_blat_annotation_3 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
@@ -429,12 +451,14 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT4 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_3 = clock()
+            
             # Protein Annotation BLAT Postprocessing
             COMMANDS_Annotate_BLAT_Post = [
             Python + " " + Map_reads_gene_BLAT + " " + DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_genes.fna" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_contigs" + ".blatout" + " " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_Filepath + "_unpaired" + ".blatout" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File1 + "_paired" + ".blatout" + " " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_paired" + ".blatout" + " " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta"
             ]
 
+            start_blat_pp = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
@@ -444,7 +468,7 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT_Post = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT1.strip("\n") + ":" + JobID_Annotate_BLAT2.strip("\n") + ":" + JobID_Annotate_BLAT3.strip("\n") + ":" + JobID_Annotate_BLAT4.strip("\n")])
-
+            end_blat_pp = clock()
 
             # Protein Annotation Diamond 1
             COMMANDS_Annotate_Diamond1 = [
@@ -672,6 +696,7 @@ for genome in sorted(os.listdir(input_folder)):
             JobID_Network = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Network.pbs", "-W", "depend=afterok:" + JobID_EC_Postprocess.strip("\n") + ":" + JobID_Classify.strip("\n")])
             Network_list.append(JobID_Network.strip("\n"))
 
+           
     if len(file_list) > 1:
         os.chdir(output_folder)
         Input_Filepath = os.path.join(output_folder, os.path.splitext(os.path.basename(file_list[0]))[0])[:-11]
