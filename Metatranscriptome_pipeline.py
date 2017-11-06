@@ -764,7 +764,7 @@ print "infernal time:", end_infernal_stage - start_infernal_stage, "s"
 print "combine_0 time:", end_combine_0 - start_combine_0, "s"
 print "qalter time 0:", end_qalter_0 - start_qalter_0, "s"
 print "transcript assembly time:", end_transcript_assembly - start_transcript_assembly, "s"
-print "BWA annotation:", end_protein_bwa_annotation - start_protein_bwa_annotation, "s")
+print "BWA annotation:", end_protein_bwa_annotation - start_protein_bwa_annotation, "s"
 print "BLAT annotation 0:", end_protein_blat_annotation_0 - start_protein_blat_annotation_0, "s"
 print "BLAT annotation 1:", end_protein_blat_annotation_1 - start_protein_blat_annotation_1, "s"
 print "BLAT annotation 2:", end_protein_blat_annotation_2 - start_protein_blat_annotation_2, "s"
