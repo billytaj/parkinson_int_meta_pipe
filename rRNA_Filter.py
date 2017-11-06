@@ -127,18 +127,18 @@ end_alternate_write_fastq = clock()
 ### ADD PERCENT ID FILTER 90%
 
 end_all = clock()
-print("rRNA filter")
-print("============================================")
-print("total runtime", end_all - start_all, "s")
-print("sequence file write time:", end_write_sequence_fasta - start_write_sequence_fasta, "s")
-print("barrnap arc time:", end_barrnap_arc - start_barrnap_arc, "s")
-print("barrnap bac time:", end_barrnap_bac - start_barrnap_bac, "s")
-print("barrnap euk time:", end_barrnap_euk - start_barrnap_euk, "s")
-print("barrnap mito time:", end_barrnap_mito - start_barrnap_mito, "s")
-print("barrnap text manipulation:", end_barrnap_text_manip - start_barrnap_text_manip, "s")
-print("writing mrna FASTA:", end_write_mrna_fasta - start_write_mrna_fasta, "s")
-print("INFERNAL TIME:", end_infernal - start_infernal, "s")
-print("parsing the INFERNAL output:", end_infernal_result_parse - start_infernal_result_parse, "s")
-print("writing mrna FASTQ:", end_write_mrna_fastq - start_write_mrna_fastq, "s")
-print("writing rrna FASTQ:", end_write_rrna_fastq - start_write_rrna_fastq, "s")
-print("writing alternate FASTQs:", end_alternate_write_fastq - start_alternate_write_fastq, "s")
+print "rRNA filter"
+print "============================================"
+print "total runtime", end_all - start_all, "s"
+print "sequence file write time:", end_write_sequence_fasta - start_write_sequence_fasta, "s"
+print "barrnap arc time:", end_barrnap_arc - start_barrnap_arc, "s"
+print "barrnap bac time:", end_barrnap_bac - start_barrnap_bac, "s"
+print "barrnap euk time:", end_barrnap_euk - start_barrnap_euk, "s"
+print "barrnap mito time:", end_barrnap_mito - start_barrnap_mito, "s"
+print "barrnap text manipulation:", end_barrnap_text_manip - start_barrnap_text_manip, "s"
+print "writing mrna FASTA:", end_write_mrna_fasta - start_write_mrna_fasta, "s"
+print "INFERNAL TIME:", end_infernal - start_infernal, "s"
+print "parsing the INFERNAL output:", end_infernal_result_parse - start_infernal_result_parse, "s"
+print "writing mrna FASTQ:", end_write_mrna_fastq - start_write_mrna_fastq, "s"
+print "writing rrna FASTQ:", end_write_rrna_fastq - start_write_rrna_fastq, "s"
+print "writing alternate FASTQs:", end_alternate_write_fastq - start_alternate_write_fastq, "s"

@@ -153,6 +153,6 @@ with open(gene2read_file, "w") as out_map:
 print "Reads mapped to %d genes." % (len(genes))
 
 end_all = clock()
-print("Map read gene BWA")
-print("=================================")
-print("total run time:", end_all - start_all, "s")
+print "Map read gene BWA"
+print "=================================" 
+print "total run time:", end_all - start_all, "s"

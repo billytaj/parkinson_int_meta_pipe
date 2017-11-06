@@ -178,6 +178,6 @@ with open(Cytoscape, "w") as Cytoscape_out:
         
         
 end_all = clock()
-print("RPKM")
-print("================================")
-print("total runtime:", end_all - start_all, "s")        
+print "RPKM"
+print "================================"
+print "total runtime:", end_all - start_all, "s"      

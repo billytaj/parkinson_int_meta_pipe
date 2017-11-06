@@ -75,12 +75,12 @@ for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_F
         JobIDy = subprocess.check_output("ssh gpc01 " + "\"" + "cd " + os.path.dirname(Split_File1) + ";" + "qsub" + " " + os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.splitext(split)[0] + "_rRNA_Filter.pbs") + "\"", shell=True)
         Preprocess_jobs.append(JobIDy.strip("\n"))
 
-print (":".join(Preprocess_jobs[-10:]))
+print ":".join(Preprocess_jobs[-10:])
 end_paired_infernal = clock()
 end_all = clock()
 
-print("rRNA split job")
-print("============================================")
-print("total runtime:", end_all - start_all, "s")
-print("unpaired infernal runtime:", end_unpaired_infernal - start_unpaired_infernal, "s")
-print("paired infernal runtime:", end_paired_infernal - start_paired_infernal, "s")
+print "rRNA split job"
+print "============================================"
+print "total runtime:", end_all - start_all, "s"
+print "unpaired infernal runtime:", end_unpaired_infernal - start_unpaired_infernal, "s"
+print "paired infernal runtime:", end_paired_infernal - start_paired_infernal, "s"

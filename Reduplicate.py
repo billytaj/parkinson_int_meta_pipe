@@ -51,6 +51,6 @@ with open(reduplicated_file, "w") as out:
     SeqIO.write(reduplicated_seqs, out, "fastq")
     
 end_all = clock()
-print("Reduplicate")
-print("================================")
-print("total runtime:", end_all - start_all, "s")    
+print "Reduplicate"
+print "================================"
+print "total runtime:", end_all - start_all, "s"   

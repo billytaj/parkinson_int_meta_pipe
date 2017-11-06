@@ -158,6 +158,6 @@ print str(reads_count) + " reads were mapped with Diamond"
 print "Reads mapped to " + str(len(proteins)) + " proteins."
 
 end_all = clock()
-print("map read protein DIAMOND")
-print("==============================================")
-print("total run time:", end_all - start_all, "s")
+print "map read protein DIAMOND"
+print "=============================================="
+print "total run time:", end_all - start_all, "s"

@@ -76,7 +76,7 @@ if len(Unpaired_seqs) > 0:
         SeqIO.write(Unpaired_seqs, out, "fastq")
 
 end_all = clock()
-print("Paired reads filter")
-print("===========================================")
-print("total run time:", end_all - start_all, "s")
+print "Paired reads filter"
+print "==========================================="
+print "total run time:", end_all - start_all, "s"
 

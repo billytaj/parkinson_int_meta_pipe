@@ -135,6 +135,6 @@ with open(gene_file, "w") as outfile:
 print str(reads_count) + " reads were mapped with BWA and BLAT"
 print "Reads mapped to " + str(len(genes)) + " genes."
 
-print("Map read gene BLAT")
-print("=================================")
-print("total runtime:", end_all - start_all, "s")
+print "Map read gene BLAT" 
+print "================================="
+print "total runtime:", end_all - start_all, "s"

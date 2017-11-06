@@ -69,6 +69,6 @@ with open(output_file, "w") as outfile:
             outfile.write("\n")
 
 end_all = clock()
-print("Map read contigs")
-print("===========================")
-print("total runtime:", end_all - start_all, "s")            
+print "Map read contigs"
+print "==========================="
+print "total runtime:", end_all - start_all, "s"          
