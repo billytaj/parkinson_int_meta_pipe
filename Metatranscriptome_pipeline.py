@@ -8,6 +8,9 @@ import multiprocessing
 from time import clock as clock
 
 start_all = clock()
+pipeline_pieces = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
+
+
 
 cdhit_dup = "/home/j/jparkins/mobolaji/Tools/CDHIT/cd-hit-v4.6.6-2016-0711/cd-hit-auxtools/cd-hit-dup"
 Timmomatic = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/trimmomatic-0.36.jar"
@@ -34,17 +37,18 @@ Fastqc = "/home/j/jparkins/mobolaji/Tools/FastQC/fastqc"
 Adapter = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE-2.fa"
 Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmscan"
 Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
-Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
-Reduplicate = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Reduplicate.py"
-Map_reads_contigs = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_contigs.py"
-Paired_Reads_Filter = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Paired_Reads_Filter.py"
-BLAT_Contaminant_Filter = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/BLAT_Contaminant_Filter.py"
-File_splitter = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/File_splitter.py"
-Sort_Reads = "/home/j/jparkins/mobolaji/Read_Classification/Sort_Reads.py"
-rRNA_Split_Jobs = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Split_Jobs.py"
-Map_reads_gene_BWA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_gene_BWA.py"
-Map_reads_gene_BLAT = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_gene_BLAT.py"
-Map_reads_prot_DMND = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_prot_DMND.py"
+
+Filter_rRNA = pipeline_pieces +"rRNA_Filter.py"
+Reduplicate = pipeline_pieces + "Reduplicate.py"
+Map_reads_contigs = pipeline_pieces + "Map_read_contigs.py"
+Paired_Reads_Filter = pipeline_pieces + "Paired_Reads_Filter.py"
+BLAT_Contaminant_Filter = pipeline_pieces + "BLAT_Contaminant_Filter.py"
+File_splitter = pipeline_pieces + "File_splitter.py"
+Sort_Reads = pipeline_pieces + "/Read_Classification/Sort_Reads.py"
+rRNA_Split_Jobs = pipeline_pieces + "rRNA_Split_Jobs.py"
+Map_reads_gene_BWA = pipeline_pieces + "Map_read_gene_BWA.py"
+Map_reads_gene_BLAT = pipeline_pieces + "Map_read_gene_BLAT.py"
+Map_reads_prot_DMND = pipeline_pieces + "Map_read_prot_DMND.py"
 Spades = "/home/j/jparkins/mobolaji/Tools/SPAdes/SPAdes-3.9.1-Linux/bin/spades.py"
 
 EC_Annotation_Prep = "/home/j/jparkins/mobolaji/EC_Prediction_Scripts/0_Preprocess_Input.py"
@@ -70,14 +74,14 @@ Centrifuge = "/home/j/jparkins/mobolaji/Tools/Centrifuge/centrifuge/centrifuge"
 Centrifuge_report = "/home/j/jparkins/mobolaji/Tools/Centrifuge/centrifuge/centrifuge-kreport"
 kSLAM = "/home/j/jparkins/mobolaji/Tools/k-SLAM/k-SLAM/SLAM"
 
-RPKM = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/RPKM.py"
+RPKM = pipeline_pieces + "RPKM.py"
 
 Threads = str(multiprocessing.cpu_count())
 
 PBS_Submit_LowMem = """#!/bin/bash
 #PBS -l nodes=1:ppn=8,walltime=12:00:00
 #PBS -N NAME
-
+#PBS
 module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
 cd $PBS_O_WORKDIR
 export OMP_NUM_THREADS=8
