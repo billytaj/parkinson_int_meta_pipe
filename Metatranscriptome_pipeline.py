@@ -755,9 +755,6 @@ end_all = clock()
 print("Meta transcriptnomics pipeline")
 print("=====================================")
 print("total runtime:", end_all - start_all, "s")
-
- 
- 
 print("file splitter time:", end_file_splitter_call_time - start_file_splitter_call_time, "s")
 print("file joiner time:", end_file_joiner - start_file_joiner, "s")
 print("second file joiner time:", end_secondary_file_joiner - start_secondary_file_joiner, "s")
@@ -765,23 +762,23 @@ print("large preprocessing time:", end_giant_preprocess - start_giant_preprocess
 print("infernal time:", end_infernal_stage - start_infernal_stage, "s")
 print("combine_0 time:", end_combine_0 - start_combine_0, "s")
 print("qalter time 0:", end_qalter_0 - start_qalter_0, "s")
-start_transcript_assembly
-start_protein_bwa_annotation
-start_protein_blat_annotation_0
-start_protein_blat_annotation_1
-start_protein_blat_annotation_2
-start_protein_blat_annotation_3
-start_blat_pp
-start_protein_diamond_annotation_0
-start_protein_diamond_annotation_1
-start_protein_diamond_annotation_2
-start_protein_diamond_annotation_3
-start_diamond_pp
-start_classification
-start_ec_prep
-start_ec_detect
-start_ec_combine
-start_ec_qalter
-start_ec_annotation
-start_network_generation
-start_wevote
+print("transcript assembly time:", end_transcript_assembly - start_transcript_assembly, "s")
+print("BWA annotation:", end_protein_bwa_annotation - start_protein_bwa_annotation, "s")
+print("BLAT annotation 0:", end_protein_blat_annotation_0 - start_protein_blat_annotation_0, "s")
+print("BLAT annotation 1:", end_protein_blat_annotation_1 - start_protein_blat_annotation_1, "s")
+print("BLAT annotation 2:", end_protein_blat_annotation_2 - start_protein_blat_annotation_2, "s")
+print("BLAT annotation 3:", end_protein_blat_annotation_3 - start_protein_blat_annotation_3, "s")
+print("BLAT post process:", end_blat_pp - start_blat_pp, "s")
+print("DIAMOND annotation 0:", end_protein_diamond_annotation_0 - start_protein_diamond_annotation_0, "s")
+print("DIAMOND annotation 1:", end_protein_diamond_annotation_1 - start_protein_diamond_annotation_1, "s")
+print("DIAMOND annotation 2:", end_protein_diamond_annotation_2 - start_protein_diamond_annotation_2, "s")
+print("DIAMOND annotation 3:", end_protein_diamond_annotation_3 - start_protein_diamond_annotation_3, "s")
+print("DIAMOND post process:", end_diamond_pp - start_diamond_pp, "s")
+print("Classification:", end_classification - start_classification, "s")
+print("EC prep:", end_ec_prep - start_ec_prep, "s")
+print("EC detect:", end_ec_detect - start_ec_detect, "s")
+print("EC combine:", end_ec_combine - start_ec_combine, "s")
+print("EC qalter:", end_ec_qalter - start_ec_qalter, "s")
+print("EC annotation:", end_ec_annotation - start_ec_annotation, "s")
+print("Network generation:", end_network_generation - start_network_generation, "s")
+print("WEVOTE:", end_wevote - start_wevote, "s")

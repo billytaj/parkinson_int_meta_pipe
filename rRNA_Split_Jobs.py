@@ -1,4 +1,4 @@
-# This is actually the infernal stage
+# This is the high-level mode that calls the infernal program
 
 #!/usr/bin/env python
 
@@ -35,7 +35,10 @@ export PATH=$NEWPATH
 COMMANDS"""
 
 Preprocess_jobs = []
+
+start_unpaired_infernal = clock()
 for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants"))):
+    
     if split.endswith(".fastq"):
         Split_File = os.path.splitext(os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", split))[0]
 
@@ -51,7 +54,9 @@ for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_F
                 PBS_script_out.write(line + "\n")
         JobIDx = subprocess.check_output("ssh gpc01 " + "\"" + "cd " + os.path.dirname(Split_File) + ";" + "qsub" + " " + os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.splitext(split)[0] + "_rRNA_Filter.pbs") + "\"", shell=True)
         Preprocess_jobs.append(JobIDx.strip("\n"))
+end_unpaired_infernal = clock()
 
+start_paired_infernal = clock()
 for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_paired_n_contaminants"))):
     if split.split("_paired_n_contaminants_split_")[0].endswith("1"):
         Split_File1 = os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", split.split("_paired_n_contaminants_split_")[0][:-1] + "1" + "_paired_n_contaminants_split_" + split.split("_paired_n_contaminants_split_")[1])
@@ -70,10 +75,12 @@ for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_F
         JobIDy = subprocess.check_output("ssh gpc01 " + "\"" + "cd " + os.path.dirname(Split_File1) + ";" + "qsub" + " " + os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.splitext(split)[0] + "_rRNA_Filter.pbs") + "\"", shell=True)
         Preprocess_jobs.append(JobIDy.strip("\n"))
 
-print ":".join(Preprocess_jobs[-10:])
-
+print (":".join(Preprocess_jobs[-10:]))
+end_paired_infernal = clock()
 end_all = clock()
 
 print("rRNA split job")
 print("============================================")
 print("total runtime:", end_all - start_all, "s")
+print("unpaired infernal runtime:", end_unpaired_infernal - start_unpaired_infernal, "s")
+print("paired infernal runtime:", end_paired_infernal - start_paired_infernal, "s")
