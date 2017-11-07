@@ -4,12 +4,14 @@
 
 import sys
 import os
+import csv
 import os.path
 import shutil
 import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from time import clock as clock
+from datetime import datetime as dt
 
 start_all = clock()
 
@@ -79,8 +81,11 @@ print ":".join(Preprocess_jobs[-10:])
 end_paired_infernal = clock()
 end_all = clock()
 
-print "rRNA split job"
-print "============================================"
-print "total runtime:", end_all - start_all, "s"
-print "unpaired infernal runtime:", end_unpaired_infernal - start_unpaired_infernal, "s"
-print "paired infernal runtime:", end_paired_infernal - start_paired_infernal, "s"
+with open("rna_split_jobs.txt", 'w+') as profile:
+    
+    profile.write("rRNA split job")
+    profile.write( "============================================")
+    profile.write("total runtime:", end_all - start_all, "s")
+    profile.write( "unpaired infernal runtime:", end_unpaired_infernal - start_unpaired_infernal, "s")
+    profile.write( "paired infernal runtime:", end_paired_infernal - start_paired_infernal, "s")
+    profile.close()

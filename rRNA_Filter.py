@@ -127,18 +127,22 @@ end_alternate_write_fastq = clock()
 ### ADD PERCENT ID FILTER 90%
 
 end_all = clock()
-print "rRNA filter"
-print "============================================"
-print "total runtime", end_all - start_all, "s"
-print "sequence file write time:", end_write_sequence_fasta - start_write_sequence_fasta, "s"
-print "barrnap arc time:", end_barrnap_arc - start_barrnap_arc, "s"
-print "barrnap bac time:", end_barrnap_bac - start_barrnap_bac, "s"
-print "barrnap euk time:", end_barrnap_euk - start_barrnap_euk, "s"
-print "barrnap mito time:", end_barrnap_mito - start_barrnap_mito, "s"
-print "barrnap text manipulation:", end_barrnap_text_manip - start_barrnap_text_manip, "s"
-print "writing mrna FASTA:", end_write_mrna_fasta - start_write_mrna_fasta, "s"
-print "INFERNAL TIME:", end_infernal - start_infernal, "s"
-print "parsing the INFERNAL output:", end_infernal_result_parse - start_infernal_result_parse, "s"
-print "writing mrna FASTQ:", end_write_mrna_fastq - start_write_mrna_fastq, "s"
-print "writing rrna FASTQ:", end_write_rrna_fastq - start_write_rrna_fastq, "s"
-print "writing alternate FASTQs:", end_alternate_write_fastq - start_alternate_write_fastq, "s"
+with open("rna_filter_profile.txt", 'w+') as profile:
+    profile.write("rRNA filter")
+    profile.write("============================================")
+    profile.write("total runtime"), end_all - start_all, "s")
+    profile.write("sequence file write time:"), end_write_sequence_fasta - start_write_sequence_fasta, "s")
+    profile.write("barrnap arc time:"), end_barrnap_arc - start_barrnap_arc, "s")
+    profile.write("barrnap bac time:"), end_barrnap_bac - start_barrnap_bac, "s")
+    profile.write("barrnap euk time:"), end_barrnap_euk - start_barrnap_euk, "s")
+    profile.write("barrnap mito time:"), end_barrnap_mito - start_barrnap_mito, "s")
+    profile.write("barrnap text manipulation:"), end_barrnap_text_manip - start_barrnap_text_manip, "s")
+    profile.write("writing mrna FASTA:"), end_write_mrna_fasta - start_write_mrna_fasta, "s")
+    profile.write("INFERNAL TIME:"), end_infernal - start_infernal, "s")
+    profile.write("parsing the INFERNAL output:"), end_infernal_result_parse - start_infernal_result_parse, "s")
+    profile.write("writing mrna FASTQ:"), end_write_mrna_fastq - start_write_mrna_fastq, "s")
+    profile.write("writing rrna FASTQ:"), end_write_rrna_fastq - start_write_rrna_fastq, "s")
+    profile.write("writing alternate FASTQs:"), end_alternate_write_fastq - start_alternate_write_fastq, "s")
+    profile.close()
+
+
