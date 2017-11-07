@@ -560,7 +560,8 @@ for genome in sorted(os.listdir(input_folder)):
                     if "ERROR" in line:
                         line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2_ERR")
                     if "OUTPUT" in line:
-                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2_OUT")if "COMMANDS" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2_OUT")
+                    if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_Diamond2))
                         break
                     PBS_script_out.write(line + "\n")
