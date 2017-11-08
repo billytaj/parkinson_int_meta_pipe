@@ -85,7 +85,7 @@ with open("rna_split_jobs.txt", 'w+') as profile:
     
     profile.write("rRNA split job")
     profile.write( "============================================")
-    profile.write("total runtime:", end_all - start_all, "s")
-    profile.write( "unpaired infernal runtime:", end_unpaired_infernal - start_unpaired_infernal, "s")
-    profile.write( "paired infernal runtime:", end_paired_infernal - start_paired_infernal, "s")
+    profile.write("total runtime: " + str(end_all - start_all) + "s")
+    profile.write( "unpaired infernal runtime: " + str(end_unpaired_infernal - start_unpaired_infernal) + "s")
+    profile.write( "paired infernal runtime: " + str(end_paired_infernal - start_paired_infernal) + "s")
     profile.close()

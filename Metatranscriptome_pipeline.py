@@ -282,9 +282,9 @@ for genome in sorted(os.listdir(input_folder)):
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Preprocess")
                     if "ERROR" in line:
-                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Preprocess_ERR")
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Preprocess_ERR")
                     if "OUTPUT" in line:
-                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Preprocess_OUT")
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Preprocess_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Pre))
                         break
@@ -312,6 +312,8 @@ for genome in sorted(os.listdir(input_folder)):
                     PBS_script_out.write(line + "\n")
             JobID_rRNA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_rRNA_Submit.pbs", "-W", "depend=afterok:" + JobID_Pre.strip("\n")])
             end_infernal_stage = clock()
+            print "ENDING THE PIPELINE AT rRNA submit jobs"
+            sys.exit()
             
             COMMANDS_Combine = [
             "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_Filepath + "_mRNA_unpaired.fastq",
