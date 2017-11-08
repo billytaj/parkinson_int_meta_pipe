@@ -20,7 +20,7 @@ UniVec_Core = "/home/j/jparkins/mobolaji/Databases/UniVec_Core.fasta"
 Flash = "/home/j/jparkins/mobolaji/Tools/Flash/FLASH-1.2.11/flash"
 Perl = "/home/j/jparkins/mobolaji/perl"
 Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
-Python = "/home/j/jparkins/mobolaji/python"
+Python = "python" #"/home/j/jparkins/mobolaji/python"
 BWA = "/home/j/jparkins/mobolaji/Tools/BWA/bwa-0.7.5a/bwa"
 SAMTOOLS = "/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/samtools"
 BLAT = "/home/j/jparkins/mobolaji/Tools/pBLAT/pblat/pblat"
@@ -79,7 +79,7 @@ RPKM = pipeline_pieces + "RPKM.py"
 Threads = str(multiprocessing.cpu_count())
 
 PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=00:30:00 -q debug
+#PBS -l nodes=1:ppn=16,walltime=12:00:00 -q sandy
 #PBS -N NAME
 #PBS -e ERROR
 #PBS -o OUTPUT
@@ -312,8 +312,7 @@ for genome in sorted(os.listdir(input_folder)):
                     PBS_script_out.write(line + "\n")
             JobID_rRNA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_rRNA_Submit.pbs", "-W", "depend=afterok:" + JobID_Pre.strip("\n")])
             end_infernal_stage = clock()
-            print "ENDING THE PIPELINE AT rRNA submit jobs"
-            sys.exit()
+            
             
             COMMANDS_Combine = [
             "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_Filepath + "_mRNA_unpaired.fastq",
@@ -343,9 +342,15 @@ for genome in sorted(os.listdir(input_folder)):
             JobID_Combine = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Combine.pbs", "-W", "depend=afterok:" + JobID_rRNA.strip("\n")])
             end_combine_0 = clock()
             
+            
+            
             start_qalter_0 = clock()
             subprocess.call(["qalter", "-v", "JOB2=" + JobID_Combine.strip("\n").split(".")[0], JobID_rRNA.strip("\n")])
             end_qalter_0 = clock()
+            
+            print "ENDING AT COMBINE QALTER PART"
+            print "combine time:", end_combine_0 - start_combine_0, "s"
+            sys.exit()
             
             #BIGG Database, AGORA Nature paper, Additional functionality
             # Transcript Assembly
