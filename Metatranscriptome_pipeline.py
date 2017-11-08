@@ -79,7 +79,7 @@ RPKM = pipeline_pieces + "RPKM.py"
 Threads = str(multiprocessing.cpu_count())
 
 PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=12:00:00
+#PBS -l nodes=1:ppn=8,walltime=00:30:00 -q debug
 #PBS -N NAME
 #PBS -e ERROR
 #PBS -o OUTPUT

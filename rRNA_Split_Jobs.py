@@ -23,9 +23,12 @@ JobID1 = sys.argv[2]
 Python = "/home/j/jparkins/mobolaji/python"
 Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
 
+
 PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=6:00:00
+#PBS -l nodes=1:ppn=16,walltime=6:00:00 -q sandy
 #PBS -N NAME
+#PBS -e ERROR
+#PBS -o OUTPUT
 
 module load gcc intel/15.0.2 openmpi java blast extras python
 cd $PBS_O_WORKDIR
@@ -37,7 +40,7 @@ export PATH=$NEWPATH
 COMMANDS"""
 
 Preprocess_jobs = []
-
+export_filepath = ""
 start_unpaired_infernal = clock()
 for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants"))):
     
@@ -50,12 +53,17 @@ for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_F
             for line in PBS_Submit_LowMem.splitlines():
                 if "NAME" in line:
                     line = line.replace("NAME", os.path.splitext(split)[0] + "_rRNA_Filter")
+                if "ERROR" in line:
+                    line = line.replace("ERROR", os.path.splitext(split)[0] + "_rRNA_Filter_ERR")
+                if "OUTPUT" in line:
+                    line = line.replace("OUTPUT", os.path.splitext(split)[0] + "_rRNA_Filter_OUT")    
                 if "COMMANDS" in line:
                     PBS_script_out.write("\n".join(COMMANDSx))
                     break
                 PBS_script_out.write(line + "\n")
         JobIDx = subprocess.check_output("ssh gpc01 " + "\"" + "cd " + os.path.dirname(Split_File) + ";" + "qsub" + " " + os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.splitext(split)[0] + "_rRNA_Filter.pbs") + "\"", shell=True)
         Preprocess_jobs.append(JobIDx.strip("\n"))
+        export_filepath = os.path.splitext(split)[0]
 end_unpaired_infernal = clock()
 
 start_paired_infernal = clock()
@@ -70,6 +78,10 @@ for split in sorted(os.listdir(os.path.join(Input_Path, os.path.splitext(Input_F
             for line in PBS_Submit_LowMem.splitlines():
                 if "NAME" in line:
                     line = line.replace("NAME", os.path.splitext(split)[0] + "_rRNA_Filter")
+                if "ERROR" in line:
+                    line = line.replace("ERROR", os.path.splitext(split)[0] + "_rRNA_Filter_ERR")    
+                if "OUTPUT" in line:
+                    line = line.replace("OUTPUT", os.path.splitext(split)[0] + "_rRNA_Filter_OUT")    
                 if "COMMANDS" in line:
                     PBS_script_out.write("\n".join(COMMANDSy))
                     break
@@ -81,11 +93,11 @@ print ":".join(Preprocess_jobs[-10:])
 end_paired_infernal = clock()
 end_all = clock()
 
-with open("rna_split_jobs.txt", 'w+') as profile:
+with open(export_filepath + "_rna_split_jobs.txt", 'w+') as profile:
     
-    profile.write("rRNA split job")
-    profile.write( "============================================")
-    profile.write("total runtime: " + str(end_all - start_all) + "s")
-    profile.write( "unpaired infernal runtime: " + str(end_unpaired_infernal - start_unpaired_infernal) + "s")
-    profile.write( "paired infernal runtime: " + str(end_paired_infernal - start_paired_infernal) + "s")
+    profile.write("rRNA split job\n")
+    profile.write( "============================================\n")
+    profile.write("total runtime: " + str(end_all - start_all) + "s\n")
+    profile.write( "unpaired infernal runtime: " + str(end_unpaired_infernal - start_unpaired_infernal) + "s\n")
+    profile.write( "paired infernal runtime: " + str(end_paired_infernal - start_paired_infernal) + "s\n")
     profile.close()

@@ -1,0 +1,16 @@
+def create_pbs_job(job_name, input_file_name, command):
+    Input_FName = input_file_name
+    real_suffix = "_"+job_name
+    with open(os.path.splitext(Input_FName)[0] + real_suffix + ".pbs", "w") as PBS_script_out:
+        for line in PBS_Submit_LowMem.splitlines():
+            if "NAME" in line:
+                line = line.replace("NAME", os.path.splitext(Input_FName)[0] + real_suffix)
+            if "ERROR" in line:
+                line = line.replace("NAME", os.path.splitext(Input_FName)[0] + real_suffix + "_ERR")
+            if "OUTPUT" in line:
+                line = line.replace("NAME", os.path.splitext(Input_FName)[0] + real_suffix + "_OUT")
+            if "COMMANDS" in line:
+                PBS_script_out.write("\n".join(command))
+                break
+            
+            PBS_script_out.write(line + "\n")
