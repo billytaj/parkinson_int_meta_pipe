@@ -1,9 +1,9 @@
-import mt_pipe_paths
+import mt_pipe_paths as mpp
 
 
 COMMANDS_Pre = [
                 # remove adapters
-                AdapterRemoval + " --file1 " + Input_File1 + ".fastq" + " --file2 " + Input_File2 + ".fastq" + " --qualitybase " + Qual + " --threads " + Threads + " --minlength " + "30" + " --basename " + os.path.splitext(Input_FName)[0] + "_AdapterRemoval" + " --trimqualities " + " --output1 " + Input_File1 + "_trimmed.fastq" + " --output2 " + Input_File2 + "_trimmed.fastq" + " --singleton " + Input_Filepath + "_singletons_trimmed.fastq",
+                mpp.AdapterRemoval + " --file1 " + Input_File1 + ".fastq" + " --file2 " + Input_File2 + ".fastq" + " --qualitybase " + Qual + " --threads " + Threads + " --minlength " + "30" + " --basename " + os.path.splitext(Input_FName)[0] + "_AdapterRemoval" + " --trimqualities " + " --output1 " + Input_File1 + "_trimmed.fastq" + " --output2 " + Input_File2 + "_trimmed.fastq" + " --singleton " + Input_Filepath + "_singletons_trimmed.fastq",
                 #trim things
                 vsearch + " --fastq_mergepairs " + Input_File1 + "_trimmed.fastq" + " --reverse " + Input_File2 + "_trimmed.fastq" + " --fastq_ascii " + Qual + " --fastqout " + Input_Filepath + "_overlap_trimmed.fastq" + " --fastqout_notmerged_fwd " + Input_File1 + "_paired_trimmed.fastq" + " --fastqout_notmerged_rev " + Input_File2 + "_paired_trimmed.fastq",
                 "cat " + Input_Filepath + "_overlap_trimmed.fastq" + " " + Input_Filepath + "_singletons_trimmed.fastq" + " > " + Input_Filepath + "_unpaired_trimmed.fastq",

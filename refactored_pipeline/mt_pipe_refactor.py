@@ -6,8 +6,8 @@ import os
 import os.path
 import subprocess
 import multiprocessing
-import mt_pipe_commands
-import mt_pipe_paths
+import mt_pipe_commands as mpcom
+import mt_pipe_paths as mpfp
 
 Threads = str(multiprocessing.cpu_count())
 

@@ -77,7 +77,7 @@ for x in range((len(sys.argv) - 6) / 3):
                     align_len = line[3]
                     score = line[11]
                 if float(seq_identity) > float(identity_cutoff):
-                    if align_len > len(read_seqs[query].seq) * length_cutoff:
+                    if float(align_len) > len(read_seqs[query].seq) * length_cutoff:
                         if float(score) > float(score_cutoff):
                             if db_match in gene2read_map:
                                 if contig:
