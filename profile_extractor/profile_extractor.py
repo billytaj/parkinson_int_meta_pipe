@@ -4,12 +4,20 @@ import datetime
 #This program takes in files ending in extension "_OUT" from qsub exports, extracts the walltime, 
 #and displays it as a useful metric
 
-
+#this tool needs to be upgraded to consider overlappings.
+#some stages do try to run in parallel
 def main():
     full_profile_list = list()
     total_time = 0
     for item in os.listdir():
-        if("_OUT" in item):
+        
+        if("Annotate_BLAT" in item and "_OUT" in item and "Annotate_BLAT_Post" not in item):
+            print("he")
+        
+        elif("Annotate_DMD" in item and "_OUT" in item and "Annotate_DMD_Post" not in item):
+            print("she")
+            
+        elif("_OUT" in item):
             with open(item, "r") as time_file:
                 time_reader = csv.reader(time_file, delimiter = '\t')
                 per_stage_profile = list()
@@ -38,8 +46,25 @@ def main():
         item[2] = str(round(((item[2] / total_time) * 100), 2)) + "%"
     full_profile_list.append(["total time:", str(datetime.timedelta(seconds=total_time))])    
     return full_profile_list
+
+def other_thing():
+    min_time
+    for item in os.listdir():
+        if("Annotate_BLAT" in item and "_OUT" in item and "Annotate_BLAT_Post" not in item):
+            with open(item, "r") as time_file:
+                time_reader = csv.reader(time_file, delimiter = ' ')
+                for row in time_reader:
+                    if(len(row) > 0):
+                        if(row[0] == "Begin" and row[2] == "Prologue"):
+                            
+                        elif(row[0] == "End" and row[2] == "Epilogue"):
+                            print(row)
+              
+            
 if __name__ == "__main__":
     os.chdir("C:/Users/Billy/Desktop/Profile_info")
-    summarized_timing = main()
-    for item in summarized_timing:
-        print(item)
+    
+    #summarized_timing = main()
+    #for item in summarized_timing:
+    #    print(item)
+    other_thing()    
