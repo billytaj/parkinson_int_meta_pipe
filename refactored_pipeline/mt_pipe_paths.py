@@ -1,6 +1,5 @@
-
+import os
 script_path = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
-
 cdhit_dup = "/home/j/jparkins/mobolaji/Tools/CDHIT/cd-hit-v4.6.6-2016-0711/cd-hit-auxtools/cd-hit-dup"
 Timmomatic = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/trimmomatic-0.36.jar"
 AdapterRemoval = "/home/j/jparkins/mobolaji/Tools/AdapterRemoval/adapterremoval-2.2.0/build/AdapterRemoval"
@@ -9,7 +8,7 @@ UniVec_Core = "/home/j/jparkins/mobolaji/Databases/UniVec_Core.fasta"
 Flash = "/home/j/jparkins/mobolaji/Tools/Flash/FLASH-1.2.11/flash"
 Perl = "/home/j/jparkins/mobolaji/perl"
 Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
-Python = "/home/j/jparkins/mobolaji/python"
+Python = "python" #"/home/j/jparkins/mobolaji/python"
 BWA = "/home/j/jparkins/mobolaji/Tools/BWA/bwa-0.7.5a/bwa"
 SAMTOOLS = "/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/samtools"
 BLAT = "/home/j/jparkins/mobolaji/Tools/pBLAT/pblat/pblat"
