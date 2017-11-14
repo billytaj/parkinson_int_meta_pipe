@@ -2,7 +2,6 @@ import os
 import sys
 import mt_pipe_paths as mpp
 
-
 def create_pre_command(Input_File, Quality_score, Thread_count):
     Qual = Quality_score
     Threads = Thread_count
@@ -238,54 +237,43 @@ def create_BWA_annotate_command(Contigs):
 
 
     
-def create_BLAT_annotate_command(input_filepath, extension):
+def create_BLAT_annotate_command(input_filepath, extension, datatype, splits = 5):
+    # example input filepath: Input_File1, Input_File2
+    # example extension: [contigs_n_BWA, unpaired_unmapped_n_BWA, unmapped_BWA]-> leave out the .fasta.  it's implied
+    # example datatype [contigs, unpaired, paired]
     Input_Filepath = input_filepath
-        
-    COMMANDS_Annotate_BLAT1 = [
-                    BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_1" + ".blatout",
-                    BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_2" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_2" + ".blatout",
-                    BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_3" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_3" + ".blatout",
-                    BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_4" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_4" + ".blatout",
-                    BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_5" + ".blatout",
-                    "cat " + Input_Filepath + "_contigs" + "_[1-5]" + ".blatout" + " > " + Input_Filepath + "_contigs" + ".blatout"
+    for i in range (1, splits+1):
+        tag = "_" + str(i)
+        blat_command = BLAT + " -noHead -minIdentity=90 -minScore=65 " + mpp.DNA_DB_Prefix + tag + mpp.DNA_DB_Extension + " " + Input_Filepath + "_" + extension + ".fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_" + datatype + tag + ".blatout"
+        COMMANDS_Annotate_BLAT.append(blat_command)
+    
+    final_cat = "cat " + Input_Filepath + "_" + datatype + "_[1-" + splits + "]" + ".blatout" + " > " + Input_Filepath + "_" + datatype + ".blatout"
+    COMMANDS_Annotate_BLAT.append(final_cat)
+    
+    return COMMANDS_Annotate_BLAT
+
+def create_BLAT_pp_command(Input_File):
+
+    Input_Filepath = os.path.splitext(Input_File)[0]
+    Input_File1 = Input_Filepath + "1"
+    Input_File2 = Input_Filepath + "2"
+    Input_Path = os.path.dirname(Input_File)
+    COMMANDS_Annotate_BLAT_Post = [
+                    mpp.Python + " " + mpp.Map_reads_gene_BLAT + " " + mpp.DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_genes.fna" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_contigs" + ".blatout" + " " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_Filepath + "_unpaired" + ".blatout" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File1 + "_paired" + ".blatout" + " " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_paired" + ".blatout" + " " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta"
                     ]
+    return COMMANDS_Annotate_BLAT_Post
 
-
-COMMANDS_Annotate_BLAT2 = [
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_unpaired" + "_1" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_2" + DNA_DB_Extension + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_unpaired" + "_2" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_3" + DNA_DB_Extension + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_unpaired" + "_3" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_4" + DNA_DB_Extension + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_unpaired" + "_4" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_unpaired" + "_5" + ".blatout",
-                "cat " + Input_Filepath + "_unpaired" + "_[1-5]" + ".blatout" + " > " + Input_Filepath + "_unpaired" + ".blatout"
-                ]
-
-COMMANDS_Annotate_BLAT3 = [
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_1" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_2" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_2" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_3" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_3" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_4" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_4" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_5" + ".blatout",
-                "cat " + Input_File1 + "_paired" + "_[1-5]" + ".blatout" + " > " + Input_File1 + "_paired" + ".blatout"
-                ]
-
-COMMANDS_Annotate_BLAT4 = [
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File2 + "_paired" + "_1" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_2" + DNA_DB_Extension + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File2 + "_paired" + "_2" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_3" + DNA_DB_Extension + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File2 + "_paired" + "_3" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_4" + DNA_DB_Extension + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File2 + "_paired" + "_4" + ".blatout",
-                BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File2 + "_paired" + "_5" + ".blatout",
-                "cat " + Input_File2 + "_paired" + "_[1-5]" + ".blatout" + " > " + Input_File2 + "_paired" + ".blatout"
-                ]
-
-COMMANDS_Annotate_BLAT_Post = [
-                mpp.Python + " " + Map_reads_gene_BLAT + " " + DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_genes.fna" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_contigs" + ".blatout" + " " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_Filepath + "_unpaired" + ".blatout" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File1 + "_paired" + ".blatout" + " " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_paired" + ".blatout" + " " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta"
-                ]
-
-COMMANDS_Annotate_Diamond1 = [
-                "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp1",
-                DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " -o " + Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp1 -k 10 --id 85 --query-cover 65 --min-score 60",
-                ]
+def create_DIAMOND_annotate_command(Input_File):
+    Input_Filepath = os.path.splitext(Input_File)[0]
+    Input_File1 = Input_Filepath + "1"
+    Input_File2 = Input_Filepath + "2"
+    Input_Path = os.path.dirname(Input_File)
+    Input_FName = os.path.basename(Input_File)
+    COMMANDS_Annotate_Diamond1 = [
+                    "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp1",
+                    DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " -o " + Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp1 -k 10 --id 85 --query-cover 65 --min-score 60",
+                    ]
+    return COMMANDS_Annotate_Diamond1
 
 
 COMMANDS_Annotate_Diamond2 = [
