@@ -85,12 +85,6 @@ def create_pbs_job(job_name, input_file_name, command, mode = low):
             PBS_script_out.write(line + "\n")
     
 
-if __name__ == "__main__":
-    input_folder = sys.argv[1]
-    output_folder = sys.argv[2]
-
-    print "Remember to run " + Sort_Reads + " on your reads before running this pipeline."
-    main(input_folder, output_folder)
 
 def main(input_folder, output_folder):
     for genome in sorted(os.listdir(input_folder)):
@@ -344,3 +338,11 @@ def main(input_folder, output_folder):
             
             if(run_jobs):
                 JobID_Join = subprocess.check_output(["qsub", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "-W", "depend=afterok:" + ":".join(Network_list)])
+                
+
+if __name__ == "__main__":
+    input_folder = sys.argv[1]
+    output_folder = sys.argv[2]
+
+    print "Remember to run " + Sort_Reads + " on your reads before running this pipeline."
+    main(input_folder, output_folder)                

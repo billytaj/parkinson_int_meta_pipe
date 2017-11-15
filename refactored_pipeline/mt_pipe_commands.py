@@ -227,11 +227,15 @@ def create_assemble_commands(Input_File, Thread_count, Contigs):
     
     
 def create_BWA_annotate_command(Contigs):    
+    
+    bwa_contigs = mpp.BWA + " mem -t " + Threads + " " + mpp.DNA_DB + " " + Contigs + " | " + mpp.SAMTOOLS + " view > " + Input_Filepath + "_contigs_BWA.sam"
+    make_sam_1 = mpp.BWA + " mem -t " + Threads + " " + mpp.DNA_DB + " " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " | " + mpp.SAMTOOLS + " view > " + Input_Filepath + "_unpaired_unmapped_BWA.sam"
+    make_sam_2 = mpp.BWA + " mem -t " + Threads + " " + mpp.DNA_DB + " " + Input_File1 + "_all_mRNA_unmapped.fastq" + " " + Input_File2 + "_all_mRNA_unmapped.fastq" + " | " + mpp.SAMTOOLS + " view > " + Input_Filepath + "_paired_unmapped_BWA.sam"
     COMMANDS_Annotate_BWA = [
-        mpp.BWA + " mem -t " + Threads + " " + mpp.DNA_DB + " " + Contigs + " | " + mpp.SAMTOOLS + " view > " + Input_Filepath + "_contigs_BWA.sam",
-        mpp.BWA + " mem -t " + Threads + " " + mpp.DNA_DB + " " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " | " + mpp.SAMTOOLS + " view > " + Input_Filepath + "_unpaired_unmapped_BWA.sam",
-        mpp.BWA + " mem -t " + Threads + " " + mpp.DNA_DB + " " + Input_File1 + "_all_mRNA_unmapped.fastq" + " " + Input_File2 + "_all_mRNA_unmapped.fastq" + " | " + mpp.SAMTOOLS + " view > " + Input_Filepath + "_paired_unmapped_BWA.sam",
-        mpp.Python + " " + mpp.Map_reads_gene_BWA + " " + mpp.DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Contigs + " " + Input_Filepath + "_contigs_BWA.sam" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " " + Input_Filepath + "_unpaired_unmapped_BWA.sam" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_File1 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File2 + "_unmapped_n_BWA.fasta",
+        bwa_contigs,
+        make_sam_1,
+        make_sam_2,
+        mpp.Python + " " + mpp.Map_reads_gene_BWA + " " + mpp.DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Contigs + " " + Input_Filepath + "_contigs_BWA.sam" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " " + Input_Filepath + "_unpaired_unmapped_BWA.sam" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_File1 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File2 + "_unmapped_n_BWA.fasta"
     ]
     return COMMANDS_Annotate_BWA
 
@@ -242,6 +246,7 @@ def create_BLAT_annotate_command(input_filepath, extension, datatype, splits = 5
     # example extension: [contigs_n_BWA, unpaired_unmapped_n_BWA, unmapped_BWA]-> leave out the .fasta.  it's implied
     # example datatype [contigs, unpaired, paired]
     Input_Filepath = input_filepath
+    COMMANDS_Annotate_BLAT = []
     for i in range (1, splits+1):
         tag = "_" + str(i)
         blat_command = BLAT + " -noHead -minIdentity=90 -minScore=65 " + mpp.DNA_DB_Prefix + tag + mpp.DNA_DB_Extension + " " + Input_Filepath + "_" + extension + ".fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_" + datatype + tag + ".blatout"
@@ -263,17 +268,19 @@ def create_BLAT_pp_command(Input_File):
                     ]
     return COMMANDS_Annotate_BLAT_Post
 
-def create_DIAMOND_annotate_command(Input_File):
+def create_DIAMOND_annotate_command(Input_File, datatype, Thread_count, count = 5):
+    Threads = Thread_count
     Input_Filepath = os.path.splitext(Input_File)[0]
-    Input_File1 = Input_Filepath + "1"
-    Input_File2 = Input_Filepath + "2"
-    Input_Path = os.path.dirname(Input_File)
     Input_FName = os.path.basename(Input_File)
-    COMMANDS_Annotate_Diamond1 = [
-                    "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp1",
-                    DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " -o " + Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp1 -k 10 --id 85 --query-cover 65 --min-score 60",
-                    ]
-    return COMMANDS_Annotate_Diamond1
+    COMMANDS_Annotate_Diamond = []
+    for i in range(1, count+1):
+        tag = "_dmnd_tmp" + str(count)
+        Diamond_command_string = 
+                        "mkdir -p " + os.path.splitext(Input_FName)[0] + tag,
+                        mpp.DIAMOND + " blastx -p " + Threads + " -d " + mpp.Prot_DB + " -q " + Input_Filepath + "_contigs_n_BWA_BLAT" + ".fasta" + " -o " + Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + tag + "-k 10 --id 85 --query-cover 65 --min-score 60",
+                        
+        COMMANDS_Annotate_Diamond.append(Diamond_command_string)                
+    return COMMANDS_Annotate_Diamond
 
 
 COMMANDS_Annotate_Diamond2 = [
@@ -306,10 +313,7 @@ COMMANDS_Classify = [
                 Centrifuge + " -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -1 " + Input_File1 + "_all_mRNA_unmapped.fastq" + " -2 " + Input_File2 + "_all_mRNA_unmapped.fastq" + " -U " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + Qual + " -p " + Threads + " -S " + Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " --report-file " + Input_Filepath + "_unmapped_CentrifugeReport.txt",
                 Centrifuge + " -f -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -U " + Contigs + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + Qual + " -p " + Threads + " -S " + Input_Filepath + "_contigs_CentrifugeOut.tsv" + " --report-file " + Input_Filepath + "_contigs_CentrifugeReport.txt",
                 "cat " + Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " " + Input_Filepath + "_contigs_CentrifugeOut.tsv" + " > " + Input_Filepath + "_CentrifugeOut.tsv",
-                #kSLAM + " " + "--db=/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/" + " " + "--output-file=" + Input_Filepath + "_unpaired_kSLAMOut" + " " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq",
-                #kSLAM + " " + "--db=/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/" + " " + "--output-file=" + Input_Filepath + "_paired_kSLAMOut" + " " + Input_File1 + "_all_mRNA_unmapped.fastq" + " " + Input_File2 + "_all_mRNA_unmapped.fastq",
-                #"sed \'s/^.*/C\\t&/\' " + Input_Filepath + "_unpaired_kSLAMOut_PerRead" + " " + Input_Filepath + "_paired_kSLAMOut_PerRead" + " > " + Input_Filepath + "_kSLAMOut.tsv",
-                mpp.Python + " " + Classification_combine + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + Input_Filepath + "_TaxIDOut.tsv" + " " + Input_Filepath + "_KaijuOut.tsv" + " " + Input_Filepath + "_CentrifugeOut.tsv",# + " " + Input_Filepath + "_kSLAMOut.tsv",
+                mpp.Python + " " + Classification_combine + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + Input_Filepath + "_TaxIDOut.tsv" + " " + Input_Filepath + "_KaijuOut.tsv" + " " + Input_Filepath + "_CentrifugeOut.tsv",
                 "mkdir -p " + Input_Filepath + "_WEVOTEOut",
                 "cp "  + Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + Input_Filepath + "_WEVOTEOut",
                 "cd " + os.path.dirname(WEVOTE),
