@@ -1,3 +1,7 @@
+#The functions here generate the pipeline commands.
+#Each command module is made up of (often) many sub stages that are used to get the final result.
+#If you want to move around the ordering, you'd do that here.
+
 import os
 import sys
 import mt_pipe_paths as mpp
@@ -182,15 +186,26 @@ def create_combine_command(Input_File):
     Input_File1 = Input_Filepath + "1"
     Input_File2 = Input_Filepath + "2"
     Input_FName = os.path.basename(Input_File)
+    
+    combine_unpaired_mrna = "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_Filepath + "_mRNA_unpaired.fastq"
 
-
+    combine_unpaired_rrna = "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_Filepath + "_rRNA_unpaired.fastq"
+    
+    combine_pair_1_mrna_fastq = "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File1) + "_paired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_File1 + "_mRNA.fastq"
+    
+    combine_pair_1_rrna_fastq = "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File1) + "_paired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_File1 + "_rRNA.fastq"
+    
+    combine_pair_2_mrna_fastq = "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File2) + "_paired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_File2 + "_mRNA.fastq"
+    
+    combine_pair_2_rrna_fastq = "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File2) + "_paired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_File2 + "_rRNA.fastq"
+    
     COMMANDS_Combine = [
-    "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_Filepath + "_mRNA_unpaired.fastq",
-    "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_Filepath + "_rRNA_unpaired.fastq",
-    "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File1) + "_paired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_File1 + "_mRNA.fastq",
-    "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File1) + "_paired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_File1 + "_rRNA.fastq",
-    "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File2) + "_paired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_File2 + "_mRNA.fastq",
-    "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_paired_n_contaminants", os.path.basename(Input_File2) + "_paired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_File2 + "_rRNA.fastq",
+    combine_unpaired_mrna,
+    combine_unpaired_rrna,
+    combine_pair_1_mrna_fastq,
+    combine_pair_1_rrna_fastq,
+    combine_pair_2_mrna_fastq,
+    combine_pair_2_rrna_fastq,
     mpp.Python + " " + mpp.Reduplicate + " " + Input_Filepath + "_unpaired_quality.fastq" + " " + Input_Filepath + "_mRNA_unpaired.fastq" + " " + Input_Filepath + "_unpaired.clstr" + " " + Input_Filepath + "_all_mRNA_unpaired.fastq",
     mpp.Python + " " + mpp.Reduplicate + " " + Input_File1 + "_paired_quality.fastq" + " " + Input_File1 + "_mRNA.fastq" + " " + Input_Filepath + "_paired.clstr" + " " + Input_File1 + "_all_mRNA.fastq",
     mpp.Python + " " + mpp.Reduplicate + " " + Input_File2 + "_paired_quality.fastq" + " " + Input_File2 + "_mRNA.fastq" + " " + Input_Filepath + "_paired.clstr" + " " + Input_File2 + "_all_mRNA.fastq"
@@ -198,6 +213,7 @@ def create_combine_command(Input_File):
     return COMMANDS_Combine
 
 def create_assemble_commands(Input_File, Thread_count, Contigs):
+    #this assembles contigs
     Input_Filepath = os.path.splitext(Input_File)[0]
     Input_File1 = Input_Filepath + "1"
     Input_File2 = Input_Filepath + "2"
@@ -283,48 +299,75 @@ def create_DIAMOND_annotate_command(Input_File, datatype, Thread_count, count = 
     return COMMANDS_Annotate_Diamond
 
 
-COMMANDS_Annotate_Diamond2 = [
-                "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp2",
-                DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " -o " + Input_Filepath + "_unpaired.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp2 -k 10 --id 85 --query-cover 65 --min-score 60",
-                ]
+    
+def create_DIAMOND_pp_command(Input_File):    
+    Input_Filepath = os.path.splitext(Input_File)[0]
+    Input_FName = os.path.basename(Input_File)
+    Input_File1 = Input_Filepath + "1"
+    Input_File2 = Input_Filepath + "2"
+    COMMANDS_Annotate_Diamond_Post = [
+    mpp.Python + " " + mpp.Map_reads_prot_DMND + " " + mpp.Prot_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_genes.fna" + " " + Input_Filepath + "_proteins.faa" + " " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_contigs.dmdout" + " " + Input_Filepath + "_contigs_n_BWA_BLAT_DMD.fasta" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_unpaired.dmdout" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File1 + "_paired.dmdout" + " " + Input_File1 + "_unmapped_n_BWA_BLAT_DMD.fasta" + " " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File2 + "_paired.dmdout" + " " + Input_File2 + "_unmapped_n_BWA_BLAT_DMD.fasta"
+    ]
+    return COMMANDS_Annotate_Diamond_Post
 
-COMMANDS_Annotate_Diamond3 = [
-                "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp3",
-                DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " -o " + Input_File1 + "_paired.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp3 -k 10 --id 85 --query-cover 65 --min-score 60",
-                ]
-
-COMMANDS_Annotate_Diamond4 = [
-                "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp4",
-                DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " -o " + Input_File2 + "_paired.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp4 -k 10 --id 85 --query-cover 65 --min-score 60"
-                ]
-
-
-COMMANDS_Annotate_Diamond_Post = [
-                mpp.Python + " " + Map_reads_prot_DMND + " " + Prot_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_genes.fna" + " " + Input_Filepath + "_proteins.faa" + " " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_contigs.dmdout" + " " + Input_Filepath + "_contigs_n_BWA_BLAT_DMD.fasta" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_unpaired.dmdout" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File1 + "_paired.dmdout" + " " + Input_File1 + "_unmapped_n_BWA_BLAT_DMD.fasta" + " " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File2 + "_paired.dmdout" + " " + Input_File2 + "_unmapped_n_BWA_BLAT_DMD.fasta"
-                ]
-
-
-COMMANDS_Classify = [
-                mpp.Python + " " + Annotated_taxid + " " + Input_Filepath + "_gene_map.tsv" + " " + accession2taxid + " " + Input_Filepath + "_TaxIDOut.tsv",
-                Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + Contigs + " -z " + Threads + " -o " + Input_Filepath + "_contigs_KaijuOut.tsv",
-                Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " -z " + Threads + " -o " + Input_Filepath + "_unpaired_KaijuOut.tsv",
-                Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + Input_File1 + "_all_mRNA_unmapped.fastq" + " -j " + Input_File2 + "_all_mRNA_unmapped.fastq" + " -z " + Threads + " -o " + Input_Filepath + "_paired_KaijuOut.tsv",
-                "cat " + Input_Filepath + "_contigs_KaijuOut.tsv" + " " + Input_Filepath + "_unpaired_KaijuOut.tsv" + " " + Input_Filepath + "_paired_KaijuOut.tsv" + " > " + Input_Filepath + "_KaijuOut.tsv",
-                Centrifuge + " -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -1 " + Input_File1 + "_all_mRNA_unmapped.fastq" + " -2 " + Input_File2 + "_all_mRNA_unmapped.fastq" + " -U " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + Qual + " -p " + Threads + " -S " + Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " --report-file " + Input_Filepath + "_unmapped_CentrifugeReport.txt",
-                Centrifuge + " -f -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -U " + Contigs + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + Qual + " -p " + Threads + " -S " + Input_Filepath + "_contigs_CentrifugeOut.tsv" + " --report-file " + Input_Filepath + "_contigs_CentrifugeReport.txt",
-                "cat " + Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " " + Input_Filepath + "_contigs_CentrifugeOut.tsv" + " > " + Input_Filepath + "_CentrifugeOut.tsv",
-                mpp.Python + " " + Classification_combine + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + Input_Filepath + "_TaxIDOut.tsv" + " " + Input_Filepath + "_KaijuOut.tsv" + " " + Input_Filepath + "_CentrifugeOut.tsv",
-                "mkdir -p " + Input_Filepath + "_WEVOTEOut",
-                "cp "  + Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + Input_Filepath + "_WEVOTEOut",
-                "cd " + os.path.dirname(WEVOTE),
-                WEVOTE + " -o " + Input_Filepath + "_WEVOTEOut" + " --db " + WEVOTEDB + " -c",
-                "cd $PBS_O_WORKDIR",
-                "awk -F \'\\t\' \'{print \"C\\t\"$1\"\\t\"$9}\' " + os.path.join(Input_Filepath + "_WEVOTEOut", os.path.splitext(Input_FName)[0] + "_WEVOTEOut_WEVOTE_Details.txt") + " > " + Input_Filepath + "_WEVOTEOut.tsv",
-                mpp.Python + " " + Contrain_classification + " " + "family" + " " + Input_Filepath + "_WEVOTEOut.tsv" + " " + Nodes + " " + Names + " " + Input_Filepath + "_WEVOTEOut_family.tsv",
-                Kaiju2krona + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + Input_Filepath + "_WEVOTEOut_family_Krona.txt",
-                "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + Input_Filepath + "_WEVOTEOut_family_Krona.tsv",
-                ktImportText + " -o " + Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
-                ]
+def create_EC_classify_command(Input_File, Thread_count, Quality_score):
+    Qual = Quality_score
+    Input_Path = os.path.dirname(Input_File)
+    Contigs = os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_SpadesOut", "contigs.fasta")
+    Threads = Thread_count
+    Input_Filepath = os.path.splitext(Input_File)[0]
+    Input_FName = os.path.basename(Input_File)
+    Input_File1 = Input_Filepath + "1"
+    Input_File2 = Input_Filepath + "2"
+    
+    get_taxa_from_gene = mpp.Python + " " + Annotated_taxid + " " + Input_Filepath + "_gene_map.tsv" + " " + mpp.accession2taxid + " " + Input_Filepath + "_TaxIDOut.tsv"
+    kaiju_on_contigs = Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + Contigs + " -z " + Threads + " -o " + Input_Filepath + "_contigs_KaijuOut.tsv"
+    
+    kaiju_on_unpaired = Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " -z " + Threads + " -o " + Input_Filepath + "_unpaired_KaijuOut.tsv"
+    
+    kaiju_on_paired = Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + Input_File1 + "_all_mRNA_unmapped.fastq" + " -j " + Input_File2 + "_all_mRNA_unmapped.fastq" + " -z " + Threads + " -o " + Input_Filepath + "_paired_KaijuOut.tsv"
+    
+    cat_kaiju = "cat " + Input_Filepath + "_contigs_KaijuOut.tsv" + " " + Input_Filepath + "_unpaired_KaijuOut.tsv" + " " + Input_Filepath + "_paired_KaijuOut.tsv" + " > " + Input_Filepath + "_KaijuOut.tsv"
+    
+    centrifuge_on_unmapped = mpp.Centrifuge + " -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -1 " + Input_File1 + "_all_mRNA_unmapped.fastq" + " -2 " + Input_File2 + "_all_mRNA_unmapped.fastq" + " -U " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + Qual + " -p " + Threads + " -S " + Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " --report-file " + Input_Filepath + "_unmapped_CentrifugeReport.txt"
+    
+    centrifuge_on_contigs = mpp.Centrifuge + " -f -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -U " + Contigs + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + Qual + " -p " + Threads + " -S " + Input_Filepath + "_contigs_CentrifugeOut.tsv" + " --report-file " + Input_Filepath + "_contigs_CentrifugeReport.txt"
+    
+    cat_centrifuge = "cat " + Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " " + Input_Filepath + "_contigs_CentrifugeOut.tsv" + " > " + Input_Filepath + "_CentrifugeOut.tsv"
+    
+    COMMANDS_Classify = [
+        get_taxa_from_gene,
+        kaiju_on_contigs,
+        kaiju_on_unpaired,
+        kaiju_on_paired,
+        cat_kaiju,
+        centrifuge_on_unmapped,
+        centrifuge_on_contigs,
+        cat_centrifuge,
+        
+        mpp.Python + " " + Classification_combine + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + Input_Filepath + "_TaxIDOut.tsv" + " " + Input_Filepath + "_KaijuOut.tsv" + " " + Input_Filepath + "_CentrifugeOut.tsv",
+        
+        "mkdir -p " + Input_Filepath + "_WEVOTEOut",
+        
+        "cp "  + Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + Input_Filepath + "_WEVOTEOut",
+        
+        "cd " + os.path.dirname(WEVOTE),
+        
+        WEVOTE + " -o " + Input_Filepath + "_WEVOTEOut" + " --db " + WEVOTEDB + " -c",
+        
+        "cd $PBS_O_WORKDIR",
+        
+        "awk -F \'\\t\' \'{print \"C\\t\"$1\"\\t\"$9}\' " + os.path.join(Input_Filepath + "_WEVOTEOut", os.path.splitext(Input_FName)[0] + "_WEVOTEOut_WEVOTE_Details.txt") + " > " + Input_Filepath + "_WEVOTEOut.tsv",
+        
+        mpp.Python + " " + Contrain_classification + " " + "family" + " " + Input_Filepath + "_WEVOTEOut.tsv" + " " + Nodes + " " + Names + " " + Input_Filepath + "_WEVOTEOut_family.tsv",
+        
+        Kaiju2krona + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + Input_Filepath + "_WEVOTEOut_family_Krona.txt",
+        
+        "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + Input_Filepath + "_WEVOTEOut_family_Krona.tsv",
+        
+        ktImportText + " -o " + Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
+        
+        ]
 COMMANDS_EC_Preprocess = [
                 "mkdir -p " + EC_Split,
                 "mkdir -p " + EC_Output,
