@@ -8,6 +8,9 @@ import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import re
+from time import clock as clock
+
+start_all = clock()
 
 Prot_DB = sys.argv[1]
 contig2read_file = sys.argv[2]
@@ -74,7 +77,7 @@ for x in range((len(sys.argv) - 6) / 3):
                     align_len = line[3]
                     score = line[11]
                 if float(seq_identity) > float(identity_cutoff):
-                    if align_len > len(read_seqs[query].seq) * length_cutoff:
+                    if float(align_len) > len(read_seqs[query].seq) * length_cutoff:
                         if float(score) > float(score_cutoff):
                             if db_match in gene2read_map:
                                 if contig:
@@ -153,3 +156,8 @@ with open(prot_file, "w") as out_prot:
 
 print str(reads_count) + " reads were mapped with Diamond"
 print "Reads mapped to " + str(len(proteins)) + " proteins."
+
+end_all = clock()
+print "map read protein DIAMOND"
+print "=============================================="
+print "total run time:", end_all - start_all, "s"

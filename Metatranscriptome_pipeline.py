@@ -5,6 +5,12 @@ import os
 import os.path
 import subprocess
 import multiprocessing
+from time import clock as clock
+
+start_all = clock()
+pipeline_pieces = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
+
+
 
 cdhit_dup = "/home/j/jparkins/mobolaji/Tools/CDHIT/cd-hit-v4.6.6-2016-0711/cd-hit-auxtools/cd-hit-dup"
 Timmomatic = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/trimmomatic-0.36.jar"
@@ -14,7 +20,7 @@ UniVec_Core = "/home/j/jparkins/mobolaji/Databases/UniVec_Core.fasta"
 Flash = "/home/j/jparkins/mobolaji/Tools/Flash/FLASH-1.2.11/flash"
 Perl = "/home/j/jparkins/mobolaji/perl"
 Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
-Python = "/home/j/jparkins/mobolaji/python"
+Python = "python" #"/home/j/jparkins/mobolaji/python"
 BWA = "/home/j/jparkins/mobolaji/Tools/BWA/bwa-0.7.5a/bwa"
 SAMTOOLS = "/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/samtools"
 BLAT = "/home/j/jparkins/mobolaji/Tools/pBLAT/pblat/pblat"
@@ -31,17 +37,18 @@ Fastqc = "/home/j/jparkins/mobolaji/Tools/FastQC/fastqc"
 Adapter = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE-2.fa"
 Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmscan"
 Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
-Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
-Reduplicate = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Reduplicate.py"
-Map_reads_contigs = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_contigs.py"
-Paired_Reads_Filter = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Paired_Reads_Filter.py"
-BLAT_Contaminant_Filter = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/BLAT_Contaminant_Filter.py"
-File_splitter = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/File_splitter.py"
-Sort_Reads = "/home/j/jparkins/mobolaji/Read_Classification/Sort_Reads.py"
-rRNA_Split_Jobs = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Split_Jobs.py"
-Map_reads_gene_BWA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_gene_BWA.py"
-Map_reads_gene_BLAT = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_gene_BLAT.py"
-Map_reads_prot_DMND = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Map_read_prot_DMND.py"
+
+Filter_rRNA = pipeline_pieces +"rRNA_Filter.py"
+Reduplicate = pipeline_pieces + "Reduplicate.py"
+Map_reads_contigs = pipeline_pieces + "Map_read_contigs.py"
+Paired_Reads_Filter = pipeline_pieces + "Paired_Reads_Filter.py"
+BLAT_Contaminant_Filter = pipeline_pieces + "BLAT_Contaminant_Filter.py"
+File_splitter = pipeline_pieces + "File_splitter.py"
+Sort_Reads = pipeline_pieces + "/Read_Classification/Sort_Reads.py"
+rRNA_Split_Jobs = pipeline_pieces + "rRNA_Split_Jobs.py"
+Map_reads_gene_BWA = pipeline_pieces + "Map_read_gene_BWA.py"
+Map_reads_gene_BLAT = pipeline_pieces + "Map_read_gene_BLAT.py"
+Map_reads_prot_DMND = pipeline_pieces + "Map_read_prot_DMND.py"
 Spades = "/home/j/jparkins/mobolaji/Tools/SPAdes/SPAdes-3.9.1-Linux/bin/spades.py"
 
 EC_Annotation_Prep = "/home/j/jparkins/mobolaji/EC_Prediction_Scripts/0_Preprocess_Input.py"
@@ -67,13 +74,15 @@ Centrifuge = "/home/j/jparkins/mobolaji/Tools/Centrifuge/centrifuge/centrifuge"
 Centrifuge_report = "/home/j/jparkins/mobolaji/Tools/Centrifuge/centrifuge/centrifuge-kreport"
 kSLAM = "/home/j/jparkins/mobolaji/Tools/k-SLAM/k-SLAM/SLAM"
 
-RPKM = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/RPKM.py"
+RPKM = pipeline_pieces + "RPKM.py"
 
 Threads = str(multiprocessing.cpu_count())
 
 PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=12:00:00
+#PBS -l nodes=1:ppn=16,walltime=12:00:00 -q sandy
 #PBS -N NAME
+#PBS -e ERROR
+#PBS -o OUTPUT
 
 module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
 cd $PBS_O_WORKDIR
@@ -87,6 +96,8 @@ COMMANDS"""
 PBS_Submit_HighMem = """#!/bin/bash
 #PBS -l nodes=1:m64g:ppn=16,walltime=12:00:00 -q sandy
 #PBS -N NAME
+#PBS -e ERROR
+#PBS -o OUTPUT
 
 module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
 cd $PBS_O_WORKDIR
@@ -100,6 +111,8 @@ COMMANDS"""
 PBS_Submit_vHighMem = """#!/bin/bash
 #PBS -l nodes=1:m128g:ppn=16,walltime=1:00:00 -q sandy
 #PBS -N NAME
+#PBS -e ERROR
+#PBS -o OUTPUT
 
 module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
 cd $PBS_O_WORKDIR
@@ -113,7 +126,7 @@ COMMANDS"""
 input_folder = sys.argv[1]
 output_folder = sys.argv[2]
 
-print "Remember to run " + Sort_Reads + " on your reads before running this pipeline."
+print ("Remember to run " + Sort_Reads + " on your reads before running this pipeline.")
 
 
 for genome in sorted(os.listdir(input_folder)):
@@ -131,8 +144,12 @@ for genome in sorted(os.listdir(input_folder)):
                 os.mkdir(os.path.join(input_folder, genome_name))
             except:
                 pass
+            start_file_splitter_call_time = clock()
             subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome), os.path.join(input_folder, genome_name)])
             subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome_name + "2.fastq"), os.path.join(input_folder, genome_name)])
+            end_file_splitter_call_time = clock()
+            
+            start_file_joiner = clock()
             for genome_split in os.listdir(os.path.join(input_folder, genome_name)):
                 if genome_split.endswith("_1.fastq"):
                     name = os.path.join(input_folder,  genome_name, genome_split[:-7])
@@ -153,8 +170,13 @@ for genome in sorted(os.listdir(input_folder)):
                             os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "2.fastq")
                     except:
                         pass
+            end_file_joiner = clock()            
         else:
+            start_secondary_file_joiner = clock()
             file_list.append(os.path.join(input_folder, genome_name))
+            end_secondary_file_joiner = clock()
+            
+        #This is the heart of the code.  The external program calls.  
         for item in file_list:
             original = item
             base_name = os.path.splitext(os.path.basename(item))[0]
@@ -191,6 +213,7 @@ for genome in sorted(os.listdir(input_folder)):
             Host_Contaminants = Input_Filepath + "_host_contaminants_seq.fasta"
             Vector_Contaminants = Input_Filepath + "_vector_contaminants_seq.fasta"
             # Preprocessing
+            # This section looks like it's forcing all the commands into a list.  
             COMMANDS_Pre = [
             #Python + " " + Sort_Reads + " " + original + "1.fastq" + " " + os.path.join(output_folder, base_name + "1.fastq"),
             #Python + " " + Sort_Reads + " " + original + "2.fastq" + " " + os.path.join(output_folder, base_name + "2.fastq"),
@@ -249,31 +272,48 @@ for genome in sorted(os.listdir(input_folder)):
             Python + " " + File_splitter + " " + "10000" + " " + Input_File1 + "_paired_n_contaminants.fastq" + " " + os.path.splitext(Input_FName)[0] + "_paired_n_contaminants",
             Python + " " + File_splitter + " " + "10000" + " " + Input_File2 + "_paired_n_contaminants.fastq" + " " + os.path.splitext(Input_FName)[0] + "_paired_n_contaminants"
             ]
-
+            
+            #this part creates the preprocessing pbsm and runs it, with check_output()
+            # adapter removal stage.  how do we know this?  it's the order of the list. This part must change.  it's just annoying.
+            # note: check_output waits for the call's output.  by definition, it must wait
+            start_giant_preprocess = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Preprocess.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Preprocess")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Preprocess_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Preprocess_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Pre))
                         break
+                    
                     PBS_script_out.write(line + "\n")
             JobID_Pre = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Preprocess.pbs"])
-
+            end_giant_preprocess = clock()
+            
             COMMANDS_rRNA = [
             "JOBS=$(" + Python + " " + rRNA_Split_Jobs + " " + Input_File + " " + JobID_Pre.strip("\n") + ");" + "qalter -W depend=afterok:$JOBS $JOB2"
             ]
-
+            
+            start_infernal_stage = clock()
             with open(os.path.splitext(Input_FName)[0] + "_rRNA_Submit.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_rRNA_Submit")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_rRNA_Submit_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_rRNA_Submit_OUT")    
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_rRNA))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_rRNA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_rRNA_Submit.pbs", "-W", "depend=afterok:" + JobID_Pre.strip("\n")])
-
+            end_infernal_stage = clock()
+            
+            
             COMMANDS_Combine = [
             "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + Input_Filepath + "_mRNA_unpaired.fastq",
             "cat " + os.path.join(os.path.splitext(Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + Input_Filepath + "_rRNA_unpaired.fastq",
@@ -285,19 +325,33 @@ for genome in sorted(os.listdir(input_folder)):
             Python + " " + Reduplicate + " " + Input_File1 + "_paired_quality.fastq" + " " + Input_File1 + "_mRNA.fastq" + " " + Input_Filepath + "_paired.clstr" + " " + Input_File1 + "_all_mRNA.fastq",
             Python + " " + Reduplicate + " " + Input_File2 + "_paired_quality.fastq" + " " + Input_File2 + "_mRNA.fastq" + " " + Input_Filepath + "_paired.clstr" + " " + Input_File2 + "_all_mRNA.fastq"
             ]
-
+            
+            start_combine_0 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Combine.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Combine")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Combine_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Combine_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Combine))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Combine = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Combine.pbs", "-W", "depend=afterok:" + JobID_rRNA.strip("\n")])
-
+            end_combine_0 = clock()
+            
+            
+            
+            start_qalter_0 = clock()
             subprocess.call(["qalter", "-v", "JOB2=" + JobID_Combine.strip("\n").split(".")[0], JobID_rRNA.strip("\n")])
-
+            end_qalter_0 = clock()
+            
+            print "ENDING AT COMBINE QALTER PART"
+            print "combine time:", end_combine_0 - start_combine_0, "s"
+            sys.exit()
+            
             #BIGG Database, AGORA Nature paper, Additional functionality
             # Transcript Assembly
             Contigs = os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_SpadesOut", "contigs.fasta")
@@ -310,17 +364,23 @@ for genome in sorted(os.listdir(input_folder)):
             BWA + " mem -t " + Threads + " -B 40 -O 60 -E 10 -L 50 " + Contigs + " " + Input_Filepath + "_all_mRNA_unpaired.fastq | " + SAMTOOLS + " view > " + Input_Filepath + "_contig_unpaired.sam",
             Python + " " + Map_reads_contigs + " " + Input_File1 + "_all_mRNA.fastq" + " " + Input_File2 + "_all_mRNA.fastq" + " " + Input_Filepath + "_all_mRNA_unpaired.fastq" + " " + Input_Filepath + "_contig_paired.sam" + " " + Input_Filepath + "_contig_unpaired.sam" + " " + Input_Filepath + "_contig_map.tsv"
             ]
-
+            start_transcript_assembly = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Assemble.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Assemble")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Assemble_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Assemble_OUT")
+                        
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Assemble))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Assemble = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Assemble.pbs", "-W", "depend=afterok:" + JobID_Combine.strip("\n")])
-
+            end_transcript_assembly = clock()
+            
             # Protein Annotation BWA
             COMMANDS_Annotate_BWA = [
             BWA + " mem -t " + Threads + " " + DNA_DB + " " + Contigs + " | " + SAMTOOLS + " view > " + Input_Filepath + "_contigs_BWA.sam",
@@ -329,16 +389,22 @@ for genome in sorted(os.listdir(input_folder)):
             Python + " " + Map_reads_gene_BWA + " " + DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Contigs + " " + Input_Filepath + "_contigs_BWA.sam" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " " + Input_Filepath + "_unpaired_unmapped_BWA.sam" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_File1 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_all_mRNA_unmapped.fastq" + " " + Input_Filepath + "_paired_unmapped_BWA.sam" + " " + Input_File2 + "_unmapped_n_BWA.fasta",
             ]
 
+            start_protein_bwa_annotation = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BWA.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BWA")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_BWA_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_BWA_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_BWA))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BWA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BWA.pbs", "-W", "depend=afterok:" + JobID_Assemble.strip("\n")])
-
+            end_protein_bwa_annotation = clock()
+            
             # Protein Annotation BLAT 1
             COMMANDS_Annotate_BLAT1 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_1" + ".blatout",
@@ -348,17 +414,23 @@ for genome in sorted(os.listdir(input_folder)):
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_contigs" + "_5" + ".blatout",
             "cat " + Input_Filepath + "_contigs" + "_[1-5]" + ".blatout" + " > " + Input_Filepath + "_contigs" + ".blatout"
             ]
-
+            
+            start_protein_blat_annotation_0 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1_OUT")    
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_BLAT1))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT1 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_0 = clock()
+            
             # Protein Annotation BLAT 2
             COMMANDS_Annotate_BLAT2 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_Filepath + "_unpaired" + "_1" + ".blatout",
@@ -369,16 +441,23 @@ for genome in sorted(os.listdir(input_folder)):
             "cat " + Input_Filepath + "_unpaired" + "_[1-5]" + ".blatout" + " > " + Input_Filepath + "_unpaired" + ".blatout"
             ]
 
+            start_protein_blat_annotation_1 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2")
+                    if "ERROR" in line:
+                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2_OUT")
+
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_BLAT2))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT2 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_1 = clock()
+            
             # Protein Annotation BLAT 3
             COMMANDS_Annotate_BLAT3 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_1" + ".blatout",
@@ -388,17 +467,23 @@ for genome in sorted(os.listdir(input_folder)):
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_5" + DNA_DB_Extension + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File1 + "_paired" + "_5" + ".blatout",
             "cat " + Input_File1 + "_paired" + "_[1-5]" + ".blatout" + " > " + Input_File1 + "_paired" + ".blatout"
             ]
-
+            start_protein_blat_annotation_2 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3")
+                    if "ERROR" in line:
+                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3_OUT")
+
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_BLAT3))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT3 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_2 = clock()
+            
             # Protein Annotation BLAT 4
             COMMANDS_Annotate_BLAT4 = [
             BLAT + " -noHead -minIdentity=90 -minScore=65 " + DNA_DB_Prefix + "_1" + DNA_DB_Extension + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + Threads + " " + Input_File2 + "_paired" + "_1" + ".blatout",
@@ -409,31 +494,43 @@ for genome in sorted(os.listdir(input_folder)):
             "cat " + Input_File2 + "_paired" + "_[1-5]" + ".blatout" + " > " + Input_File2 + "_paired" + ".blatout"
             ]
 
+            start_protein_blat_annotation_3 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_HighMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4")
+                    if "ERROR" in line:
+                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4_OUT")
+                    
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_BLAT4))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT4 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
+            end_protein_blat_annotation_3 = clock()
+            
             # Protein Annotation BLAT Postprocessing
             COMMANDS_Annotate_BLAT_Post = [
             Python + " " + Map_reads_gene_BLAT + " " + DNA_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_genes.fna" + " " + Input_Filepath + "_contigs_n_BWA.fasta" + " " + Input_Filepath + "_contigs" + ".blatout" + " " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + Input_Filepath + "_unpaired" + ".blatout" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + Input_File1 + "_unmapped_n_BWA.fasta" + " " + Input_File1 + "_paired" + ".blatout" + " " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File2 + "_unmapped_n_BWA.fasta" + " " + Input_File2 + "_paired" + ".blatout" + " " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta"
             ]
 
+            start_blat_pp = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_BLAT_Post))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_BLAT_Post = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT1.strip("\n") + ":" + JobID_Annotate_BLAT2.strip("\n") + ":" + JobID_Annotate_BLAT3.strip("\n") + ":" + JobID_Annotate_BLAT4.strip("\n")])
-
+            end_blat_pp = clock()
 
             # Protein Annotation Diamond 1
             COMMANDS_Annotate_Diamond1 = [
@@ -441,78 +538,110 @@ for genome in sorted(os.listdir(input_folder)):
             DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " -o " + Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp1 -k 10 --id 85 --query-cover 65 --min-score 60",
             ]
 
+            start_protein_diamond_annotation_0 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_DMD1.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_DMD1")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_DMD1_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_DMD1_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_Diamond1))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_Diamond1 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD1.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
+            end_protein_diamond_annotation_0 = clock()
+            
             # Protein Annotation Diamond 2
             COMMANDS_Annotate_Diamond2 = [
             "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp2",
             DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " -o " + Input_Filepath + "_unpaired.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp2 -k 10 --id 85 --query-cover 65 --min-score 60",
             ]
-
+            start_protein_diamond_annotation_1 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_DMD2.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_Diamond2))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_Diamond2 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
+            end_protein_diamond_annotation_1 = clock()
+            
             # Protein Annotation Diamond 3
             COMMANDS_Annotate_Diamond3 = [
             "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp3",
             DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " -o " + Input_File1 + "_paired.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp3 -k 10 --id 85 --query-cover 65 --min-score 60",
             ]
 
+            start_protein_diamond_annotation_2 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_DMD3.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_DMD3")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_DMD3_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_DMD3_OUT")    
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_Diamond3))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_Diamond3 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD3.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
+            end_protein_diamond_annotation_2 = clock()
+            
             # Protein Annotation Diamond 4
             COMMANDS_Annotate_Diamond4 = [
             "mkdir -p " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp4",
             DIAMOND + " blastx -p " + Threads + " -d " + Prot_DB + " -q " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " -o " + Input_File2 + "_paired.dmdout" + " -f 6 -t " + os.path.splitext(Input_FName)[0] + "_dmnd_tmp4 -k 10 --id 85 --query-cover 65 --min-score 60"
             ]
 
+            start_protein_diamond_annotation_3 = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_DMD4.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_DMD4")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_DMD4_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_DMD4_OUT")    
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_Diamond4))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_Diamond4 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD4.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
+            
+            end_protein_diamond_annotation_3 = clock()
+            
+            
             # Protein Annotation Diamond Postprocess
             COMMANDS_Annotate_Diamond_Post = [
             Python + " " + Map_reads_prot_DMND + " " + Prot_DB + " " + Input_Filepath + "_contig_map.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_genes.fna" + " " + Input_Filepath + "_proteins.faa" + " " + Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_contigs.dmdout" + " " + Input_Filepath + "_contigs_n_BWA_BLAT_DMD.fasta" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + Input_Filepath + "_unpaired.dmdout" + " " + Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " " + Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File1 + "_paired.dmdout" + " " + Input_File1 + "_unmapped_n_BWA_BLAT_DMD.fasta" + " " + Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " " + Input_File2 + "_paired.dmdout" + " " + Input_File2 + "_unmapped_n_BWA_BLAT_DMD.fasta"
             ]
-
+            
+            start_diamond_pp = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Annotate_DMD_Postprocess.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Annotate_DMD_Postprocess")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Annotate_DMD_Postprocess_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Annotate_DMD_Postprocess_OUT")
+
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Annotate_Diamond_Post))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Annotate_Diamond_Post = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD_Postprocess.pbs", "-W", "depend=afterany:" + JobID_Annotate_Diamond1.strip("\n") + ":" + JobID_Annotate_Diamond2.strip("\n") + ":" + JobID_Annotate_Diamond3.strip("\n") + ":" + JobID_Annotate_Diamond4.strip("\n")])
+            end_diamond_pp = clock()
             
             # Classify Reads
             COMMANDS_Classify = [
@@ -540,15 +669,22 @@ for genome in sorted(os.listdir(input_folder)):
             ktImportText + " -o " + Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
             ]
 
+            
+            start_classification = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Classify.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_vHighMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Classify")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Classify_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Classify_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Classify))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Classify = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Classify.pbs", "-W", "depend=afterok:" + JobID_Annotate_Diamond_Post.strip("\n")])
+            end_classification = clock()
             
             # Prepare EC annotation files
             EC_Split = os.path.join(Input_Filepath + "_EC_Annotation", "Split")
@@ -559,32 +695,45 @@ for genome in sorted(os.listdir(input_folder)):
             Python + " " + File_splitter + " " + "1000" + " " + Input_Filepath + "_proteins.faa" + " " + EC_Split,
             ]
 
+            start_ec_prep = clock()
             with open(os.path.splitext(Input_FName)[0] + "_EC_Preprocess.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_EC_Preprocess")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_EC_Preprocess_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_EC_Preprocess_OUT")    
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_EC_Preprocess))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_EC_Preprocess = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_EC_Preprocess.pbs", "-W", "depend=afterok:" + JobID_Annotate_Diamond_Post.strip("\n")])
-
+            end_ec_prep = clock()
+            
             COMMANDS_Detect = [
             "JOBS=$(" + Python + " " + Detect_Submit + " " + EC_Split + " " + EC_Output + " " + Threads + " " + JobID_EC_Preprocess.strip("\n") + ");" + "qalter -W depend=afterok:$JOBS $JOB2"
             ]
-
+            
+            start_ec_detect = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Detect.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Detect")
+                    if "NAME" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Detect_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Detect_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Detect))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Detect = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Detect.pbs", "-W", "depend=afterok:" + JobID_EC_Preprocess.strip("\n")])
-
+            end_ec_detect = clock()
+            
             COMMANDS_Combine_Detect = ["cat " + os.path.join(EC_Output, "Detect", "*.toppred") + " > " + os.path.join(EC_Output, "Detect", os.path.splitext(Input_FName)[0] + "_proteins.toppred")]
 
+            start_ec_combine = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Combine_Detect.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
@@ -594,73 +743,101 @@ for genome in sorted(os.listdir(input_folder)):
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Combine_Detect = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Combine_Detect.pbs", "-W", "depend=afterok:" + JobID_Detect.strip("\n")])
-
+            end_ec_combine = clock()
+            
+            start_ec_qalter = clock()
             subprocess.call(["qalter", "-v", "JOB2=" + JobID_Combine_Detect.strip("\n").split(".")[0], JobID_Detect.strip("\n")])
-
+            end_ec_qalter = clock()
+            
             COMMANDS_PRIAM = [
             "mkdir -p " + os.path.join(EC_Output, "PRIAM"),
             "cd " + os.path.join(EC_Output, "PRIAM"),
             "java -jar" + " " + Priam + " -n " + os.path.splitext(Input_FName)[0] + "_PRIAM" + " -i " + Input_Filepath + "_proteins.faa" + " -p " + os.path.join(os.path.dirname(Priam), "PRIAM_MAR15") + " -od " + os.path.join(EC_Output, "PRIAM") +" -e T -pt 0.5 -mo -1 -mp 70 -cc T -cg T -bd " + BLAST_dir,
             ]
-
+            
+            start_priam = clock()
             with open(os.path.splitext(Input_FName)[0] + "_PRIAM.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_PRIAM")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_PRIAM_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_PRIAM_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_PRIAM))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_PRIAM = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_PRIAM.pbs", "-W", "depend=afterok:" + JobID_EC_Preprocess.strip("\n")])
-
+            end_priam = clock()
+            
+            # EC DIAMOND
+            
             COMMANDS_EC_Diamond = [
             "mkdir -p " + os.path.join(EC_Output, "Diamond"),
             "cd " + os.path.join(EC_Output, "Diamond"),
             DIAMOND + " blastp -p " + Threads + " --query "+ Input_Filepath + "_proteins.faa" + " --db "+ SWISS_PROT + " --outfmt "+ "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident" + " --out " + os.path.join(EC_Output, "Diamond", os.path.splitext(Input_FName)[0] + ".blastout") + " --evalue 0.0000000001 --max-target-seqs 1"
             ]
-
+            start_ec_diamond = clock()
             with open(os.path.splitext(Input_FName)[0] + "_EC_Diamond.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_EC_Diamond")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_EC_Diamond_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_EC_Diamond_OUT")    
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_EC_Diamond))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_EC_Diamond = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_EC_Diamond.pbs", "-W", "depend=afterok:" + JobID_EC_Preprocess.strip("\n")])
+            end_ec_diamond = clock()
 
             # EC Annotation Compile
             COMMANDS_EC_Postprocess = [
             Python + " " + EC_Annotation_Post + " " + Input_Filepath + "_proteins.faa" + " " + EC_Output
             #Produce_Table
             ]
-
+            
+            start_ec_annotation = clock()
             with open(os.path.splitext(Input_FName)[0] + "_EC_Postprocess.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_EC_Postprocess")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_EC_Postprocess_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_EC_Postprocess_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_EC_Postprocess))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_EC_Postprocess = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_EC_Postprocess.pbs", "-W", "depend=afterok:" + JobID_Combine_Detect.strip("\n") + ":" + JobID_PRIAM.strip("\n") + ":" + JobID_EC_Diamond.strip("\n")])
-
+            end_ec_annotation = clock()
+            
             # Network Generation
             COMMANDS_Network = [
             Python + " " + RPKM + " " + Nodes + " " + Input_Filepath + "_WEVOTEOut.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + os.path.join(Input_Filepath + "_EC_Annotation", "Output", "Consolidated", os.path.splitext(Input_FName)[0] + "_proteins.ECs_All") + " " + Input_Filepath + "_RPKM.tsv" + " " + Input_Filepath + "_Cytoscape.tsv"
             ]
-
+            
+            start_network_generation = clock()
             with open(os.path.splitext(Input_FName)[0] + "_Network.pbs", "w") as PBS_script_out:
                 for line in PBS_Submit_LowMem.splitlines():
                     if "NAME" in line:
                         line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Network")
+                    if "ERROR" in line:
+                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Network_ERR")
+                    if "OUTPUT" in line:
+                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Network_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(COMMANDS_Network))
                         break
                     PBS_script_out.write(line + "\n")
             JobID_Network = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Network.pbs", "-W", "depend=afterok:" + JobID_EC_Postprocess.strip("\n") + ":" + JobID_Classify.strip("\n")])
             Network_list.append(JobID_Network.strip("\n"))
-
+            end_network_generation = clock()
+           
     if len(file_list) > 1:
         os.chdir(output_folder)
         Input_Filepath = os.path.join(output_folder, os.path.splitext(os.path.basename(file_list[0]))[0])[:-11]
@@ -674,13 +851,50 @@ for genome in sorted(os.listdir(input_folder)):
         "cat " + os.path.join(Input_Filepath + "*/*_EC_Annotation", "Output", "Consolidated", "*_proteins.ECs_All") + " > " + Input_Filepath + "_proteins.ECs_All",
         Python + " " + RPKM + " " + Nodes + " " + Input_Filepath + "_WEVOTEOut.tsv" + " " + Input_Filepath + "_gene_map.tsv" + " " + Input_Filepath + "_proteins.ECs_All" + " " + Input_Filepath + "_RPKM.tsv" + " " + Input_Filepath + "_Cytoscape.tsv"
         ]
-
+        start_wevote = clock()
         with open(os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "w") as PBS_script_out:
             for line in PBS_Submit_LowMem.splitlines():
                 if "NAME" in line:
                     line = line.replace("NAME", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join")
+                if "ERROR" in line:
+                    line = line.replace("ERROR", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join_ERR")
+                if "OUTPUT" in line:
+                    line = line.replace("OUTPUT", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join_OUT")
                 if "COMMANDS" in line:
                     PBS_script_out.write("\n".join(COMMANDS_Join))
                     break
                 PBS_script_out.write(line + "\n")
         JobID_Join = subprocess.check_output(["qsub", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "-W", "depend=afterok:" + ":".join(Network_list)])
+        end_wevote = clock()
+        
+end_all = clock()       
+print "Meta transcriptnomics pipeline"
+print "====================================="
+print "total runtime:", end_all - start_all, "s"
+print "file splitter time:", end_file_splitter_call_time - start_file_splitter_call_time, "s"
+print "file joiner time:", end_file_joiner - start_file_joiner, "s"
+print "second file joiner time:", end_secondary_file_joiner - start_secondary_file_joiner, "s"
+print "large preprocessing time:", end_giant_preprocess - start_giant_preprocess, "s"
+print "infernal time:", end_infernal_stage - start_infernal_stage, "s"
+print "combine_0 time:", end_combine_0 - start_combine_0, "s"
+print "qalter time 0:", end_qalter_0 - start_qalter_0, "s"
+print "transcript assembly time:", end_transcript_assembly - start_transcript_assembly, "s"
+print "BWA annotation:", end_protein_bwa_annotation - start_protein_bwa_annotation, "s"
+print "BLAT annotation 0:", end_protein_blat_annotation_0 - start_protein_blat_annotation_0, "s"
+print "BLAT annotation 1:", end_protein_blat_annotation_1 - start_protein_blat_annotation_1, "s"
+print "BLAT annotation 2:", end_protein_blat_annotation_2 - start_protein_blat_annotation_2, "s"
+print "BLAT annotation 3:", end_protein_blat_annotation_3 - start_protein_blat_annotation_3, "s"
+print "BLAT post process:", end_blat_pp - start_blat_pp, "s"
+print "DIAMOND annotation 0:", end_protein_diamond_annotation_0 - start_protein_diamond_annotation_0, "s"
+print "DIAMOND annotation 1:", end_protein_diamond_annotation_1 - start_protein_diamond_annotation_1, "s"
+print "DIAMOND annotation 2:", end_protein_diamond_annotation_2 - start_protein_diamond_annotation_2, "s"
+print "DIAMOND annotation 3:", end_protein_diamond_annotation_3 - start_protein_diamond_annotation_3, "s"
+print "DIAMOND post process:", end_diamond_pp - start_diamond_pp, "s"
+print "Classification:", end_classification - start_classification, "s"
+print "EC prep:", end_ec_prep - start_ec_prep, "s"
+print "EC detect:", end_ec_detect - start_ec_detect, "s"
+print "EC combine:", end_ec_combine - start_ec_combine, "s"
+print "EC qalter:", end_ec_qalter - start_ec_qalter, "s"
+print "EC annotation:", end_ec_annotation - start_ec_annotation, "s"
+print "Network generation:", end_network_generation - start_network_generation, "s"
+print "WEVOTE:", end_wevote - start_wevote, "s"

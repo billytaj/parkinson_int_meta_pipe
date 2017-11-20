@@ -9,6 +9,9 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import re
 from collections import Counter
+from time import clock as clock
+
+start_all = clock()
 
 DNA_DB = sys.argv[1]
 contig2read_file = sys.argv[2]
@@ -148,3 +151,8 @@ with open(gene2read_file, "w") as out_map:
                     out_map.write("\n")
 
 print "Reads mapped to %d genes." % (len(genes))
+
+end_all = clock()
+print "Map read gene BWA"
+print "=================================" 
+print "total run time:", end_all - start_all, "s"
