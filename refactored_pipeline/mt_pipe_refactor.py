@@ -69,15 +69,15 @@ def create_pbs_job(job_name, input_file_name, command, mode = low):
     else:
         pbs_template = PBS_Submit_LowMem
     
-    with open(os.path.splitext(Input_FName)[0] + real_suffix + ".pbs", "w") as PBS_script_out:
+    with open(os.path.splitext(Input_FName)[0] + "pbs_jobs/" + real_suffix + ".pbs", "w") as PBS_script_out:
         
         for line in pbs_template.splitlines():
             if "NAME" in line:
                 line = line.replace("NAME", os.path.splitext(Input_FName)[0] + real_suffix)
             if "ERROR" in line:
-                line = line.replace("NAME", os.path.splitext(Input_FName)[0] + real_suffix + "_ERR")
+                line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + real_suffix + "_ERR")
             if "OUTPUT" in line:
-                line = line.replace("NAME", os.path.splitext(Input_FName)[0] + real_suffix + "_OUT")
+                line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + real_suffix + "_OUT")
             if "COMMANDS" in line:
                 PBS_script_out.write("\n".join(command))
                 break
@@ -87,6 +87,7 @@ def create_pbs_job(job_name, input_file_name, command, mode = low):
 
 
 def main(input_folder, output_folder):
+    
     for genome in sorted(os.listdir(input_folder)):
         file_list = []
         Network_list = []
