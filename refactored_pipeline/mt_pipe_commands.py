@@ -447,5 +447,7 @@ class mt_pipe_commands:
         cat_EC,
         get_RPKM
         ]
+        
+        return COMMANDS_Join
                         
                     
