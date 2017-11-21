@@ -94,6 +94,19 @@ def main(input_folder, output_folder):
     file_list = []
     Network_list = []
     #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.  
+    raw_genome_path = input_folder + "/raw_genome/"
+    if not os.path.exists(raw_genome_path):
+        print("No genomes found.  to use pipeline, please place fastq file at:", raw_genome_path)
+        os.makedirs(raw_genome_path)
+        sys.exit()
+    else:
+        # folder found.  now see if it's single-ended or paired
+        genome_file_count = len(os.listdir(raw_genome_path))
+        print("number of files:", genome_file_count)
+        
+        
+    sys.exit()
+"""    
     if genome.endswith("1.fastq"):
         genome_name = os.path.splitext(genome)[0][:-1]
         line_count = 0
@@ -102,34 +115,7 @@ def main(input_folder, output_folder):
                 line_count += 1
         file_list = []
         if line_count/4 > 2000000:
-            try:
-                os.mkdir(os.path.join(input_folder, genome_name))
-            except:
-                pass
-            #splits the genome file.  but is there any other reason besides mem constraints?
-            #if not, then this is a bad way to split
-            subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome), os.path.join(input_folder, genome_name)])
-            subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome_name + "2.fastq"), os.path.join(input_folder, genome_name)])
-            for genome_split in os.listdir(os.path.join(input_folder, genome_name)):
-                if genome_split.endswith("_1.fastq"):
-                    name = os.path.join(input_folder,  genome_name, genome_split[:-7])
-                    if name not in file_list:
-                        file_list.append(name)
-                elif genome_split.endswith("_2.fastq"):
-                    continue
-                else:
-                    try:
-                        prefix = genome_split.split("_split_")[0]
-                        renamed = prefix[:-1] + "_split_" + genome_split.split("_split_")[1]
-                        renamed_full = os.path.join(input_folder,  genome_name, os.path.splitext(renamed)[0] + "_")
-                        if prefix.endswith("1"):
-                            os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "1.fastq")
-                            if renamed_full not in file_list:
-                                file_list.append(os.path.join(input_folder,  genome_name, os.path.splitext(renamed)[0] + "_"))
-                        elif prefix.endswith("2"):
-                            os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "2.fastq")
-                    except:
-                        pass
+            (1)
         else:
             file_list.append(os.path.join(input_folder, genome_name))
         for item in file_list:
@@ -344,11 +330,9 @@ def main(input_folder, output_folder):
         
         if(run_jobs):
             JobID_Join = subprocess.check_output(["qsub", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "-W", "depend=afterok:" + ":".join(Network_list)])
-                
+"""                
 
 if __name__ == "__main__":
     input_folder = sys.argv[1]
     output_folder = sys.argv[2]
-
-    print "Remember to run " + Sort_Reads + " on your reads before running this pipeline."
-    main(input_folder, output_folder)                
+    main(input_folder, output_folder)

@@ -1,0 +1,31 @@
+dumping ground
+
+(1)
+try:
+                os.mkdir(os.path.join(input_folder, genome_name))
+            except:
+                pass
+            #splits the genome file.  but is there any other reason besides mem constraints?
+            #if not, then this is a bad way to split
+            subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome), os.path.join(input_folder, genome_name)])
+            subprocess.call([Python, File_splitter, "2000000", os.path.join(input_folder, genome_name + "2.fastq"), os.path.join(input_folder, genome_name)])
+            for genome_split in os.listdir(os.path.join(input_folder, genome_name)):
+                if genome_split.endswith("_1.fastq"):
+                    name = os.path.join(input_folder,  genome_name, genome_split[:-7])
+                    if name not in file_list:
+                        file_list.append(name)
+                elif genome_split.endswith("_2.fastq"):
+                    continue
+                else:
+                    try:
+                        prefix = genome_split.split("_split_")[0]
+                        renamed = prefix[:-1] + "_split_" + genome_split.split("_split_")[1]
+                        renamed_full = os.path.join(input_folder,  genome_name, os.path.splitext(renamed)[0] + "_")
+                        if prefix.endswith("1"):
+                            os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "1.fastq")
+                            if renamed_full not in file_list:
+                                file_list.append(os.path.join(input_folder,  genome_name, os.path.splitext(renamed)[0] + "_"))
+                        elif prefix.endswith("2"):
+                            os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "2.fastq")
+                    except:
+                        pass

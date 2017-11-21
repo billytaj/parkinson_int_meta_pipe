@@ -14,6 +14,7 @@ import subprocess
 import multiprocessing
 from Bio import SeqIO
 import pandas as pd
+import math as m
 
         
 
@@ -46,12 +47,25 @@ def split_fastq(file_name_in, dir_in, split_count = 4):
     file_base_name = file_name_in.split(".")[0]
     fastq_df = pd.read_csv(file_name_in, header=None, names=[None], sep="\n")
     fastq_df = pd.DataFrame(fastq_df.values.reshape(int(len(fastq_df)/4), 4))
+    #At this point, we've already got the number of reads.
+    chunks = m.ceil(len(fastq_df) / split_count) 
+    print("total df length:", len(fastq_df))
+    print("chunk size:", chunks)
+    if(chunks % 4) != 0:
+        print("WARNING: split setting will not yield even divisions")
+        while((chunks * split_count) < int(len(fastq_df))):
+            chunks += 1
+        print("new compensatory chunk size:", chunks)
+    #sys.exit()
     for i in range(0, split_count):
         print("working on segment :", i+1, "of", split_count)
         if not os.path.exists(dir_in):
             os.makedirs(dir_in)
         new_file_name = dir_in + file_base_name + "_"+str(i) + ".fastq"
-        fastq_df.to_csv(new_file_name, chunksize = int(len(fastq_df) / split_count), index=False, sep='\n', header=False)
+        start_index = int(i * chunks)
+        end_index = int(((i+1) * chunks)-1)
+        print("[", i, "]: start:", start_index, "| end:", end_index)
+        fastq_df.iloc[start_index:end_index, :].to_csv(new_file_name, chunksize = chunks, index=False, sep='\n', header=False)
     
 """
     os.chdir(os.path.dirname(input_file))
@@ -140,4 +154,4 @@ if __name__ == "__main__":
         print("This is a fasta")
     elif(input_extension == "fastq"):
         print("This is a fastq")    
-        split_fastq(input_file, operating_dir + "\\new_dump\\")
+        split_fastq(input_file, operating_dir + "\\new_dump\\", 3)
