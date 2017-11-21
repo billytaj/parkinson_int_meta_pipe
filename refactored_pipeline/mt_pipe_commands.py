@@ -7,7 +7,7 @@ import sys
 import mt_pipe_paths as mpp
 
 class mt_pipe_commands:
-    def __init__ (self, Input_File, self.Quality_score, Thread_count):
+    def __init__ (self, Input_File, Quality_score, Thread_count):
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
         self.Input_File2 = self.Input_Filepath + "2"
