@@ -39,7 +39,7 @@ def write_fasta(fasta_dict, count, mode):
             outfile.write(fasta_dict[seq_id][0] + "\n")
 
 os.chdir(os.path.dirname(input_file))
-
+#split a fastq
 if input_file.endswith("q"):
     read_count = 0
     with open(input_file, "r") as infile:
@@ -78,6 +78,7 @@ if input_file.endswith("q"):
                 line_count += 1
         write_fastq(Temp_sequences, m, "w")
 
+#split a fasta
 elif input_file.endswith("a"):
     prot_count = 0
     with open(input_file, "r") as infile:

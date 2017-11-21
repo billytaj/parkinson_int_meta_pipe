@@ -293,11 +293,10 @@ class mt_pipe_commands:
         COMMANDS_Annotate_Diamond = []
         for i in range(1, count+1):
             tag = "_dmnd_tmp" + str(count)
-            Diamond_command_string = 
-                            "mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
-                            mpp.DIAMOND + " blastx -p " + self.Threads + " -d " + mpp.Prot_DB + " -q " + self.Input_Filepath + "_contigs_n_BWA_BLAT" + ".fasta" + " -o " + self.Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(self.Input_FName)[0] + tag + "-k 10 --id 85 --query-cover 65 --min-score 60",
+            Diamond_command_list = ["mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
+                            mpp.DIAMOND + " blastx -p " + self.Threads + " -d " + mpp.Prot_DB + " -q " + self.Input_Filepath + "_contigs_n_BWA_BLAT" + ".fasta" + " -o " + self.Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(self.Input_FName)[0] + tag + "-k 10 --id 85 --query-cover 65 --min-score 60"]
                             
-            COMMANDS_Annotate_Diamond.append(Diamond_command_string)                
+            COMMANDS_Annotate_Diamond.append(Diamond_command_list)                
         return COMMANDS_Annotate_Diamond
 
 
@@ -365,7 +364,7 @@ class mt_pipe_commands:
             ]
         return COMMANDS_Classify 
 
-    def create_EC_preprocess_command(self)    
+    def create_EC_preprocess_command(self):    
         COMMANDS_EC_Preprocess = [
                         "mkdir -p " + self.EC_Split,
                         "mkdir -p " + self.EC_Output,
