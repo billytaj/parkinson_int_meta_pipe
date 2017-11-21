@@ -58,7 +58,7 @@ export PATH=$NEWPATH
 
 COMMANDS"""
 
-def create_pbs_job(job_name, input_file_name, command, mode = low):
+def create_pbs_job(job_name, input_file_name, command, mode = "low"):
     Input_FName = input_file_name
     real_suffix = "_"+job_name
     pbs_template = ""
@@ -87,6 +87,19 @@ def create_pbs_job(job_name, input_file_name, command, mode = low):
 
 
 def main(input_folder, output_folder):
+    # constants
+    # -----------------------------
+    single_mode = 0
+    double_mode = 1
+
+    # system vars
+    # -------------------------------
+    # operating mode:
+    # 0: single-ended
+    # 1: paired
+    # 2: error
+    operating_mode = 0
+    
     #note: this also needs to support paired and single-ended data
     #input folder is the main location of the dump.
     #
@@ -101,11 +114,20 @@ def main(input_folder, output_folder):
         sys.exit()
     else:
         # folder found.  now see if it's single-ended or paired
+        # for single-ended, have only 1 file.  if doubled, have both files.  Else, stop
         genome_file_count = len(os.listdir(raw_genome_path))
         print("number of files:", genome_file_count)
+        if(genome_file_count == 1):
+            print("OPERATING IN SINGLE-ENDED MODE")
+        elif(genome_file_count == 2):
+            print("OPERATING IN PAIRED-MODE")
+        else:
+            print("Too many genome files here.  Get rid of all non-essentials")
+            sys.exit()
+        
+        operating_mode = genome_file_count - 1
         
         
-    sys.exit()
 """    
     if genome.endswith("1.fastq"):
         genome_name = os.path.splitext(genome)[0][:-1]
