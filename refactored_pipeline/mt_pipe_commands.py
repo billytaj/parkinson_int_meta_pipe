@@ -121,9 +121,10 @@ class mt_pipe_commands:
                     
                     PBS_script_out.write(line + "\n")
                 PBS_script_out.close()
-                
+                dep_str = ""
                 if (isinstance(dependency_list, int)):
                     #single dep
+                    dep_str = "
                 elif(isinstance(dependency_list, list)):
                     # multiple deps
                     
