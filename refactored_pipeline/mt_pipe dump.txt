@@ -29,3 +29,6 @@ try:
                             os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "2.fastq")
                     except:
                         pass
+                        
+                        
+                        

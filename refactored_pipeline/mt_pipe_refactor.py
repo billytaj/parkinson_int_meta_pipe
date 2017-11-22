@@ -13,76 +13,8 @@ Threads = str(multiprocessing.cpu_count())
 
 run_jobs = False
 
-PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=12:00:00
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
 
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=8
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Python27/Python-2.7.12/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
 
-COMMANDS"""
-
-PBS_Submit_HighMem = """#!/bin/bash
-#PBS -l nodes=1:m64g:ppn=16,walltime=12:00:00 -q sandy
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=16
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Python27/Python-2.7.12/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-PBS_Submit_vHighMem = """#!/bin/bash
-#PBS -l nodes=1:m128g:ppn=16,walltime=1:00:00 -q sandy
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=20
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Python27/Python-2.7.12/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-def create_pbs_job(job_name, input_file_name, command, mode = "low"):
-    Input_FName = input_file_name
-    real_suffix = "_"+job_name
-    pbs_template = ""
-    if(mode == "med"):
-        pbs_template = PBS_Submit_HighMem
-    elif(mode == "high"):
-        pbs_template = PBS_Submit_vHighMem
-    else:
-        pbs_template = PBS_Submit_LowMem
-    
-    with open(os.path.splitext(Input_FName)[0] + "pbs_jobs/" + real_suffix + ".pbs", "w") as PBS_script_out:
-        
-        for line in pbs_template.splitlines():
-            if "NAME" in line:
-                line = line.replace("NAME", os.path.splitext(Input_FName)[0] + real_suffix)
-            if "ERROR" in line:
-                line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + real_suffix + "_ERR")
-            if "OUTPUT" in line:
-                line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + real_suffix + "_OUT")
-            if "COMMANDS" in line:
-                PBS_script_out.write("\n".join(command))
-                break
-            
-            PBS_script_out.write(line + "\n")
     
 
 
@@ -127,54 +59,14 @@ def main(input_folder, output_folder):
         
         operating_mode = genome_file_count - 1
         
+        # is the file too big?
+        # split it.
         
-"""    
-    if genome.endswith("1.fastq"):
-        genome_name = os.path.splitext(genome)[0][:-1]
-        line_count = 0
-        with open(os.path.join(input_folder, genome), "r") as counting_file:
-            for line in counting_file:
-                line_count += 1
-        file_list = []
-        if line_count/4 > 2000000:
-            (1)
-        else:
-            file_list.append(os.path.join(input_folder, genome_name))
-        for item in file_list:
-            original = item
-            base_name = os.path.splitext(os.path.basename(item))[0]
-            
-            Input_File = os.path.join(output_folder, base_name, base_name + ".fastq")
-            Input_Filepath = os.path.splitext(Input_File)[0]
-            Input_File1 = Input_Filepath + "1"
-            Input_File2 = Input_Filepath + "2"
-            Input_Path = os.path.dirname(Input_File)
-            Input_FName = os.path.basename(Input_File)
-
-            try:
-                os.chdir(Input_Path)
-            except:
-                os.mkdir(Input_Path)
-                os.chdir(Input_Path)
-            
-            try:
-                os.symlink(original + "1.fastq", os.path.join(output_folder, base_name, base_name + "1.fastq"))
-                os.symlink(original + "2.fastq", os.path.join(output_folder, base_name, base_name + "2.fastq"))
-            except:
-                pass
-            
-            try:
-                File_stats = subprocess.check_output([os.path.join(BBMap_Dir, "testformat.sh"), os.path.join(input_folder, genome_name + "1.fastq")])
-            except:
-                sys.exit("Use module load java before running script")
-            if File_stats.startswith("sanger"):
-                Qual = "33"
-            else:
-                Qual = "64"
-            Length = File_stats.split("\t")[4].split("bp")[0]
-            
-            Host_Contaminants = Input_Filepath + "_host_contaminants_seq.fasta"
-            Vector_Contaminants = Input_Filepath + "_vector_contaminants_seq.fasta"
+        #init a command object, and start making commands
+        command_obj = mpcom.mt_pipe_commands(raw_genome_path, 66, 16)
+        
+        
+"""
             # Preprocessing
             
 
