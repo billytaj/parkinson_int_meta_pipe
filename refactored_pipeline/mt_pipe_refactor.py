@@ -63,9 +63,9 @@ def main(input_folder, output_folder):
         # split it.
         
         #init a command object, and start making commands
-        command_obj = mpcom.mt_pipe_commands(raw_genome_path, 66, 16)
-        
-        
+        comm = mpcom.mt_pipe_commands(os.getcwd(), 66, 16)
+        preprocess_job_id = [comm.create_pbs_and_launch("preprocess", comm.create_pre_command("preprocess"))]
+        comm.create_pbs_and_launch("rRNA_filter", comm.create_
 """
             # Preprocessing
             
@@ -249,4 +249,5 @@ def main(input_folder, output_folder):
 if __name__ == "__main__":
     input_folder = sys.argv[1]
     output_folder = sys.argv[2]
+    os.chdir(output_folder)
     main(input_folder, output_folder)
