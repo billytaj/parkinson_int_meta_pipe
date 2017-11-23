@@ -60,7 +60,13 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Input_File, Quality_score, Thread_count):
+    def __init__(self, raw_genome_path_0, Input_File, Quality_score, Thread_count, raw_genome_path_1 = None):
+        # path to the raw genome sequence file
+        self.raw_genome_path_0 = raw_genome_path 
+        if not(raw_genome_path_1 is None):
+            self.raw_genome_path_1 = raw_genome_path_1
+            
+            
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
         self.Input_File2 = self.Input_Filepath + "2"
@@ -124,32 +130,77 @@ class mt_pipe_commands:
                 dep_str = ""
                 if (isinstance(dependency_list, int)):
                     #single dep
-                    dep_str = "
+                    dep_str = "-W depend=afterok:" + str(dependency_list)
                 elif(isinstance(dependency_list, list)):
                     # multiple deps
-                    
-                job_id = sp.check_output(["qsub", pbs_script_full_path])
+                    dep_str = "-W depend=afterok:"
+                    for item in dependency_list:
+                        dep_str += ":" + str(item)
+                
+                if not dep_str == "":
+                    print("dep string not empty")
+                    job_id = sp.check_output(["qsub", pbs_script_full_path, dep_str])
+                else:
+                    job_id = sp.check_output(["qsub", pbs_script_full_path])
                 return job_id
         except Exception as e:
             # error catchall 
             print("Failure at pbs creation:", e)
             sys.exit()
+    
+    def create_pre_single_command(self, stage_name):
+        subfolder = os.getcwd() + "/" + stage_name
+        if not (os.path.exists(subfolder)):
+            os.makedirs(subfolder)
+        print("not ready")
+        adapter_removal = mpp.AdapterRemoval + "--file1 " + ""
+        COMMANDS_PRE = []
+    
+    def create_pre_double_command(self, stage_name):
+        subfolder = os.getcwd() + "/" + stage_name
+        if not (os.path.exists(subfolder)):
+            os.makedirs(subfolder)
             
-    def create_pre_command(self, stage_name):
-        pre_subfolder = os.getcwd() + "/" + stage_name
-        if not (os.path.exists(pre_subfolder)):
-            os.makedirs(pre_subfolder)
-            
-        adapter_removal_line = mpp.AdapterRemoval + " --file1 " + self.Input_File1 + ".fastq" + " --file2 " + self.Input_File2 + ".fastq" + " --qualitybase " + self.Qual_str + " --threads " + self.Threads_str + " --minlength " + "30" + " --basename " + os.path.splitext(self.Input_FName)[0] + "_AdapterRemoval" + " --trimqualities " + " --output1 " + self.Input_File1 + "_trimmed.fastq" + " --output2 " + self.Input_File2 + "_trimmed.fastq" + " --singleton " + self.Input_Filepath + "_singletons_trimmed.fastq"
+        adapter_removal_line = mpp.AdapterRemoval
+        + " --file1 " + self.raw_genome_path 
+        + " --file2 " + self.raw_genome_path
+        + " --qualitybase " + self.Qual_str
+        + " --threads " + self.Threads_str  
+        + " --minlength " + "30" 
+        + " --basename " + os.path.splitext(self.Input_FName)[0]  
+        + "_AdapterRemoval" 
+        + " --trimqualities "  
+        + " --output1 " + self.Input_File1 + "_trimmed.fastq"  
+        + " --output2 " + self.Input_File2 + "_trimmed.fastq"  
+        + " --singleton " + self.Input_Filepath + "_singletons_trimmed.fastq"
         
-        vsearch_merge = mpp.vsearch + " --fastq_mergepairs " + self.Input_File1 + "_trimmed.fastq" + " --reverse " + self.Input_File2 + "_trimmed.fastq" + " --fastq_ascii " + self.Qual_str + " --fastqout " + self.Input_Filepath + "_overlap_trimmed.fastq" + " --fastqout_notmerged_fwd " + self.Input_File1 + "_paired_trimmed.fastq" + " --fastqout_notmerged_rev " + self.Input_File2 + "_paired_trimmed.fastq"
+        vsearch_merge = mpp.vsearch 
+        + " --fastq_mergepairs " + self.Input_File1 + "_trimmed.fastq" 
+        + " --reverse " + self.Input_File2 + "_trimmed.fastq" 
+        + " --fastq_ascii " + self.Qual_str 
+        + " --fastqout " + self.Input_Filepath + "_overlap_trimmed.fastq" 
+        + " --fastqout_notmerged_fwd " + self.Input_File1 + "_paired_trimmed.fastq" 
+        + " --fastqout_notmerged_rev " + self.Input_File2 + "_paired_trimmed.fastq"
         
         cat_glue = "cat " + self.Input_Filepath + "_overlap_trimmed.fastq" + " " + self.Input_Filepath + "_singletons_trimmed.fastq" + " > " + self.Input_Filepath + "_unpaired_trimmed.fastq"
-        vsearch_filter_0 = mpp.vsearch + " --fastq_filter " + self.Input_Filepath + "_unpaired_trimmed.fastq" + " --fastq_ascii " + self.Qual_str + " --fastq_maxee " + "2.0" + " --fastqout " + self.Input_Filepath + "_unpaired_quality.fastq"
-
-        vsearch_filter_1 = mpp.vsearch + " --fastq_filter " + self.Input_File1 + "_paired_trimmed.fastq" + " --fastq_ascii " + self.Qual_str + " --fastq_maxee " + "2.0" + " --fastqout " + self.Input_File1 + "_quality.fastq"
         
-        vsearch_filter_2 = mpp.vsearch + " --fastq_filter " + self.Input_File2 + "_paired_trimmed.fastq" + " --fastq_ascii " + self.Qual_str + " --fastq_maxee " + "2.0" + " --fastqout " + self.Input_File2 + "_quality.fastq"
+        vsearch_filter_0 = mpp.vsearch 
+        + " --fastq_filter " + self.Input_Filepath + "_unpaired_trimmed.fastq" 
+        + " --fastq_ascii " + self.Qual_str 
+        + " --fastq_maxee " + "2.0" 
+        + " --fastqout " + self.Input_Filepath + "_unpaired_quality.fastq"
+
+        vsearch_filter_1 = mpp.vsearch  
+        + " --fastq_filter " + self.Input_File1 + "_paired_trimmed.fastq" 
+        + " --fastq_ascii " + self.Qual_str 
+        + " --fastq_maxee " + "2.0" 
+        + " --fastqout " + self.Input_File1 + "_quality.fastq"
+        
+        vsearch_filter_2 = mpp.vsearch 
+        + " --fastq_filter " + self.Input_File2 + "_paired_trimmed.fastq" 
+        + " --fastq_ascii " + self.Qual_str 
+        + " --fastq_maxee " + "2.0" 
+        + " --fastqout " + self.Input_File2 + "_quality.fastq"
         
         paired_read_filter = mpp.Python + " " + mpp.Paired_Reads_Filter + " " + self.Input_File1 + "_quality.fastq" + " " + self.Input_File1 + "_paired_quality.fastq" + " " + self.Input_File2 + "_quality.fastq" + " " + self.Input_File2 + "_paired_quality.fastq" + " " + self.Input_Filepath + "_unpaired_quality.fastq"
         
@@ -187,7 +238,10 @@ class mt_pipe_commands:
         
         blat_host_remove_unpaired = mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " " + self.Input_Filepath + "_unpaired_n_BWA_host_contaminants.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " + self.Input_Filepath + "_unpaired_n_host_contaminants.blatout"
         
-        vsearch_unmatched_paired = mpp.vsearch + " --fastq_filter " + self.Input_File1 + "_paired_n_BWA_host_contaminants.fastq" + " --fastq_ascii " + self.Qual_str + " --fastaout " + self.Input_File1 + "_paired_n_BWA_host_contaminants.fasta"
+        vsearch_unmatched_paired = mpp.vsearch 
+        + " --fastq_filter " + self.Input_File1 + "_paired_n_BWA_host_contaminants.fastq" 
+        + " --fastq_ascii " + self.Qual_str 
+        + " --fastaout " + self.Input_File1 + "_paired_n_BWA_host_contaminants.fasta"
         
         blat_host_remove_paired = mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " " + self.Input_File1 + "_paired_n_BWA_host_contaminants.fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " + self.Input_File1 + "_paired_n_host_contaminants.blatout"
         
@@ -307,12 +361,12 @@ class mt_pipe_commands:
                     
                     
                     
-    def create_infernal_command(Input_File, stage_name, qsub_job_id):
-        pre_subfolder = os.getcwd() + "/" + stage_name
-        if not (os.path.exists(pre_subfolder)):
-            os.makedirs(pre_subfolder)
+    def create_infernal_command(self, stage_name):
+        subfolder = os.getcwd() + "/" + stage_name
+        if not (os.path.exists(subfolder)):
+            os.makedirs(subfolder)
         COMMANDS_rRNA = [
-                        "JOBS=$(" + mpp.Python + " " + rRNA_Split_Jobs + " " + Input_File + " " + qsub_job_id.strip("\n") + ");" + "qalter -W depend=afterok:$JOBS $JOB2"
+        "JOBS=$(" + mpp.Python + " " + rRNA_Split_Jobs + " " + self.Input_File
         ]                
         return COMMANDS_rRNA                
 
