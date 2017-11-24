@@ -63,16 +63,16 @@ def main(input_folder, output_folder):
         # split it.
         
         #init a command object, and start making commands
-        sys.exit()
+        #sys.exit()
         
         if(operating_mode == double_mode):
         
-            raw_genome_pair_0_path = raw_genome_path + os.listdir(raw_genome_path)[0]
-            raw_genome_pair_1_path = raw_genome_path + os.listdir(raw_genome_path)[1]
-            comm = mpcom.mt_pipe_commands(raw_genome_pair_0_path, os.getcwd(), 66, 16, raw_genome_path_1 = raw_genome_pair_1_path)
-            
-            preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_command("preprocess"))
-            rRNA_job_id = comm.create_pbs_and_launch("rRNA_filter", comm.create_infernal_command("rRNA_filter"), dependency_list = preprocess_job_id)
+            raw_genome_pair_0_path = raw_genome_path + sorted(os.listdir(raw_genome_path))[0]
+            raw_genome_pair_1_path = raw_genome_path + sorted(os.listdir(raw_genome_path))[1]
+            comm = mpcom.mt_pipe_commands(33, 16, raw_genome_path_0 = raw_genome_pair_0_path, raw_genome_path_1 = raw_genome_pair_1_path)
+            #pre_job = comm.create_pre_double_command("preprocess")
+            preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_double_command("preprocess"), run_job = True)
+            #rRNA_job_id = comm.create_pbs_and_launch("rRNA_filter", comm.create_infernal_command("rRNA_filter"), dependency_list = preprocess_job_id)
         elif(operating_mode == single_mode):
             print("not ready")
 

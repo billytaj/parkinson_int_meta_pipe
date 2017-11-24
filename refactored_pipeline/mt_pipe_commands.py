@@ -60,12 +60,16 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, raw_genome_path_0, Input_File, Quality_score, Thread_count, raw_genome_path_1 = None):
+    def __init__(self, Quality_score, Thread_count, raw_genome_path_0, raw_genome_path_1 = None):
         # path to the raw genome sequence file
-        self.raw_genome_path_0 = raw_genome_path 
+        Input_File = os.getcwd()
+        self.raw_genome_path_0 = raw_genome_path_0
+        print("raw genome 0:", self.raw_genome_path_0)
+
         if not(raw_genome_path_1 is None):
             self.raw_genome_path_1 = raw_genome_path_1
-            
+            print("raw genome 1:", self.raw_genome_path_1)
+        
             
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
@@ -81,6 +85,8 @@ class mt_pipe_commands:
         self.Host_Contaminants = self.Input_Filepath + "_host_contaminents_seq.fasta"
         self.Vector_Contaminants = self.Input_Filepath + "_vector_contaminants_seq.fasta"
         
+        
+        
         print("input filepath:", self.Input_Filepath)
         print("input file 1:", self.Input_File1)
         print("input file 2:", self.Input_File2)
@@ -93,7 +99,7 @@ class mt_pipe_commands:
     #def make_stage_dir(self, stage_name):
     #    if not(os.path.exists(self.)):
     
-    def create_pbs_and_launch(self, job_name, command_list, mode = "low", dependency_list = None):
+    def create_pbs_and_launch(self, job_name, command_list, mode = "low", dependency_list = None, run_job = False):
         #create the pbs job, and launch items
         #job name: string tag for export file name
         #command list:  list of command statements for writing
@@ -116,11 +122,11 @@ class mt_pipe_commands:
             with open(pbs_script_full_path, "w+") as PBS_script_out:
                 for line in pbs_template.splitlines():
                     if "NAME" in line:
-                        line = line.replace("NAME", os.path.splitext(self.Input_FName)[0] + real_suffix)
+                        line = line.replace("NAME", pbs_script_full_path + real_suffix)
                     if "ERROR" in line:
-                        line = line.replace("ERROR", os.path.splitext(self.Input_FName)[0] + real_suffix + "_ERR")
+                        line = line.replace("ERROR", pbs_script_full_path + real_suffix + "_ERR")
                     if "OUTPUT" in line:
-                        line = line.replace("OUTPUT", os.path.splitext(self.Input_FName)[0] + real_suffix + "_OUT")
+                        line = line.replace("OUTPUT", pbs_script_full_path + real_suffix + "_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(command_list))
                         break
@@ -136,22 +142,29 @@ class mt_pipe_commands:
                     dep_str = "-W depend=afterok:"
                     for item in dependency_list:
                         dep_str += ":" + str(item)
-                
-                if not dep_str == "":
-                    print("dep string not empty")
-                    job_id = sp.check_output(["qsub", pbs_script_full_path, dep_str])
+                if(run_job):
+                    if not dep_str == "":
+                        print("dep string not empty")
+                        job_id = sp.check_output(["qsub", pbs_script_full_path, dep_str])
+                    else:
+                        job_id = sp.check_output(["qsub", pbs_script_full_path])
+                    return job_id
                 else:
-                    job_id = sp.check_output(["qsub", pbs_script_full_path])
-                return job_id
+                    return 0
+                
+                
         except Exception as e:
             # error catchall 
             print("Failure at pbs creation:", e)
             sys.exit()
     
     def create_pre_single_command(self, stage_name):
-        subfolder = os.getcwd() + "/" + stage_name
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
         if not (os.path.exists(subfolder)):
             os.makedirs(subfolder)
+        if not(os.path.exists(data_folder)):
+            os.makedirs(data_folder)
         print("not ready")
         adapter_removal = mpp.AdapterRemoval + "--file1 " + ""
         COMMANDS_PRE = []
@@ -160,30 +173,34 @@ class mt_pipe_commands:
         subfolder = os.getcwd() + "/" + stage_name
         if not (os.path.exists(subfolder)):
             os.makedirs(subfolder)
-            
-        adapter_removal_line = mpp.AdapterRemoval
-        + " --file1 " + self.raw_genome_path 
-        + " --file2 " + self.raw_genome_path
-        + " --qualitybase " + self.Qual_str
-        + " --threads " + self.Threads_str  
-        + " --minlength " + "30" 
-        + " --basename " + os.path.splitext(self.Input_FName)[0]  
-        + "_AdapterRemoval" 
-        + " --trimqualities "  
-        + " --output1 " + self.Input_File1 + "_trimmed.fastq"  
-        + " --output2 " + self.Input_File2 + "_trimmed.fastq"  
-        + " --singleton " + self.Input_Filepath + "_singletons_trimmed.fastq"
+        adapter_removal_line = mpp.AdapterRemoval 
+        adapter_removal_line += " --file1 " + self.raw_genome_path_0
+        adapter_removal_line += " --file2 " + str(self.raw_genome_path_1)
+        adapter_removal_line += " --qualitybase " + str(self.Qual_str) #must be either 33 or 64
+        adapter_removal_line += " --threads " + self.Threads_str  
+        adapter_removal_line += " --minlength " + "30" 
+        adapter_removal_line += " --basename " + data_folder  + os.path.splitext(self.Input_FName)[0]  
+        adapter_removal_line += "_AdapterRemoval" 
+        adapter_removal_line += " --trimqualities "  
+        adapter_removal_line += " --output1 " + data_folder + "pair_1_adptr_rem.fastq"  
+        adapter_removal_line += " --output2 " + data_folder + "pair_2_adptr_rem.fastq"  
+        adapter_removal_line += " --singleton " + data_folder + "singletons_adptr_rem.fastq"
         
+        # tries to merge the cleaned pairs
+        # rejects get sent out
         vsearch_merge = mpp.vsearch 
-        + " --fastq_mergepairs " + self.Input_File1 + "_trimmed.fastq" 
-        + " --reverse " + self.Input_File2 + "_trimmed.fastq" 
-        + " --fastq_ascii " + self.Qual_str 
-        + " --fastqout " + self.Input_Filepath + "_overlap_trimmed.fastq" 
-        + " --fastqout_notmerged_fwd " + self.Input_File1 + "_paired_trimmed.fastq" 
-        + " --fastqout_notmerged_rev " + self.Input_File2 + "_paired_trimmed.fastq"
+        vsearch_merge += " --fastq_mergepairs " + data_folder + "pair_1_adptr_rem.fastq" 
+        vsearch_merge += " --reverse " + data_folder + "pair_2_adptr_rem.fastq" 
+        vsearch_merge += " --fastq_ascii " + str(self.Qual_str) 
+        vsearch_merge += " --fastqout " + data_folder + "merge_success.fastq" 
+        vsearch_merge += " --fastqout_notmerged_fwd " + data_folder + "pair_1_merge_reject.fastq" 
+        vsearch_merge += " --fastqout_notmerged_rev " + data_folder + "pair_2_merge_reject.fastq"
         
-        cat_glue = "cat " + self.Input_Filepath + "_overlap_trimmed.fastq" + " " + self.Input_Filepath + "_singletons_trimmed.fastq" + " > " + self.Input_Filepath + "_unpaired_trimmed.fastq"
+        # concatenate the merge overlaps with the singletons
+        cat_glue = "cat " + data_folder + "merge_success.fastq" + " " + data_folder + "singletons_adptr_rem.fastq" + " > " + data_folder + "unpaired_trimmed.fastq"
         
+        """
+        #Filter out low-quality reads
         vsearch_filter_0 = mpp.vsearch 
         + " --fastq_filter " + self.Input_Filepath + "_unpaired_trimmed.fastq" 
         + " --fastq_ascii " + self.Qual_str 
@@ -292,70 +309,70 @@ class mt_pipe_commands:
         file_splitter_1 = mpp.Python + " " + mpp.File_splitter + " " + "10000" + " " + self.Input_File1 + "_paired_n_contaminants.fastq" + " " + os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants"
         
         file_splitter_2 = mpp.Python + " " + mpp.File_splitter + " " + "10000" + " " + self.Input_File2 + "_paired_n_contaminants.fastq" + " " + os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants"
-        
+        """
         COMMANDS_Pre = [
             # remove adapters
-            adapter_removal_line,
+            adapter_removal_line#,
             #trim things
-            vsearch_merge,
-            cat_glue,
-            vsearch_filter_0,
-            vsearch_filter_1,
-            vsearch_filter_2,
-            paired_read_filter,
-            cdhit_unpaired,
-            move_unpaired_cluster,
-            cdhit_paired,
-            move_paired_cluster,
-            copy_host,
-            bwa_host_remove_prep,
-            # SAMTOOLS makes bam files
-            samtools_host_remove_prep,
-            bwa_host_remove_unpaired,
-            samtools_host_unpaired_sam_to_bam,
-            samtools_host_unmatched_unpaired_fastq_to_bam,
-            samtools_host_unpaired_fastq_to_bam,
-            bwa_host_remove_paired,
-            samtools_host_paired_0,
-            samtools_host_paired_1,
-            samtools_host_paired_2,
-            make_blast_db_host,
-            vsearch_unmatched_unpaired,
-            blat_host_remove_unpaired,
-            vsearch_unmatched_paired,
-            blat_host_remove_paired,
-            blat_containment_host_unpaired,
-            blat_containment_host_paired_1,
-            blat_containment_host_paired_2,
-            copy_vector,
-            bwa_vector_remove_prep,
-            samtools_vector_remove_prep,
-            bwa_vector_remove_unpaired,
-            samtools_unpaired_vector_remove_0,
-            samtools_unpaired_vector_remove_1,
-            samtools_unpaired_vector_remove_2,
-            bwa_vector_remove_paired,
-            samtools_paired_vector_remove_0,
-            samtools_paired_vector_remove_1,
-            samtools_paired_vector_remove_2,
+            # vsearch_merge,
+            # cat_glue,
+            # vsearch_filter_0,
+            # vsearch_filter_1,
+            # vsearch_filter_2,
+            # paired_read_filter,
+            # cdhit_unpaired,
+            # move_unpaired_cluster,
+            # cdhit_paired,
+            # move_paired_cluster,
+            # copy_host,
+            # bwa_host_remove_prep,
+            # # SAMTOOLS makes bam files
+            # samtools_host_remove_prep,
+            # bwa_host_remove_unpaired,
+            # samtools_host_unpaired_sam_to_bam,
+            # samtools_host_unmatched_unpaired_fastq_to_bam,
+            # samtools_host_unpaired_fastq_to_bam,
+            # bwa_host_remove_paired,
+            # samtools_host_paired_0,
+            # samtools_host_paired_1,
+            # samtools_host_paired_2,
+            # make_blast_db_host,
+            # vsearch_unmatched_unpaired,
+            # blat_host_remove_unpaired,
+            # vsearch_unmatched_paired,
+            # blat_host_remove_paired,
+            # blat_containment_host_unpaired,
+            # blat_containment_host_paired_1,
+            # blat_containment_host_paired_2,
+            # copy_vector,
+            # bwa_vector_remove_prep,
+            # samtools_vector_remove_prep,
+            # bwa_vector_remove_unpaired,
+            # samtools_unpaired_vector_remove_0,
+            # samtools_unpaired_vector_remove_1,
+            # samtools_unpaired_vector_remove_2,
+            # bwa_vector_remove_paired,
+            # samtools_paired_vector_remove_0,
+            # samtools_paired_vector_remove_1,
+            # samtools_paired_vector_remove_2,
             
-            make_blast_db_vector, 
+            # make_blast_db_vector, 
             
-            vsearch_unpaired_vector_remove,
-            blat_unpaired_vector_remove,
-            vsearch_paired_vector_remove,
-            blat_paired_vector_remove,
+            # vsearch_unpaired_vector_remove,
+            # blat_unpaired_vector_remove,
+            # vsearch_paired_vector_remove,
+            # blat_paired_vector_remove,
             
-            blat_containment_vector_unpaired,
-            blat_containment_vector_paired_1,
-            blat_containment_vector_paired_2,
+            # blat_containment_vector_unpaired,
+            # blat_containment_vector_paired_1,
+            # blat_containment_vector_paired_2,
             
             
-            "mkdir -p " + os.path.splitext(self.Input_FName)[0] + "_unpaired_n_contaminants",
-            "mkdir -p " + os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants",
-            file_splitter_0,
-            file_splitter_1,
-            file_splitter_2
+            # "mkdir -p " + os.path.splitext(self.Input_FName)[0] + "_unpaired_n_contaminants",
+            # "mkdir -p " + os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants",
+            # file_splitter_0,
+            # file_splitter_1,
+            # file_splitter_2
         ]
         return COMMANDS_Pre            
                     
@@ -629,4 +646,5 @@ class mt_pipe_commands:
         
         return COMMANDS_Join
                         
+                    
                     
