@@ -14,10 +14,10 @@ PBS_Submit_LowMem = """#!/bin/bash
 #PBS -e ERROR
 #PBS -o OUTPUT
 
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
+module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
 cd $PBS_O_WORKDIR
 export OMP_NUM_THREADS=8
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Python27/Python-2.7.12/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
+OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
 NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
 export PATH=$NEWPATH
 
@@ -29,10 +29,10 @@ PBS_Submit_HighMem = """#!/bin/bash
 #PBS -e ERROR
 #PBS -o OUTPUT
 
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
+module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
 cd $PBS_O_WORKDIR
 export OMP_NUM_THREADS=16
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Python27/Python-2.7.12/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
+OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
 NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
 export PATH=$NEWPATH
 
@@ -44,10 +44,10 @@ PBS_Submit_vHighMem = """#!/bin/bash
 #PBS -e ERROR
 #PBS -o OUTPUT
 
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras python
+module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
 cd $PBS_O_WORKDIR
 export OMP_NUM_THREADS=20
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Python27/Python-2.7.12/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
+OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
 NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
 export PATH=$NEWPATH
 
@@ -170,6 +170,8 @@ class mt_pipe_commands:
         COMMANDS_PRE = []
     
     def create_pre_double_command(self, stage_name):
+        #why do we leave all the interim files intact?
+        #because science needs repeatable data, and the process needs to be able to start at any point
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         if not (os.path.exists(subfolder)):
@@ -210,69 +212,87 @@ class mt_pipe_commands:
         vsearch_filter_0 += " --fastq_filter " + data_folder + "unpaired_trimmed.fastq" 
         vsearch_filter_0 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_0 += " --fastq_maxee " + "2.0" 
-        vsearch_filter_0 += " --fastqout " + data_folder + "unpaired_clean.fastq"
+        vsearch_filter_0 += " --fastqout " + data_folder + "unpaired_hq.fastq"
         
         #then move onto the standalones in pair 1
         vsearch_filter_1 = mpp.vsearch  
         vsearch_filter_1 += " --fastq_filter " + data_folder + "pair_1_merge_reject.fastq" 
         vsearch_filter_1 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_1 += " --fastq_maxee " + "2.0" 
-        vsearch_filter_1 += " --fastqout " + data_folder + "pair_1_clean.fastq"
+        vsearch_filter_1 += " --fastqout " + data_folder + "pair_1_hq.fastq"
         
         vsearch_filter_2 = mpp.vsearch 
         vsearch_filter_2 += " --fastq_filter " + data_folder + "pair_2_merge_reject.fastq" 
         vsearch_filter_2 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_2 += " --fastq_maxee " + "2.0" 
-        vsearch_filter_2 += " --fastqout " + data_folder + "pair_2_clean.fastq"
+        vsearch_filter_2 += " --fastqout " + data_folder + "pair_2_hq.fastq"
         
-        """
-        paired_read_filter = mpp.Python + " " 
-        paired_read_filter += mpp.Paired_Reads_Filter + " " 
-        paired_read_filter += data_folder + "pair_1_clean.fastq " 
-        paired_read_filter += self.Input_File1 + "_paired_quality.fastq " 
-        paired_read_filter += data_folder + "pair_2_clean.fastq " 
-        paired_read_filter += self.Input_File2 + "_paired_quality.fastq "
-        paired_read_filter += self.Input_Filepath + "_unpaired_quality.fastq"
+        #redistribute data into orphans, or paired-reads
+        orphan_read_filter = mpp.Python + " " 
+        orphan_read_filter += mpp.orphaned_read_filter + " " 
+        orphan_read_filter += data_folder + "pair_1_hq.fastq " 
+        orphan_read_filter += data_folder + "pair_2_hq.fastq " 
+        orphan_read_filter += data_folder + "pair_1_match.fastq " 
+        orphan_read_filter += data_folder + "pair_2_match.fastq "
+        orphan_read_filter += data_folder + "orphans.fastq"
         
+        #remove duplicates (to shrink the data size)
         
         cdhit_unpaired = mpp.cdhit_dup + " -i " 
-        cdhit_unpaired += self.Input_Filepath + "_unpaired_quality.fastq" 
-        cdhit_unpaired += " -o " + self.Input_Filepath + "_unpaired_unique.fastq"
+        cdhit_unpaired += data_folder + "orphans.fastq" 
+        cdhit_unpaired += " -o " + data_folder + "orphans_unique.fastq"
         
-        move_unpaired_cluster = "mv " 
-        move_unpaired_cluster += self.Input_Filepath + "_unpaired_unique.fastq.clstr " 
-        move_unpaired_cluster += self.Input_Filepath + "_unpaired.clstr"
         
-        cdhit_paired = mpp.cdhit_dup + " -i " 
-        cdhit_paired += self.Input_File1 + "_paired_quality.fastq" + " -i2 " 
-        cdhit_paired += self.Input_File2 + "_paired_quality.fastq" + " -o " 
-        cdhit_paired += self.Input_File1 + "_paired_unique.fastq" + " -o2 " 
-        cdhit_paired +=  self.Input_File2 + "_paired_unique.fastq"
+        #move_unpaired_cluster = "mv " 
+        #move_unpaired_cluster += self.Input_Filepath + "_unpaired_unique.fastq.clstr " 
+        #move_unpaired_cluster += self.Input_Filepath + "_unpaired.clstr"
         
-        move_paired_cluster = "mv " + self.Input_File1 + "_paired_unique.fastq.clstr" + " " + self.Input_Filepath + "_paired.clstr"
+        #remove duplicates in the pairs
+        cdhit_paired = mpp.cdhit_dup  
+        cdhit_paired += " -i " + data_folder + "pair_1_match.fastq"  
+        cdhit_paired += " -i2 " + data_folder + "pair_2_match.fastq"   
+        cdhit_paired += " -o " + data_folder + "pair_1_unique.fastq" 
+        cdhit_paired += " -o2 " + self.Input_File2 + "pair_2_unique.fastq"
         
+        #move_paired_cluster = "mv " + self.Input_File1 + "_paired_unique.fastq.clstr" + " " + self.Input_Filepath + "_paired.clstr"
+        
+        self.Host_Contaminants = data_folder + "host_contaminents_seq.fasta"
         copy_host = "cp " + mpp.Host + " " + self.Host_Contaminants
         
+        #craft a BWA index for the host sequences
         bwa_host_remove_prep = mpp.BWA + " index -a bwtsw " + self.Host_Contaminants
         
         samtools_host_remove_prep = mpp.SAMTOOLS + " faidx " + self.Host_Contaminants
         
+        #host removal on unique orphans
         bwa_host_remove_unpaired = mpp.BWA + " mem -t " 
         bwa_host_remove_unpaired += self.Threads_str + " " 
         bwa_host_remove_unpaired += self.Host_Contaminants + " " 
-        bwa_host_remove_unpaired += self.Input_Filepath + "_unpaired_unique.fastq" 
-        bwa_host_remove_unpaired += " > " + self.Input_Filepath + "_unpaired_host_contaminants.sam"
+        bwa_host_remove_unpaired += data_folder + "orphans_unique.fastq" 
+        bwa_host_remove_unpaired += " > " + data_folder + "orphans_no_host.sam"
         
-        samtools_host_unpaired_sam_to_bam = mpp.SAMTOOLS + " view -bS " + self.Input_Filepath + "_unpaired_host_contaminants.sam" + " > " + self.Input_Filepath + "_unpaired_host_contaminants.bam"
+        #annoying type conversion pt 1
+        samtools_host_unpaired_sam_to_bam = mpp.SAMTOOLS 
+        samtools_host_unpaired_sam_to_bam += " view -bS " + data_folder + "orphans_no_host.sam" 
+        samtools_host_unpaired_sam_to_bam += " > " + data_folder + "orphans_no_host.bam"
+        #annoying type conversion pt 2
+        samtools_orphan_fastq_to_bam = mpp.SAMTOOLS 
+        samtools_orphan_fastq_to_bam += " fastq -n -f 4" + " -0 " + data_folder + "orphans_no_host.fastq" + " "  
+        samtools_orphan_fastq_to_bam += data_folder + "orphans_no_host.bam"
+        #Left in error?
+        #samtools_host_unpaired_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -F 4" + " -0 " + self.Input_Filepath + "_unpaired_host_contaminants.fastq" + " " + self.Input_Filepath + "_unpaired_host_contaminants.bam"
         
-        samtools_host_unmatched_unpaired_fastq_to_bam = mpp.SAMTOOLS + " fastq -n -f 4" + " -0 " + self.Input_Filepath + "_unpaired_n_BWA_host_contaminants.fastq" + " " + self.Input_Filepath + "_unpaired_host_contaminants.bam"
+        #host-remove the rest
+        bwa_host_remove_paired = mpp.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " 
+        bwa_host_remove_paired += data_folder + "pair_1_unique.fastq" + " " 
+        bwa_host_remove_paired += data_folder+ "pair_2_unique.fastq" 
+        bwa_host_remove_paired += " > " + data_folder + "pair_no_host.sam"
         
-        samtools_host_unpaired_fastq_to_bam = mpp.SAMTOOLS + " fastq -n -F 4" + " -0 " + self.Input_Filepath + "_unpaired_host_contaminants.fastq" + " " + self.Input_Filepath + "_unpaired_host_contaminants.bam"
-        
-        bwa_host_remove_paired = mpp.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " + self.Input_File1 + "_paired_unique.fastq" + " " + self.Input_File2 + "_paired_unique.fastq" + " > " + self.Input_Filepath + "_paired_host_contaminants.sam"
-        
+        """
         samtools_host_paired_0 = mpp.SAMTOOLS + " view -bS " + self.Input_Filepath + "_paired_host_contaminants.sam" + " > " + self.Input_Filepath + "_paired_host_contaminants.bam"
+        
         samtools_host_paired_1 = mpp.SAMTOOLS + " fastq -n -f 13" + " -1 " + self.Input_File1 + "_paired_n_BWA_host_contaminants.fastq" + " -2 " + self.Input_File2 + "_paired_n_BWA_host_contaminants.fastq" + " " + self.Input_Filepath + "_paired_host_contaminants.bam"
+        
         samtools_host_paired_2 = mpp.SAMTOOLS + " fastq -n -F 4" + " -1 " + self.Input_File1 + "_paired_host_contaminants.fastq" + " -2 " + self.Input_File2 + "_paired_host_contaminants.fastq" + " " + self.Input_Filepath + "_paired_host_contaminants.bam"
         
         make_blast_db_host = mpp.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
@@ -344,18 +364,18 @@ class mt_pipe_commands:
             cat_glue,
             vsearch_filter_0,
             vsearch_filter_1,
-            vsearch_filter_2#,
-            #paired_read_filter,
-            # cdhit_unpaired,
+            vsearch_filter_2,
+            orphan_read_filter,
+            cdhit_unpaired,
             # move_unpaired_cluster,
-            # cdhit_paired,
+            cdhit_paired,
             # move_paired_cluster,
-            # copy_host,
-            # bwa_host_remove_prep,
+            copy_host,
+            bwa_host_remove_prep,
             # # SAMTOOLS makes bam files
-            # samtools_host_remove_prep,
-            # bwa_host_remove_unpaired,
-            # samtools_host_unpaired_sam_to_bam,
+            samtools_host_remove_prep,
+            bwa_host_remove_unpaired,
+            samtools_orphan_fastq_to_bam#,
             # samtools_host_unmatched_unpaired_fastq_to_bam,
             # samtools_host_unpaired_fastq_to_bam,
             # bwa_host_remove_paired,
