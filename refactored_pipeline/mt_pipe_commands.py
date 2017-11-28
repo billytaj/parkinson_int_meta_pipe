@@ -170,9 +170,13 @@ class mt_pipe_commands:
         COMMANDS_PRE = []
     
     def create_pre_double_command(self, stage_name):
-        subfolder = os.getcwd() + "/" + stage_name
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
         if not (os.path.exists(subfolder)):
             os.makedirs(subfolder)
+        if not(os.path.exists(data_folder)):
+            os.makedirs(data_folder)
+            
         adapter_removal_line = mpp.AdapterRemoval 
         adapter_removal_line += " --file1 " + self.raw_genome_path_0
         adapter_removal_line += " --file2 " + str(self.raw_genome_path_1)
@@ -199,33 +203,51 @@ class mt_pipe_commands:
         # concatenate the merge overlaps with the singletons
         cat_glue = "cat " + data_folder + "merge_success.fastq" + " " + data_folder + "singletons_adptr_rem.fastq" + " > " + data_folder + "unpaired_trimmed.fastq"
         
-        """
+        
         #Filter out low-quality reads
+        #start with the singles / merged sections
         vsearch_filter_0 = mpp.vsearch 
-        + " --fastq_filter " + self.Input_Filepath + "_unpaired_trimmed.fastq" 
-        + " --fastq_ascii " + self.Qual_str 
-        + " --fastq_maxee " + "2.0" 
-        + " --fastqout " + self.Input_Filepath + "_unpaired_quality.fastq"
-
+        vsearch_filter_0 += " --fastq_filter " + data_folder + "unpaired_trimmed.fastq" 
+        vsearch_filter_0 += " --fastq_ascii " + self.Qual_str 
+        vsearch_filter_0 += " --fastq_maxee " + "2.0" 
+        vsearch_filter_0 += " --fastqout " + data_folder + "unpaired_clean.fastq"
+        
+        #then move onto the standalones in pair 1
         vsearch_filter_1 = mpp.vsearch  
-        + " --fastq_filter " + self.Input_File1 + "_paired_trimmed.fastq" 
-        + " --fastq_ascii " + self.Qual_str 
-        + " --fastq_maxee " + "2.0" 
-        + " --fastqout " + self.Input_File1 + "_quality.fastq"
+        vsearch_filter_1 += " --fastq_filter " + data_folder + "pair_1_merge_reject.fastq" 
+        vsearch_filter_1 += " --fastq_ascii " + self.Qual_str 
+        vsearch_filter_1 += " --fastq_maxee " + "2.0" 
+        vsearch_filter_1 += " --fastqout " + data_folder + "pair_1_clean.fastq"
         
         vsearch_filter_2 = mpp.vsearch 
-        + " --fastq_filter " + self.Input_File2 + "_paired_trimmed.fastq" 
-        + " --fastq_ascii " + self.Qual_str 
-        + " --fastq_maxee " + "2.0" 
-        + " --fastqout " + self.Input_File2 + "_quality.fastq"
+        vsearch_filter_2 += " --fastq_filter " + data_folder + "pair_2_merge_reject.fastq" 
+        vsearch_filter_2 += " --fastq_ascii " + self.Qual_str 
+        vsearch_filter_2 += " --fastq_maxee " + "2.0" 
+        vsearch_filter_2 += " --fastqout " + data_folder + "pair_2_clean.fastq"
         
-        paired_read_filter = mpp.Python + " " + mpp.Paired_Reads_Filter + " " + self.Input_File1 + "_quality.fastq" + " " + self.Input_File1 + "_paired_quality.fastq" + " " + self.Input_File2 + "_quality.fastq" + " " + self.Input_File2 + "_paired_quality.fastq" + " " + self.Input_Filepath + "_unpaired_quality.fastq"
+        """
+        paired_read_filter = mpp.Python + " " 
+        paired_read_filter += mpp.Paired_Reads_Filter + " " 
+        paired_read_filter += data_folder + "pair_1_clean.fastq " 
+        paired_read_filter += self.Input_File1 + "_paired_quality.fastq " 
+        paired_read_filter += data_folder + "pair_2_clean.fastq " 
+        paired_read_filter += self.Input_File2 + "_paired_quality.fastq "
+        paired_read_filter += self.Input_Filepath + "_unpaired_quality.fastq"
         
-        cdhit_unpaired = mpp.cdhit_dup + " -i " + self.Input_Filepath + "_unpaired_quality.fastq" + " -o " + self.Input_Filepath + "_unpaired_unique.fastq"
         
-        move_unpaired_cluster = "mv " + self.Input_Filepath + "_unpaired_unique.fastq.clstr" + " " + self.Input_Filepath + "_unpaired.clstr"
+        cdhit_unpaired = mpp.cdhit_dup + " -i " 
+        cdhit_unpaired += self.Input_Filepath + "_unpaired_quality.fastq" 
+        cdhit_unpaired += " -o " + self.Input_Filepath + "_unpaired_unique.fastq"
         
-        cdhit_paired = mpp.cdhit_dup + " -i " + self.Input_File1 + "_paired_quality.fastq" + " -i2 " + self.Input_File2 + "_paired_quality.fastq" + " -o " + self.Input_File1 + "_paired_unique.fastq" + " -o2 " + self.Input_File2 + "_paired_unique.fastq"
+        move_unpaired_cluster = "mv " 
+        move_unpaired_cluster += self.Input_Filepath + "_unpaired_unique.fastq.clstr " 
+        move_unpaired_cluster += self.Input_Filepath + "_unpaired.clstr"
+        
+        cdhit_paired = mpp.cdhit_dup + " -i " 
+        cdhit_paired += self.Input_File1 + "_paired_quality.fastq" + " -i2 " 
+        cdhit_paired += self.Input_File2 + "_paired_quality.fastq" + " -o " 
+        cdhit_paired += self.Input_File1 + "_paired_unique.fastq" + " -o2 " 
+        cdhit_paired +=  self.Input_File2 + "_paired_unique.fastq"
         
         move_paired_cluster = "mv " + self.Input_File1 + "_paired_unique.fastq.clstr" + " " + self.Input_Filepath + "_paired.clstr"
         
@@ -235,7 +257,11 @@ class mt_pipe_commands:
         
         samtools_host_remove_prep = mpp.SAMTOOLS + " faidx " + self.Host_Contaminants
         
-        bwa_host_remove_unpaired = mpp.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " + self.Input_Filepath + "_unpaired_unique.fastq" + " > " + self.Input_Filepath + "_unpaired_host_contaminants.sam"
+        bwa_host_remove_unpaired = mpp.BWA + " mem -t " 
+        bwa_host_remove_unpaired += self.Threads_str + " " 
+        bwa_host_remove_unpaired += self.Host_Contaminants + " " 
+        bwa_host_remove_unpaired += self.Input_Filepath + "_unpaired_unique.fastq" 
+        bwa_host_remove_unpaired += " > " + self.Input_Filepath + "_unpaired_host_contaminants.sam"
         
         samtools_host_unpaired_sam_to_bam = mpp.SAMTOOLS + " view -bS " + self.Input_Filepath + "_unpaired_host_contaminants.sam" + " > " + self.Input_Filepath + "_unpaired_host_contaminants.bam"
         
@@ -312,14 +338,14 @@ class mt_pipe_commands:
         """
         COMMANDS_Pre = [
             # remove adapters
-            adapter_removal_line#,
+            adapter_removal_line,
             #trim things
-            # vsearch_merge,
-            # cat_glue,
-            # vsearch_filter_0,
-            # vsearch_filter_1,
-            # vsearch_filter_2,
-            # paired_read_filter,
+            vsearch_merge,
+            cat_glue,
+            vsearch_filter_0,
+            vsearch_filter_1,
+            vsearch_filter_2#,
+            #paired_read_filter,
             # cdhit_unpaired,
             # move_unpaired_cluster,
             # cdhit_paired,
