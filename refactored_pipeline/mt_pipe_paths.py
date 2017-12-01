@@ -1,5 +1,6 @@
 import os
 script_path = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
+refactor_path = script_path + "refactored_pipeline/"
 
 cdhit_dup = "/home/j/jparkins/mobolaji/Tools/CDHIT/cd-hit-v4.6.6-2016-0711/cd-hit-auxtools/cd-hit-dup"
 Timmomatic = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/trimmomatic-0.36.jar"
@@ -29,9 +30,9 @@ Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
 Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
 Reduplicate = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Reduplicate.py"
 Map_reads_contigs = script_path + "Map_read_contigs.py"
-orphaned_read_filter = script_path + "refactored_pipeline/orphaned_pair_filter.py"
+orphaned_read_filter = refactor_path + "orphaned_pair_filter.py"
 BLAT_Contaminant_Filter = script_path + "BLAT_Contaminant_Filter.py"
-File_splitter = script_path + "File_splitter.py"
+File_splitter = refactor_path + "file_splitter.py"
 Sort_Reads = script_path + "Read_Classification/Sort_Reads.py"
 rRNA_Split_Jobs = script_path + "rRNA_Split_Jobs.py"
 Map_reads_gene_BWA = script_path + "Map_read_gene_BWA.py"
