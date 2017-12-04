@@ -13,11 +13,6 @@ Threads = str(multiprocessing.cpu_count())
 
 run_jobs = False
 
-
-
-    
-
-
 def main(input_folder, output_folder):
     # constants
     # -----------------------------
@@ -39,15 +34,15 @@ def main(input_folder, output_folder):
     file_list = []
     Network_list = []
     #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.  
-    raw_genome_path = input_folder + "/raw_genome/"
-    if not os.path.exists(raw_genome_path):
-        print("No genomes found.  to use pipeline, please place fastq file at:", raw_genome_path)
-        os.makedirs(raw_genome_path)
+    raw_sequence_path = input_folder + "/raw_sequences/"
+    if not os.path.exists(raw_sequence_path):
+        print("No sequences found.  to use pipeline, please place fastq file at:", raw_sequence_path)
+        os.makedirs(raw_sequence_path)
         sys.exit()
     else:
         # folder found.  now see if it's single-ended or paired
         # for single-ended, have only 1 file.  if doubled, have both files.  Else, stop
-        genome_file_count = len(os.listdir(raw_genome_path))
+        genome_file_count = len(os.listdir(raw_sequence_path))
         print("number of files:", genome_file_count)
         if(genome_file_count == 1):
             print("OPERATING IN SINGLE-ENDED MODE")
@@ -66,13 +61,13 @@ def main(input_folder, output_folder):
         #sys.exit()
         
         if(operating_mode == double_mode):
-        
-            raw_genome_pair_0_path = raw_genome_path + sorted(os.listdir(raw_genome_path))[0]
-            raw_genome_pair_1_path = raw_genome_path + sorted(os.listdir(raw_genome_path))[1]
-            comm = mpcom.mt_pipe_commands(33, 16, raw_genome_path_0 = raw_genome_pair_0_path, raw_genome_path_1 = raw_genome_pair_1_path)
+            preprocess_label = "preprocess"
+            raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
+            raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
+            comm = mpcom.mt_pipe_commands(33, 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path)
             #pre_job = comm.create_pre_double_command("preprocess")
-            preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_double_command("preprocess", 5), run_job = True)
-            rRNA_job_id = comm.create_pbs_and_launch("rRNA_filter", comm.create_infernal_command("rRNA_filter"), dependency_list = preprocess_job_id)
+            preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_double_command(preprocess_label, 5), run_job = True)
+            rRNA_job_id = comm.create_pbs_and_launch("rRNA_filter", comm.create_infernal_command("rRNA_filter", "preprocess"), dependency_list = preprocess_job_id)
             
             
         elif(operating_mode == single_mode):

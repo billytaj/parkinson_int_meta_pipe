@@ -8,8 +8,9 @@ import mt_pipe_paths as mpp
 import subprocess as sp
 #------------------------------------------------------
 # pragmas needed for command construction
+
 PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=12:00:00
+#PBS -l nodes=1:ppn=8,walltime=00:15:00
 #PBS -N NAME
 #PBS -e ERROR
 #PBS -o OUTPUT
@@ -60,15 +61,15 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score, Thread_count, raw_genome_path_0, raw_genome_path_1 = None):
+    def __init__(self, Quality_score, Thread_count, raw_sequence_path_0, raw_sequence_path_1 = None):
         # path to the raw genome sequence file
         Input_File = os.getcwd()
-        self.raw_genome_path_0 = raw_genome_path_0
-        print("raw genome 0:", self.raw_genome_path_0)
+        self.raw_sequence_path_0 = raw_sequence_path_0
+        print("raw sequence 0:", self.raw_sequence_path_0)
 
-        if not(raw_genome_path_1 is None):
-            self.raw_genome_path_1 = raw_genome_path_1
-            print("raw genome 1:", self.raw_genome_path_1)
+        if not(raw_sequence_path_1 is None):
+            self.raw_sequence_path_1 = raw_sequence_path_1
+            print("raw seqeunce 1:", self.raw_sequence_path_1)
         
             
         self.Input_Filepath = os.path.splitext(Input_File)[0]
@@ -84,8 +85,6 @@ class mt_pipe_commands:
         self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
         self.Host_Contaminants = self.Input_Filepath + "_host_contaminents_seq.fasta"
         self.Vector_Contaminants = self.Input_Filepath + "_vector_contaminants_seq.fasta"
-        
-        
         
         print("input filepath:", self.Input_Filepath)
         print("input file 1:", self.Input_File1)
@@ -185,8 +184,8 @@ class mt_pipe_commands:
         adapter_folder = data_folder + "1_adapter_removal/"
         self.make_folder(adapter_folder)
         adapter_removal_line = mpp.AdapterRemoval 
-        adapter_removal_line += " --file1 " + self.raw_genome_path_0
-        adapter_removal_line += " --file2 " + str(self.raw_genome_path_1)
+        adapter_removal_line += " --file1 " + self.raw_sequence_path_0
+        adapter_removal_line += " --file2 " + str(self.raw_sequence_path_1)
         adapter_removal_line += " --qualitybase " + str(self.Qual_str) #must be either 33 or 64
         adapter_removal_line += " --threads " + self.Threads_str  
         adapter_removal_line += " --minlength " + "30" 
@@ -263,11 +262,13 @@ class mt_pipe_commands:
         #move_unpaired_cluster += self.Input_Filepath + "_unpaired.clstr"
         
         #remove duplicates in the pairs
-        cdhit_pair = mpp.cdhit_dup  
-        cdhit_pair += " -i " + orphan_read_filter_folder + "pair_1_match.fastq"  
-        cdhit_pair += " -i2 " + orphan_read_filter_folder + "pair_2_match.fastq"   
-        cdhit_pair += " -o " + cdhit_folder + "pair_1_unique.fastq" 
-        cdhit_pair += " -o2 " + cdhit_folder + "pair_2_unique.fastq"
+        cdhit_pair_1 = mpp.cdhit_dup
+        cdhit_pair_1 += " -i " + orphan_read_filter_folder + "pair_1_match.fastq"
+        cdhit_pair_1 += " -o " + cdhit_folder + "pair_1_unique.fastq"
+        
+        cdhit_pair_2 = mpp.cdhit_dup
+        cdhit_pair_2 += " -i " + orphan_read_filter_folder + "pair_2_match.fastq"
+        cdhit_pair_2 += " -o " + cdhit_folder + "pair_2_unique.fastq"
         
         #move_paired_cluster = "mv " + self.Input_File1 + "_paired_unique.fastq.clstr" + " " + self.Input_Filepath + "_paired.clstr"
         #NOTE: we overwrite host contaminants here. why? because the preprocess folder is created
@@ -365,6 +366,7 @@ class mt_pipe_commands:
         
         # HR BLAT Containment
         blat_containment_host_folder = data_folder + "7_blat_containment_hr/"
+        self.make_folder(blat_containment_host_folder)
         blat_containment_host_orphans = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
         blat_containment_host_orphans += host_removal_folder + "orphans_no_host.fastq" + " " # in
         blat_containment_host_orphans += host_removal_folder + "orphans_no_host.blatout" + " " #in 
@@ -490,22 +492,20 @@ class mt_pipe_commands:
         blat_containment_vector_pair_2 += blat_containment_vector_folder + "pair_2_vectors_only.fastq"
 
         #----final split
-        final_folder = data_folder + "10_final_results/"
-        file_splitter_orphans = mpp.Python + " " + mpp.File_splitter + " " 
-        file_splitter_orphans += blat_containment_vector_folder + "orphans_no_vectors.fastq " 
-        file_splitter_orphans += final_folder + "orphans.fastq "
-        file_splitter_orphans += str(file_split_count)
+        #----------------------------------
+        #our convention dictates that all final results must be placed inside this folder.
+        final_folder = data_folder + "final_results/"
+        self.make_folder(final_folder)
         
+        move_orphans = "mv " + blat_containment_vector_folder + "orphans_no_vectors.fastq "
+        move_orphans += final_folder
         
-        file_splitter_pair_1 = mpp.Python + " " + mpp.File_splitter + " " 
-        file_splitter_pair_1 += blat_containment_vector_folder + "pair_1_no_vectors.fastq " 
-        file_splitter_pair_1 += final_folder + "pair_1.fastq "
-        file_splitter_pair_1 += str(file_split_count)
+        move_pair_1 = "mv " + blat_containment_vector_folder + "pair_1_no_vectors.fastq " 
+        move_pair_1 += final_folder
         
-        file_splitter_pair_2 = mpp.Python + " " + mpp.File_splitter + " " 
-        file_splitter_pair_2 += blat_containment_vector_folder + "pair_2_no_vectors.fastq "  
-        file_splitter_pair_2 += final_folder + "pair_2.fastq "
-        file_splitter_pair_2 += str(file_split_count)
+        move_pair_2 = "mv " + blat_containment_vector_folder + "pair_2_no_vectors.fastq "
+        move_pair_2 += final_folder
+        echo_probe = "echo PROBE HERE"
         
         COMMANDS_Pre = [
             # remove adapters
@@ -519,7 +519,8 @@ class mt_pipe_commands:
             orphan_read_filter,
             cdhit_orphans,
             # move_unpaired_cluster,
-            cdhit_pair,
+            cdhit_pair_1,
+            cdhit_pair_2,
             # move_paired_cluster,
             #----host removal
             copy_host,
@@ -527,10 +528,10 @@ class mt_pipe_commands:
             #----SAMTOOLS makes bam files
             samtools_hr_prep,
             bwa_hr_orphans,
+            bwa_hr_pair,
             samtools_hr_orphans_sam_to_bam,
             samtools_no_host_orphans_bam_to_fastq,
             samtools_host_orphans_bam_to_fastq,
-            bwa_hr_pair,
             samtools_host_pair_sam_to_bam,
             samtools_no_host_pair_bam_to_fastq,
             samtools_host_pair_bam_to_fastq,
@@ -538,13 +539,14 @@ class mt_pipe_commands:
             vsearch_filter_3,
             vsearch_filter_4,
             vsearch_filter_5,
+            echo_probe,
             blat_hr_orphans,
             blat_hr_pair_1,
             blat_hr_pair_2,
             blat_containment_host_orphans,
             blat_containment_host_pair_1,
             blat_containment_host_pair_2,
-            #-----vector removal
+            # #-----vector removal
             copy_vector,
             bwa_vr_prep,
             samtools_vr_prep,
@@ -566,20 +568,47 @@ class mt_pipe_commands:
             blat_containment_vector_orphans,
             blat_containment_vector_pair_1,
             blat_containment_vector_pair_2,
-            file_splitter_orphans,
-            file_splitter_pair_1,
-            file_splitter_pair_2
+            move_orphans, 
+            move_pair_1, 
+            move_pair_2
         ]
         return COMMANDS_Pre            
                     
                     
                     
-    def create_infernal_command(self, stage_name):
-        subfolder = os.getcwd() + "/" + stage_name
+    def create_infernal_command(self, stage_name, dependency_location):
+        #split, transform, and throw data into the rRNA filter.  Get back mRNA (goal) and rRNA (garbage)
+        dep_loc = os.getcwd() + "/" + dependency_location + "/" + "data/final_results/"
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
+        
         if not (os.path.exists(subfolder)):
             os.makedirs(subfolder)
+        if not (os.path.exists(data_folder)):
+            os.makedirs(data_folder)
+        
+        file_splitter_orphans = mpp.Python + " " + mpp.File_splitter + " " 
+        file_splitter_orphans += dep_loc + "orphans_no_vectors.fastq " 
+        file_splitter_orphans += data_folder + "orphans "
+        file_splitter_orphans += str(file_split_count)
+        
+        file_splitter_pair_1 = mpp.Python + " " + mpp.File_splitter + " " 
+        file_splitter_pair_1 += dep_loc + "pair_1_no_vectors.fastq " 
+        file_splitter_pair_1 += data_folder + "pair_1 "
+        file_splitter_pair_1 += str(file_split_count)
+        
+        file_splitter_pair_2 = mpp.Python + " " + mpp.File_splitter + " " 
+        file_splitter_pair_2 += dep_loc + "pair_2_no_vectors.fastq "  
+        file_splitter_pair_2 += final_folder + "pair_2 "
+        file_splitter_pair_2 += str(file_split_count)
+        
+        call_infernal = mpp.Python + " " + rRNA_Split_Jobs + " " + dep_location
+        
         COMMANDS_rRNA = [
-        "JOBS=$(" + mpp.Python + " " + rRNA_Split_Jobs + " " + self.Input_File
+            file_splitter_orphans,
+            file_splitter_pair_1,
+            file_splitter_pair_2,
+            call_infernal
         ]                
         return COMMANDS_rRNA                
 

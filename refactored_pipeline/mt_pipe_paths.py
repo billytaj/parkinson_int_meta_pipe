@@ -31,7 +31,7 @@ Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA
 Reduplicate = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Reduplicate.py"
 Map_reads_contigs = script_path + "Map_read_contigs.py"
 orphaned_read_filter = refactor_path + "orphaned_pair_filter.py"
-BLAT_Contaminant_Filter = script_path + "BLAT_Contaminant_Filter.py"
+BLAT_Contaminant_Filter = refactor_path + "BLAT_Contaminant_Filter.py"
 File_splitter = refactor_path + "file_splitter.py"
 Sort_Reads = script_path + "Read_Classification/Sort_Reads.py"
 rRNA_Split_Jobs = script_path + "rRNA_Split_Jobs.py"
@@ -64,3 +64,8 @@ Centrifuge_report = "/home/j/jparkins/mobolaji/Tools/Centrifuge/centrifuge/centr
 kSLAM = "/home/j/jparkins/mobolaji/Tools/k-SLAM/k-SLAM/SLAM"
 
 RPKM = script_path + "RPKM.py"
+
+#from rRNA_Filter
+Barrnap = "/home/j/jparkins/mobolaji/Tools/Barrnap/bin/barrnap"
+#Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmsearch"
+#Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
