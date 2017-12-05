@@ -64,10 +64,10 @@ def main(input_folder, output_folder):
             preprocess_label = "preprocess"
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
-            comm = mpcom.mt_pipe_commands(33, 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path)
+            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path)
             #pre_job = comm.create_pre_double_command("preprocess")
-            preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_double_command(preprocess_label, 5), run_job = True)
-            rRNA_job_id = comm.create_pbs_and_launch("rRNA_filter", comm.create_infernal_command("rRNA_filter", "preprocess"), dependency_list = preprocess_job_id)
+            preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_double_command(preprocess_label), run_job = True)
+            rRNA_job_id = comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_command("rRNA_filter", 5, "preprocess"), dependency_list = preprocess_job_id, run_job = True)
             
             
         elif(operating_mode == single_mode):

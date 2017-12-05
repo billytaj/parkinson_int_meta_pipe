@@ -24,9 +24,9 @@ def filter_for_orphans(pair_0_path_i, pair_1_path_i, pair_0_path_o, pair_1_path_
     df_1[~df_1.ID.isin(common.ID)].to_csv(unique_path_o, sep='\n', mode = 'a', header=False, index = False)
 
 if __name__ == "__main__":
-    if(len(sys.argv) < 5):
+    if(len(sys.argv) < 6):
         print("Too few input arguements.  Not filtering for orphans")
-    elif(len(sys.argv) > 5):
+    elif(len(sys.argv) > 6):
         print("Too many input arguments.  Not filtering for orphans")
     else:
         pair_0_path_i = sys.argv[1]
@@ -35,5 +35,7 @@ if __name__ == "__main__":
         pair_1_path_o = sys.argv[4]
         unique_path_o = sys.argv[5]
         
+        print("pair 0 out:", pair_0_path_o)
+        print("pair 1 out:", pair_1_path_o)
         filter_for_orphans(pair_0_path_i, pair_1_path_i, pair_0_path_o, pair_1_path_o, unique_path_o)
         

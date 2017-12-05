@@ -61,11 +61,12 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score, Thread_count, raw_sequence_path_0, raw_sequence_path_1 = None):
+    def __init__(self, Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = None, raw_sequence_path_1 = None):
         # path to the raw genome sequence file
         Input_File = os.getcwd()
-        self.raw_sequence_path_0 = raw_sequence_path_0
-        print("raw sequence 0:", self.raw_sequence_path_0)
+        if not(raw_sequence_path_0 is None):
+            self.raw_sequence_path_0 = raw_sequence_path_0
+            print("raw sequence 0:", self.raw_sequence_path_0)
 
         if not(raw_sequence_path_1 is None):
             self.raw_sequence_path_1 = raw_sequence_path_1
@@ -101,7 +102,7 @@ class mt_pipe_commands:
         if not(os.path.exists(folder_path)):
             os.makedirs(folder_path)
     
-    def create_pbs_and_launch(self, job_name, command_list, mode = "low", dependency_list = None, run_job = False):
+    def create_pbs_and_launch(self, job_name, command_list, mode = "low", dependency_list = None, run_job = False,  inner_name = None):
         #create the pbs job, and launch items
         #job name: string tag for export file name
         #command list:  list of command statements for writing
@@ -109,7 +110,6 @@ class mt_pipe_commands:
         #dependency_list: if not empty, will append wait args to qsub subprocess call. it's polymorphic
         #returns back the job ID given from qsub
         
-        real_suffix = "_" + job_name
         pbs_template = ""
         if(mode == "med"):
             pbs_template = PBS_Submit_HighMem
@@ -119,16 +119,19 @@ class mt_pipe_commands:
             pbs_template = PBS_Submit_LowMem
         
         
-        pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name + ".pbs"
+        pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
+        if(not inner_name is None):
+            pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
+            
         try:
-            with open(pbs_script_full_path, "w+") as PBS_script_out:
+            with open(pbs_script_full_path + ".pbs", "w+") as PBS_script_out:
                 for line in pbs_template.splitlines():
                     if "NAME" in line:
-                        line = line.replace("NAME", pbs_script_full_path + real_suffix)
+                        line = line.replace("NAME", pbs_script_full_path)
                     if "ERROR" in line:
-                        line = line.replace("ERROR", pbs_script_full_path + real_suffix + "_ERR")
+                        line = line.replace("ERROR", pbs_script_full_path + "_ERR")
                     if "OUTPUT" in line:
-                        line = line.replace("OUTPUT", pbs_script_full_path + real_suffix + "_OUT")
+                        line = line.replace("OUTPUT", pbs_script_full_path + "_OUT")
                     if "COMMANDS" in line:
                         PBS_script_out.write("\n".join(command_list))
                         break
@@ -139,17 +142,30 @@ class mt_pipe_commands:
                 if (isinstance(dependency_list, int)):
                     #single dep
                     dep_str = "-W depend=afterok:" + str(dependency_list)
+                    print(job_name, "running with single dependency")
+                    
                 elif(isinstance(dependency_list, list)):
                     # multiple deps
                     dep_str = "-W depend=afterok:"
                     for item in dependency_list:
                         dep_str += ":" + str(item)
-                if(run_job):
+                    print(job_name, "running with multiple dependencies")    
+                        
+                elif(dependency_list is None):
+                    print(job_name, "running without dependency")
+                else:
+                    print("This isn't supposed to happen")
+                    
+                if(run_job): # a lock built for testing syntax, but not run
                     if not dep_str == "":
                         print("dep string not empty")
-                        job_id = sp.check_output(["qsub", pbs_script_full_path, dep_str])
+                        job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs", dep_str])
                     else:
-                        job_id = sp.check_output(["qsub", pbs_script_full_path])
+                        job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs"])
+                    #return val is a binary string, so we convert, and extract only the numeric part
+                    job_id = job_id.decode('ascii')
+                    job_id = int(job_id.split('.')[0])
+                    
                     return job_id
                 else:
                     return 0
@@ -163,15 +179,14 @@ class mt_pipe_commands:
     def create_pre_single_command(self, stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        if not (os.path.exists(subfolder)):
-            os.makedirs(subfolder)
-        if not(os.path.exists(data_folder)):
-            os.makedirs(data_folder)
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        
         print("not ready")
         adapter_removal = mpp.AdapterRemoval + "--file1 " + ""
         COMMANDS_PRE = []
     
-    def create_pre_double_command(self, stage_name, file_split_count):
+    def create_pre_double_command(self, stage_name):
         #why do we leave all the interim files intact?
         #because science needs repeatable data, and the process needs to be able to start at any point
         subfolder = os.getcwd() + "/" + stage_name + "/"
@@ -574,44 +589,79 @@ class mt_pipe_commands:
         ]
         return COMMANDS_Pre            
                     
-                    
-                    
-    def create_infernal_command(self, stage_name, dependency_location):
+    def create_rRNA_filter_command(self, stage_name, file_split_count, dependency_location):
         #split, transform, and throw data into the rRNA filter.  Get back mRNA (goal) and rRNA (garbage)
         dep_loc = os.getcwd() + "/" + dependency_location + "/" + "data/final_results/"
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         
-        if not (os.path.exists(subfolder)):
-            os.makedirs(subfolder)
-        if not (os.path.exists(data_folder)):
-            os.makedirs(data_folder)
+        orphan_split_folder = data_folder + "orphan_split/"
+        pair_1_split_folder = data_folder + "pair_1_split/"
+        pair_2_split_folder = data_folder + "pair_2_split/"
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(orphan_split_folder)
+        self.make_folder(pair_1_split_folder)
+        self.make_folder(pair_2_split_folder)
         
         file_splitter_orphans = mpp.Python + " " + mpp.File_splitter + " " 
         file_splitter_orphans += dep_loc + "orphans_no_vectors.fastq " 
-        file_splitter_orphans += data_folder + "orphans "
+        file_splitter_orphans += orphan_split_folder + "orphans "
         file_splitter_orphans += str(file_split_count)
         
         file_splitter_pair_1 = mpp.Python + " " + mpp.File_splitter + " " 
         file_splitter_pair_1 += dep_loc + "pair_1_no_vectors.fastq " 
-        file_splitter_pair_1 += data_folder + "pair_1 "
+        file_splitter_pair_1 += pair_1_split_folder + "pair_1 "
         file_splitter_pair_1 += str(file_split_count)
         
         file_splitter_pair_2 = mpp.Python + " " + mpp.File_splitter + " " 
         file_splitter_pair_2 += dep_loc + "pair_2_no_vectors.fastq "  
-        file_splitter_pair_2 += final_folder + "pair_2 "
+        file_splitter_pair_2 += pair_2_split_folder + "pair_2 "
         file_splitter_pair_2 += str(file_split_count)
         
-        call_infernal = mpp.Python + " " + rRNA_Split_Jobs + " " + dep_location
+        call_infernal_orphans = mpp.Python + " " + mpp.rRNA_Split_Jobs + " " + orphan_split_folder + " orphans " + stage_name
+        call_infernal_pair_1 = mpp.Python + " " + mpp.rRNA_Split_Jobs + " " + pair_1_split_folder + " pair_1 " + stage_name
+        call_infernal_pair_2 = mpp.Python + " " + mpp.rRNA_Split_Jobs + " " + pair_2_split_folder + " pair_2 " + stage_name
         
         COMMANDS_rRNA = [
             file_splitter_orphans,
             file_splitter_pair_1,
             file_splitter_pair_2,
-            call_infernal
+            call_infernal_orphans,
+            call_infernal_pair_1,
+            call_infernal_pair_2
         ]                
         return COMMANDS_rRNA                
-
+    
+    def create_infernal_command(self, full_seq_path):
+        #called by each split file
+        
+        convert_fastq_to_fasta = mpp.vsearch 
+        convert_fastq_to_fasta += " --fastq_filter " + full_seq_path + ".fastq" 
+        convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
+        convert_fastq_to_fasta += " --fastaout " + full_seq_path + ".fasta"
+        
+        infernal_command = mpp.Infernal 
+        infernal_command += " -o /dev/null --tblout " 
+        infernal_command += full_seq_path + "_infernal_out"
+        infernal_command += " --anytrunc --rfam -E 0.001 "
+        infernal_command += mpp.Rfam + " "
+        infernal_command += full_seq_path + ".fasta"
+        
+        #[Infernal, "-o", "/dev/null", "--tblout", Infernal_out, "--anytrunc", "--rfam", "-E", "0.001", Rfam, Barrnap_out])
+        """
+        infernal_command = mpp.Python + " " 
+        infernal_command += mpp.Filter_rRNA + " " 
+        infernal_command += Split_File + ".fastq" + " "  #in
+        infernal_command += Split_File + "_mRNA.fastq" + " " #out
+        infernal_command += Split_File + "_rRNA.fastq" #out
+        """
+        COMMANDS_infernal = [
+            convert_fastq_to_fasta,
+            infernal_command
+        ]
+        return COMMANDS_infernal
+        
     def create_combine_command(Input_File):
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
