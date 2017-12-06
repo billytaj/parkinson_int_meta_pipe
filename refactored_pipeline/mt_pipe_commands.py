@@ -157,16 +157,19 @@ class mt_pipe_commands:
                     print("This isn't supposed to happen")
                     
                 if(run_job): # a lock built for testing syntax, but not run
-                    if not dep_str == "":
-                        print("dep string not empty")
-                        job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs", dep_str])
-                    else:
-                        job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs"])
-                    #return val is a binary string, so we convert, and extract only the numeric part
-                    job_id = job_id.decode('ascii')
-                    job_id = int(job_id.split('.')[0])
+                    try:
+                        if not dep_str == "":
+                            print("dep string not empty")
+                            job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs", dep_str])
+                        else:
+                            job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs"])
+                        #return val is a binary string, so we convert, and extract only the numeric part
+                        job_id = job_id.decode('ascii')
+                        job_id = int(job_id.split('.')[0])
                     
-                    return job_id
+                        return job_id
+                    except CalledProcessError as e:
+                        print("subprocess call error:", e)
                 else:
                     return 0
                 
@@ -595,14 +598,26 @@ class mt_pipe_commands:
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         
-        orphan_split_folder = data_folder + "orphan_split/"
-        pair_1_split_folder = data_folder + "pair_1_split/"
-        pair_2_split_folder = data_folder + "pair_2_split/"
+        orphan_split_folder = data_folder + "orphan_fastq/"
+        pair_1_split_folder = data_folder + "pair_1_fastq/"
+        pair_2_split_folder = data_folder + "pair_2_fastq/"
+        
+        fasta_orphans_folder = data_folder + "orphan_fasta/"
+        fasta_pair_1_folder = data_folder + "pair_1_fasta/"
+        fasta_pair_2_folder = data_folder + "pair_2_fasta/"
+        
+        print(orphan_split_folder)
+        print(pair_1_split_folder)
+        print(pair_2_split_folder)
+        
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(orphan_split_folder)
         self.make_folder(pair_1_split_folder)
         self.make_folder(pair_2_split_folder)
+        self.make_folder(fasta_orphans_folder)
+        self.make_folder(fasta_pair_1_folder)
+        self.make_folder(fasta_pair_2_folder)
         
         file_splitter_orphans = mpp.Python + " " + mpp.File_splitter + " " 
         file_splitter_orphans += dep_loc + "orphans_no_vectors.fastq " 
@@ -619,18 +634,40 @@ class mt_pipe_commands:
         file_splitter_pair_2 += pair_2_split_folder + "pair_2 "
         file_splitter_pair_2 += str(file_split_count)
         
-        call_infernal_orphans = mpp.Python + " " + mpp.rRNA_Split_Jobs + " " + orphan_split_folder + " orphans " + stage_name
-        call_infernal_pair_1 = mpp.Python + " " + mpp.rRNA_Split_Jobs + " " + pair_1_split_folder + " pair_1 " + stage_name
-        call_infernal_pair_2 = mpp.Python + " " + mpp.rRNA_Split_Jobs + " " + pair_2_split_folder + " pair_2 " + stage_name
         
         COMMANDS_rRNA = [
             file_splitter_orphans,
             file_splitter_pair_1,
-            file_splitter_pair_2,
-            call_infernal_orphans,
-            call_infernal_pair_1,
-            call_infernal_pair_2
-        ]                
+            file_splitter_pair_2
+        ]          
+
+        for item in os.listdir(orphan_split_folder):
+            file_root_name = item.split('.')[0]
+            convert_fastq_to_fasta = mpp.vsearch 
+            convert_fastq_to_fasta += " --fastq_filter " + orphan_split_folder + file_root_name + ".fastq" 
+            convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
+            convert_fastq_to_fasta += " --fastaout " + fasta_orphans_folder + file_root_name + ".fasta"
+            COMMANDS_rRNA.append(convert_fastq_to_fasta)
+            print(COMMANDS_rRNA)
+        
+        for item in os.listdir(pair_1_split_folder):
+            file_root_name = item.split('.')[0]
+            convert_fastq_to_fasta = mpp.vsearch 
+            convert_fastq_to_fasta += " --fastq_filter " + pair_1_split_folder + file_root_name + ".fastq" 
+            convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
+            convert_fastq_to_fasta += " --fastaout " + fasta_pair_1_folder + file_root_name + ".fasta"
+            COMMANDS_rRNA.append(convert_fastq_to_fasta)
+            print(COMMANDS_rRNA)
+            
+        for item in os.listdir(pair_2_split_folder):
+            file_root_name = item.split('.')[0]
+            convert_fastq_to_fasta = mpp.vsearch 
+            convert_fastq_to_fasta += " --fastq_filter " + pair_2_split_folder + file_root_name + ".fastq" 
+            convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
+            convert_fastq_to_fasta += " --fastaout " + fasta_pair_2_folder + file_root_name + ".fasta"
+            COMMANDS_rRNA.append(convert_fastq_to_fasta)
+            print(COMMANDS_rRNA)
+        print(COMMANDS_rRNA)
         return COMMANDS_rRNA                
     
     def create_infernal_command(self, full_seq_path):
@@ -657,8 +694,8 @@ class mt_pipe_commands:
         infernal_command += Split_File + "_rRNA.fastq" #out
         """
         COMMANDS_infernal = [
-            convert_fastq_to_fasta,
-            infernal_command
+            convert_fastq_to_fasta#,
+            #infernal_command
         ]
         return COMMANDS_infernal
         

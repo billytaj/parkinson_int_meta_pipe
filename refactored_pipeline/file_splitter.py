@@ -15,45 +15,64 @@ import os.path
 import shutil
 import subprocess
 import multiprocessing
-from Bio import SeqIO
+#from Bio import SeqIO
 import pandas as pd
 import math as m
 
-def split_fastq(file_name_in, dir_in, split_count = 4):
+def split_fastq(file_name_in, file_name_out, split_count = 4):
     #FASTQ has 4 lines per entry.
     file_base_name = file_name_in.split(".")[0]
     fastq_df = pd.read_csv(file_name_in, header=None, names=[None], sep="\n")
     fastq_df = pd.DataFrame(fastq_df.values.reshape(int(len(fastq_df)/4), 4))
     #At this point, we've already got the number of reads.
-    chunks = m.ceil(len(fastq_df) / split_count) 
+    chunks = m.ceil(len(fastq_df) / split_count) #how many sequences each split file will have
     print("total df length:", len(fastq_df))
     print("chunk size:", chunks)
-    if(chunks % 4) != 0:
+    if(chunks < 1):
+        print("split count too large. not enough info to split")
+        chunks = 1
+        print("new split count:", split_count)
+        
+    elif(chunks % 4) != 0:
         print("WARNING: split setting will not yield even divisions")
         while((chunks * split_count) < int(len(fastq_df))):
             chunks += 1
         print("new compensatory chunk size:", chunks)
-    #sys.exit()
+        
     for i in range(0, split_count):
         print("working on segment :", i+1, "of", split_count)
-        if not os.path.exists(dir_in):
-            os.makedirs(dir_in)
-        new_file_name = dir_in + file_base_name + "_"+str(i) + ".fastq"
+        #fancy naming
+        new_file_name = file_name_out + "_" + str(i) + ".fastq"
+        if(split_count == 1):
+            new_file_name = file_name_out + ".fastq"
+        #split file by selective selection, and writing
         start_index = int(i * chunks)
-        end_index = int(((i+1) * chunks)-1)
-        print("[", i, "]: start:", start_index, "| end:", end_index)
-        fastq_df.iloc[start_index:end_index, :].to_csv(new_file_name, chunksize = chunks, index=False, sep='\n', header=False)
+        end_index = int(((i+1) * chunks))
+        #if(chunks == 1):
+        #    end_index += 1 #override on splits that only have 1 
+        if not(fastq_df.iloc[start_index:end_index, :].empty):
+            fastq_df.iloc[start_index:end_index, :].to_csv(new_file_name, chunksize = chunks, mode = "w+", index=False, sep='\n', header=False)
+        else:
+            print("empty frame detected.  no sense in running the rest")
+            break
 
     
 if __name__ == "__main__":
-    input_file = sys.argv[1]
-    
-    input_extension = input_file.split(".")[1]
-    operating_dir = "C:\\parkinson_int_meta_pipe\\refactored_pipeline\\"
-    os.chdir(operating_dir)
-    if(input_extension == "fastq"):
-        #print("This is a fastq")    
-        split_fastq(input_file, operating_dir + "\\new_dump\\", 3)
+    if(len(sys.argv) == 4):
+        input_file = sys.argv[1]
+        output_name = sys.argv[2]
+        split_count = int(sys.argv[3])
+        if(split_count < 2):
+            print("not splitting file, just moving it")
+            split_count = 1
+            
+        input_extension = input_file.split(".")[1]
+        if(input_extension == "fastq"):
+            #print("This is a fastq")    
+            split_fastq(input_file, output_name, split_count)
+        else:
+            print("This is not a fastq.  Not splitting the file")
     else:
-        print("This is not a fasta.  Not splitting the file")
+        print("only: ", len(sys.argv), "number of args.  not running")
+        print("wrong number of args to file splitter.  not running")
     sys.exit()

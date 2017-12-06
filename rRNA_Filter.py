@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # this script calls infernal.
 # this script gets called by a higher power
+# Most of the work here seems to just want to make Barrnap play nice.
+# But after further discussion, it's just a lightweight, speedy mini-filter to take the load off of infernal (which was supposed to be slow)
 import sys
 import os
 import os.path
@@ -9,17 +11,16 @@ import subprocess
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from time import clock as clock
+import mt_pipe_paths as mpp
 
 start_all = clock()
 
-Barrnap = "/home/j/jparkins/mobolaji/Tools/Barrnap/bin/barrnap"
-Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmsearch"
-Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
 
-sequence_file = sys.argv[1]
+
+sequence_file = sys.argv[1]#in
 sequence_file_fasta = os.path.splitext(sequence_file)[0] + ".fasta"
-mRNA_file = sys.argv[2]
-rRNA_file = sys.argv[3]
+mRNA_file = sys.argv[2] #out
+rRNA_file = sys.argv[3] #out
 
 start_write_sequence_fasta = clock()
 sequences = list(SeqIO.parse(sequence_file, "fastq"))
