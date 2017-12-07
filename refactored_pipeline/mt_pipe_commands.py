@@ -592,19 +592,15 @@ class mt_pipe_commands:
         ]
         return COMMANDS_Pre            
                     
-    def create_rRNA_filter_command(self, stage_name, file_split_count, dependency_location):
+    def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_location):
         #split, transform, and throw data into the rRNA filter.  Get back mRNA (goal) and rRNA (garbage)
         dep_loc = os.getcwd() + "/" + dependency_location + "/" + "data/final_results/"
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         
-        orphan_split_folder = data_folder + "orphan_fastq/"
-        pair_1_split_folder = data_folder + "pair_1_fastq/"
-        pair_2_split_folder = data_folder + "pair_2_fastq/"
-        
-        fasta_orphans_folder = data_folder + "orphan_fasta/"
-        fasta_pair_1_folder = data_folder + "pair_1_fasta/"
-        fasta_pair_2_folder = data_folder + "pair_2_fasta/"
+        orphan_split_folder = data_folder + "orphans/orphans_fastq/"
+        pair_1_split_folder = data_folder + "pair_1/pair_1_fastq/"
+        pair_2_split_folder = data_folder + "pair_2/pair_2_fastq/"
         
         print(orphan_split_folder)
         print(pair_1_split_folder)
@@ -615,9 +611,6 @@ class mt_pipe_commands:
         self.make_folder(orphan_split_folder)
         self.make_folder(pair_1_split_folder)
         self.make_folder(pair_2_split_folder)
-        self.make_folder(fasta_orphans_folder)
-        self.make_folder(fasta_pair_1_folder)
-        self.make_folder(fasta_pair_2_folder)
         
         file_splitter_orphans = mpp.Python + " " + mpp.File_splitter + " " 
         file_splitter_orphans += dep_loc + "orphans_no_vectors.fastq " 
@@ -640,7 +633,8 @@ class mt_pipe_commands:
             file_splitter_pair_1,
             file_splitter_pair_2
         ]          
-
+        """
+        # doesn't work.  files aren't there yet
         for item in os.listdir(orphan_split_folder):
             file_root_name = item.split('.')[0]
             convert_fastq_to_fasta = mpp.vsearch 
@@ -648,7 +642,6 @@ class mt_pipe_commands:
             convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
             convert_fastq_to_fasta += " --fastaout " + fasta_orphans_folder + file_root_name + ".fasta"
             COMMANDS_rRNA.append(convert_fastq_to_fasta)
-            print(COMMANDS_rRNA)
         
         for item in os.listdir(pair_1_split_folder):
             file_root_name = item.split('.')[0]
@@ -657,7 +650,6 @@ class mt_pipe_commands:
             convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
             convert_fastq_to_fasta += " --fastaout " + fasta_pair_1_folder + file_root_name + ".fasta"
             COMMANDS_rRNA.append(convert_fastq_to_fasta)
-            print(COMMANDS_rRNA)
             
         for item in os.listdir(pair_2_split_folder):
             file_root_name = item.split('.')[0]
@@ -666,24 +658,36 @@ class mt_pipe_commands:
             convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
             convert_fastq_to_fasta += " --fastaout " + fasta_pair_2_folder + file_root_name + ".fasta"
             COMMANDS_rRNA.append(convert_fastq_to_fasta)
-            print(COMMANDS_rRNA)
-        print(COMMANDS_rRNA)
+        """    
         return COMMANDS_rRNA                
     
-    def create_infernal_command(self, full_seq_path):
+    def create_rRNA_filter_command(self, stage_name, category, segment_root_name):
         #called by each split file
+        #category -> orphans, pair 1, pair 2
+        #stage_name -> "rRNA_Filter"
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/" + category + "/"
+        infernal_out_folder = data_folder + category + "_infernal/"
+        fasta_folder = data_folder + category + "_fasta/"
+        fastq_folder = data_folder + category + "_fastq/"
+        
+        self.make_folder(fasta_folder)
+        self.make_folder(infernal_out_folder)
+        
         
         convert_fastq_to_fasta = mpp.vsearch 
-        convert_fastq_to_fasta += " --fastq_filter " + full_seq_path + ".fastq" 
+        convert_fastq_to_fasta += " --fastq_filter " + fastq_folder + segment_root_name + ".fastq" 
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
-        convert_fastq_to_fasta += " --fastaout " + full_seq_path + ".fasta"
+        convert_fastq_to_fasta += " --fastaout " + fasta_folder + segment_root_name + ".fasta"
+        print("converting", fastq_folder + segment_root_name + ".fastq" )
+        print("placing in", fasta_folder + segment_root_name + ".fasta" )
         
         infernal_command = mpp.Infernal 
         infernal_command += " -o /dev/null --tblout " 
-        infernal_command += full_seq_path + "_infernal_out"
+        infernal_command += infernal_out_folder + segment_root_name + "_infernal_out"
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += mpp.Rfam + " "
-        infernal_command += full_seq_path + ".fasta"
+        infernal_command += fasta_folder + segment_root_name + ".fasta"
         
         #[Infernal, "-o", "/dev/null", "--tblout", Infernal_out, "--anytrunc", "--rfam", "-E", "0.001", Rfam, Barrnap_out])
         """
@@ -694,8 +698,8 @@ class mt_pipe_commands:
         infernal_command += Split_File + "_rRNA.fastq" #out
         """
         COMMANDS_infernal = [
-            convert_fastq_to_fasta#,
-            #infernal_command
+            convert_fastq_to_fasta,
+            infernal_command
         ]
         return COMMANDS_infernal
         
