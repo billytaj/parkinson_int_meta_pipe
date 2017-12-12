@@ -80,6 +80,7 @@ def main(input_folder, output_folder):
     # 2: error
     operating_mode = 0
     sync_obj = qsub_sync()
+    start_time = time.time()
     #note: this also needs to support paired and single-ended data
     #input folder is the main location of the dump.
     #
@@ -114,6 +115,7 @@ def main(input_folder, output_folder):
         #sys.exit()
         
         if(operating_mode == double_mode):
+            
             preprocess_label = "preprocess"
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
@@ -122,19 +124,37 @@ def main(input_folder, output_folder):
             
             rRNA_filter_job_id = []
             rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 5, "preprocess"), dependency_list = preprocess_job_id, run_job = True))
-            print("-----------------------------------")
-            print(rRNA_filter_job_id)
-            print(rRNA_filter_job_id[0])
-            print("-----------------------------------")
-            #standalone
-            #rRNA_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 5, "preprocess"), run_job = True))
-            rRNA_orphans_fasta_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fasta/"
-            rRNA_pair_1_fasta_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fasta/"
-            rRNA_pair_2_fasta_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fasta/"
-            rRNA_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
-            rRNA_pair_1_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fastq/"
-            rRNA_pair_2_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fastq/"
             
+            #standalone
+            #rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 5, "preprocess"), run_job = True))
+            #--------------------------
+            #print("-----------------------------------")
+            #print(rRNA_filter_job_id)
+            #print(rRNA_filter_job_id[0])
+            #print("-----------------------------------")
+            
+            #constructing folder paths, so we have an easier time
+            rRNA_filter_orphans_fasta_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fasta/"
+            rRNA_filter_pair_1_fasta_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fasta/"
+            rRNA_filter_pair_2_fasta_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fasta/"
+            #-------------------------------------------------------------------
+            rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
+            rRNA_filter_pair_1_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fastq/"
+            rRNA_filter_pair_2_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fastq/"
+            #--------------------------------------------------------------------
+            rRNA_filter_orphans_mRNA_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_mRNA/"
+            rRNA_filter_pair_1_mRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_mRNA/"
+            rRNA_filter_pair_2_mRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_mRNA/"
+            #---------------------------------------------------------------------
+            rRNA_filter_orphans_rRNA_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_rRNA/"
+            rRNA_filter_pair_1_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_rRNA/"
+            rRNA_filter_pair_2_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_rRNA/"
+            
+            rRNA_filter_final_mRNA_folder = os.getcwd() + "/rRNA_filter/data/final_result/mRNA/"
+            rRNA_filter_final_rRNA_folder = os.getcwd() + "/rRNA_filter/data/final_result/rRNA/"
+            
+            make_folder(rRNA_filter_final_mRNA_folder)
+            make_folder(rRNA_filter_final_rRNA_folder)
             
             #this is gonna be hacky.... we have to wait until the prep stage is finished, but there's no nice way to sense it, through qsub
             #why delay?  because the following code needs the files present to generate the correct job.  
@@ -143,7 +163,7 @@ def main(input_folder, output_folder):
             sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], "rRNA filter")
             print("moving onto INFERNAL")
             
-            for item in os.listdir(rRNA_orphans_fastq_folder):
+            for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                 file_root_name = item.split('.')[0]
                 rRNA_filter_job_id.append(
                     comm.create_pbs_and_launch(
@@ -155,7 +175,7 @@ def main(input_folder, output_folder):
                     )
                 )
                 
-            for item in os.listdir(rRNA_pair_1_fastq_folder):
+            for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
                 file_root_name = item.split('.')[0]
                 rRNA_filter_job_id.append(
                     comm.create_pbs_and_launch(
@@ -167,7 +187,7 @@ def main(input_folder, output_folder):
                     )
                 )
                 
-            for item in os.listdir(rRNA_pair_2_fastq_folder):
+            for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                 file_root_name = item.split('.')[0]
                 rRNA_filter_job_id.append(
                     comm.create_pbs_and_launch(
@@ -178,8 +198,26 @@ def main(input_folder, output_folder):
                         run_job = True
                     )
                 )
-        
-
+            #wait for infernal to finish running
+            sync_obj.wait_for_sync(600, rRNA_filter_job_id, "rRNA filter")
+            #then we need to combine the splits into per-category files
+            #this shouldn't be a qsub job
+            
+            cat_orphans_mRNA = "cat " + rRNA_filter_orphans_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "orphans.fastq"
+            cat_orphans_rRNA = "cat " + rRNA_filter_orphans_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "orphans.fastq"
+            
+            cat_pair_1_mRNA = "cat " + rRNA_filter_pair_1_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "pair_1.fastq"
+            cat_pair_1_rRNA = "cat " + rRNA_filter_pair_1_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "pair_1.fastq"
+            
+            cat_pair_2_mRNA = "cat " + rRNA_filter_pair_2_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "pair_2.fastq"
+            cat_pair_2_rRNA = "cat " + rRNA_filter_pair_2_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "pair_2.fastq"
+            
+            #--------------------------------------------------------------------------------------------------------
+            # stage 3: 
+            
+            
+            end_time = time.time()
+            print("Total runtime:", end_time - start_time)
         elif(operating_mode == single_mode):
             print("not ready")
 
