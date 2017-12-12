@@ -150,8 +150,8 @@ def main(input_folder, output_folder):
             rRNA_filter_pair_1_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_rRNA/"
             rRNA_filter_pair_2_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_rRNA/"
             
-            rRNA_filter_final_mRNA_folder = os.getcwd() + "/rRNA_filter/data/final_result/mRNA/"
-            rRNA_filter_final_rRNA_folder = os.getcwd() + "/rRNA_filter/data/final_result/rRNA/"
+            rRNA_filter_final_mRNA_folder = os.getcwd() + "/rRNA_filter/data/final_result/"
+            rRNA_filter_final_rRNA_folder = os.getcwd() + "/rRNA_filter/data/rRNA_leftovers/"
             
             make_folder(rRNA_filter_final_mRNA_folder)
             make_folder(rRNA_filter_final_rRNA_folder)
