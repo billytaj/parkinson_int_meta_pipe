@@ -150,8 +150,8 @@ def main(input_folder, output_folder):
             rRNA_filter_pair_1_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_rRNA/"
             rRNA_filter_pair_2_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_rRNA/"
             
-            rRNA_filter_final_mRNA_folder = os.getcwd() + "/rRNA_filter/data/final_result/"
-            rRNA_filter_final_rRNA_folder = os.getcwd() + "/rRNA_filter/data/rRNA_leftovers/"
+            rRNA_filter_final_mRNA_folder = os.getcwd() + "/rRNA_filter/data/final_results/mRNA/"
+            rRNA_filter_final_rRNA_folder = os.getcwd() + "/rRNA_filter/data/final_results/rRNA/"
             
             make_folder(rRNA_filter_final_mRNA_folder)
             make_folder(rRNA_filter_final_rRNA_folder)
@@ -212,9 +212,12 @@ def main(input_folder, output_folder):
             cat_pair_2_mRNA = "cat " + rRNA_filter_pair_2_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "pair_2.fastq"
             cat_pair_2_rRNA = "cat " + rRNA_filter_pair_2_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "pair_2.fastq"
             
-            #--------------------------------------------------------------------------------------------------------
-            # stage 3: 
-            
+            sp.check_output(cat_orphans_mRNA, shell=True)
+            sp.check_output(cat_orphans_rRNA, shell=True)
+            sp.check_output(cat_pair_1_mRNA, shell=True)
+            sp.check_output(cat_pair_1_rRNA, shell=True)
+            sp.check_output(cat_pair_2_mRNA, shell=True)
+            sp.check_output(cat_pair_2_rRNA, shell=True)
             
             end_time = time.time()
             print("Total runtime:", end_time - start_time)

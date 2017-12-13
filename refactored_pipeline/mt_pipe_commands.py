@@ -382,27 +382,27 @@ class mt_pipe_commands:
         blat_hr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
         blat_hr_pair_2 += " " + host_removal_folder + "pair_2_no_host.blatout"
         
-        # HR BLAT Containment
-        blat_containment_host_folder = data_folder + "7_blat_containment_hr/"
-        self.make_folder(blat_containment_host_folder)
-        blat_containment_host_orphans = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
-        blat_containment_host_orphans += host_removal_folder + "orphans_no_host.fastq" + " " # in
-        blat_containment_host_orphans += host_removal_folder + "orphans_no_host.blatout" + " " #in 
-        blat_containment_host_orphans += blat_containment_host_folder + "orphans_no_host.fastq" + " " #out
-        blat_containment_host_orphans += blat_containment_host_folder + "orphans_host_only.fastq" #out
+        # HR BLAT
+        blat_hr_folder = data_folder + "7_blat_hr/"
+        self.make_folder(blat_hr_folder)
+        hr_orphans = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        hr_orphans += host_removal_folder + "orphans_no_host.fastq" + " " # in
+        hr_orphans += host_removal_folder + "orphans_no_host.blatout" + " " #in 
+        hr_orphans += blat_hr_folder + "orphans_no_host.fastq" + " " #out
+        hr_orphans += blat_hr_folder + "orphans_host_only.fastq" #out
         
-        blat_containment_host_pair_1 = mpp.Python + " " 
-        blat_containment_host_pair_1 += mpp.BLAT_Contaminant_Filter + " " 
-        blat_containment_host_pair_1 += host_removal_folder + "pair_1_no_host.fastq" + " " 
-        blat_containment_host_pair_1 += host_removal_folder + "pair_1_no_host.blatout" + " " 
-        blat_containment_host_pair_1 += blat_containment_host_folder + "pair_1_no_host.fastq" + " " 
-        blat_containment_host_pair_1 += blat_containment_host_folder + "pair_1_host_only.fastq"
+        hr_pair_1 = mpp.Python + " " 
+        hr_pair_1 += mpp.BLAT_Contaminant_Filter + " " 
+        hr_pair_1 += host_removal_folder + "pair_1_no_host.fastq" + " " 
+        hr_pair_1 += host_removal_folder + "pair_1_no_host.blatout" + " " 
+        hr_pair_1 += blat_hr_folder + "pair_1_no_host.fastq" + " " 
+        hr_pair_1 += blat_hr_folder + "pair_1_host_only.fastq"
         
-        blat_containment_host_pair_2 = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
-        blat_containment_host_pair_2 += host_removal_folder + "pair_2_no_host.fastq" + " " 
-        blat_containment_host_pair_2 += host_removal_folder + "pair_2_no_host.blatout" + " " 
-        blat_containment_host_pair_2 += blat_containment_host_folder + "pair_2_no_host.fastq" + " " 
-        blat_containment_host_pair_2 += blat_containment_host_folder + "pair_2_host_only.fastq"
+        hr_pair_2 = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        hr_pair_2 += host_removal_folder + "pair_2_no_host.fastq" + " " 
+        hr_pair_2 += host_removal_folder + "pair_2_no_host.blatout" + " " 
+        hr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq" + " " 
+        hr_pair_2 += blat_hr_folder + "pair_2_host_only.fastq"
         
         #-----------------------------
         # Vector removal
@@ -418,7 +418,7 @@ class mt_pipe_commands:
         
         bwa_vr_orphans = mpp.BWA + " mem -t " + self.Threads_str + " " 
         bwa_vr_orphans += self.Vector_Contaminants + " " 
-        bwa_vr_orphans += blat_containment_host_folder + "orphans_no_host.fastq"  
+        bwa_vr_orphans += blat_hr_folder + "orphans_no_host.fastq"  
         bwa_vr_orphans += " > " + vector_removal_folder + "orphans_no_vectors.sam"
         
         samtools_no_vector_orphans_sam_to_bam = mpp.SAMTOOLS + " view -bS " 
@@ -435,8 +435,8 @@ class mt_pipe_commands:
         
         bwa_vr_pair = mpp.BWA + " mem -t " + self.Threads_str + " " 
         bwa_vr_pair += self.Vector_Contaminants + " " 
-        bwa_vr_pair += blat_containment_host_folder + "pair_1_no_host.fastq " 
-        bwa_vr_pair += blat_containment_host_folder + "pair_2_no_host.fastq" 
+        bwa_vr_pair += blat_hr_folder + "pair_1_no_host.fastq " 
+        bwa_vr_pair += blat_hr_folder + "pair_2_no_host.fastq" 
         bwa_vr_pair += " > " + vector_removal_folder + "pair_no_vectors.sam"
         
         samtools_vr_pair_sam_to_bam = mpp.SAMTOOLS + " view -bS " 
@@ -561,9 +561,9 @@ class mt_pipe_commands:
             blat_hr_orphans,
             blat_hr_pair_1,
             blat_hr_pair_2,
-            blat_containment_host_orphans,
-            blat_containment_host_pair_1,
-            blat_containment_host_pair_2,
+            hr_orphans,
+            hr_pair_1,
+            hr_pair_2,
             # #-----vector removal
             copy_vector,
             bwa_vr_prep,
@@ -602,10 +602,6 @@ class mt_pipe_commands:
         pair_1_split_folder = data_folder + "pair_1/pair_1_fastq/"
         pair_2_split_folder = data_folder + "pair_2/pair_2_fastq/"
         
-        print(orphan_split_folder)
-        print(pair_1_split_folder)
-        print(pair_2_split_folder)
-        
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(orphan_split_folder)
@@ -628,38 +624,13 @@ class mt_pipe_commands:
         file_splitter_pair_2 += str(file_split_count)
         
         
-        COMMANDS_rRNA = [
+        COMMANDS_rRNA_prep = [
             file_splitter_orphans,
             file_splitter_pair_1,
             file_splitter_pair_2
         ]          
-        """
-        # doesn't work.  files aren't there yet
-        for item in os.listdir(orphan_split_folder):
-            file_root_name = item.split('.')[0]
-            convert_fastq_to_fasta = mpp.vsearch 
-            convert_fastq_to_fasta += " --fastq_filter " + orphan_split_folder + file_root_name + ".fastq" 
-            convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
-            convert_fastq_to_fasta += " --fastaout " + fasta_orphans_folder + file_root_name + ".fasta"
-            COMMANDS_rRNA.append(convert_fastq_to_fasta)
-        
-        for item in os.listdir(pair_1_split_folder):
-            file_root_name = item.split('.')[0]
-            convert_fastq_to_fasta = mpp.vsearch 
-            convert_fastq_to_fasta += " --fastq_filter " + pair_1_split_folder + file_root_name + ".fastq" 
-            convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
-            convert_fastq_to_fasta += " --fastaout " + fasta_pair_1_folder + file_root_name + ".fasta"
-            COMMANDS_rRNA.append(convert_fastq_to_fasta)
-            
-        for item in os.listdir(pair_2_split_folder):
-            file_root_name = item.split('.')[0]
-            convert_fastq_to_fasta = mpp.vsearch 
-            convert_fastq_to_fasta += " --fastq_filter " + pair_2_split_folder + file_root_name + ".fastq" 
-            convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
-            convert_fastq_to_fasta += " --fastaout " + fasta_pair_2_folder + file_root_name + ".fasta"
-            COMMANDS_rRNA.append(convert_fastq_to_fasta)
-        """    
-        return COMMANDS_rRNA                
+           
+        return COMMANDS_rRNA_prep               
     
     def create_rRNA_filter_command(self, stage_name, category, segment_root_name):
         #converts the fastq segments to fasta for infernal,
@@ -713,25 +684,15 @@ class mt_pipe_commands:
         ]
         return COMMANDS_infernal
         
-    def create_combine_command(Input_File):
-        self.Input_Filepath = os.path.splitext(Input_File)[0]
-        self.Input_File1 = self.Input_Filepath + "1"
-        self.Input_File2 = self.Input_Filepath + "2"
-        self.Input_FName = os.path.basename(Input_File)
+    def create_combine_command(self, stage_name):
         
-        combine_unpaired_mrna = "cat " + os.path.join(os.path.splitext(self.Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(self.Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + self.Input_Filepath + "_mRNA_unpaired.fastq"
-
-        combine_unpaired_rrna = "cat " + os.path.join(os.path.splitext(self.Input_FName)[0] + "_unpaired_n_contaminants", os.path.basename(self.Input_Filepath) + "_unpaired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + self.Input_Filepath + "_rRNA_unpaired.fastq"
         
-        combine_pair_1_mrna_fastq = "cat " + os.path.join(os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants", os.path.basename(self.Input_File1) + "_paired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + self.Input_File1 + "_mRNA.fastq"
-        
-        combine_pair_1_rrna_fastq = "cat " + os.path.join(os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants", os.path.basename(self.Input_File1) + "_paired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + self.Input_File1 + "_rRNA.fastq"
-        
-        combine_pair_2_mrna_fastq = "cat " + os.path.join(os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants", os.path.basename(self.Input_File2) + "_paired_n_contaminants" + "_split_*" + "_mRNA.fastq") + " > " + self.Input_File2 + "_mRNA.fastq"
-        
-        combine_pair_2_rrna_fastq = "cat " + os.path.join(os.path.splitext(self.Input_FName)[0] + "_paired_n_contaminants", os.path.basename(self.Input_File2) + "_paired_n_contaminants" + "_split_*" + "_rRNA.fastq") + " > " + self.Input_File2 + "_rRNA.fastq"
-        
-        reduplicate_unpaired = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_Filepath + "_unpaired_quality.fastq" + " " + self.Input_Filepath + "_mRNA_unpaired.fastq" + " " + self.Input_Filepath + "_unpaired.clstr" + " " + self.Input_Filepath + "_all_mRNA_unpaired.fastq"
+        reduplicate_unpaired = mpp.Python + " " + mpp.Reduplicate + " " 
+        reduplicate_unpaired += self.Input_Filepath + "_unpaired_quality.fastq" + " "   #in -> way back when things were quality-filtered.  
+                                                                                        #      step 2 in preprocess.  could still contain rRNA
+        reduplicate_unpaired += self.Input_Filepath + "_mRNA_unpaired.fastq" + " "      #in -> rRNA filtration output
+        reduplicate_unpaired += self.Input_Filepath + "_unpaired.clstr" + " "           #in -> duplicates filter output
+        reduplicate_unpaired += self.Input_Filepath + "_all_mRNA_unpaired.fastq"        #out
         
         reduplicate_pair_1 = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_File1 + "_paired_quality.fastq" + " " + self.Input_File1 + "_mRNA.fastq" + " " + self.Input_Filepath + "_paired.clstr" + " " + self.Input_File1 + "_all_mRNA.fastq"
         

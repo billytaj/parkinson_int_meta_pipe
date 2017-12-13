@@ -14,11 +14,17 @@ def extract_rRNA_ID(inf_file):
     
     for item in inf_list:
         if(not item.startswith("#")):
+            subitem_count = 0
             for subitem in item.split(' '):
-                if(subitem.startswith('ERR')):
-                    #needs the @ at the start, for a match with the FASTQ's IDs
-                    ID_list.add(str("@" + subitem))
-                    break
+                #our ID will always be the 3rd item, in a series of blanks.  
+                #The blanks will always be there.  It's apparently not a tab
+                if(len(subitem) > 0):
+                    subitem_count += 1
+                    print("subitem:", subitem, "length:", len(subitem))
+                    if(subitem_count == 3):
+                        #needs the @ at the start, for a match with the FASTQ's IDs
+                        ID_list.add(str("@" + subitem))
+                        break
                 
         elif(len(item) == 2):
             break
