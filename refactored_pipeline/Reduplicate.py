@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-
+#This file is just supposed to repopulate the mRNA with the right number of duplicates
+#but in order to do so, it must find out what's mRNA.  
+#There's better ways to do this, but we're told that it's such a minor thing, we should leave it be.
+#It also sorta ruins the modularity aspect, since we now have to include more than the original 3 files, but.... yeah...
+#We need a clever solution for this.
 import sys
 import os
 import os.path
@@ -10,9 +14,10 @@ from Bio.SeqRecord import SeqRecord
 from time import clock as clock
 
 start_all = clock()
-Barrnap = "/home/j/jparkins/mobolaji/Tools/Barrnap/bin/barrnap"
-Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmsearch"
-Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
+#Not actually called in this code
+#Barrnap = "/home/j/jparkins/mobolaji/Tools/Barrnap/bin/barrnap"
+#Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmsearch"
+#Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
 
 reference_file = sys.argv[1]
 reference_sequences = SeqIO.to_dict(SeqIO.parse(reference_file, "fastq"))

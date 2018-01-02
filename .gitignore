@@ -10,3 +10,5 @@ refactored_pipeline/blat_pp_test_data/
 *.py~sort_reads_refactor
 
 *.pyc
+
+*.odg#
