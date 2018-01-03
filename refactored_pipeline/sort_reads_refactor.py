@@ -3,19 +3,10 @@ import sys
 import time
 import numpy as np
 
-def main(input_file, scinet_flag):
+def sort_and_export(input_file, output_file):
 
-    export_filepath = ""
-    if(scinet_flag):
-        export_filepath = "/scratch/j/jparkins/billyc59/sorted_" +  input_file.split('/')[-1]
-        
-    elif "\\" in input_file:
-        split_filepath = input_file.split('\\') #assumes 1 layer down
-        export_filepath = split_filepath[0] + "\sorted_" + split_filepath[1]
-    else:
-        export_filepath = "sorted_" + input_file
-    
     start_total_call = time.clock()
+    print("input file:", input_file)
     df = pd.read_csv(input_file, header=None, names=[None])
     end_read_time = time.clock()
     
@@ -35,10 +26,10 @@ def main(input_file, scinet_flag):
     #df = df.drop(['sort_ID'], axis=1)
     
     # old code just strips away the original ID, and writes that 
-    df["ID"] = df["ID"].str.split(' ', n=1, expand=True)[0]
+    #df["ID"] = df["ID"].str.split(' ', n=1, expand=True)[0]
     df = df.sort_values(by=['ID'])
     end_df_time = time.clock()
-    df.to_csv(export_filepath, sep='\n', mode = 'w+', header=False, index=False)
+    df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False)
     end_total_call = time.clock()
     #-------------------------------------------------------------------------------------------
     
@@ -51,11 +42,10 @@ def main(input_file, scinet_flag):
 if __name__ == "__main__":
     scinet_flag = False
     if(len(sys.argv) < 3):
-        print("missing launch mode flag (\"scinet\") or something else")
+        print("something wrong with the args")
         sys.exit()
     else:
         input_fastq_path = sys.argv[1]
-        launch_mode = sys.argv[2]
-    if(launch_mode == "scinet"):
-        scinet_flag = True
-    main(input_fastq_path, scinet_flag)
+        export_path = sys.argv[2]
+    
+    sort_and_export(input_fastq_path, export_path)

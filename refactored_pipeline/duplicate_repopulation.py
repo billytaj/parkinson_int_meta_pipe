@@ -4,6 +4,7 @@
 #There's better ways to do this, but we're told that it's such a minor thing, we should leave it be.
 #It also sorta ruins the modularity aspect, since we now have to include more than the original 3 files, but.... yeah...
 #We need a clever solution for this.
+#Also, this needs to check for file existence.  If there's missing files in the arg, don't run
 import sys
 import os
 import os.path

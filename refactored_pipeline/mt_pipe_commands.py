@@ -229,7 +229,7 @@ class mt_pipe_commands:
         # concatenate the merge overlaps with the singletons
         cat_glue = "cat " 
         cat_glue += vsearch_merge_folder + "merge_success.fastq " 
-        cat_glue += vsearch_merge_folder + "singletons_adptr_rem.fastq" 
+        cat_glue += adapter_folder + "singletons_adptr_rem.fastq" 
         cat_glue += " > " + vsearch_merge_folder + "unpaired.fastq"
         
         
@@ -592,9 +592,9 @@ class mt_pipe_commands:
         ]
         return COMMANDS_Pre            
                     
-    def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_location):
+    def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name):
         #split, transform, and throw data into the rRNA filter.  Get back mRNA (goal) and rRNA (garbage)
-        dep_loc = os.getcwd() + "/" + dependency_location + "/" + "data/final_results/"
+        dep_loc = os.getcwd() + "/" + dependency_name + "/" + "data/final_results/"
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         
@@ -684,31 +684,61 @@ class mt_pipe_commands:
         ]
         return COMMANDS_infernal
         
-    def create_combine_command(self, stage_name):
+    def create_combine_command(self, stage_name, preprocess_stage_name, dependency_name):
+        #Due to time, and hierarchical importance, we're leaving this stage alone.
+        #Leaving it alone in a tangled state
+        #But the issue is that by leaving it alone, we violate the design plan
+        #The fix? We have to detect if preprocess has been run.  If so, pull the missing data there
+        #if not, 
+        #What has to happen here:
+        #-> detect if we've run the preprocess stage.
+        #-> if it's run, grab data
+        #-> if not, run our own custom preprocess up to what we need
+        dep_loc = os.getcwd() + "/" + dependency_name + "/" + "data/final_results/"
+        COMMANDS_combine = []
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
+        if not (os.path.exists(subfolder)):
+            os.makedirs(subfolder)
+        if not(os.path.exists(data_folder)):
+            os.makedirs(data_folder)
+            
+        preprocess_subfolder = os.getcwd() + "/" + preprocess_stage_name + "/"
+        if not(os.path.exists(preprocess_subfolder)):
+            #start our own custom preprocess steps
+            print("duplicate repopulation without preprocess not ready")
+            
+            
+        else:
+            #we ran a previous preprocess.  grab files
+            #need 3, 5(clstr only), and mRNA from the 2nd stage.
+            #for the mRNA, we don't really care if it is.  This stage is just supposed to add in the missing duplicates from something that was stripped.
+            
+            hq_path = preprocess_subfolder + "data/3_ar_quality_filter/"
+            cluster_path = preprocess_subfolder + "data/5_remove_duplicates/"
+            
+            reduplicate_unpaired = mpp.Python + " " + mpp.duplicate_repopulate + " " 
+            reduplicate_unpaired += hq_path + "orphans_hq.fastq" + " "   #in -> way back when things were quality-filtered.  
+                                                                                            #      step 2 in preprocess.  could still contain rRNA
+            reduplicate_unpaired += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
+            reduplicate_unpaired += dep_loc + "orphans.clstr" + " "           #in -> duplicates filter output
+            reduplicate_unpaired += data_folder + "mRNA_oprhans.fastq"        #out
+            
+            reduplicate_pair_1 = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_File1 + "_paired_quality.fastq" + " " + self.Input_File1 + "_mRNA.fastq" + " " + self.Input_Filepath + "_paired.clstr" + " " + self.Input_File1 + "_all_mRNA.fastq"
+            
+            reduplicate_pair_2 = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_File2 + "_paired_quality.fastq" + " " + self.Input_File2 + "_mRNA.fastq" + " " + self.Input_Filepath + "_paired.clstr" + " " + self.Input_File2 + "_all_mRNA.fastq"
         
-        
-        reduplicate_unpaired = mpp.Python + " " + mpp.Reduplicate + " " 
-        reduplicate_unpaired += self.Input_Filepath + "_unpaired_quality.fastq" + " "   #in -> way back when things were quality-filtered.  
-                                                                                        #      step 2 in preprocess.  could still contain rRNA
-        reduplicate_unpaired += self.Input_Filepath + "_mRNA_unpaired.fastq" + " "      #in -> rRNA filtration output
-        reduplicate_unpaired += self.Input_Filepath + "_unpaired.clstr" + " "           #in -> duplicates filter output
-        reduplicate_unpaired += self.Input_Filepath + "_all_mRNA_unpaired.fastq"        #out
-        
-        reduplicate_pair_1 = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_File1 + "_paired_quality.fastq" + " " + self.Input_File1 + "_mRNA.fastq" + " " + self.Input_Filepath + "_paired.clstr" + " " + self.Input_File1 + "_all_mRNA.fastq"
-        
-        reduplicate_pair_2 = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_File2 + "_paired_quality.fastq" + " " + self.Input_File2 + "_mRNA.fastq" + " " + self.Input_Filepath + "_paired.clstr" + " " + self.Input_File2 + "_all_mRNA.fastq"
-        
-        COMMANDS_Combine = [
-        combine_unpaired_mrna,
-        combine_unpaired_rrna,
-        combine_pair_1_mrna_fastq,
-        combine_pair_1_rrna_fastq,
-        combine_pair_2_mrna_fastq,
-        combine_pair_2_rrna_fastq,
-        reduplicate_unpaired,
-        reduplicate_pair_1,
-        reduplicate_pair_2
-        ]
+            COMMANDS_Combine = [
+            combine_unpaired_mrna,
+            combine_unpaired_rrna,
+            combine_pair_1_mrna_fastq,
+            combine_pair_1_rrna_fastq,
+            combine_pair_2_mrna_fastq,
+            combine_pair_2_rrna_fastq,
+            reduplicate_unpaired,
+            reduplicate_pair_1,
+            reduplicate_pair_2
+            ]
         return COMMANDS_Combine
 
     def create_assemble_commands(self):

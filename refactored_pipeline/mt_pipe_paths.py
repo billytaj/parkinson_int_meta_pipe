@@ -2,6 +2,7 @@ import os
 script_path = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
 refactor_path = script_path + "refactored_pipeline/"
 
+sort_reads = refactor_path + "sort_reads_refactor.py"
 cdhit_dup = "/home/j/jparkins/mobolaji/Tools/CDHIT/cd-hit-v4.6.6-2016-0711/cd-hit-auxtools/cd-hit-dup"
 Timmomatic = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/trimmomatic-0.36.jar"
 AdapterRemoval = "/home/j/jparkins/mobolaji/Tools/AdapterRemoval/adapterremoval-2.2.0/build/AdapterRemoval"
@@ -28,7 +29,7 @@ Adapter = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/adapters
 Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmscan"
 Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
 Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
-Reduplicate = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/Reduplicate.py"
+duplicate_repopulate = refactor_path +  "duplicate_repopulation.py"
 Map_reads_contigs = script_path + "Map_read_contigs.py"
 orphaned_read_filter = refactor_path + "orphaned_pair_filter.py"
 BLAT_Contaminant_Filter = refactor_path + "BLAT_Contaminant_Filter.py"
