@@ -7,7 +7,7 @@ def sort_and_export(input_file, output_file):
 
     start_total_call = time.clock()
     print("input file:", input_file)
-    df = pd.read_csv(input_file, header=None, names=[None])
+    df = pd.read_csv(input_file, header=None, names=[None], sep='\n', skip_blank_lines = False)
     end_read_time = time.clock()
     
     # reshaping, aka: unflattening the 1-D array into something meaningful to us

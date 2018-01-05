@@ -168,7 +168,7 @@ class mt_pipe_commands:
                         job_id = int(job_id.split('.')[0])
                     
                         return job_id
-                    except CalledProcessError as e:
+                    except Exception as e:
                         print("subprocess call error:", e)
                 else:
                     return 0
@@ -198,12 +198,28 @@ class mt_pipe_commands:
             os.makedirs(subfolder)
         if not(os.path.exists(data_folder)):
             os.makedirs(data_folder)
+            
+        sorted_raw_folder = data_folder + "0_sorted_raw_input/"
+        self.make_folder(sorted_raw_folder)
+        
+        sort_pair_1 = ">&2 echo Sorting pair 1 | "
+        sort_pair_1 += mpp.Python + " " + mpp.Sort_Reads + " "
+        sort_pair_1 += self.raw_sequence_path_0
+        sort_pair_1 += " " + sorted_raw_folder + "pair_1_sorted.fastq"
+        
+        sort_pair_2 = ">&2 echo Sorting pair 2 | "
+        sort_pair_2 += mpp.Python + " " + mpp.Sort_Reads + " "
+        sort_pair_2 += self.raw_sequence_path_1
+        sort_pair_2 += " " + sorted_raw_folder + "pair_2_sorted.fastq"
         
         adapter_folder = data_folder + "1_adapter_removal/"
         self.make_folder(adapter_folder)
-        adapter_removal_line = mpp.AdapterRemoval 
-        adapter_removal_line += " --file1 " + self.raw_sequence_path_0
-        adapter_removal_line += " --file2 " + str(self.raw_sequence_path_1)
+        adapter_removal_line = ">&2 echo Removing adapters | "
+        adapter_removal_line += mpp.AdapterRemoval 
+        #adapter_removal_line += " --file1 " + self.raw_sequence_path_0
+        #adapter_removal_line += " --file2 " + self.raw_sequence_path_1
+        adapter_removal_line += " --file1 " + sorted_raw_folder + "pair_1_sorted.fastq"
+        adapter_removal_line += " --file2 " + sorted_raw_folder + "pair_2_sorted.fastq"
         adapter_removal_line += " --qualitybase " + str(self.Qual_str) #must be either 33 or 64
         adapter_removal_line += " --threads " + self.Threads_str  
         adapter_removal_line += " --minlength " + "30" 
@@ -218,7 +234,8 @@ class mt_pipe_commands:
         # rejects get sent out
         vsearch_merge_folder = data_folder + "2_vsearch_pair_merge/"
         self.make_folder(vsearch_merge_folder)
-        vsearch_merge = mpp.vsearch 
+        vsearch_merge = ">&2 echo " + "Vsearch Merge pairs | "
+        vsearch_merge += mpp.vsearch 
         vsearch_merge += " --fastq_mergepairs " + adapter_folder + "pair_1_adptr_rem.fastq" 
         vsearch_merge += " --reverse " + adapter_folder + "pair_2_adptr_rem.fastq" 
         vsearch_merge += " --fastq_ascii " + str(self.Qual_str) 
@@ -227,30 +244,34 @@ class mt_pipe_commands:
         vsearch_merge += " --fastqout_notmerged_rev " + vsearch_merge_folder + "pair_2_merge_reject.fastq"
         
         # concatenate the merge overlaps with the singletons
-        cat_glue = "cat " 
+        cat_glue = ">&2 echo concatenating orphans | "
+        cat_glue += "cat " 
         cat_glue += vsearch_merge_folder + "merge_success.fastq " 
         cat_glue += adapter_folder + "singletons_adptr_rem.fastq" 
-        cat_glue += " > " + vsearch_merge_folder + "unpaired.fastq"
+        cat_glue += " > " + vsearch_merge_folder + "orphans.fastq"
         
         
         #Filter out low-quality reads
         #start with the singles / merged sections
         vsearch_filter_folder = data_folder + "3_ar_quality_filter/"
         self.make_folder(vsearch_filter_folder)
-        vsearch_filter_0 = mpp.vsearch 
+        vsearch_filter_0 = ">&2 echo low-quality filter on orphans | "
+        vsearch_filter_0 += mpp.vsearch 
         vsearch_filter_0 += " --fastq_filter " + vsearch_merge_folder + "orphans.fastq" 
         vsearch_filter_0 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_0 += " --fastq_maxee " + "2.0" 
         vsearch_filter_0 += " --fastqout " + vsearch_filter_folder + "orphans_hq.fastq"
         
         #then move onto the standalones in pair 1
-        vsearch_filter_1 = mpp.vsearch  
+        vsearch_filter_1 = ">&2 echo low-quality filter on pair 1 | "
+        vsearch_filter_1 += mpp.vsearch  
         vsearch_filter_1 += " --fastq_filter " + vsearch_merge_folder + "pair_1_merge_reject.fastq" 
         vsearch_filter_1 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_1 += " --fastq_maxee " + "2.0" 
         vsearch_filter_1 += " --fastqout " + vsearch_filter_folder + "pair_1_hq.fastq"
         
-        vsearch_filter_2 = mpp.vsearch 
+        vsearch_filter_2 = ">&2 echo low-quality filter on pair 2 | "
+        vsearch_filter_2 += mpp.vsearch 
         vsearch_filter_2 += " --fastq_filter " + vsearch_merge_folder + "pair_2_merge_reject.fastq" 
         vsearch_filter_2 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_2 += " --fastq_maxee " + "2.0" 
@@ -259,7 +280,8 @@ class mt_pipe_commands:
         #redistribute data into orphans, or paired-reads
         orphan_read_filter_folder = data_folder + "4_orphan_read_filter/"
         self.make_folder(orphan_read_filter_folder)
-        orphan_read_filter = mpp.Python + " " 
+        orphan_read_filter = ">&2 echo moving newly orphaned hq reads | "
+        orphan_read_filter += mpp.Python + " " 
         orphan_read_filter += mpp.orphaned_read_filter + " " 
         orphan_read_filter += vsearch_filter_folder + "pair_1_hq.fastq " 
         orphan_read_filter += vsearch_filter_folder + "pair_2_hq.fastq " 
@@ -270,7 +292,8 @@ class mt_pipe_commands:
         #remove duplicates (to shrink the data size)
         cdhit_folder = data_folder + "5_remove_duplicates/"
         self.make_folder(cdhit_folder)
-        cdhit_orphans = mpp.cdhit_dup + " -i " 
+        cdhit_orphans = ">&2 echo removing orphan duplicates | "
+        cdhit_orphans += mpp.cdhit_dup + " -i " 
         cdhit_orphans += orphan_read_filter_folder + "orphans.fastq" 
         cdhit_orphans += " -o " + cdhit_folder + "orphans_unique.fastq"
         
@@ -280,11 +303,13 @@ class mt_pipe_commands:
         #move_unpaired_cluster += self.Input_Filepath + "_unpaired.clstr"
         
         #remove duplicates in the pairs
-        cdhit_pair_1 = mpp.cdhit_dup
+        cdhit_pair_1 = ">&2 echo remove duplicates from pair 1 | "
+        cdhit_pair_1 += mpp.cdhit_dup
         cdhit_pair_1 += " -i " + orphan_read_filter_folder + "pair_1_match.fastq"
         cdhit_pair_1 += " -o " + cdhit_folder + "pair_1_unique.fastq"
         
-        cdhit_pair_2 = mpp.cdhit_dup
+        cdhit_pair_2 = ">&2 echo remove duplicates from pair 2 | " 
+        cdhit_pair_2 += mpp.cdhit_dup
         cdhit_pair_2 += " -i " + orphan_read_filter_folder + "pair_2_match.fastq"
         cdhit_pair_2 += " -o " + cdhit_folder + "pair_2_unique.fastq"
         
@@ -295,88 +320,106 @@ class mt_pipe_commands:
         self.make_folder(host_removal_folder)
         
         self.Host_Contaminants = host_removal_folder + "host_contaminents_seq.fasta"
-        copy_host = "cp " + mpp.Host + " " + self.Host_Contaminants
+        copy_host = ">&2 echo Copy the host file over | "
+        copy_host += "cp " + mpp.Host + " " + self.Host_Contaminants
         
         #craft a BWA index for the host sequences
-        bwa_hr_prep = mpp.BWA + " index -a bwtsw " + self.Host_Contaminants
+        bwa_hr_prep = ">&2 echo make host contaminants index for BWA | "
+        bwa_hr_prep += mpp.BWA + " index -a bwtsw " + self.Host_Contaminants
         
-        samtools_hr_prep = mpp.SAMTOOLS + " faidx " + self.Host_Contaminants
+        samtools_hr_prep = ">&2 echo SAMTOOLS host contaminant prep | "
+        samtools_hr_prep += mpp.SAMTOOLS + " faidx " + self.Host_Contaminants
         
         #host removal on unique orphans
-        bwa_hr_orphans = mpp.BWA + " mem -t " 
+        bwa_hr_orphans = ">&2 echo BWA host remove on orphans | "
+        bwa_hr_orphans += mpp.BWA + " mem -t " 
         bwa_hr_orphans += self.Threads_str + " " 
         bwa_hr_orphans += self.Host_Contaminants + " " 
         bwa_hr_orphans += cdhit_folder + "orphans_unique.fastq" 
         bwa_hr_orphans += " > " + host_removal_folder + "orphans_no_host.sam"
         
         #annoying type conversion pt 1
-        samtools_hr_orphans_sam_to_bam = mpp.SAMTOOLS 
+        samtools_hr_orphans_sam_to_bam = ">&2 echo convert orphans hr files pt1 | "
+        samtools_hr_orphans_sam_to_bam += mpp.SAMTOOLS 
         samtools_hr_orphans_sam_to_bam += " view -bS " + host_removal_folder + "orphans_no_host.sam" 
         samtools_hr_orphans_sam_to_bam += " > " + host_removal_folder + "orphans_no_host.bam"
         #annoying type conversion pt 2
-        samtools_no_host_orphans_bam_to_fastq = mpp.SAMTOOLS 
+        samtools_no_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt2 | "
+        samtools_no_host_orphans_bam_to_fastq += mpp.SAMTOOLS 
         samtools_no_host_orphans_bam_to_fastq += " fastq -n -f 4" + " -0 " + host_removal_folder + "orphans_no_host.fastq" + " "
         samtools_no_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
         
         #apparently, we're to keep the host separation
-        samtools_host_orphans_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -F 4" 
+        samtools_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt3 | "
+        samtools_host_orphans_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" 
         samtools_host_orphans_bam_to_fastq += " -0 " + host_removal_folder + "orphans_host_only.fastq" + " " 
         samtools_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
         
         #host-remove the rest
-        bwa_hr_pair = mpp.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " 
+        bwa_hr_pair = ">&2 echo bwa pair host remove | "
+        bwa_hr_pair += mpp.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " 
         bwa_hr_pair += cdhit_folder + "pair_1_unique.fastq" + " " 
         bwa_hr_pair += cdhit_folder + "pair_2_unique.fastq" 
         bwa_hr_pair += " > " + host_removal_folder + "pair_no_host.sam"
         
         
         #separating bwa results back into paired reads
-        samtools_host_pair_sam_to_bam = mpp.SAMTOOLS + " view -bS " + host_removal_folder + "pair_no_host.sam"
+        samtools_host_pair_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
+        samtools_host_pair_sam_to_bam += mpp.SAMTOOLS + " view -bS " + host_removal_folder + "pair_no_host.sam"
         samtools_host_pair_sam_to_bam += " > " + host_removal_folder + "pair_no_host.bam"
         
         #stuff that doesn't match with the host
-        samtools_no_host_pair_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -f 13" 
+        samtools_no_host_pair_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
+        samtools_no_host_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -f 13" 
         samtools_no_host_pair_bam_to_fastq += " -1 " + host_removal_folder + "pair_1_no_host.fastq" # out
         samtools_no_host_pair_bam_to_fastq += " -2 " + host_removal_folder + "pair_2_no_host.fastq" # out
         samtools_no_host_pair_bam_to_fastq += " " + host_removal_folder + "pair_no_host.bam" #in
         
         #stuff that matches with the host (why keep it?  request from john)
-        samtools_host_pair_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -F 4" 
+        samtools_host_pair_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
+        samtools_host_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" 
         samtools_host_pair_bam_to_fastq += " -1 " + host_removal_folder + "pair_1_host_only.fastq" 
         samtools_host_pair_bam_to_fastq += " -2 " + host_removal_folder + "pair_2_host_only.fastq" 
         samtools_host_pair_bam_to_fastq += " " + host_removal_folder + "pair_no_host.bam"
         
         #blast prep
-        make_blast_db_host = mpp.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
-        
-        vsearch_filter_3 = mpp.vsearch 
+        make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
+        make_blast_db_host += mpp.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
+
+        vsearch_filter_3 = ">&2 echo Convert orphans for BLAT | "     
+        vsearch_filter_3 += mpp.vsearch 
         vsearch_filter_3 += " --fastq_filter " + host_removal_folder + "orphans_no_host.fastq" 
         vsearch_filter_3 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_3 += " --fastaout " + host_removal_folder + "orphans_no_host.fasta"
         
-        vsearch_filter_4 = mpp.vsearch 
+        vsearch_filter_4 = ">&2 echo Convert pair 1 for BLAT | "
+        vsearch_filter_4 += mpp.vsearch 
         vsearch_filter_4 += " --fastq_filter " + host_removal_folder + "pair_1_no_host.fastq" 
         vsearch_filter_4 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_4 += " --fastaout " + host_removal_folder + "pair_1_no_host.fasta"
         
-        vsearch_filter_5 = mpp.vsearch
+        vsearch_filter_5 = ">&2 echo Convert pair 2 for BLAT | "
+        vsearch_filter_5 += mpp.vsearch
         vsearch_filter_5 += " --fastq_filter " + host_removal_folder + "pair_2_no_host.fastq" 
         vsearch_filter_5 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_5 += " --fastaout " + host_removal_folder + "pair_2_no_host.fasta"
         
-        blat_hr_orphans = mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_hr_orphans = ">&2 echo BLAT hr orphans | "
+        blat_hr_orphans += mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
         blat_hr_orphans += self.Host_Contaminants + " " 
         blat_hr_orphans += host_removal_folder + "orphans_no_host.fasta" 
         blat_hr_orphans += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str 
         blat_hr_orphans += " " + host_removal_folder + "orphans_no_host.blatout"
-        
-        blat_hr_pair_1 = mpp.BLAT 
+
+        blat_hr_pair_1 = ">&2 echo BLAT hr pair 1 | "    
+        blat_hr_pair_1 += mpp.BLAT 
         blat_hr_pair_1 += " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " " 
         blat_hr_pair_1 += host_removal_folder + "pair_1_no_host.fasta" 
         blat_hr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
         blat_hr_pair_1 += " " + host_removal_folder + "pair_1_no_host.blatout"
         
-        blat_hr_pair_2 = mpp.BLAT 
+        blat_hr_pair_2 = ">&2 echo BLAT hr pair 2 | "
+        blat_hr_pair_2 += mpp.BLAT 
         blat_hr_pair_2 += " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " " 
         blat_hr_pair_2 += host_removal_folder + "pair_2_no_host.fasta" 
         blat_hr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
@@ -385,20 +428,23 @@ class mt_pipe_commands:
         # HR BLAT
         blat_hr_folder = data_folder + "7_blat_hr/"
         self.make_folder(blat_hr_folder)
-        hr_orphans = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        hr orphans = ">&2 echo BLAT contaminant orphans | "
+        hr_orphans += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
         hr_orphans += host_removal_folder + "orphans_no_host.fastq" + " " # in
         hr_orphans += host_removal_folder + "orphans_no_host.blatout" + " " #in 
         hr_orphans += blat_hr_folder + "orphans_no_host.fastq" + " " #out
         hr_orphans += blat_hr_folder + "orphans_host_only.fastq" #out
         
-        hr_pair_1 = mpp.Python + " " 
+        hr_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
+        hr_pair_1 += mpp.Python + " " 
         hr_pair_1 += mpp.BLAT_Contaminant_Filter + " " 
         hr_pair_1 += host_removal_folder + "pair_1_no_host.fastq" + " " 
         hr_pair_1 += host_removal_folder + "pair_1_no_host.blatout" + " " 
         hr_pair_1 += blat_hr_folder + "pair_1_no_host.fastq" + " " 
         hr_pair_1 += blat_hr_folder + "pair_1_host_only.fastq"
         
-        hr_pair_2 = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        hr_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
+        hr_pair_2 += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
         hr_pair_2 += host_removal_folder + "pair_2_no_host.fastq" + " " 
         hr_pair_2 += host_removal_folder + "pair_2_no_host.blatout" + " " 
         hr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq" + " " 
@@ -410,80 +456,99 @@ class mt_pipe_commands:
         vector_removal_folder = data_folder + "8_vector_removal/"
         self.make_folder(vector_removal_folder)
         self.Vector_Contaminants = vector_removal_folder + "vector_contaminants_seq.fasta"
-        copy_vector = "cp " + mpp.UniVec_Core + " " + self.Vector_Contaminants
         
-        bwa_vr_prep = mpp.BWA + " index -a bwtsw " + self.Vector_Contaminants
+        copy_vector = ">&2 echo copy vector prep | "
+        copy_vector += "cp " + mpp.UniVec_Core + " " + self.Vector_Contaminants
         
-        samtools_vr_prep = mpp.SAMTOOLS + " faidx " + self.Vector_Contaminants
+        bwa_vr_prep = ">&2 echo BWA vector prep | "
+        bwa_vr_prep += mpp.BWA + " index -a bwtsw " + self.Vector_Contaminants
         
-        bwa_vr_orphans = mpp.BWA + " mem -t " + self.Threads_str + " " 
+        samtools_vr_prep = ">&2 echo samtools vector prep | "
+        samtools_vr_prep += mpp.SAMTOOLS + " faidx " + self.Vector_Contaminants
+        
+        bwa_vr_orphans = ">&2 echo BWA vr oprhans | "
+        bwa_vr_orphans += mpp.BWA + " mem -t " + self.Threads_str + " " 
         bwa_vr_orphans += self.Vector_Contaminants + " " 
         bwa_vr_orphans += blat_hr_folder + "orphans_no_host.fastq"  
         bwa_vr_orphans += " > " + vector_removal_folder + "orphans_no_vectors.sam"
         
-        samtools_no_vector_orphans_sam_to_bam = mpp.SAMTOOLS + " view -bS " 
+        samtools_no_vector_orphans_sam_to_bam = ">&2 echo samtools vr oprhans pt 1 | "
+        samtools_no_vector_orphans_sam_to_bam += mpp.SAMTOOLS + " view -bS " 
         samtools_no_vector_orphans_sam_to_bam += vector_removal_folder + "orphans_no_vectors.sam" 
         samtools_no_vector_orphans_sam_to_bam += " > " + vector_removal_folder + "orphans_no_vectors.bam"
         
-        samtools_no_vector_orphans_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -f 4" + " -0 "
+        samtools_no_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 2 | " 
+        samtools_no_vector_orphans_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -f 4" + " -0 "
         samtools_no_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.fastq "  
         samtools_no_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"    
         
-        samtools_vector_orphans_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -F 4" + " -0 " 
+        samtools_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 3 | "
+        samtools_vector_orphans_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" + " -0 " 
         samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_vectors_only.fastq "  
         samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"
         
-        bwa_vr_pair = mpp.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_vr_pair = ">&2 echo bwa vr pair | " 
+        bwa_vr_pair += mpp.BWA + " mem -t " + self.Threads_str + " " 
         bwa_vr_pair += self.Vector_Contaminants + " " 
         bwa_vr_pair += blat_hr_folder + "pair_1_no_host.fastq " 
         bwa_vr_pair += blat_hr_folder + "pair_2_no_host.fastq" 
         bwa_vr_pair += " > " + vector_removal_folder + "pair_no_vectors.sam"
         
-        samtools_vr_pair_sam_to_bam = mpp.SAMTOOLS + " view -bS " 
+        samtools_vr_pair_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
+        samtools_vr_pair_sam_to_bam += mpp.SAMTOOLS + " view -bS " 
         samtools_vr_pair_sam_to_bam += vector_removal_folder + "pair_no_vectors.sam" 
         samtools_vr_pair_sam_to_bam += " > " + vector_removal_folder + "pair_no_vectors.bam"
         
-        samtools_no_vector_pair_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -f 13"
+        samtools_no_vector_pair_bam_to_fastq = ">&2 echo samtools vr pair pt 2 | "
+        samtools_no_vector_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -f 13"
         samtools_no_vector_pair_bam_to_fastq += " -1 " + vector_removal_folder + "pair_1_no_vectors.fastq" 
         samtools_no_vector_pair_bam_to_fastq += " -2 " + vector_removal_folder + "pair_2_no_vectors.fastq " 
         samtools_no_vector_pair_bam_to_fastq += vector_removal_folder + "pair_no_vectors.bam"
-        
-        samtools_vector_pair_bam_to_fastq = mpp.SAMTOOLS + " fastq -n -F 4" 
+
+        samtools_vector_pair_bam_to_fastq = ">&2 echo samtools vr pair pt 3 | "
+        samtools_vector_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" 
         samtools_vector_pair_bam_to_fastq += " -1 " + vector_removal_folder + "pair_1_vectors_only.fastq" 
         samtools_vector_pair_bam_to_fastq += " -2 " + vector_removal_folder + "pair_2_vectors_only.fastq " 
         samtools_vector_pair_bam_to_fastq += vector_removal_folder + "pair_no_vectors.bam"
         
-        make_blast_db_vector = mpp.Makeblastdb + " -in " + self.Vector_Contaminants + " -dbtype nucl"
+        make_blast_db_vector = ">&2 echo BLAST make db vectors | "
+        make_blast_db_vector += mpp.Makeblastdb + " -in " + self.Vector_Contaminants + " -dbtype nucl"
         
-        vsearch_filter_6 = mpp.vsearch 
+        vsearch_filter_6 = ">&2 echo convert vr orphans for BLAT | " 
+        vsearch_filter_6 += mpp.vsearch 
         vsearch_filter_6 += " --fastq_filter " + vector_removal_folder + "orphans_no_vectors.fastq" 
         vsearch_filter_6 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_6 += " --fastaout " + vector_removal_folder + "orphans_no_vectors.fasta"
 
-        vsearch_filter_7 = mpp.vsearch 
+        vsearch_filter_7 = ">&2 echo convert vr pair 1 for BLAT | "
+        vsearch_filter_7 += mpp.vsearch 
         vsearch_filter_7 += " --fastq_filter " + vector_removal_folder + "pair_1_no_vectors.fastq" 
         vsearch_filter_7 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_7 += " --fastaout " + vector_removal_folder + "pair_1_no_vectors.fasta"
         
-        vsearch_filter_8 = mpp.vsearch 
+        vsearch_filter_8 = ">&2 echo convert vr pair 2 for BLAT | "
+        vsearch_filter_8 += mpp.vsearch 
         vsearch_filter_8 += " --fastq_filter " + vector_removal_folder + "pair_2_no_vectors.fastq" 
         vsearch_filter_8 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_8 += " --fastaout " + vector_removal_folder + "pair_2_no_vectors.fasta"
         
-        blat_vr_orphans = mpp.BLAT 
+        blat_vr_orphans = ">&2 echo BLAT vr orphans | "
+        blat_vr_orphans += mpp.BLAT 
         blat_vr_orphans += " -noHead -minIdentity=90 -minScore=65 " 
         blat_vr_orphans += self.Vector_Contaminants + " " 
         blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.fasta" 
         blat_vr_orphans += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
         blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.blatout"
         
-        blat_vr_pair_1 = mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_vr_pair_1 = ">&2 echo BLAT vr pair 1 | "
+        blat_vr_pair_1 += mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
         blat_vr_pair_1 += self.Vector_Contaminants + " " 
         blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.fasta" 
         blat_vr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
         blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.blatout"
         
-        blat_vr_pair_2 = mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_vr_pair_2 = ">&2 echo BLAT vr pair 2 | "
+        blat_vr_pair_2 += mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
         blat_vr_pair_2 += self.Vector_Contaminants + " " 
         blat_vr_pair_2 += vector_removal_folder + "pair_2_no_vectors.fasta" 
         blat_vr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
@@ -491,19 +556,22 @@ class mt_pipe_commands:
         
         blat_containment_vector_folder = data_folder + "9_blat_containment_vr/"
         self.make_folder(blat_containment_vector_folder)
-        blat_containment_vector_orphans = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        blat_containment_vector_orphans = ">&2 echo BLAT contaminant orphans | " 
+        blat_containment_vector_orphans += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
         blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.fastq" + " " #in
         blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.blatout" + " " #in
         blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_no_vectors.fastq" + " " #out
         blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_vectors_only.fastq" #out
         
-        blat_containment_vector_pair_1 = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        blat_containment_vector_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
+        blat_containment_vector_pair_1 += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
         blat_containment_vector_pair_1 += vector_removal_folder + "pair_1_no_vectors.fastq" + " " 
         blat_containment_vector_pair_1 += vector_removal_folder + "pair_1_no_vectors.blatout" + " " 
         blat_containment_vector_pair_1 += blat_containment_vector_folder + "pair_1_no_vectors.fastq" + " " 
         blat_containment_vector_pair_1 += blat_containment_vector_folder + "pair_1_vectors_only.fastq"
         
-        blat_containment_vector_pair_2 = mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        blat_containment_vector_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
+        blat_containment_vector_pair_2 += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
         blat_containment_vector_pair_2 += vector_removal_folder + "pair_2_no_vectors.fastq" + " " 
         blat_containment_vector_pair_2 += vector_removal_folder + "pair_2_no_vectors.blatout" + " " 
         blat_containment_vector_pair_2 += blat_containment_vector_folder + "pair_2_no_vectors.fastq" + " " 
@@ -523,72 +591,77 @@ class mt_pipe_commands:
         
         move_pair_2 = "mv " + blat_containment_vector_folder + "pair_2_no_vectors.fastq "
         move_pair_2 += final_folder
-        echo_probe = "echo PROBE HERE"
+        
         
         COMMANDS_Pre = [
+            #make the pairs align, by sorting
+            sort_pair_1, 
+            sort_pair_2,
             # remove adapters
-            adapter_removal_line,
+            adapter_removal_line#,
             #trim things
-            vsearch_merge,
-            cat_glue,
-            vsearch_filter_0,
-            vsearch_filter_1,
-            vsearch_filter_2,
-            orphan_read_filter,
-            cdhit_orphans,
-            # move_unpaired_cluster,
-            cdhit_pair_1,
-            cdhit_pair_2,
-            # move_paired_cluster,
-            #----host removal
-            copy_host,
-            bwa_hr_prep,
-            #----SAMTOOLS makes bam files
-            samtools_hr_prep,
-            bwa_hr_orphans,
-            bwa_hr_pair,
-            samtools_hr_orphans_sam_to_bam,
-            samtools_no_host_orphans_bam_to_fastq,
-            samtools_host_orphans_bam_to_fastq,
-            samtools_host_pair_sam_to_bam,
-            samtools_no_host_pair_bam_to_fastq,
-            samtools_host_pair_bam_to_fastq,
-            make_blast_db_host,
-            vsearch_filter_3,
-            vsearch_filter_4,
-            vsearch_filter_5,
-            echo_probe,
-            blat_hr_orphans,
-            blat_hr_pair_1,
-            blat_hr_pair_2,
-            hr_orphans,
-            hr_pair_1,
-            hr_pair_2,
-            # #-----vector removal
-            copy_vector,
-            bwa_vr_prep,
-            samtools_vr_prep,
-            bwa_vr_orphans,
-            samtools_no_vector_orphans_sam_to_bam,
-            samtools_no_vector_orphans_bam_to_fastq,
-            samtools_vector_orphans_bam_to_fastq,
-            bwa_vr_pair,
-            samtools_vr_pair_sam_to_bam,
-            samtools_no_vector_pair_bam_to_fastq,
-            samtools_vector_pair_bam_to_fastq,
-            make_blast_db_vector, 
-            vsearch_filter_6,
-            vsearch_filter_7,
-            vsearch_filter_8,
-            blat_vr_orphans,
-            blat_vr_pair_1,
-            blat_vr_pair_2,
-            blat_containment_vector_orphans,
-            blat_containment_vector_pair_1,
-            blat_containment_vector_pair_2,
-            move_orphans, 
-            move_pair_1, 
-            move_pair_2
+            
+            # vsearch_merge,
+            # cat_glue,
+            # vsearch_filter_0,
+            # vsearch_filter_1,
+            # vsearch_filter_2,
+            # orphan_read_filter,
+            # cdhit_orphans,
+            # # move_unpaired_cluster,
+            # cdhit_pair_1,
+            # cdhit_pair_2,
+            # # move_paired_cluster,
+            # #----host removal
+            # copy_host,
+            # bwa_hr_prep,
+            # #----SAMTOOLS makes bam files
+            # samtools_hr_prep,
+            # bwa_hr_orphans,
+            # bwa_hr_pair,
+            # samtools_hr_orphans_sam_to_bam,
+            # samtools_no_host_orphans_bam_to_fastq,
+            # samtools_host_orphans_bam_to_fastq,
+            # samtools_host_pair_sam_to_bam,
+            # samtools_no_host_pair_bam_to_fastq,
+            # samtools_host_pair_bam_to_fastq,
+            # make_blast_db_host,
+            # vsearch_filter_3,
+            # vsearch_filter_4,
+            # vsearch_filter_5,
+            # echo_probe,
+            # blat_hr_orphans,
+            # blat_hr_pair_1,
+            # blat_hr_pair_2,
+            # hr_orphans,
+            # hr_pair_1,
+            # hr_pair_2,
+            # # #-----vector removal
+            # copy_vector,
+            # bwa_vr_prep,
+            # samtools_vr_prep,
+            # bwa_vr_orphans,
+            # samtools_no_vector_orphans_sam_to_bam,
+            # samtools_no_vector_orphans_bam_to_fastq,
+            # samtools_vector_orphans_bam_to_fastq,
+            # bwa_vr_pair,
+            # samtools_vr_pair_sam_to_bam,
+            # samtools_no_vector_pair_bam_to_fastq,
+            # samtools_vector_pair_bam_to_fastq,
+            # make_blast_db_vector, 
+            # vsearch_filter_6,
+            # vsearch_filter_7,
+            # vsearch_filter_8,
+            # blat_vr_orphans,
+            # blat_vr_pair_1,
+            # blat_vr_pair_2,
+            # blat_containment_vector_orphans,
+            # blat_containment_vector_pair_1,
+            # blat_containment_vector_pair_2,
+            # move_orphans, 
+            # move_pair_1, 
+            # move_pair_2
+            
         ]
         return COMMANDS_Pre            
                     

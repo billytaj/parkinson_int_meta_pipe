@@ -63,7 +63,8 @@ class qsub_sync:
                     lockout_count -= 1
             
             if(lockout_count <= 0):
-                print(label, "took too long.  shutting down pipeline")
+                print(label, "took too long.  shutting down pipeline.  QSUB Jobs may still be running")
+                print("Use qselect -u <username> | xargs qdel  to remove jobs from qsub")
                 sys.exit()
 
 def main(input_folder, output_folder):
@@ -121,7 +122,9 @@ def main(input_folder, output_folder):
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
             comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path)
             preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_double_command(preprocess_label), run_job = True)
-            
+            #testing construct only:
+            sync_obj.wait_for_sync(600, preprocess_job_id, "preprocess")
+            """
             rRNA_filter_job_id = []
             rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 5, "preprocess"), dependency_list = preprocess_job_id, run_job = True))
             
@@ -219,8 +222,12 @@ def main(input_folder, output_folder):
             sp.check_output(cat_pair_2_mRNA, shell=True)
             sp.check_output(cat_pair_2_rRNA, shell=True)
             
+            #-------------------------------------------------------------
+            #Next, we have 
+            
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
+            """
         elif(operating_mode == single_mode):
             print("not ready")
 
