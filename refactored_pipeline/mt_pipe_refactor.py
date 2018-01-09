@@ -23,12 +23,13 @@ class qsub_sync:
             jobs_list = sp.check_output(["showq", "-c"]).decode('ascii')
         elif(op_mode == "queue"):
             jobs_list = sp.check_output(["showq", "-i"]).decode('ascii')
+            
         if (isinstance(job_id, int)):
             #single
             if(str(job_id) in jobs_list):
-                return True
+                return 1 #match
             else:
-                return False
+                return 2 #no match
             
         elif(isinstance(job_id, list)):
             # multi
@@ -37,13 +38,13 @@ class qsub_sync:
                 if(str(item) in jobs_list):
                     match_count += 1
             if(match_count != len(job_id)):
-                return False
+                return 2 #no match
             else:
-                return True
+                return 1 #match
                 
-        elif(dependency_list is None):
+        elif(job_id is None):
             print("bad arg to check job finished")
-            return False
+            return 0 #error
         else:
             print("This isn't supposed to happen")
             sys.exit()
@@ -51,15 +52,18 @@ class qsub_sync:
     def wait_for_sync(self, timeout, job_id, label):
         #does the actual wait for the qsub job to finish
         b_lock = True
+        job_status = 0
         lockout_count = int(timeout)
         while(b_lock):
-            if(self.check_job_finished(job_id, "completed")):
+            job_status = self.check_job_finished(job_id, "completed")
+            if(job_status == 1):
                 b_lock = False
             else:
                 time.sleep(1)
                 #only start the countdown if the job is running, not while it's waiting in the queue.  
                 #job could wait a long time in the queue if someone's clobbering the cluster
-                if not(self.check_job_finished(job_id, "queue")):
+                job_status = self.check_job_finished(job_id, "queue")
+                if(job_status == 2):
                     lockout_count -= 1
             
             if(lockout_count <= 0):
@@ -120,13 +124,14 @@ def main(input_folder, output_folder):
             preprocess_label = "preprocess"
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
-            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path)
-            preprocess_job_id = comm.create_pbs_and_launch("preprocess", comm.create_pre_double_command(preprocess_label), run_job = True)
+            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
+            preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
             #testing construct only:
-            sync_obj.wait_for_sync(600, preprocess_job_id, "preprocess")
-            """
+            #sync_obj.wait_for_sync(600, preprocess_job_id, "preprocess")
+            
             rRNA_filter_job_id = []
-            rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 5, "preprocess"), dependency_list = preprocess_job_id, run_job = True))
+            rRNA_filter_label = "rRNA_filter"
+            rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 10, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
             
             #standalone
             #rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 5, "preprocess"), run_job = True))
@@ -163,7 +168,7 @@ def main(input_folder, output_folder):
             #why delay?  because the following code needs the files present to generate the correct job.  
             #this delay, and timeout are a check against super large runaway jobs.
             
-            sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], "rRNA filter")
+            sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], rRNA_filter_label)
             print("moving onto INFERNAL")
             
             for item in os.listdir(rRNA_filter_orphans_fastq_folder):
@@ -202,7 +207,7 @@ def main(input_folder, output_folder):
                     )
                 )
             #wait for infernal to finish running
-            sync_obj.wait_for_sync(600, rRNA_filter_job_id, "rRNA filter")
+            sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label)
             #then we need to combine the splits into per-category files
             #this shouldn't be a qsub job
             
@@ -223,11 +228,16 @@ def main(input_folder, output_folder):
             sp.check_output(cat_pair_2_rRNA, shell=True)
             
             #-------------------------------------------------------------
-            #Next, we have 
+            #Next, we have duplicate repopulation
+            repop_job_label = "duplicate_repopulation"
+            repop_job_id = comm.create_pbs_and_launch("repopulate", comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label), run_job = True)
+            
+            
+            #----------------------------------------
             
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
-            """
+            
         elif(operating_mode == single_mode):
             print("not ready")
 

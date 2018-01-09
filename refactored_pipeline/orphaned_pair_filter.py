@@ -21,8 +21,8 @@ def filter_for_orphans(pair_0_path_i, pair_1_path_i, pair_0_path_o, pair_1_path_
     df_1[df_1.ID.isin(common.ID)].to_csv(pair_1_path_o, sep = '\n', mode = 'w+', header = False, index = False)
     
     #stuff that doesn't belong go to another pile
-    df_0[~df_0.ID.isin(common.ID)].to_csv(unique_path_o, sep='\n', mode = 'w+', header=False, index = False)
-    df_1[~df_1.ID.isin(common.ID)].to_csv(unique_path_o, sep='\n', mode = 'a', header=False, index = False)
+    df_0[~df_0.ID.isin(common.ID)].to_csv(unique_path_o, sep = '\n', mode = 'w+', header=False, index = False)
+    df_1[~df_1.ID.isin(common.ID)].to_csv(unique_path_o, sep = '\n', mode = 'a', header=False, index = False)
 
 if __name__ == "__main__":
     if(len(sys.argv) < 6):

@@ -428,7 +428,7 @@ class mt_pipe_commands:
         # HR BLAT
         blat_hr_folder = data_folder + "7_blat_hr/"
         self.make_folder(blat_hr_folder)
-        hr orphans = ">&2 echo BLAT contaminant orphans | "
+        hr_orphans = ">&2 echo BLAT contaminant orphans | "
         hr_orphans += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
         hr_orphans += host_removal_folder + "orphans_no_host.fastq" + " " # in
         hr_orphans += host_removal_folder + "orphans_no_host.blatout" + " " #in 
@@ -598,69 +598,68 @@ class mt_pipe_commands:
             sort_pair_1, 
             sort_pair_2,
             # remove adapters
-            adapter_removal_line#,
+            adapter_removal_line,
             #trim things
             
-            # vsearch_merge,
-            # cat_glue,
-            # vsearch_filter_0,
-            # vsearch_filter_1,
-            # vsearch_filter_2,
-            # orphan_read_filter,
-            # cdhit_orphans,
-            # # move_unpaired_cluster,
-            # cdhit_pair_1,
-            # cdhit_pair_2,
-            # # move_paired_cluster,
-            # #----host removal
-            # copy_host,
-            # bwa_hr_prep,
-            # #----SAMTOOLS makes bam files
-            # samtools_hr_prep,
-            # bwa_hr_orphans,
-            # bwa_hr_pair,
-            # samtools_hr_orphans_sam_to_bam,
-            # samtools_no_host_orphans_bam_to_fastq,
-            # samtools_host_orphans_bam_to_fastq,
-            # samtools_host_pair_sam_to_bam,
-            # samtools_no_host_pair_bam_to_fastq,
-            # samtools_host_pair_bam_to_fastq,
-            # make_blast_db_host,
-            # vsearch_filter_3,
-            # vsearch_filter_4,
-            # vsearch_filter_5,
-            # echo_probe,
-            # blat_hr_orphans,
-            # blat_hr_pair_1,
-            # blat_hr_pair_2,
-            # hr_orphans,
-            # hr_pair_1,
-            # hr_pair_2,
-            # # #-----vector removal
-            # copy_vector,
-            # bwa_vr_prep,
-            # samtools_vr_prep,
-            # bwa_vr_orphans,
-            # samtools_no_vector_orphans_sam_to_bam,
-            # samtools_no_vector_orphans_bam_to_fastq,
-            # samtools_vector_orphans_bam_to_fastq,
-            # bwa_vr_pair,
-            # samtools_vr_pair_sam_to_bam,
-            # samtools_no_vector_pair_bam_to_fastq,
-            # samtools_vector_pair_bam_to_fastq,
-            # make_blast_db_vector, 
-            # vsearch_filter_6,
-            # vsearch_filter_7,
-            # vsearch_filter_8,
-            # blat_vr_orphans,
-            # blat_vr_pair_1,
-            # blat_vr_pair_2,
-            # blat_containment_vector_orphans,
-            # blat_containment_vector_pair_1,
-            # blat_containment_vector_pair_2,
-            # move_orphans, 
-            # move_pair_1, 
-            # move_pair_2
+            vsearch_merge,
+            cat_glue,
+            vsearch_filter_0,
+            vsearch_filter_1,
+            vsearch_filter_2,
+            orphan_read_filter,
+            cdhit_orphans,
+            # move_unpaired_cluster,
+            cdhit_pair_1,
+            cdhit_pair_2,
+            # move_paired_cluster,
+            #----host removal
+            copy_host,
+            bwa_hr_prep,
+            #----SAMTOOLS makes bam files
+            samtools_hr_prep,
+            bwa_hr_orphans,
+            bwa_hr_pair,
+            samtools_hr_orphans_sam_to_bam,
+            samtools_no_host_orphans_bam_to_fastq,
+            samtools_host_orphans_bam_to_fastq,
+            samtools_host_pair_sam_to_bam,
+            samtools_no_host_pair_bam_to_fastq,
+            samtools_host_pair_bam_to_fastq,
+            make_blast_db_host,
+            vsearch_filter_3,
+            vsearch_filter_4,
+            vsearch_filter_5,
+            blat_hr_orphans,
+            blat_hr_pair_1,
+            blat_hr_pair_2,
+            hr_orphans,
+            hr_pair_1,
+            hr_pair_2,
+            # #-----vector removal
+            copy_vector,
+            bwa_vr_prep,
+            samtools_vr_prep,
+            bwa_vr_orphans,
+            samtools_no_vector_orphans_sam_to_bam,
+            samtools_no_vector_orphans_bam_to_fastq,
+            samtools_vector_orphans_bam_to_fastq,
+            bwa_vr_pair,
+            samtools_vr_pair_sam_to_bam,
+            samtools_no_vector_pair_bam_to_fastq,
+            samtools_vector_pair_bam_to_fastq,
+            make_blast_db_vector, 
+            vsearch_filter_6,
+            vsearch_filter_7,
+            vsearch_filter_8,
+            blat_vr_orphans,
+            blat_vr_pair_1,
+            blat_vr_pair_2,
+            blat_containment_vector_orphans,
+            blat_containment_vector_pair_1,
+            blat_containment_vector_pair_2,
+            move_orphans, 
+            move_pair_1, 
+            move_pair_2
             
         ]
         return COMMANDS_Pre            
@@ -757,7 +756,8 @@ class mt_pipe_commands:
         ]
         return COMMANDS_infernal
         
-    def create_combine_command(self, stage_name, preprocess_stage_name, dependency_name):
+    def create_repop_command(self, stage_name, preprocess_stage_name, dependency_stage_name):
+        #This stage reintroduces the duplicate reads into the data.  We need it to count towards things.
         #Due to time, and hierarchical importance, we're leaving this stage alone.
         #Leaving it alone in a tangled state
         #But the issue is that by leaving it alone, we violate the design plan
@@ -767,20 +767,21 @@ class mt_pipe_commands:
         #-> detect if we've run the preprocess stage.
         #-> if it's run, grab data
         #-> if not, run our own custom preprocess up to what we need
-        dep_loc = os.getcwd() + "/" + dependency_name + "/" + "data/final_results/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/" + "data/final_results/"
         COMMANDS_combine = []
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        if not (os.path.exists(subfolder)):
-            os.makedirs(subfolder)
-        if not(os.path.exists(data_folder)):
-            os.makedirs(data_folder)
-            
+        final_folder = data_folder + "final_results/"
         preprocess_subfolder = os.getcwd() + "/" + preprocess_stage_name + "/"
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(final_folder)
+        
+        
         if not(os.path.exists(preprocess_subfolder)):
             #start our own custom preprocess steps
             print("duplicate repopulation without preprocess not ready")
-            
             
         else:
             #we ran a previous preprocess.  grab files
@@ -790,41 +791,77 @@ class mt_pipe_commands:
             hq_path = preprocess_subfolder + "data/3_ar_quality_filter/"
             cluster_path = preprocess_subfolder + "data/5_remove_duplicates/"
             
-            reduplicate_unpaired = mpp.Python + " " + mpp.duplicate_repopulate + " " 
-            reduplicate_unpaired += hq_path + "orphans_hq.fastq" + " "   #in -> way back when things were quality-filtered.  
+            repop_orphans = ">&2 echo Duplication repopulate Orphans | "
+            repop_orphans += mpp.Python + " " + mpp.duplicate_repopulate + " " 
+            repop_orphans += hq_path + "orphans_hq.fastq" + " "   #in -> way back when things were quality-filtered.  
                                                                                             #      step 2 in preprocess.  could still contain rRNA
-            reduplicate_unpaired += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
-            reduplicate_unpaired += dep_loc + "orphans.clstr" + " "           #in -> duplicates filter output
-            reduplicate_unpaired += data_folder + "mRNA_oprhans.fastq"        #out
+            repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
+            repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " "           #in -> duplicates filter output
+            repop_orphans += data_folder + "mRNA_oprhans.fastq"        #out
             
-            reduplicate_pair_1 = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_File1 + "_paired_quality.fastq" + " " + self.Input_File1 + "_mRNA.fastq" + " " + self.Input_Filepath + "_paired.clstr" + " " + self.Input_File1 + "_all_mRNA.fastq"
             
-            reduplicate_pair_2 = mpp.Python + " " + mpp.Reduplicate + " " + self.Input_File2 + "_paired_quality.fastq" + " " + self.Input_File2 + "_mRNA.fastq" + " " + self.Input_Filepath + "_paired.clstr" + " " + self.Input_File2 + "_all_mRNA.fastq"
+            repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
+            repop_pair_1 += mpp.Python + " " + mpp.duplicate_repopulate + " " 
+            repop_pair_1 += hq_path + "pair_1_hq.fastq" + " " 
+            repop_pair_1 += dep_loc + "mRNA/pair_1.fastq" + " " 
+            repop_pair_1 += cluster_path + "pair_1_unique.fastq.clstr" + " " 
+            repop_pair_1 += data_folder + "mRNA_pair_1.fastq"
+            
+            repop_pair_2 = ">&2 echo Duplication repopulate pair 2 | "
+            repop_pair_2 += mpp.Python + " " + mpp.duplicate_repopulate + " " 
+            repop_pair_2 += hq_path + "_paired_quality.fastq" + " " 
+            repop_pair_2 += dep_loc + "_mRNA.fastq" + " " 
+            repop_pair_2 += cluster_path + "pair_2_unique.fastq.clstr" + " " 
+            repop_pair_2 += data_folder + "_all_mRNA.fastq"
         
             COMMANDS_Combine = [
-            combine_unpaired_mrna,
-            combine_unpaired_rrna,
-            combine_pair_1_mrna_fastq,
-            combine_pair_1_rrna_fastq,
-            combine_pair_2_mrna_fastq,
-            combine_pair_2_rrna_fastq,
-            reduplicate_unpaired,
-            reduplicate_pair_1,
-            reduplicate_pair_2
+            repop_orphans,
+            repop_pair_1,
+            repop_pair_2
             ]
         return COMMANDS_Combine
 
-    def create_assemble_commands(self):
+    def create_assemble_commands(self, stage_name, dependency_stage_name):
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        
+        spades_folder = data_folder + "0_spades/"
+        self.make_folder(spades_folder)
+        
         #this assembles contigs
-        spades = mpp.Python + " " + mpp.Spades + " -k 21,33,55,77 --meta" + " -1 " + self.Input_File1 + "_all_mRNA.fastq" + " -2 " + self.Input_File2 + "_all_mRNA.fastq" + " -o " + os.path.splitext(self.Input_FName)[0] + "_SpadesOut"
+        spades = ">&2 echo Spades Contig assembly | "
+        spades += mpp.Python + " " 
+        spades += mpp.Spades + " -k 21,33,55,77 --meta" 
+        spades += " -1 " + self.Input_File1 + "_all_mRNA.fastq" #in1 (pair 1)
+        spades += " -2 " + self.Input_File2 + "_all_mRNA.fastq" #in2 (pair 2)
+        spades += " -o " + os.path.splitext(self.Input_FName)[0] + "_SpadesOut" #out
         
         bwa_index = mpp.BWA + " index -a bwtsw " + self.Contigs
         
-        bwa_paired_contigs = mpp.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " + self.Contigs + " " + self.Input_File1 + "_all_mRNA.fastq " + self.Input_File2 + "_all_mRNA.fastq | " + mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_paired.sam"
+        #calls BWA, then uses SAMTools to get a report
+        bwa_pair_contigs = ">&2 echo BWA pair contigs | " 
+        bwa_pair_contigs += mpp.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
+        bwa_pair_contigs += self.Contigs + " " 
+        bwa_pair_contigs += self.Input_File1 + "_all_mRNA.fastq " 
+        bwa_pair_contigs += self.Input_File2 + "_all_mRNA.fastq | " 
+        bwa_pair_contigs += mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_paired.sam"
         
-        bwa_unpaired_contigs = mpp.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " + self.Contigs + " " + self.Input_Filepath + "_all_mRNA_unpaired.fastq | " + mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_unpaired.sam"
+        bwa_orphans_contigs = ">&2 echo BWA orphan contigs | " 
+        bwa_orphans_contigs += mpp.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
+        bwa_orphans_contigs += self.Contigs + " " 
+        bwa_orphans_contigs += self.Input_Filepath + "_all_mRNA_unpaired.fastq | " 
+        bwa_orphans_contigs += mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_unpaired.sam"
         
-        contig_merge = mpp.Python + " " + mpp.Map_reads_contigs + " " + self.Input_File1 + "_all_mRNA.fastq" + " " + self.Input_File2 + "_all_mRNA.fastq" + " " + self.Input_Filepath + "_all_mRNA_unpaired.fastq" + " " + self.Input_Filepath + "_contig_paired.sam" + " " + self.Input_Filepath + "_contig_unpaired.sam" + " " + self.Input_Filepath + "_contig_map.tsv"
+        contig_merge = ">&2 echo Contig merge | "
+        contig_merge += mpp.Python + " " + mpp.Map_reads_contigs + " " 
+        contig_merge += self.Input_File1 + "_all_mRNA.fastq" + " " 
+        contig_merge += self.Input_File2 + "_all_mRNA.fastq" + " " 
+        contig_merge += self.Input_Filepath + "_all_mRNA_unpaired.fastq" + " " 
+        contig_merge += self.Input_Filepath + "_contig_paired.sam" + " " 
+        contig_merge += self.Input_Filepath + "_contig_unpaired.sam" + " " 
+        contig_merge += self.Input_Filepath + "_contig_map.tsv"
         
         COMMANDS_Assemble = [
                         "mkdir -p " + os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0]) + "_SpadesOut",
