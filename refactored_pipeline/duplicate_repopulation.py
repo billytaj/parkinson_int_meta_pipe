@@ -21,12 +21,18 @@ start_all = clock()
 #Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
 
 reference_file = sys.argv[1]
-reference_sequences = SeqIO.to_dict(SeqIO.parse(reference_file, "fastq"))
-dedeplicated_file = sys.argv[2]
-dedeplicated_sequences = SeqIO.index(dedeplicated_file, "fastq")
+#reference_sequences = SeqIO.to_dict(SeqIO.parse(reference_file, "fastq"))
+deduplicated_file = sys.argv[2]
+#deduplicated_sequences = SeqIO.index(deduplicated_file, "fastq")
 cluster_file = sys.argv[3]
 cluster_map = {}
 reduplicated_file = sys.argv[4]
+
+print("ref file:", reference_file)
+print("unique file:", deduplicated_file)
+print("cluster file:", cluster_file)
+print("full output:", reduplicated_file)
+"""
 reduplicated_ids = set()
 reduplicated_seqs = []
 
@@ -44,7 +50,7 @@ with open(cluster_file, "r") as clustr_read:
             seq_id = line[line.find(">") + 1:line.find("...")]
             cluster_map[rep].append(seq_id)
 
-for sequence in dedeplicated_sequences:
+for sequence in deduplicated_sequences:
     if len(cluster_map[sequence]) > 1:
         for seq_id in cluster_map[sequence]:
             reduplicated_ids.add(seq_id)
@@ -57,6 +63,7 @@ with open(reduplicated_file, "w") as out:
     SeqIO.write(reduplicated_seqs, out, "fastq")
     
 end_all = clock()
-print "Reduplicate"
-print "================================"
-print "total runtime:", end_all - start_all, "s"   
+print ("Reduplicate")
+print ("================================")
+print ("total runtime:", end_all - start_all, "s") 
+"""  
