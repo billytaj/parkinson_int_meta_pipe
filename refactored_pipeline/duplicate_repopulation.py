@@ -10,9 +10,10 @@ import os
 import os.path
 import shutil
 import subprocess
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
+#from Bio import SeqIO
+#from Bio.SeqRecord import SeqRecord
 from time import clock as clock
+import pandas as pd
 
 start_all = clock()
 #Not actually called in this code
@@ -22,8 +23,12 @@ start_all = clock()
 
 reference_file = sys.argv[1]
 #reference_sequences = SeqIO.to_dict(SeqIO.parse(reference_file, "fastq"))
+ref_df = pd.read_csv(reference_file, header=None, names=[None], sep='\n', skip_blank_lines = False)
+ref_df = pd.DataFrame(ref_df.values.reshape(int(len(ref_df)/4), 4))
 deduplicated_file = sys.argv[2]
 #deduplicated_sequences = SeqIO.index(deduplicated_file, "fastq")
+deduplicated_df = pd.read_csv(deduplicated_file, header=None, names=[None], sep = '\n', skip_blank_lines = False)
+deduplicated_df = pd.DataFrame(deduplicated_df.values.reshape(int(len(deduplicated_df)/4), 4))
 cluster_file = sys.argv[3]
 cluster_map = {}
 reduplicated_file = sys.argv[4]
@@ -32,7 +37,7 @@ print("ref file:", reference_file)
 print("unique file:", deduplicated_file)
 print("cluster file:", cluster_file)
 print("full output:", reduplicated_file)
-"""
+
 reduplicated_ids = set()
 reduplicated_seqs = []
 
@@ -50,6 +55,10 @@ with open(cluster_file, "r") as clustr_read:
             seq_id = line[line.find(">") + 1:line.find("...")]
             cluster_map[rep].append(seq_id)
 
+for item in cluster_map:
+    print(item, ":", cluster_map[item])
+            
+"""
 for sequence in deduplicated_sequences:
     if len(cluster_map[sequence]) > 1:
         for seq_id in cluster_map[sequence]:
@@ -61,9 +70,8 @@ reduplicated_seqs = [reference_sequences[seq_id] for seq_id in sorted(reduplicat
 
 with open(reduplicated_file, "w") as out:
     SeqIO.write(reduplicated_seqs, out, "fastq")
-    
+"""    
 end_all = clock()
 print ("Reduplicate")
 print ("================================")
 print ("total runtime:", end_all - start_all, "s") 
-"""  
