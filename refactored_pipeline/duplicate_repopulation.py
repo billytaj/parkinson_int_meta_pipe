@@ -25,10 +25,10 @@ reference_file = sys.argv[1]
 #reference_sequences = SeqIO.to_dict(SeqIO.parse(reference_file, "fastq"))
 ref_df = pd.read_csv(reference_file, header=None, names=[None], sep='\n', skip_blank_lines = False)
 ref_df = pd.DataFrame(ref_df.values.reshape(int(len(ref_df)/4), 4))
-deduplicated_file = sys.argv[2]
+mRNA_file = sys.argv[2]
 #deduplicated_sequences = SeqIO.index(deduplicated_file, "fastq")
-deduplicated_df = pd.read_csv(deduplicated_file, header=None, names=[None], sep = '\n', skip_blank_lines = False)
-deduplicated_df = pd.DataFrame(deduplicated_df.values.reshape(int(len(deduplicated_df)/4), 4))
+mRNA_df = pd.read_csv(mRNA_file, header=None, names=[None], sep = '\n', skip_blank_lines = False)
+mRNA_df = pd.DataFrame(mRNA_df.values.reshape(int(len(mRNA_df)/4), 4))
 cluster_file = sys.argv[3]
 cluster_map = {}
 reduplicated_file = sys.argv[4]
