@@ -224,16 +224,16 @@ def main(input_folder, output_folder):
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
             comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
             
-            #preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
+            preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
             #testing construct only:
             #sync_obj.wait_for_sync(600, preprocess_job_id, "preprocess")
             
             rRNA_filter_job_id = []
             
-            #rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 2, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
+            rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 2, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
             
             #standalone
-            rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 2, "preprocess"), run_job = True))
+            #rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 2, "preprocess"), run_job = True))
             #--------------------------
             #print("-----------------------------------")
             #print(rRNA_filter_job_id)
@@ -251,7 +251,7 @@ def main(input_folder, output_folder):
             
             sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], rRNA_filter_label, "waiting for rRNA splitter")
             print("moving onto INFERNAL")
-            rRNA_filter_job_id.pop(0)
+            #rRNA_filter_job_id.pop(0)
             
             for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                 file_root_name = item.split('.')[0]
@@ -289,11 +289,13 @@ def main(input_folder, output_folder):
                     )
                 )
             #wait for infernal to finish running
+            time.sleep(5)
             sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
             
             #then we need to combine the splits into per-category files
             #this shouldn't be a qsub job
             print("Working on cats")
+            time.sleep(1)
             cat_orphans_mRNA = "cat " + rRNA_filter_orphans_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "orphans.fastq"
             cat_orphans_rRNA = "cat " + rRNA_filter_orphans_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "orphans.fastq"
             

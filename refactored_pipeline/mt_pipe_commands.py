@@ -285,6 +285,7 @@ class mt_pipe_commands:
         orphan_read_filter += mpp.orphaned_read_filter + " " 
         orphan_read_filter += vsearch_filter_folder + "pair_1_hq.fastq " 
         orphan_read_filter += vsearch_filter_folder + "pair_2_hq.fastq " 
+        orphan_read_filter += vsearch_filter_folder + "orphans_hq.fastq"
         orphan_read_filter += orphan_read_filter_folder + "pair_1_match.fastq " 
         orphan_read_filter += orphan_read_filter_folder + "pair_2_match.fastq "
         orphan_read_filter += orphan_read_filter_folder + "orphans.fastq"
@@ -706,7 +707,7 @@ class mt_pipe_commands:
     
     def create_rRNA_filter_command(self, stage_name, category, segment_root_name):
         #converts the fastq segments to fasta for infernal,
-        #then takes the fastq segments, filters out the rRNA
+        #then takes the fasta segments, filters out the rRNA
         #then merges the split fastqs back together
         #called by each split file
         #category -> orphans, pair 1, pair 2
@@ -797,7 +798,7 @@ class mt_pipe_commands:
                                                                                             #      step 2 in preprocess.  could still contain rRNA
             repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
             repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " "           #in -> duplicates filter output
-            repop_orphans += data_folder + "mRNA_oprhans.fastq"        #out
+            repop_orphans += final_folder + "orphans.fastq"        #out
             
             
             repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
@@ -805,14 +806,14 @@ class mt_pipe_commands:
             repop_pair_1 += hq_path + "pair_1_hq.fastq" + " " 
             repop_pair_1 += dep_loc + "mRNA/pair_1.fastq" + " " 
             repop_pair_1 += cluster_path + "pair_1_unique.fastq.clstr" + " " 
-            repop_pair_1 += data_folder + "mRNA_pair_1.fastq"
+            repop_pair_1 += final_folder + "pair_1.fastq"
             
             repop_pair_2 = ">&2 echo Duplication repopulate pair 2 | "
             repop_pair_2 += mpp.Python + " " + mpp.duplicate_repopulate + " " 
-            repop_pair_2 += hq_path + "_paired_quality.fastq" + " " 
-            repop_pair_2 += dep_loc + "_mRNA.fastq" + " " 
+            repop_pair_2 += hq_path + "pair_2_hq.fastq" + " " 
+            repop_pair_2 += dep_loc + "mRNA/pair_2.fastq" + " " 
             repop_pair_2 += cluster_path + "pair_2_unique.fastq.clstr" + " " 
-            repop_pair_2 += data_folder + "_all_mRNA.fastq"
+            repop_pair_2 += final_folder + "pair_2.fastq"
         
             COMMANDS_Combine = [
             repop_orphans,
@@ -824,6 +825,7 @@ class mt_pipe_commands:
     def create_assemble_commands(self, stage_name, dependency_stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         
@@ -834,10 +836,10 @@ class mt_pipe_commands:
         spades = ">&2 echo Spades Contig assembly | "
         spades += mpp.Python + " " 
         spades += mpp.Spades + " -k 21,33,55,77 --meta" 
-        spades += " -1 " + self.Input_File1 + "_all_mRNA.fastq" #in1 (pair 1)
-        spades += " -2 " + self.Input_File2 + "_all_mRNA.fastq" #in2 (pair 2)
-        spades += " -o " + os.path.splitext(self.Input_FName)[0] + "_SpadesOut" #out
-        
+        spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
+        spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
+        spades += " -o " + spades_folder + "_SpadesOut" #out
+        """
         bwa_index = mpp.BWA + " index -a bwtsw " + self.Contigs
         
         #calls BWA, then uses SAMTools to get a report
@@ -862,14 +864,14 @@ class mt_pipe_commands:
         contig_merge += self.Input_Filepath + "_contig_paired.sam" + " " 
         contig_merge += self.Input_Filepath + "_contig_unpaired.sam" + " " 
         contig_merge += self.Input_Filepath + "_contig_map.tsv"
-        
+        """
         COMMANDS_Assemble = [
-                        "mkdir -p " + os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0]) + "_SpadesOut",
+                        #"mkdir -p " + os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0]) + "_SpadesOut",
                         spades,
-                        bwa_index,
-                        bwa_paired_contigs,
-                        bwa_unpaired_contigs,
-                        contig_merge
+                        #bwa_index,
+                        #bwa_paired_contigs,
+                        #bwa_unpaired_contigs#,
+                        #contig_merge
                         ]
         return COMMANDS_Assemble
         
@@ -932,7 +934,7 @@ class mt_pipe_commands:
         ]
         return COMMANDS_Annotate_Diamond_Post
 
-    def create_EC_classify_command(self):
+    def create_taxonomic_annotation_command(self):
         
         
         get_taxa_from_gene = mpp.Python + " " + mpp.Annotated_taxid + " " + self.Input_Filepath + "_gene_map.tsv" + " " + mpp.accession2taxid + " " + self.Input_Filepath + "_TaxIDOut.tsv"
