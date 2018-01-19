@@ -17,7 +17,7 @@ def filter_for_orphans(pair_0_path_i, pair_1_path_i, orphans_path_i, pair_0_path
     
     df_0.columns = ["ID", "seq", "junk", "quality"]
     df_1.columns = ["ID", "seq", "junk", "quality"]
-    orphans_df.columns = ["ID, "seq", "junk", "quality"]
+    orphans_df.columns = ["ID", "seq", "junk", "quality"]
     common = df_0.merge(df_1, on=["ID"])
     
     #stuff that belongs go here
@@ -27,12 +27,12 @@ def filter_for_orphans(pair_0_path_i, pair_1_path_i, orphans_path_i, pair_0_path
     #stuff that doesn't belong go to another pile
     df_0[~df_0.ID.isin(common.ID)].to_csv(unique_path_o, sep = '\n', mode = 'w+', header=False, index = False)
     df_1[~df_1.ID.isin(common.ID)].to_csv(unique_path_o, sep = '\n', mode = 'a', header=False, index = False)
-    orphans_df.to_csv(unique_path_o, sep = '\n', mode = a, header=False, index=False)
+    orphans_df.to_csv(unique_path_o, sep = '\n', mode = 'a', header=False, index=False)
 
 if __name__ == "__main__":
-    if(len(sys.argv) < 6):
+    if(len(sys.argv) < 7):
         print("Too few input arguements.  Not filtering for orphans")
-    elif(len(sys.argv) > 6):
+    elif(len(sys.argv) > 7):
         print("Too many input arguments.  Not filtering for orphans")
     else:
         pair_0_path_i = sys.argv[1]

@@ -285,7 +285,7 @@ class mt_pipe_commands:
         orphan_read_filter += mpp.orphaned_read_filter + " " 
         orphan_read_filter += vsearch_filter_folder + "pair_1_hq.fastq " 
         orphan_read_filter += vsearch_filter_folder + "pair_2_hq.fastq " 
-        orphan_read_filter += vsearch_filter_folder + "orphans_hq.fastq"
+        orphan_read_filter += vsearch_filter_folder + "orphans_hq.fastq "
         orphan_read_filter += orphan_read_filter_folder + "pair_1_match.fastq " 
         orphan_read_filter += orphan_read_filter_folder + "pair_2_match.fastq "
         orphan_read_filter += orphan_read_filter_folder + "orphans.fastq"
@@ -608,15 +608,16 @@ class mt_pipe_commands:
             vsearch_filter_1,
             vsearch_filter_2,
             orphan_read_filter,
+            
             cdhit_orphans,
-            # move_unpaired_cluster,
+            # # move_unpaired_cluster,
             cdhit_pair_1,
             cdhit_pair_2,
-            # move_paired_cluster,
-            #----host removal
+            # # move_paired_cluster,
+            # #----host removal
             copy_host,
             bwa_hr_prep,
-            #----SAMTOOLS makes bam files
+            # #----SAMTOOLS makes bam files
             samtools_hr_prep,
             bwa_hr_orphans,
             bwa_hr_pair,
@@ -636,7 +637,7 @@ class mt_pipe_commands:
             hr_orphans,
             hr_pair_1,
             hr_pair_2,
-            # #-----vector removal
+            # # #-----vector removal
             copy_vector,
             bwa_vr_prep,
             samtools_vr_prep,
@@ -661,6 +662,7 @@ class mt_pipe_commands:
             move_orphans, 
             move_pair_1, 
             move_pair_2
+            
             
         ]
         return COMMANDS_Pre            
