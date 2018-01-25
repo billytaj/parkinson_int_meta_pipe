@@ -41,7 +41,8 @@ if __name__ == "__main__":
         pair_0_path_o = sys.argv[4]
         pair_1_path_o = sys.argv[5]
         unique_path_o = sys.argv[6]
-        
+        print("pair 0 in:", pair_0_path_i)
+        print("pair 1 in:", pair_1_path_i)
         print("pair 0 out:", pair_0_path_o)
         print("pair 1 out:", pair_1_path_o)
         filter_for_orphans(pair_0_path_i, pair_1_path_i, orphans_path_i, pair_0_path_o, pair_1_path_o, unique_path_o)

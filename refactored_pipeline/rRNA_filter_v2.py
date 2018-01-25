@@ -47,7 +47,7 @@ def filter_rRNA(rRNA_ID_list, fastq_sequence, mRNA_loc, rRNA_loc, file_name):
     
 if __name__ == "__main__":
     
-    inf_file = sys.argv[1]
+    inf_file = sys.argv[1] #infernal
     fastq_sequence = sys.argv[2]
     mRNA_location = sys.argv[3]
     rRNA_location = sys.argv[4]

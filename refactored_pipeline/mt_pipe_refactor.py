@@ -198,28 +198,7 @@ def main(input_folder, output_folder):
             preprocess_label = "preprocess"
             rRNA_filter_label = "rRNA_filter"
             
-            #constructing folder paths, so we have an easier time
-            rRNA_filter_orphans_fasta_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fasta/"
-            rRNA_filter_pair_1_fasta_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fasta/"
-            rRNA_filter_pair_2_fasta_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fasta/"
-            #-------------------------------------------------------------------
-            rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
-            rRNA_filter_pair_1_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fastq/"
-            rRNA_filter_pair_2_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fastq/"
-            #--------------------------------------------------------------------
-            rRNA_filter_orphans_mRNA_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_mRNA/"
-            rRNA_filter_pair_1_mRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_mRNA/"
-            rRNA_filter_pair_2_mRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_mRNA/"
-            #---------------------------------------------------------------------
-            rRNA_filter_orphans_rRNA_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_rRNA/"
-            rRNA_filter_pair_1_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_rRNA/"
-            rRNA_filter_pair_2_rRNA_folder =  os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_rRNA/"
-            
-            rRNA_filter_final_mRNA_folder = os.getcwd() + "/rRNA_filter/data/final_results/mRNA/"
-            rRNA_filter_final_rRNA_folder = os.getcwd() + "/rRNA_filter/data/final_results/rRNA/"
-            
-            
-            
+                        
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
             comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
@@ -230,7 +209,7 @@ def main(input_folder, output_folder):
             
             rRNA_filter_job_id = []
             
-            rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 2, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
+            rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 5, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
             
             #standalone
             #rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 2, "preprocess"), run_job = True))
@@ -239,11 +218,13 @@ def main(input_folder, output_folder):
             #print(rRNA_filter_job_id)
             #print(rRNA_filter_job_id[0])
             #print("-----------------------------------")
+            #-------------------------------------------------------------------
             
             
+            rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
+            rRNA_filter_pair_1_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fastq/"
+            rRNA_filter_pair_2_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fastq/"
             
-            make_folder(rRNA_filter_final_mRNA_folder)
-            make_folder(rRNA_filter_final_rRNA_folder)
             
             #this is gonna be hacky.... we have to wait until the prep stage is finished, but there's no nice way to sense it, through qsub
             #why delay?  because the following code needs the files present to generate the correct job.  
@@ -251,7 +232,7 @@ def main(input_folder, output_folder):
             
             sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], rRNA_filter_label, "waiting for rRNA splitter")
             print("moving onto INFERNAL")
-            #rRNA_filter_job_id.pop(0)
+            rRNA_filter_job_id.pop(0)
             
             for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                 file_root_name = item.split('.')[0]
@@ -290,35 +271,48 @@ def main(input_folder, output_folder):
                 )
             #wait for infernal to finish running
             time.sleep(5)
-            sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
+            #sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
+            print("rRNA ID list:", rRNA_filter_job_id)
+            rRNA_consolidate_id = comm.create_pbs_and_launch(
+                                        rRNA_filter_label, 
+                                        comm.create_rRNA_filter_post_command(rRNA_filter_label), 
+                                        inner_name = "rRNA_filter_post",
+                                        dependency_list = rRNA_filter_job_id, 
+                                        run_job = True
+                                        )
+                                        
             
             #then we need to combine the splits into per-category files
             #this shouldn't be a qsub job
             print("Working on cats")
             time.sleep(1)
-            cat_orphans_mRNA = "cat " + rRNA_filter_orphans_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "orphans.fastq"
-            cat_orphans_rRNA = "cat " + rRNA_filter_orphans_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "orphans.fastq"
             
-            cat_pair_1_mRNA = "cat " + rRNA_filter_pair_1_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "pair_1.fastq"
-            cat_pair_1_rRNA = "cat " + rRNA_filter_pair_1_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "pair_1.fastq"
-            
-            cat_pair_2_mRNA = "cat " + rRNA_filter_pair_2_mRNA_folder + "* 1>>" + rRNA_filter_final_mRNA_folder + "pair_2.fastq"
-            cat_pair_2_rRNA = "cat " + rRNA_filter_pair_2_rRNA_folder + "* 1>>" + rRNA_filter_final_rRNA_folder + "pair_2.fastq"
-            
-            sp.check_output(cat_orphans_mRNA, shell=True)
-            sp.check_output(cat_orphans_rRNA, shell=True)
-            sp.check_output(cat_pair_1_mRNA, shell=True)
-            sp.check_output(cat_pair_1_rRNA, shell=True)
-            sp.check_output(cat_pair_2_mRNA, shell=True)
-            sp.check_output(cat_pair_2_rRNA, shell=True)
             
             #-------------------------------------------------------------
             #Next, we have duplicate repopulation
             repop_job_label = "duplicate_repopulation"
-            repop_job_id = comm.create_pbs_and_launch(repop_job_label, comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label), run_job = True)
+            repop_job_id = comm.create_pbs_and_launch(
+                repop_job_label, comm.create_repop_command(
+                    repop_job_label, preprocess_label, 
+                    rRNA_filter_label
+                ), 
+                dependency_list = rRNA_consolidate_id,
+                run_job = True
+            )
             
             
             #----------------------------------------
+            assemble_contigs_label = "assemble_contigs"
+            assemble_contigs_id = comm.create_pbs_and_launch(
+                assemble_contigs_label, 
+                comm.create_assemble_contigs_command(
+                assemble_contigs_label,
+                repop_job_label
+                ),
+                dependency_list = repop_job_id, 
+                run_job = True
+            )
+            
             
             end_time = time.time()
             print("Total runtime:", end_time - start_time)

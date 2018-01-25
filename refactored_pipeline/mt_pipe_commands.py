@@ -88,10 +88,10 @@ class mt_pipe_commands:
         self.Vector_Contaminants = self.Input_Filepath + "_vector_contaminants_seq.fasta"
         
         print("input filepath:", self.Input_Filepath)
-        print("input file 1:", self.Input_File1)
-        print("input file 2:", self.Input_File2)
-        print("input FName:", self.Input_FName)
-        print("input path:", self.Input_Path)
+        #print("input file 1:", self.Input_File1)
+        #print("input file 2:", self.Input_File2)
+        #print("input FName:", self.Input_FName)
+        #print("input path:", self.Input_Path)
         print("where are we now:", os.getcwd())
     
     #-----------------------------------------------------------
@@ -142,17 +142,27 @@ class mt_pipe_commands:
                 if (isinstance(dependency_list, int)):
                     #single dep
                     dep_str = "-W depend=afterok:" + str(dependency_list)
-                    print(job_name, "running with single dependency")
-                    
+                    print(dep_str)
+                    if(inner_name is None):
+                        print(job_name, "running with single dependency")
+                    else:
+                        print(inner_name, "running with single dependency")
+                        
                 elif(isinstance(dependency_list, list)):
                     # multiple deps
-                    dep_str = "-W depend=afterok:"
+                    print("mutiple dependencies being used")
+                    dep_str = "-W depend=afterok"
                     for item in dependency_list:
-                        dep_str += ":" + str(item)
-                    print(job_name, "running with multiple dependencies")    
-                        
+                        dep_str += ":"+str(item)
+                    if(inner_name is None):
+                        print(job_name, "running with multiple dependencies")    
+                    else:
+                        print(inner_name, "running with multiple dependencies")
                 elif(dependency_list is None):
-                    print(job_name, "running without dependency")
+                    if(inner_name is None):
+                        print(job_name, "running without dependency")
+                    else:
+                        print(inner_name, "running without dependency")
                 else:
                     print("This isn't supposed to happen")
                     
@@ -759,6 +769,74 @@ class mt_pipe_commands:
         ]
         return COMMANDS_infernal
         
+    def create_rRNA_filter_post_command(self, stage_name):
+        #rRNA filtration orphaned some reads in the pairs.  We need to refilter the orphans.
+        #Cat then refilter
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/" 
+        pre_filter_folder = data_folder + "0_pre_orphans/"
+        pre_filter_mRNA_folder = pre_filter_folder + "mRNA/"
+        pre_filter_rRNA_folder = pre_filter_folder + "rRNA/"
+        final_folder = data_folder + "final_results/"
+        final_mRNA_folder = final_folder + "mRNA/"
+        final_rRNA_folder = final_folder + "rRNA/"
+        orphans_mRNA_folder = data_folder + "orphans/orphans_mRNA/"
+        orphans_rRNA_folder = data_folder + "orphans/orphans_rRNA/"
+        pair_1_mRNA_folder = data_folder + "pair_1/pair_1_mRNA/"
+        pair_1_rRNA_folder = data_folder + "pair_1/pair_1_rRNA/"
+        pair_2_mRNA_folder = data_folder + "pair_2/pair_2_mRNA/"
+        pair_2_rRNA_folder = data_folder + "pair_2/pair_2_rRNA/"
+        
+        self.make_folder(pre_filter_folder)
+        self.make_folder(pre_filter_mRNA_folder)
+        self.make_folder(pre_filter_rRNA_folder)
+        self.make_folder(final_folder)
+        self.make_folder(final_mRNA_folder)
+        self.make_folder(final_rRNA_folder)
+        
+        cat_orphans_mRNA = "cat " + orphans_mRNA_folder + "* 1>>" + pre_filter_mRNA_folder + "orphans.fastq"
+        cat_orphans_rRNA = "cat " + orphans_rRNA_folder + "* 1>>" + pre_filter_rRNA_folder + "orphans.fastq"
+        
+        cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "* 1>>" + pre_filter_mRNA_folder + "pair_1.fastq"
+        cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "* 1>>" + pre_filter_rRNA_folder + "pair_1.fastq"
+        
+        cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "* 1>>" + pre_filter_mRNA_folder + "pair_2.fastq"
+        cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "* 1>>" + pre_filter_rRNA_folder + "pair_2.fastq"
+        
+        orphan_mRNA_filter = ">&2 echo filtering mRNA for orphans | "
+        orphan_mRNA_filter += mpp.Python + " " 
+        orphan_mRNA_filter += mpp.orphaned_read_filter + " " 
+        orphan_mRNA_filter += pre_filter_mRNA_folder + "pair_1.fastq " 
+        orphan_mRNA_filter += pre_filter_mRNA_folder + "pair_2.fastq " 
+        orphan_mRNA_filter += pre_filter_mRNA_folder + "orphans.fastq "
+        orphan_mRNA_filter += final_mRNA_folder + "pair_1.fastq " 
+        orphan_mRNA_filter += final_mRNA_folder + "pair_2.fastq "
+        orphan_mRNA_filter += final_mRNA_folder + "orphans.fastq"
+        
+        orphan_rRNA_filter = ">&2 echo filtering mRNA for orphans | "
+        orphan_rRNA_filter += mpp.Python + " " 
+        orphan_rRNA_filter += mpp.orphaned_read_filter + " " 
+        orphan_rRNA_filter += pre_filter_rRNA_folder + "pair_1.fastq " 
+        orphan_rRNA_filter += pre_filter_rRNA_folder + "pair_2.fastq " 
+        orphan_rRNA_filter += pre_filter_rRNA_folder + "orphans.fastq "
+        orphan_rRNA_filter += final_rRNA_folder + "pair_1.fastq " 
+        orphan_rRNA_filter += final_rRNA_folder + "pair_2.fastq "
+        orphan_rRNA_filter += final_rRNA_folder + "orphans.fastq"
+        
+        
+        COMMANDS_rRNA_post = [
+            cat_orphans_mRNA,
+            cat_orphans_rRNA,
+            cat_pair_1_mRNA,
+            cat_pair_1_rRNA,
+            cat_pair_2_mRNA,
+            cat_pair_2_rRNA,
+            orphan_mRNA_filter,
+            orphan_rRNA_filter
+        ]
+        
+        return COMMANDS_rRNA_post
+    
     def create_repop_command(self, stage_name, preprocess_stage_name, dependency_stage_name):
         #This stage reintroduces the duplicate reads into the data.  We need it to count towards things.
         #Due to time, and hierarchical importance, we're leaving this stage alone.
@@ -824,7 +902,7 @@ class mt_pipe_commands:
             ]
         return COMMANDS_Combine
 
-    def create_assemble_commands(self, stage_name, dependency_stage_name):
+    def create_assemble_contigs_command(self, stage_name, dependency_stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
@@ -840,7 +918,7 @@ class mt_pipe_commands:
         spades += mpp.Spades + " -k 21,33,55,77 --meta" 
         spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
         spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
-        spades += " -o " + spades_folder + "_SpadesOut" #out
+        spades += " -o " + spades_folder #out
         """
         bwa_index = mpp.BWA + " index -a bwtsw " + self.Contigs
         
