@@ -14,7 +14,7 @@ BLAT = "/home/j/jparkins/mobolaji/Tools/pBLAT/pblat/pblat"
 DIAMOND = "/home/j/jparkins/mobolaji/Tools/Diamond/diamond"
 Blastdbcmd = "/home/j/jparkins/mobolaji/Tools/BLAST+/ncbi-blast-2.5.0+/bin/blastdbcmd"
 Makeblastdb = "/home/j/jparkins/mobolaji/Tools/BLAST+/ncbi-blast-2.5.0+/bin/makeblastdb"
-Adapter = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE-2.fa"
+
 Infernal = "/home/j/jparkins/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmscan"
 Kaiju = "/home/j/jparkins/mobolaji/Tools/Kaiju/kaiju-v1.4.5-linux-x86_64-static/bin/kaiju"
 Kaiju2krona = "/home/j/jparkins/mobolaji/Tools/Kaiju/kaiju-v1.4.5-linux-x86_64-static/bin/kaiju2krona"
@@ -35,6 +35,7 @@ WEVOTEDB = "/home/j/jparkins/mobolaji/Tools/WEVOTE/WEVOTE/WEVOTEDB"
 script_path = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
 refactor_path = script_path + "refactored_pipeline/"
 UniVec_Core = "/home/j/jparkins/mobolaji/Databases/UniVec_Core.fasta"
+Adapter = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE-2.fa"
 #--------------------------------------------
 # custom scripts
 

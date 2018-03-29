@@ -12,3 +12,5 @@ refactored_pipeline/blat_pp_test_data/
 *.pyc
 
 *.odg#
+
+refactored_pipeline/docker_image/dump\.txt
