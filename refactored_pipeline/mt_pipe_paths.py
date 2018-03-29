@@ -6,7 +6,7 @@ cdhit_dup = "/home/j/jparkins/mobolaji/Tools/CDHIT/cd-hit-v4.6.6-2016-0711/cd-hi
 Timmomatic = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/trimmomatic-0.36.jar"
 AdapterRemoval = "/home/j/jparkins/mobolaji/Tools/AdapterRemoval/adapterremoval-2.2.0/build/AdapterRemoval"
 vsearch = "/home/j/jparkins/mobolaji/Tools/vsearch/vsearch-2.4.2-linux-x86_64/bin/vsearch"
-UniVec_Core = "/home/j/jparkins/mobolaji/Databases/UniVec_Core.fasta"
+
 Flash = "/home/j/jparkins/mobolaji/Tools/Flash/FLASH-1.2.11/flash"
 BWA = "/home/j/jparkins/mobolaji/Tools/BWA/bwa-0.7.5a/bwa"
 SAMTOOLS = "/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/samtools"
@@ -28,11 +28,13 @@ BLAST_dir = "/home/j/jparkins/mobolaji/Tools/BLAST/blast-2.2.26/bin/"
 WEVOTE = "/home/j/jparkins/mobolaji/Tools/WEVOTE/WEVOTE/run_WEVOTE_PIPELINE.sh"
 WEVOTEDB = "/home/j/jparkins/mobolaji/Tools/WEVOTE/WEVOTE/WEVOTEDB"
 
+
+
 #--------------------------------------------
 # reference paths
 script_path = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
 refactor_path = script_path + "refactored_pipeline/"
-
+UniVec_Core = "/home/j/jparkins/mobolaji/Databases/UniVec_Core.fasta"
 #--------------------------------------------
 # custom scripts
 
