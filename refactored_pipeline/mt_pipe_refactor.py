@@ -146,7 +146,7 @@ class qsub_sync:
             time.sleep(5)
             
             
-def main(input_folder, output_folder):
+def main(input_folder, output_folder, system_op):
     # constants
     # -----------------------------
     single_mode = 0
@@ -185,8 +185,8 @@ def main(input_folder, output_folder):
         else:
             print("Too many genome files here.  Get rid of all non-essentials")
             sys.exit()
-        
-        operating_mode = genome_file_count - 1
+        #operating mode denotes whether it's single or paired reads
+        operating_mode = genome_file_count - 1 
         
         # is the file too big?
         # split it.
@@ -201,7 +201,7 @@ def main(input_folder, output_folder):
                         
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
-            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
+            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
             
             preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
             #testing construct only:
@@ -503,6 +503,7 @@ def main(input_folder, output_folder):
 if __name__ == "__main__":
     input_folder = sys.argv[1]
     output_folder = sys.argv[2]
+    system_op = sys.argv[3] #scinet or docker
     #scinet_user_name = sys.argv[3]
     os.chdir(output_folder)
-    main(input_folder, output_folder)
+    main(input_folder, output_folder, system_op)

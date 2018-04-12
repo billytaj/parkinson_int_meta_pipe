@@ -61,7 +61,7 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score = 33, Thread_count = 16, raw_sequence_path_0 = None, raw_sequence_path_1 = None):
+    def __init__(self, Quality_score = 33, Thread_count = 16, system_mode = "scinet", raw_sequence_path_0 = None, raw_sequence_path_1 = None):
         # path to the raw genome sequence file
         Input_File = os.getcwd()
         if not(raw_sequence_path_0 is None):
@@ -72,7 +72,7 @@ class mt_pipe_commands:
             self.raw_sequence_path_1 = raw_sequence_path_1
             print("raw seqeunce 1:", self.raw_sequence_path_1)
         
-            
+        self.tool_path_obj = mpp.path_obj(system_mode)    
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
         self.Input_File2 = self.Input_Filepath + "2"
@@ -109,85 +109,87 @@ class mt_pipe_commands:
         #mode: selection of which pbs template to use: default -> low memory
         #dependency_list: if not empty, will append wait args to qsub subprocess call. it's polymorphic
         #returns back the job ID given from qsub
-        
-        pbs_template = ""
-        if(mode == "med"):
-            pbs_template = PBS_Submit_HighMem
-        elif(mode == "high"):
-            pbs_template = PBS_Submit_vHighMem
-        else:
-            pbs_template = PBS_Submit_LowMem
-        
-        
-        pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
-        if(not inner_name is None):
-            pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
+        if(system_mode == "scinet"):
+            pbs_template = ""
+            if(mode == "med"):
+                pbs_template = PBS_Submit_HighMem
+            elif(mode == "high"):
+                pbs_template = PBS_Submit_vHighMem
+            else:
+                pbs_template = PBS_Submit_LowMem
             
-        try:
-            with open(pbs_script_full_path + ".pbs", "w+") as PBS_script_out:
-                for line in pbs_template.splitlines():
-                    if "NAME" in line:
-                        line = line.replace("NAME", pbs_script_full_path)
-                    if "ERROR" in line:
-                        line = line.replace("ERROR", pbs_script_full_path + "_ERR")
-                    if "OUTPUT" in line:
-                        line = line.replace("OUTPUT", pbs_script_full_path + "_OUT")
-                    if "COMMANDS" in line:
-                        PBS_script_out.write("\n".join(command_list))
-                        break
-                    
-                    PBS_script_out.write(line + "\n")
-                PBS_script_out.close()
-                dep_str = ""
-                if (isinstance(dependency_list, int)):
-                    #single dep
-                    dep_str = "-W depend=afterok:" + str(dependency_list)
-                    print(dep_str)
-                    if(inner_name is None):
-                        print(job_name, "running with single dependency")
-                    else:
-                        print(inner_name, "running with single dependency")
+            
+            pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
+            if(not inner_name is None):
+                pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
+                
+            try:
+                with open(pbs_script_full_path + ".pbs", "w+") as PBS_script_out:
+                    for line in pbs_template.splitlines():
+                        if "NAME" in line:
+                            line = line.replace("NAME", pbs_script_full_path)
+                        if "ERROR" in line:
+                            line = line.replace("ERROR", pbs_script_full_path + "_ERR")
+                        if "OUTPUT" in line:
+                            line = line.replace("OUTPUT", pbs_script_full_path + "_OUT")
+                        if "COMMANDS" in line:
+                            PBS_script_out.write("\n".join(command_list))
+                            break
                         
-                elif(isinstance(dependency_list, list)):
-                    # multiple deps
-                    print("mutiple dependencies being used")
-                    dep_str = "-W depend=afterok"
-                    for item in dependency_list:
-                        dep_str += ":"+str(item)
-                    if(inner_name is None):
-                        print(job_name, "running with multiple dependencies")    
-                    else:
-                        print(inner_name, "running with multiple dependencies")
-                elif(dependency_list is None):
-                    if(inner_name is None):
-                        print(job_name, "running without dependency")
-                    else:
-                        print(inner_name, "running without dependency")
-                else:
-                    print("This isn't supposed to happen")
-                    
-                if(run_job): # a lock built for testing syntax, but not run
-                    try:
-                        if not dep_str == "":
-                            print("dep string not empty")
-                            job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs", dep_str])
+                        PBS_script_out.write(line + "\n")
+                    PBS_script_out.close()
+                    dep_str = ""
+                    if (isinstance(dependency_list, int)):
+                        #single dep
+                        dep_str = "-W depend=afterok:" + str(dependency_list)
+                        print(dep_str)
+                        if(inner_name is None):
+                            print(job_name, "running with single dependency")
                         else:
-                            job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs"])
-                        #return val is a binary string, so we convert, and extract only the numeric part
-                        job_id = job_id.decode('ascii')
-                        job_id = int(job_id.split('.')[0])
+                            print(inner_name, "running with single dependency")
+                            
+                    elif(isinstance(dependency_list, list)):
+                        # multiple deps
+                        print("mutiple dependencies being used")
+                        dep_str = "-W depend=afterok"
+                        for item in dependency_list:
+                            dep_str += ":"+str(item)
+                        if(inner_name is None):
+                            print(job_name, "running with multiple dependencies")    
+                        else:
+                            print(inner_name, "running with multiple dependencies")
+                    elif(dependency_list is None):
+                        if(inner_name is None):
+                            print(job_name, "running without dependency")
+                        else:
+                            print(inner_name, "running without dependency")
+                    else:
+                        print("This isn't supposed to happen")
+                        
+                    if(run_job): # a lock built for testing syntax, but not run
+                        try:
+                            if not dep_str == "":
+                                print("dep string not empty")
+                                job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs", dep_str])
+                            else:
+                                job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs"])
+                            #return val is a binary string, so we convert, and extract only the numeric part
+                            job_id = job_id.decode('ascii')
+                            job_id = int(job_id.split('.')[0])
+                        
+                            return job_id
+                        except Exception as e:
+                            print("subprocess call error:", e)
+                    else:
+                        return 0
                     
-                        return job_id
-                    except Exception as e:
-                        print("subprocess call error:", e)
-                else:
-                    return 0
-                
-                
-        except Exception as e:
-            # error catchall 
-            print("Failure at pbs creation:", e)
-            sys.exit()
+                    
+            except Exception as e:
+                # error catchall 
+                print("Failure at pbs creation:", e)
+                sys.exit()
+        else:
+            #docker mode: single cpu
     
     def create_pre_single_command(self, stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"
@@ -196,7 +198,7 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         
         print("not ready")
-        adapter_removal = mpp.AdapterRemoval + "--file1 " + ""
+        adapter_removal = self.tool_path_obj.AdapterRemoval + "--file1 " + ""
         COMMANDS_PRE = []
     
     def create_pre_double_command(self, stage_name):
@@ -213,19 +215,19 @@ class mt_pipe_commands:
         self.make_folder(sorted_raw_folder)
         
         sort_pair_1 = ">&2 echo Sorting pair 1 | "
-        sort_pair_1 += mpp.Python + " " + mpp.Sort_Reads + " "
+        sort_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.Sort_Reads + " "
         sort_pair_1 += self.raw_sequence_path_0
         sort_pair_1 += " " + sorted_raw_folder + "pair_1_sorted.fastq"
         
         sort_pair_2 = ">&2 echo Sorting pair 2 | "
-        sort_pair_2 += mpp.Python + " " + mpp.Sort_Reads + " "
+        sort_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.Sort_Reads + " "
         sort_pair_2 += self.raw_sequence_path_1
         sort_pair_2 += " " + sorted_raw_folder + "pair_2_sorted.fastq"
         
         adapter_folder = data_folder + "1_adapter_removal/"
         self.make_folder(adapter_folder)
         adapter_removal_line = ">&2 echo Removing adapters | "
-        adapter_removal_line += mpp.AdapterRemoval 
+        adapter_removal_line += self.tool_path_obj.AdapterRemoval 
         #adapter_removal_line += " --file1 " + self.raw_sequence_path_0
         #adapter_removal_line += " --file2 " + self.raw_sequence_path_1
         adapter_removal_line += " --file1 " + sorted_raw_folder + "pair_1_sorted.fastq"
@@ -245,7 +247,7 @@ class mt_pipe_commands:
         vsearch_merge_folder = data_folder + "2_vsearch_pair_merge/"
         self.make_folder(vsearch_merge_folder)
         vsearch_merge = ">&2 echo " + "Vsearch Merge pairs | "
-        vsearch_merge += mpp.vsearch 
+        vsearch_merge += self.tool_path_obj.vsearch 
         vsearch_merge += " --fastq_mergepairs " + adapter_folder + "pair_1_adptr_rem.fastq" 
         vsearch_merge += " --reverse " + adapter_folder + "pair_2_adptr_rem.fastq" 
         vsearch_merge += " --fastq_ascii " + str(self.Qual_str) 
@@ -266,7 +268,7 @@ class mt_pipe_commands:
         vsearch_filter_folder = data_folder + "3_ar_quality_filter/"
         self.make_folder(vsearch_filter_folder)
         vsearch_filter_0 = ">&2 echo low-quality filter on orphans | "
-        vsearch_filter_0 += mpp.vsearch 
+        vsearch_filter_0 += self.tool_path_obj.vsearch 
         vsearch_filter_0 += " --fastq_filter " + vsearch_merge_folder + "orphans.fastq" 
         vsearch_filter_0 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_0 += " --fastq_maxee " + "2.0" 
@@ -274,14 +276,14 @@ class mt_pipe_commands:
         
         #then move onto the standalones in pair 1
         vsearch_filter_1 = ">&2 echo low-quality filter on pair 1 | "
-        vsearch_filter_1 += mpp.vsearch  
+        vsearch_filter_1 += self.tool_path_obj.vsearch  
         vsearch_filter_1 += " --fastq_filter " + vsearch_merge_folder + "pair_1_merge_reject.fastq" 
         vsearch_filter_1 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_1 += " --fastq_maxee " + "2.0" 
         vsearch_filter_1 += " --fastqout " + vsearch_filter_folder + "pair_1_hq.fastq"
         
         vsearch_filter_2 = ">&2 echo low-quality filter on pair 2 | "
-        vsearch_filter_2 += mpp.vsearch 
+        vsearch_filter_2 += self.tool_path_obj.vsearch 
         vsearch_filter_2 += " --fastq_filter " + vsearch_merge_folder + "pair_2_merge_reject.fastq" 
         vsearch_filter_2 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_2 += " --fastq_maxee " + "2.0" 
@@ -291,8 +293,8 @@ class mt_pipe_commands:
         orphan_read_filter_folder = data_folder + "4_orphan_read_filter/"
         self.make_folder(orphan_read_filter_folder)
         orphan_read_filter = ">&2 echo moving newly orphaned hq reads | "
-        orphan_read_filter += mpp.Python + " " 
-        orphan_read_filter += mpp.orphaned_read_filter + " " 
+        orphan_read_filter += self.tool_path_obj.Python + " " 
+        orphan_read_filter += self.tool_path_obj.orphaned_read_filter + " " 
         orphan_read_filter += vsearch_filter_folder + "pair_1_hq.fastq " 
         orphan_read_filter += vsearch_filter_folder + "pair_2_hq.fastq " 
         orphan_read_filter += vsearch_filter_folder + "orphans_hq.fastq "
@@ -304,7 +306,7 @@ class mt_pipe_commands:
         cdhit_folder = data_folder + "5_remove_duplicates/"
         self.make_folder(cdhit_folder)
         cdhit_orphans = ">&2 echo removing orphan duplicates | "
-        cdhit_orphans += mpp.cdhit_dup + " -i " 
+        cdhit_orphans += self.tool_path_obj.cdhit_dup + " -i " 
         cdhit_orphans += orphan_read_filter_folder + "orphans.fastq" 
         cdhit_orphans += " -o " + cdhit_folder + "orphans_unique.fastq"
         
@@ -315,12 +317,12 @@ class mt_pipe_commands:
         
         #remove duplicates in the pairs
         cdhit_pair_1 = ">&2 echo remove duplicates from pair 1 | "
-        cdhit_pair_1 += mpp.cdhit_dup
+        cdhit_pair_1 += self.tool_path_obj.cdhit_dup
         cdhit_pair_1 += " -i " + orphan_read_filter_folder + "pair_1_match.fastq"
         cdhit_pair_1 += " -o " + cdhit_folder + "pair_1_unique.fastq"
         
         cdhit_pair_2 = ">&2 echo remove duplicates from pair 2 | " 
-        cdhit_pair_2 += mpp.cdhit_dup
+        cdhit_pair_2 += self.tool_path_obj.cdhit_dup
         cdhit_pair_2 += " -i " + orphan_read_filter_folder + "pair_2_match.fastq"
         cdhit_pair_2 += " -o " + cdhit_folder + "pair_2_unique.fastq"
         
@@ -332,18 +334,18 @@ class mt_pipe_commands:
         
         self.Host_Contaminants = host_removal_folder + "host_contaminents_seq.fasta"
         copy_host = ">&2 echo Copy the host file over | "
-        copy_host += "cp " + mpp.Host + " " + self.Host_Contaminants
+        copy_host += "cp " + self.tool_path_obj.Host + " " + self.Host_Contaminants
         
         #craft a BWA index for the host sequences
         bwa_hr_prep = ">&2 echo make host contaminants index for BWA | "
-        bwa_hr_prep += mpp.BWA + " index -a bwtsw " + self.Host_Contaminants
+        bwa_hr_prep += self.tool_path_obj.BWA + " index -a bwtsw " + self.Host_Contaminants
         
         samtools_hr_prep = ">&2 echo SAMTOOLS host contaminant prep | "
-        samtools_hr_prep += mpp.SAMTOOLS + " faidx " + self.Host_Contaminants
+        samtools_hr_prep += self.tool_path_obj.SAMTOOLS + " faidx " + self.Host_Contaminants
         
         #host removal on unique orphans
         bwa_hr_orphans = ">&2 echo BWA host remove on orphans | "
-        bwa_hr_orphans += mpp.BWA + " mem -t " 
+        bwa_hr_orphans += self.tool_path_obj.BWA + " mem -t " 
         bwa_hr_orphans += self.Threads_str + " " 
         bwa_hr_orphans += self.Host_Contaminants + " " 
         bwa_hr_orphans += cdhit_folder + "orphans_unique.fastq" 
@@ -351,24 +353,24 @@ class mt_pipe_commands:
         
         #annoying type conversion pt 1
         samtools_hr_orphans_sam_to_bam = ">&2 echo convert orphans hr files pt1 | "
-        samtools_hr_orphans_sam_to_bam += mpp.SAMTOOLS 
+        samtools_hr_orphans_sam_to_bam += self.tool_path_obj.SAMTOOLS 
         samtools_hr_orphans_sam_to_bam += " view -bS " + host_removal_folder + "orphans_no_host.sam" 
         samtools_hr_orphans_sam_to_bam += " > " + host_removal_folder + "orphans_no_host.bam"
         #annoying type conversion pt 2
         samtools_no_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt2 | "
-        samtools_no_host_orphans_bam_to_fastq += mpp.SAMTOOLS 
+        samtools_no_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS 
         samtools_no_host_orphans_bam_to_fastq += " fastq -n -f 4" + " -0 " + host_removal_folder + "orphans_no_host.fastq" + " "
         samtools_no_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
         
         #apparently, we're to keep the host separation
         samtools_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt3 | "
-        samtools_host_orphans_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" 
+        samtools_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
         samtools_host_orphans_bam_to_fastq += " -0 " + host_removal_folder + "orphans_host_only.fastq" + " " 
         samtools_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
         
         #host-remove the rest
         bwa_hr_pair = ">&2 echo bwa pair host remove | "
-        bwa_hr_pair += mpp.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " 
+        bwa_hr_pair += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " 
         bwa_hr_pair += cdhit_folder + "pair_1_unique.fastq" + " " 
         bwa_hr_pair += cdhit_folder + "pair_2_unique.fastq" 
         bwa_hr_pair += " > " + host_removal_folder + "pair_no_host.sam"
@@ -376,61 +378,61 @@ class mt_pipe_commands:
         
         #separating bwa results back into paired reads
         samtools_host_pair_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
-        samtools_host_pair_sam_to_bam += mpp.SAMTOOLS + " view -bS " + host_removal_folder + "pair_no_host.sam"
+        samtools_host_pair_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_no_host.sam"
         samtools_host_pair_sam_to_bam += " > " + host_removal_folder + "pair_no_host.bam"
         
         #stuff that doesn't match with the host
         samtools_no_host_pair_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
-        samtools_no_host_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -f 13" 
+        samtools_no_host_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 13" 
         samtools_no_host_pair_bam_to_fastq += " -1 " + host_removal_folder + "pair_1_no_host.fastq" # out
         samtools_no_host_pair_bam_to_fastq += " -2 " + host_removal_folder + "pair_2_no_host.fastq" # out
         samtools_no_host_pair_bam_to_fastq += " " + host_removal_folder + "pair_no_host.bam" #in
         
         #stuff that matches with the host (why keep it?  request from john)
         samtools_host_pair_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
-        samtools_host_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" 
+        samtools_host_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
         samtools_host_pair_bam_to_fastq += " -1 " + host_removal_folder + "pair_1_host_only.fastq" 
         samtools_host_pair_bam_to_fastq += " -2 " + host_removal_folder + "pair_2_host_only.fastq" 
         samtools_host_pair_bam_to_fastq += " " + host_removal_folder + "pair_no_host.bam"
         
         #blast prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
-        make_blast_db_host += mpp.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
+        make_blast_db_host += self.tool_path_obj.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
 
         vsearch_filter_3 = ">&2 echo Convert orphans for BLAT | "     
-        vsearch_filter_3 += mpp.vsearch 
+        vsearch_filter_3 += self.tool_path_obj.vsearch 
         vsearch_filter_3 += " --fastq_filter " + host_removal_folder + "orphans_no_host.fastq" 
         vsearch_filter_3 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_3 += " --fastaout " + host_removal_folder + "orphans_no_host.fasta"
         
         vsearch_filter_4 = ">&2 echo Convert pair 1 for BLAT | "
-        vsearch_filter_4 += mpp.vsearch 
+        vsearch_filter_4 += self.tool_path_obj.vsearch 
         vsearch_filter_4 += " --fastq_filter " + host_removal_folder + "pair_1_no_host.fastq" 
         vsearch_filter_4 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_4 += " --fastaout " + host_removal_folder + "pair_1_no_host.fasta"
         
         vsearch_filter_5 = ">&2 echo Convert pair 2 for BLAT | "
-        vsearch_filter_5 += mpp.vsearch
+        vsearch_filter_5 += self.tool_path_obj.vsearch
         vsearch_filter_5 += " --fastq_filter " + host_removal_folder + "pair_2_no_host.fastq" 
         vsearch_filter_5 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_5 += " --fastaout " + host_removal_folder + "pair_2_no_host.fasta"
         
         blat_hr_orphans = ">&2 echo BLAT hr orphans | "
-        blat_hr_orphans += mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_hr_orphans += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
         blat_hr_orphans += self.Host_Contaminants + " " 
         blat_hr_orphans += host_removal_folder + "orphans_no_host.fasta" 
         blat_hr_orphans += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str 
         blat_hr_orphans += " " + host_removal_folder + "orphans_no_host.blatout"
 
         blat_hr_pair_1 = ">&2 echo BLAT hr pair 1 | "    
-        blat_hr_pair_1 += mpp.BLAT 
+        blat_hr_pair_1 += self.tool_path_obj.BLAT 
         blat_hr_pair_1 += " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " " 
         blat_hr_pair_1 += host_removal_folder + "pair_1_no_host.fasta" 
         blat_hr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
         blat_hr_pair_1 += " " + host_removal_folder + "pair_1_no_host.blatout"
         
         blat_hr_pair_2 = ">&2 echo BLAT hr pair 2 | "
-        blat_hr_pair_2 += mpp.BLAT 
+        blat_hr_pair_2 += self.tool_path_obj.BLAT 
         blat_hr_pair_2 += " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " " 
         blat_hr_pair_2 += host_removal_folder + "pair_2_no_host.fasta" 
         blat_hr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
@@ -440,22 +442,22 @@ class mt_pipe_commands:
         blat_hr_folder = data_folder + "7_blat_hr/"
         self.make_folder(blat_hr_folder)
         hr_orphans = ">&2 echo BLAT contaminant orphans | "
-        hr_orphans += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        hr_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " " 
         hr_orphans += host_removal_folder + "orphans_no_host.fastq" + " " # in
         hr_orphans += host_removal_folder + "orphans_no_host.blatout" + " " #in 
         hr_orphans += blat_hr_folder + "orphans_no_host.fastq" + " " #out
         hr_orphans += blat_hr_folder + "orphans_host_only.fastq" #out
         
         hr_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
-        hr_pair_1 += mpp.Python + " " 
-        hr_pair_1 += mpp.BLAT_Contaminant_Filter + " " 
+        hr_pair_1 += self.tool_path_obj.Python + " " 
+        hr_pair_1 += self.tool_path_obj.BLAT_Contaminant_Filter + " " 
         hr_pair_1 += host_removal_folder + "pair_1_no_host.fastq" + " " 
         hr_pair_1 += host_removal_folder + "pair_1_no_host.blatout" + " " 
         hr_pair_1 += blat_hr_folder + "pair_1_no_host.fastq" + " " 
         hr_pair_1 += blat_hr_folder + "pair_1_host_only.fastq"
         
         hr_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
-        hr_pair_2 += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        hr_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " " 
         hr_pair_2 += host_removal_folder + "pair_2_no_host.fastq" + " " 
         hr_pair_2 += host_removal_folder + "pair_2_no_host.blatout" + " " 
         hr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq" + " " 
@@ -469,82 +471,82 @@ class mt_pipe_commands:
         self.Vector_Contaminants = vector_removal_folder + "vector_contaminants_seq.fasta"
         
         copy_vector = ">&2 echo copy vector prep | "
-        copy_vector += "cp " + mpp.UniVec_Core + " " + self.Vector_Contaminants
+        copy_vector += "cp " + self.tool_path_obj.UniVec_Core + " " + self.Vector_Contaminants
         
         bwa_vr_prep = ">&2 echo BWA vector prep | "
-        bwa_vr_prep += mpp.BWA + " index -a bwtsw " + self.Vector_Contaminants
+        bwa_vr_prep += self.tool_path_obj.BWA + " index -a bwtsw " + self.Vector_Contaminants
         
         samtools_vr_prep = ">&2 echo samtools vector prep | "
-        samtools_vr_prep += mpp.SAMTOOLS + " faidx " + self.Vector_Contaminants
+        samtools_vr_prep += self.tool_path_obj.SAMTOOLS + " faidx " + self.Vector_Contaminants
         
         bwa_vr_orphans = ">&2 echo BWA vr oprhans | "
-        bwa_vr_orphans += mpp.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_vr_orphans += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
         bwa_vr_orphans += self.Vector_Contaminants + " " 
         bwa_vr_orphans += blat_hr_folder + "orphans_no_host.fastq"  
         bwa_vr_orphans += " > " + vector_removal_folder + "orphans_no_vectors.sam"
         
         samtools_no_vector_orphans_sam_to_bam = ">&2 echo samtools vr oprhans pt 1 | "
-        samtools_no_vector_orphans_sam_to_bam += mpp.SAMTOOLS + " view -bS " 
+        samtools_no_vector_orphans_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " 
         samtools_no_vector_orphans_sam_to_bam += vector_removal_folder + "orphans_no_vectors.sam" 
         samtools_no_vector_orphans_sam_to_bam += " > " + vector_removal_folder + "orphans_no_vectors.bam"
         
         samtools_no_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 2 | " 
-        samtools_no_vector_orphans_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -f 4" + " -0 "
+        samtools_no_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4" + " -0 "
         samtools_no_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.fastq "  
         samtools_no_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"    
         
         samtools_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 3 | "
-        samtools_vector_orphans_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" + " -0 " 
+        samtools_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" + " -0 " 
         samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_vectors_only.fastq "  
         samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"
         
         bwa_vr_pair = ">&2 echo bwa vr pair | " 
-        bwa_vr_pair += mpp.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_vr_pair += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
         bwa_vr_pair += self.Vector_Contaminants + " " 
         bwa_vr_pair += blat_hr_folder + "pair_1_no_host.fastq " 
         bwa_vr_pair += blat_hr_folder + "pair_2_no_host.fastq" 
         bwa_vr_pair += " > " + vector_removal_folder + "pair_no_vectors.sam"
         
         samtools_vr_pair_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
-        samtools_vr_pair_sam_to_bam += mpp.SAMTOOLS + " view -bS " 
+        samtools_vr_pair_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " 
         samtools_vr_pair_sam_to_bam += vector_removal_folder + "pair_no_vectors.sam" 
         samtools_vr_pair_sam_to_bam += " > " + vector_removal_folder + "pair_no_vectors.bam"
         
         samtools_no_vector_pair_bam_to_fastq = ">&2 echo samtools vr pair pt 2 | "
-        samtools_no_vector_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -f 13"
+        samtools_no_vector_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 13"
         samtools_no_vector_pair_bam_to_fastq += " -1 " + vector_removal_folder + "pair_1_no_vectors.fastq" 
         samtools_no_vector_pair_bam_to_fastq += " -2 " + vector_removal_folder + "pair_2_no_vectors.fastq " 
         samtools_no_vector_pair_bam_to_fastq += vector_removal_folder + "pair_no_vectors.bam"
 
         samtools_vector_pair_bam_to_fastq = ">&2 echo samtools vr pair pt 3 | "
-        samtools_vector_pair_bam_to_fastq += mpp.SAMTOOLS + " fastq -n -F 4" 
+        samtools_vector_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
         samtools_vector_pair_bam_to_fastq += " -1 " + vector_removal_folder + "pair_1_vectors_only.fastq" 
         samtools_vector_pair_bam_to_fastq += " -2 " + vector_removal_folder + "pair_2_vectors_only.fastq " 
         samtools_vector_pair_bam_to_fastq += vector_removal_folder + "pair_no_vectors.bam"
         
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
-        make_blast_db_vector += mpp.Makeblastdb + " -in " + self.Vector_Contaminants + " -dbtype nucl"
+        make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + self.Vector_Contaminants + " -dbtype nucl"
         
         vsearch_filter_6 = ">&2 echo convert vr orphans for BLAT | " 
-        vsearch_filter_6 += mpp.vsearch 
+        vsearch_filter_6 += self.tool_path_obj.vsearch 
         vsearch_filter_6 += " --fastq_filter " + vector_removal_folder + "orphans_no_vectors.fastq" 
         vsearch_filter_6 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_6 += " --fastaout " + vector_removal_folder + "orphans_no_vectors.fasta"
 
         vsearch_filter_7 = ">&2 echo convert vr pair 1 for BLAT | "
-        vsearch_filter_7 += mpp.vsearch 
+        vsearch_filter_7 += self.tool_path_obj.vsearch 
         vsearch_filter_7 += " --fastq_filter " + vector_removal_folder + "pair_1_no_vectors.fastq" 
         vsearch_filter_7 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_7 += " --fastaout " + vector_removal_folder + "pair_1_no_vectors.fasta"
         
         vsearch_filter_8 = ">&2 echo convert vr pair 2 for BLAT | "
-        vsearch_filter_8 += mpp.vsearch 
+        vsearch_filter_8 += self.tool_path_obj.vsearch 
         vsearch_filter_8 += " --fastq_filter " + vector_removal_folder + "pair_2_no_vectors.fastq" 
         vsearch_filter_8 += " --fastq_ascii " + self.Qual_str 
         vsearch_filter_8 += " --fastaout " + vector_removal_folder + "pair_2_no_vectors.fasta"
         
         blat_vr_orphans = ">&2 echo BLAT vr orphans | "
-        blat_vr_orphans += mpp.BLAT 
+        blat_vr_orphans += self.tool_path_obj.BLAT 
         blat_vr_orphans += " -noHead -minIdentity=90 -minScore=65 " 
         blat_vr_orphans += self.Vector_Contaminants + " " 
         blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.fasta" 
@@ -552,14 +554,14 @@ class mt_pipe_commands:
         blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.blatout"
         
         blat_vr_pair_1 = ">&2 echo BLAT vr pair 1 | "
-        blat_vr_pair_1 += mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_vr_pair_1 += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
         blat_vr_pair_1 += self.Vector_Contaminants + " " 
         blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.fasta" 
         blat_vr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
         blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.blatout"
         
         blat_vr_pair_2 = ">&2 echo BLAT vr pair 2 | "
-        blat_vr_pair_2 += mpp.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_vr_pair_2 += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
         blat_vr_pair_2 += self.Vector_Contaminants + " " 
         blat_vr_pair_2 += vector_removal_folder + "pair_2_no_vectors.fasta" 
         blat_vr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
@@ -568,21 +570,21 @@ class mt_pipe_commands:
         blat_containment_vector_folder = data_folder + "9_blat_containment_vr/"
         self.make_folder(blat_containment_vector_folder)
         blat_containment_vector_orphans = ">&2 echo BLAT contaminant orphans | " 
-        blat_containment_vector_orphans += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        blat_containment_vector_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " " 
         blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.fastq" + " " #in
         blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.blatout" + " " #in
         blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_no_vectors.fastq" + " " #out
         blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_vectors_only.fastq" #out
         
         blat_containment_vector_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
-        blat_containment_vector_pair_1 += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        blat_containment_vector_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " " 
         blat_containment_vector_pair_1 += vector_removal_folder + "pair_1_no_vectors.fastq" + " " 
         blat_containment_vector_pair_1 += vector_removal_folder + "pair_1_no_vectors.blatout" + " " 
         blat_containment_vector_pair_1 += blat_containment_vector_folder + "pair_1_no_vectors.fastq" + " " 
         blat_containment_vector_pair_1 += blat_containment_vector_folder + "pair_1_vectors_only.fastq"
         
         blat_containment_vector_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
-        blat_containment_vector_pair_2 += mpp.Python + " " + mpp.BLAT_Contaminant_Filter + " " 
+        blat_containment_vector_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " " 
         blat_containment_vector_pair_2 += vector_removal_folder + "pair_2_no_vectors.fastq" + " " 
         blat_containment_vector_pair_2 += vector_removal_folder + "pair_2_no_vectors.blatout" + " " 
         blat_containment_vector_pair_2 += blat_containment_vector_folder + "pair_2_no_vectors.fastq" + " " 
@@ -693,17 +695,17 @@ class mt_pipe_commands:
         self.make_folder(pair_1_split_folder)
         self.make_folder(pair_2_split_folder)
         
-        file_splitter_orphans = mpp.Python + " " + mpp.File_splitter + " " 
+        file_splitter_orphans = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " " 
         file_splitter_orphans += dep_loc + "orphans_no_vectors.fastq " 
         file_splitter_orphans += orphan_split_folder + "orphans "
         file_splitter_orphans += str(file_split_count)
         
-        file_splitter_pair_1 = mpp.Python + " " + mpp.File_splitter + " " 
+        file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " " 
         file_splitter_pair_1 += dep_loc + "pair_1_no_vectors.fastq " 
         file_splitter_pair_1 += pair_1_split_folder + "pair_1 "
         file_splitter_pair_1 += str(file_split_count)
         
-        file_splitter_pair_2 = mpp.Python + " " + mpp.File_splitter + " " 
+        file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " " 
         file_splitter_pair_2 += dep_loc + "pair_2_no_vectors.fastq "  
         file_splitter_pair_2 += pair_2_split_folder + "pair_2 "
         file_splitter_pair_2 += str(file_split_count)
@@ -741,22 +743,22 @@ class mt_pipe_commands:
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
         
-        convert_fastq_to_fasta = mpp.vsearch 
+        convert_fastq_to_fasta = self.tool_path_obj.vsearch 
         convert_fastq_to_fasta += " --fastq_filter " + fastq_in
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
         convert_fastq_to_fasta += " --fastaout " + fasta_io
         #print("converting", fastq_in )
         #print("placing in", fasta_io )
         
-        infernal_command = mpp.Infernal 
+        infernal_command = self.tool_path_obj.Infernal 
         infernal_command += " -o /dev/null --tblout " 
         infernal_command += infernal_out
         infernal_command += " --anytrunc --rfam -E 0.001 "
-        infernal_command += mpp.Rfam + " "
+        infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += fasta_io
         
-        rRNA_filtration = mpp.Python + " " 
-        rRNA_filtration += mpp.rRNA_filter + " "
+        rRNA_filtration = self.tool_path_obj.Python + " " 
+        rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
         rRNA_filtration += fastq_in + " "
         rRNA_filtration += mRNA_folder + " " 
@@ -804,8 +806,8 @@ class mt_pipe_commands:
         cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "* 1>>" + pre_filter_rRNA_folder + "pair_2.fastq"
         
         orphan_mRNA_filter = ">&2 echo filtering mRNA for orphans | "
-        orphan_mRNA_filter += mpp.Python + " " 
-        orphan_mRNA_filter += mpp.orphaned_read_filter + " " 
+        orphan_mRNA_filter += self.tool_path_obj.Python + " " 
+        orphan_mRNA_filter += self.tool_path_obj.orphaned_read_filter + " " 
         orphan_mRNA_filter += pre_filter_mRNA_folder + "pair_1.fastq " 
         orphan_mRNA_filter += pre_filter_mRNA_folder + "pair_2.fastq " 
         orphan_mRNA_filter += pre_filter_mRNA_folder + "orphans.fastq "
@@ -814,8 +816,8 @@ class mt_pipe_commands:
         orphan_mRNA_filter += final_mRNA_folder + "orphans.fastq"
         
         orphan_rRNA_filter = ">&2 echo filtering mRNA for orphans | "
-        orphan_rRNA_filter += mpp.Python + " " 
-        orphan_rRNA_filter += mpp.orphaned_read_filter + " " 
+        orphan_rRNA_filter += self.tool_path_obj.Python + " " 
+        orphan_rRNA_filter += self.tool_path_obj.orphaned_read_filter + " " 
         orphan_rRNA_filter += pre_filter_rRNA_folder + "pair_1.fastq " 
         orphan_rRNA_filter += pre_filter_rRNA_folder + "pair_2.fastq " 
         orphan_rRNA_filter += pre_filter_rRNA_folder + "orphans.fastq "
@@ -873,7 +875,7 @@ class mt_pipe_commands:
             cluster_path = preprocess_subfolder + "data/5_remove_duplicates/"
             
             repop_orphans = ">&2 echo Duplication repopulate Orphans | "
-            repop_orphans += mpp.Python + " " + mpp.duplicate_repopulate + " " 
+            repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " " 
             repop_orphans += hq_path + "orphans_hq.fastq" + " "   #in -> way back when things were quality-filtered.  
                                                                                             #      step 2 in preprocess.  could still contain rRNA
             repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
@@ -882,14 +884,14 @@ class mt_pipe_commands:
             
             
             repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
-            repop_pair_1 += mpp.Python + " " + mpp.duplicate_repopulate + " " 
+            repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " " 
             repop_pair_1 += hq_path + "pair_1_hq.fastq" + " " 
             repop_pair_1 += dep_loc + "mRNA/pair_1.fastq" + " " 
             repop_pair_1 += cluster_path + "pair_1_unique.fastq.clstr" + " " 
             repop_pair_1 += final_folder + "pair_1.fastq"
             
             repop_pair_2 = ">&2 echo Duplication repopulate pair 2 | "
-            repop_pair_2 += mpp.Python + " " + mpp.duplicate_repopulate + " " 
+            repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " " 
             repop_pair_2 += hq_path + "pair_2_hq.fastq" + " " 
             repop_pair_2 += dep_loc + "mRNA/pair_2.fastq" + " " 
             repop_pair_2 += cluster_path + "pair_2_unique.fastq.clstr" + " " 
@@ -914,30 +916,30 @@ class mt_pipe_commands:
         
         #this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
-        spades += mpp.Python + " " 
-        spades += mpp.Spades + " -k 21,33,55,77 --meta" 
+        spades += self.tool_path_obj.Python + " " 
+        spades += self.tool_path_obj.Spades + " -k 21,33,55,77 --meta" 
         spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
         spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
         spades += " -o " + spades_folder #out
         """
-        bwa_index = mpp.BWA + " index -a bwtsw " + self.Contigs
+        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + self.Contigs
         
         #calls BWA, then uses SAMTools to get a report
         bwa_pair_contigs = ">&2 echo BWA pair contigs | " 
-        bwa_pair_contigs += mpp.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
+        bwa_pair_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
         bwa_pair_contigs += self.Contigs + " " 
         bwa_pair_contigs += self.Input_File1 + "_all_mRNA.fastq " 
         bwa_pair_contigs += self.Input_File2 + "_all_mRNA.fastq | " 
-        bwa_pair_contigs += mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_paired.sam"
+        bwa_pair_contigs += self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_paired.sam"
         
         bwa_orphans_contigs = ">&2 echo BWA orphan contigs | " 
-        bwa_orphans_contigs += mpp.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
+        bwa_orphans_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
         bwa_orphans_contigs += self.Contigs + " " 
         bwa_orphans_contigs += self.Input_Filepath + "_all_mRNA_unpaired.fastq | " 
-        bwa_orphans_contigs += mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_unpaired.sam"
+        bwa_orphans_contigs += self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_unpaired.sam"
         
         contig_merge = ">&2 echo Contig merge | "
-        contig_merge += mpp.Python + " " + mpp.Map_reads_contigs + " " 
+        contig_merge += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_contigs + " " 
         contig_merge += self.Input_File1 + "_all_mRNA.fastq" + " " 
         contig_merge += self.Input_File2 + "_all_mRNA.fastq" + " " 
         contig_merge += self.Input_Filepath + "_all_mRNA_unpaired.fastq" + " " 
@@ -958,14 +960,14 @@ class mt_pipe_commands:
         
     def create_BWA_annotate_command(self):    
         
-        bwa_contigs = mpp.BWA + " mem -t " + self.Threads_str + " " + mpp.DNA_DB + " " + self.Contigs + " | " + mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_contigs_BWA.sam"
-        make_sam_1 = mpp.BWA + " mem -t " + self.Threads_str + " " + mpp.DNA_DB + " " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " | " + mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_unpaired_unmapped_BWA.sam"
-        make_sam_2 = mpp.BWA + " mem -t " + self.Threads_str + " " + mpp.DNA_DB + " " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " | " + mpp.SAMTOOLS + " view > " + self.Input_Filepath + "_paired_unmapped_BWA.sam"
+        bwa_contigs = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.tool_path_obj.DNA_DB + " " + self.Contigs + " | " + self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_contigs_BWA.sam"
+        make_sam_1 = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.tool_path_obj.DNA_DB + " " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " | " + self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_unpaired_unmapped_BWA.sam"
+        make_sam_2 = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.tool_path_obj.DNA_DB + " " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " | " + self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_paired_unmapped_BWA.sam"
         COMMANDS_Annotate_BWA = [
             bwa_contigs,
             make_sam_1,
             make_sam_2,
-            mpp.Python + " " + mpp.Map_reads_gene_BWA + " " + mpp.DNA_DB + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Contigs + " " + self.Input_Filepath + "_contigs_BWA.sam" + " " + self.Input_Filepath + "_contigs_n_BWA.fasta" + " " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " " + self.Input_Filepath + "_unpaired_unmapped_BWA.sam" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " " + self.Input_Filepath + "_paired_unmapped_BWA.sam" + " " + self.Input_File1 + "_unmapped_n_BWA.fasta" + " " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " " + self.Input_Filepath + "_paired_unmapped_BWA.sam" + " " + self.Input_File2 + "_unmapped_n_BWA.fasta"
+            self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BWA + " " + self.tool_path_obj.DNA_DB + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Contigs + " " + self.Input_Filepath + "_contigs_BWA.sam" + " " + self.Input_Filepath + "_contigs_n_BWA.fasta" + " " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " " + self.Input_Filepath + "_unpaired_unmapped_BWA.sam" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " " + self.Input_Filepath + "_paired_unmapped_BWA.sam" + " " + self.Input_File1 + "_unmapped_n_BWA.fasta" + " " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " " + self.Input_Filepath + "_paired_unmapped_BWA.sam" + " " + self.Input_File2 + "_unmapped_n_BWA.fasta"
         ]
         return COMMANDS_Annotate_BWA
 
@@ -979,7 +981,7 @@ class mt_pipe_commands:
         COMMANDS_Annotate_BLAT = []
         for i in range (1, splits+1):
             tag = "_" + str(i)
-            blat_command = BLAT + " -noHead -minIdentity=90 -minScore=65 " + mpp.DNA_DB_Prefix + tag + mpp.DNA_DB_Extension + " " + self.Input_Filepath + "_" + extension + ".fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " + self.Input_Filepath + "_" + datatype + tag + ".blatout"
+            blat_command = BLAT + " -noHead -minIdentity=90 -minScore=65 " + self.tool_path_obj.DNA_DB_Prefix + tag + self.tool_path_obj.DNA_DB_Extension + " " + self.Input_Filepath + "_" + extension + ".fasta" + " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " + self.Input_Filepath + "_" + datatype + tag + ".blatout"
             COMMANDS_Annotate_BLAT.append(blat_command)
         
         final_cat = "cat " + self.Input_Filepath + "_" + datatype + "_[1-" + splits + "]" + ".blatout" + " > " + self.Input_Filepath + "_" + datatype + ".blatout"
@@ -990,7 +992,7 @@ class mt_pipe_commands:
     def create_BLAT_pp_command(self):
 
         COMMANDS_Annotate_BLAT_Post = [
-                        mpp.Python + " " + mpp.Map_reads_gene_BLAT + " " + mpp.DNA_DB + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Input_Filepath + "_genes.fna" + " " + self.Input_Filepath + "_contigs_n_BWA.fasta" + " " + self.Input_Filepath + "_contigs" + ".blatout" + " " + self.Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + self.Input_Filepath + "_unpaired" + ".blatout" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File1 + "_unmapped_n_BWA.fasta" + " " + self.Input_File1 + "_paired" + ".blatout" + " " + self.Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File2 + "_unmapped_n_BWA.fasta" + " " + self.Input_File2 + "_paired" + ".blatout" + " " + self.Input_File2 + "_unmapped_n_BWA_BLAT.fasta"
+                        self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " " + self.tool_path_obj.DNA_DB + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Input_Filepath + "_genes.fna" + " " + self.Input_Filepath + "_contigs_n_BWA.fasta" + " " + self.Input_Filepath + "_contigs" + ".blatout" + " " + self.Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + self.Input_Filepath + "_unpaired" + ".blatout" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File1 + "_unmapped_n_BWA.fasta" + " " + self.Input_File1 + "_paired" + ".blatout" + " " + self.Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File2 + "_unmapped_n_BWA.fasta" + " " + self.Input_File2 + "_paired" + ".blatout" + " " + self.Input_File2 + "_unmapped_n_BWA_BLAT.fasta"
                         ]
         return COMMANDS_Annotate_BLAT_Post
 
@@ -1000,7 +1002,7 @@ class mt_pipe_commands:
         for i in range(1, count+1):
             tag = "_dmnd_tmp" + str(count)
             Diamond_command_list = ["mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
-                            mpp.DIAMOND + " blastx -p " + self.Threads_str + " -d " + mpp.Prot_DB + " -q " + self.Input_Filepath + "_contigs_n_BWA_BLAT" + ".fasta" + " -o " + self.Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(self.Input_FName)[0] + tag + "-k 10 --id 85 --query-cover 65 --min-score 60"]
+                            self.tool_path_obj.DIAMOND + " blastx -p " + self.Threads_str + " -d " + self.tool_path_obj.Prot_DB + " -q " + self.Input_Filepath + "_contigs_n_BWA_BLAT" + ".fasta" + " -o " + self.Input_Filepath + "_contigs.dmdout" + " -f 6 -t " + os.path.splitext(self.Input_FName)[0] + tag + "-k 10 --id 85 --query-cover 65 --min-score 60"]
                             
             COMMANDS_Annotate_Diamond.append(Diamond_command_list)                
         return COMMANDS_Annotate_Diamond
@@ -1010,41 +1012,41 @@ class mt_pipe_commands:
     def create_DIAMOND_pp_command(self):    
         # the command just calls the merger program
         COMMANDS_Annotate_Diamond_Post = [
-        mpp.Python + " " + mpp.Map_reads_prot_DMND + " " + mpp.Prot_DB + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Input_Filepath + "_genes.fna" + " " + self.Input_Filepath + "_proteins.faa" + " " + self.Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + self.Input_Filepath + "_contigs.dmdout" + " " + self.Input_Filepath + "_contigs_n_BWA_BLAT_DMD.fasta" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_Filepath + "_unpaired.dmdout" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " " + self.Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File1 + "_paired.dmdout" + " " + self.Input_File1 + "_unmapped_n_BWA_BLAT_DMD.fasta" + " " + self.Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File2 + "_paired.dmdout" + " " + self.Input_File2 + "_unmapped_n_BWA_BLAT_DMD.fasta"
+        self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_prot_DMND + " " + self.tool_path_obj.Prot_DB + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Input_Filepath + "_genes.fna" + " " + self.Input_Filepath + "_proteins.faa" + " " + self.Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " + self.Input_Filepath + "_contigs.dmdout" + " " + self.Input_Filepath + "_contigs_n_BWA_BLAT_DMD.fasta" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_Filepath + "_unpaired.dmdout" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " " + self.Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File1 + "_paired.dmdout" + " " + self.Input_File1 + "_unmapped_n_BWA_BLAT_DMD.fasta" + " " + self.Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " " + self.Input_File2 + "_paired.dmdout" + " " + self.Input_File2 + "_unmapped_n_BWA_BLAT_DMD.fasta"
         ]
         return COMMANDS_Annotate_Diamond_Post
 
     def create_taxonomic_annotation_command(self):
         
         
-        get_taxa_from_gene = mpp.Python + " " + mpp.Annotated_taxid + " " + self.Input_Filepath + "_gene_map.tsv" + " " + mpp.accession2taxid + " " + self.Input_Filepath + "_TaxIDOut.tsv"
-        kaiju_on_contigs = mpp.Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + self.Contigs + " -z " + self.Threads_str + " -o " + self.Input_Filepath + "_contigs_KaijuOut.tsv"
+        get_taxa_from_gene = self.tool_path_obj.Python + " " + self.tool_path_obj.Annotated_taxid + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.tool_path_obj.accession2taxid + " " + self.Input_Filepath + "_TaxIDOut.tsv"
+        kaiju_on_contigs = self.tool_path_obj.Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + self.Contigs + " -z " + self.Threads_str + " -o " + self.Input_Filepath + "_contigs_KaijuOut.tsv"
         
-        kaiju_on_unpaired = mpp.Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " -z " + self.Threads_str + " -o " + self.Input_Filepath + "_unpaired_KaijuOut.tsv"
+        kaiju_on_unpaired = self.tool_path_obj.Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " -z " + self.Threads_str + " -o " + self.Input_Filepath + "_unpaired_KaijuOut.tsv"
         
-        kaiju_on_paired = mpp.Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " -j " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " -z " + self.Threads_str + " -o " + self.Input_Filepath + "_paired_KaijuOut.tsv"
+        kaiju_on_paired = self.tool_path_obj.Kaiju + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" + " -i " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " -j " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " -z " + self.Threads_str + " -o " + self.Input_Filepath + "_paired_KaijuOut.tsv"
         
         cat_kaiju = "cat " + self.Input_Filepath + "_contigs_KaijuOut.tsv" + " " + self.Input_Filepath + "_unpaired_KaijuOut.tsv" + " " + self.Input_Filepath + "_paired_KaijuOut.tsv" + " > " + self.Input_Filepath + "_KaijuOut.tsv"
         
-        centrifuge_on_unmapped = mpp.Centrifuge + " -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -1 " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " -2 " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " -U " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + self.Qual_str + " -p " + self.Threads_str + " -S " + self.Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " --report-file " + self.Input_Filepath + "_unmapped_CentrifugeReport.txt"
+        centrifuge_on_unmapped = self.tool_path_obj.Centrifuge + " -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -1 " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " -2 " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " -U " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + self.Qual_str + " -p " + self.Threads_str + " -S " + self.Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " --report-file " + self.Input_Filepath + "_unmapped_CentrifugeReport.txt"
         
-        centrifuge_on_contigs = mpp.Centrifuge + " -f -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -U " + self.Contigs + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + self.Qual_str + " -p " + self.Threads_str + " -S " + self.Input_Filepath + "_contigs_CentrifugeOut.tsv" + " --report-file " + self.Input_Filepath + "_contigs_CentrifugeReport.txt"
+        centrifuge_on_contigs = self.tool_path_obj.Centrifuge + " -f -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" + " -U " + self.Contigs + " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" + " --phred" + self.Qual_str + " -p " + self.Threads_str + " -S " + self.Input_Filepath + "_contigs_CentrifugeOut.tsv" + " --report-file " + self.Input_Filepath + "_contigs_CentrifugeReport.txt"
         
         cat_centrifuge = "cat " + self.Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " " + self.Input_Filepath + "_contigs_CentrifugeOut.tsv" + " > " + self.Input_Filepath + "_CentrifugeOut.tsv"
         
-        wevote_combine = mpp.Python + " " + mpp.Classification_combine + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + self.Input_Filepath + "_TaxIDOut.tsv" + " " + self.Input_Filepath + "_KaijuOut.tsv" + " " + self.Input_Filepath + "_CentrifugeOut.tsv"
+        wevote_combine = self.tool_path_obj.Python + " " + self.tool_path_obj.Classification_combine + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + self.Input_Filepath + "_TaxIDOut.tsv" + " " + self.Input_Filepath + "_KaijuOut.tsv" + " " + self.Input_Filepath + "_CentrifugeOut.tsv"
         
-        wevote_call = mpp.WEVOTE + " -o " + self.Input_Filepath + "_WEVOTEOut" + " --db " + mpp.WEVOTEDB + " -c"
+        wevote_call = self.tool_path_obj.WEVOTE + " -o " + self.Input_Filepath + "_WEVOTEOut" + " --db " + self.tool_path_obj.WEVOTEDB + " -c"
         
         awk_cleanup = "awk -F \'\\t\' \'{print \"C\\t\"$1\"\\t\"$9}\' " + os.path.join(self.Input_Filepath + "_WEVOTEOut", os.path.splitext(self.Input_FName)[0] + "_WEVOTEOut_WEVOTE_Details.txt") + " > " + self.Input_Filepath + "_WEVOTEOut.tsv"
         
-        taxid_to_english = mpp.Python + " " + mpp.Contrain_classification + " " + "family" + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + mpp.Nodes + " " + mpp.Names + " " + self.Input_Filepath + "_WEVOTEOut_family.tsv"
+        taxid_to_english = self.tool_path_obj.Python + " " + self.tool_path_obj.Contrain_classification + " " + "family" + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + self.tool_path_obj.Nodes + " " + self.tool_path_obj.Names + " " + self.Input_Filepath + "_WEVOTEOut_family.tsv"
         
-        kaiju_to_krona = mpp.Kaiju2krona + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
+        kaiju_to_krona = self.tool_path_obj.Kaiju2krona + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
         
         awk_cleanup_krona = "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         
-        kt_import_text_cleanup = mpp.ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
+        kt_import_text_cleanup = self.tool_path_obj.ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         
         COMMANDS_Classify = [
             get_taxa_from_gene,
@@ -1074,7 +1076,7 @@ class mt_pipe_commands:
         COMMANDS_EC_Preprocess = [
                         "mkdir -p " + self.EC_Split,
                         "mkdir -p " + self.EC_Output,
-                        mpp.Python + " " + File_splitter + " " + "1000" + " " + self.Input_Filepath + "_proteins.faa" + " " + self.EC_Split,
+                        self.tool_path_obj.Python + " " + File_splitter + " " + "1000" + " " + self.Input_Filepath + "_proteins.faa" + " " + self.EC_Split,
                         ]
         return COMMANDS_EC_Preprocess
 
@@ -1086,7 +1088,7 @@ class mt_pipe_commands:
         #get rid of this later
         self.Threads_str = Thread_count
         COMMANDS_Detect = [
-                        "JOBS=$(" + mpp.Python + " " + mpp.Detect_Submit + " " + self.EC_Split + " " + self.EC_Output + " " + self.Threads_str + " " + JobID_EC_Preprocess.strip("\n") + ");" + "qalter -W depend=afterok:$JOBS $JOB2"
+                        "JOBS=$(" + self.tool_path_obj.Python + " " + self.tool_path_obj.Detect_Submit + " " + self.EC_Split + " " + self.EC_Output + " " + self.Threads_str + " " + JobID_EC_Preprocess.strip("\n") + ");" + "qalter -W depend=afterok:$JOBS $JOB2"
                         ]
         return COMMANDS_Detect
 
@@ -1104,7 +1106,7 @@ class mt_pipe_commands:
         COMMANDS_PRIAM = [
         "mkdir -p " + os.path.join(self.EC_Output, "PRIAM"),
         "cd " + os.path.join(self.EC_Output, "PRIAM"),
-        "java -jar" + " " + mpp.Priam + " -n " + os.path.splitext(self.Input_FName)[0] + "_PRIAM" + " -i " + self.Input_Filepath + "_proteins.faa" + " -p " + os.path.join(os.path.dirname(Priam), "PRIAM_MAR15") + " -od " + os.path.join(self.EC_Output, "PRIAM") +" -e T -pt 0.5 -mo -1 -mp 70 -cc T -cg T -bd " + mpp.BLAST_dir,
+        "java -jar" + " " + self.tool_path_obj.Priam + " -n " + os.path.splitext(self.Input_FName)[0] + "_PRIAM" + " -i " + self.Input_Filepath + "_proteins.faa" + " -p " + os.path.join(os.path.dirname(Priam), "PRIAM_MAR15") + " -od " + os.path.join(self.EC_Output, "PRIAM") +" -e T -pt 0.5 -mo -1 -mp 70 -cc T -cg T -bd " + self.tool_path_obj.BLAST_dir,
         ]
         return COMMANDS_PRIAM
 
@@ -1114,13 +1116,13 @@ class mt_pipe_commands:
         COMMANDS_EC_Diamond = [
         "mkdir -p " + os.path.join(self.EC_Output, "Diamond"),
         "cd " + os.path.join(self.EC_Output, "Diamond"),
-        mpp.DIAMOND + " blastp -p " + self.Threads_str + " --query "+ self.Input_Filepath + "_proteins.faa" + " --db "+ mpp.SWISS_PROT + " --outfmt "+ "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident" + " --out " + os.path.join(self.EC_Output, "Diamond", os.path.splitext(self.Input_FName)[0] + ".blastout") + " --evalue 0.0000000001 --max-target-seqs 1"
+        self.tool_path_obj.DIAMOND + " blastp -p " + self.Threads_str + " --query "+ self.Input_Filepath + "_proteins.faa" + " --db "+ self.tool_path_obj.SWISS_PROT + " --outfmt "+ "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident" + " --out " + os.path.join(self.EC_Output, "Diamond", os.path.splitext(self.Input_FName)[0] + ".blastout") + " --evalue 0.0000000001 --max-target-seqs 1"
         ]
         return COMMANDS_EC_Diamond
 
     def create_EC_postprocess_command(self):
         COMMANDS_EC_Postprocess = [
-        mpp.Python + " " + mpp.EC_Annotation_Post + " " + self.Input_Filepath + "_proteins.faa" + " " + self.EC_Output
+        self.tool_path_obj.Python + " " + self.tool_path_obj.EC_Annotation_Post + " " + self.Input_Filepath + "_proteins.faa" + " " + self.EC_Output
         #Produce_Table
         ]
                 
@@ -1128,19 +1130,19 @@ class mt_pipe_commands:
 
     def create_Network_generation_command(self):
         COMMANDS_Network = [
-        mpp.Python + " " + mpp.RPKM + " " + mpp.Nodes + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + os.path.join(self.Input_Filepath + "_EC_Annotation", "Output", "Consolidated", os.path.splitext(self.Input_FName)[0] + "_proteins.ECs_All") + " " + self.Input_Filepath + "_RPKM.tsv" + " " + self.Input_Filepath + "_Cytoscape.tsv"
+        self.tool_path_obj.Python + " " + self.tool_path_obj.RPKM + " " + self.tool_path_obj.Nodes + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + os.path.join(self.Input_Filepath + "_EC_Annotation", "Output", "Consolidated", os.path.splitext(self.Input_FName)[0] + "_proteins.ECs_All") + " " + self.Input_Filepath + "_RPKM.tsv" + " " + self.Input_Filepath + "_Cytoscape.tsv"
         ]
         return COMMANDS_Network
 
     def create_Join_command(self):
         wevote_cat = "cat " + self.Input_Filepath + "*/*_WEVOTEOut.tsv" + " > " + self.Input_Filepath + "_WEVOTEOut.tsv"
-        taxid_to_english = mpp.Python + " " + Contrain_classification + " " + "family" + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + Nodes + " " + Names + " " + self.Input_Filepath + "_WEVOTEOut_family.tsv"
+        taxid_to_english = self.tool_path_obj.Python + " " + Contrain_classification + " " + "family" + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + Nodes + " " + Names + " " + self.Input_Filepath + "_WEVOTEOut_family.tsv"
         kaiju_to_krona = Kaiju2krona + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
         awk_cleanup_krona = "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         kt_import_text_cleanup = ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         cat_gene_maps = "cat " + self.Input_Filepath + "*/*_gene_map.tsv" + " > " + self.Input_Filepath + "_gene_map.tsv"
         cat_EC = "cat " + os.path.join(self.Input_Filepath + "*/*_EC_Annotation", "Output", "Consolidated", "*_proteins.ECs_All") + " > " + self.Input_Filepath + "_proteins.ECs_All"
-        get_RPKM = mpp.Python + " " + mpp.RPKM + " " + mpp.Nodes + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Input_Filepath + "_proteins.ECs_All" + " " + self.Input_Filepath + "_RPKM.tsv" + " " + self.Input_Filepath + "_Cytoscape.tsv"
+        get_RPKM = self.tool_path_obj.Python + " " + self.tool_path_obj.RPKM + " " + self.tool_path_obj.Nodes + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Input_Filepath + "_proteins.ECs_All" + " " + self.Input_Filepath + "_RPKM.tsv" + " " + self.Input_Filepath + "_Cytoscape.tsv"
         
         COMMANDS_Join = [
         wevote_cat,
