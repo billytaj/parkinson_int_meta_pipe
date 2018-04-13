@@ -78,7 +78,7 @@ with open(BLAT_tab_file, "r") as tabfile:
                 SeqIO.write(contaminat_output_seqs, outfile, "fastq")
                 
 end_all = clock()
-print "--------------------------------------"
-print "BLAT containment filter"
-print "==============================="
-print "total run:", end_all - start_all, "s"          
+#print "--------------------------------------"
+#print "BLAT containment filter"
+#print "==============================="
+#print "total run:", end_all - start_all, "s"          

@@ -147,6 +147,7 @@ class qsub_sync:
             
             
 def main(input_folder, output_folder, system_op):
+    
     # constants
     # -----------------------------
     single_mode = 0
@@ -168,7 +169,7 @@ def main(input_folder, output_folder, system_op):
     file_list = []
     Network_list = []
     #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.  
-    raw_sequence_path = input_folder + "/raw_sequences/"
+    raw_sequence_path = input_folder #+ "/raw_sequences/"
     if not os.path.exists(raw_sequence_path):
         print("No sequences found.  to use pipeline, please place fastq file at:", raw_sequence_path)
         os.makedirs(raw_sequence_path)
@@ -201,12 +202,12 @@ def main(input_folder, output_folder, system_op):
                         
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
-            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
+            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, system_mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
             
             preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
             #testing construct only:
             #sync_obj.wait_for_sync(600, preprocess_job_id, "preprocess")
-            
+            """
             rRNA_filter_job_id = []
             
             rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 5, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
@@ -319,6 +320,7 @@ def main(input_folder, output_folder, system_op):
             
         elif(operating_mode == single_mode):
             print("not ready")
+        """
 
         """
             # Preprocessing
@@ -478,6 +480,7 @@ def main(input_folder, output_folder, system_op):
             if(run_jobs):
                 JobID_Network = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Network.pbs", "-W", "depend=afterok:" + JobID_EC_Postprocess.strip("\n") + ":" + JobID_Classify.strip("\n")])
             Network_list.append(JobID_Network.strip("\n"))
+            
 
     if len(file_list) > 1:
         os.chdir(output_folder)
@@ -501,9 +504,16 @@ def main(input_folder, output_folder, system_op):
 """                
 
 if __name__ == "__main__":
-    input_folder = sys.argv[1]
-    output_folder = sys.argv[2]
-    system_op = sys.argv[3] #scinet or docker
-    #scinet_user_name = sys.argv[3]
-    os.chdir(output_folder)
-    main(input_folder, output_folder, system_op)
+    if(len(sys.argv) < 3):
+        print("no args provided.  try again:  arg(1) input folder, arg(2) output folder, arg(3) docker or scinet")
+        sys.exit()
+    else:    
+        input_folder = sys.argv[1]
+        output_folder = sys.argv[2]
+        system_op = sys.argv[3] #scinet or docker
+        #scinet_user_name = sys.argv[3]
+        if not(os.path.exists(output_folder)):
+            print("output file doesn't exist.  now making one")
+            os.makedirs(output_folder)
+        os.chdir(output_folder)
+        main(input_folder, output_folder, system_op)

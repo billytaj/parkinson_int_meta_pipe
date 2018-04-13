@@ -91,41 +91,47 @@ class tool_path_obj:
 
             self.accession2taxid = "/scratch/j/jparkins/mobolaji/accession2taxid/accession2taxid"
             self.RPKM = script_path + "RPKM.py"
-        elif(mode == "docker"):
+            
+        elif(mode == "docker" or mode == "Docker"):
         
-            script_path = "/pipeline"
-            refactor_path = script_path
+            script_path             = "/pipeline/"
+            reference_file_path     = "/pipeline_reference_files/"
+            refactor_path           = script_path
+            tool_path               = "/pipeline_tools/"
+            
+            #----------------------------------------------------------
+            # Reference files
             # this is some NCBI reference file for Vectors
-            UniVec_Core = "/home/j/jparkins/mobolaji/Databases/UniVec_Core.fasta"
+            self.UniVec_Core    = reference_file_path + "UniVec_Core.fasta"
             # this too.
-            Adapter = "/home/j/jparkins/mobolaji/Tools/Trimmomatic/Trimmomatic-0.36/adapters/TruSeq3-PE-2.fa"
-        
+            self.Adapter        = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
+            self.Host           = reference_file_path + "Mouse_cds.fasta"
             #----------------------------------------------------------
             # external tools
-            tool_path               = "/pipeline_tools"
-            self.cdhit_dup          = tool_path + "/cdhit_dup/cd-hit-dup" 
-            self.Timmomatic         = tool_path + "/Trimmomatic/trimmomatic-0.36.jar"
-            self.AdapterRemoval     = tool_path + "/adapterremoval/AdapterRemoval"
-            self.vsearch            = tool_path + "/vsearch/vsearch"
-            self.Flash              = tool_path + "/FLASH/flash"
-            self.BWA                = tool_path + "/BWA/bwa"
-            self.SAMTOOLS           = tool_path + "/samtools/samtools"
-            self.BLAT               = tool_path + "/PBLAT/pblat"
-            self.DIAMOND            = tool_path + "/DIAMOND/diamond"
-            self.Blastdbcmd         = tool_path + "/BLAST_p/blastdbcmd"
-            self.Makeblastdb        = tool_path + "/BLAST_p/makeblastdb"
-            self.Infernal           = tool_path + "/infernal/cmscan"
-            self.Kaiju              = tool_path + "/kaiju/kaiju"
-            self.Kaiju2krona        = tool_path + "/kaiju/kaiju2krona"
-            self.ktImportText       = tool_path + "/KronaTools/scripts/ImportText.pl"
-            self.Centrifuge         = tool_path + "/centrifuge/centrifuge"
-            self.Centrifuge_report  = tool_path + "/centrifuge/centrifuge-kreport"
-            self.kSLAM              = tool_path + "/k-SLAM/SLAM"
-            self.Barrnap            = tool_path + "/barrnap/barrnap"
-            self.Priam              = tool_path + "/PRIAM_search/PRIAM_search.jar"
-            self.BLAST_dir          = tool_path + "/BLAST_p"
-            self.WEVOTE             = tool_path + "/WEVOTE/run_WEVOTE_PIPELINE.sh"
-            self.WEVOTEDB           = tool_path + "/WEVOTE/WEVOTEDB"
+            
+            self.cdhit_dup          = tool_path + "cdhit_dup/cd-hit-dup" 
+            self.Timmomatic         = tool_path + "Trimmomatic/trimmomatic-0.36.jar"
+            self.AdapterRemoval     = tool_path + "adapterremoval/AdapterRemoval"
+            self.vsearch            = tool_path + "vsearch/vsearch"
+            self.Flash              = tool_path + "FLASH/flash"
+            self.BWA                = tool_path + "BWA/bwa"
+            self.SAMTOOLS           = tool_path + "samtools/samtools"
+            self.BLAT               = tool_path + "PBLAT/pblat"
+            self.DIAMOND            = tool_path + "DIAMOND/diamond"
+            self.Blastdbcmd         = tool_path + "BLAST_p/blastdbcmd"
+            self.Makeblastdb        = tool_path + "BLAST_p/makeblastdb"
+            self.Infernal           = tool_path + "infernal/cmscan"
+            self.Kaiju              = tool_path + "kaiju/kaiju"
+            self.Kaiju2krona        = tool_path + "kaiju/kaiju2krona"
+            self.ktImportText       = tool_path + "KronaTools/scripts/ImportText.pl"
+            self.Centrifuge         = tool_path + "centrifuge/centrifuge"
+            self.Centrifuge_report  = tool_path + "centrifuge/centrifuge-kreport"
+            self.kSLAM              = tool_path + "k-SLAM/SLAM"
+            self.Barrnap            = tool_path + "barrnap/barrnap"
+            self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
+            self.BLAST_dir          = tool_path + "BLAST_p"
+            self.WEVOTE             = tool_path + "WEVOTE/run_WEVOTE_PIPELINE.sh"
+            self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTEDB"
 
 
 
@@ -140,10 +146,10 @@ class tool_path_obj:
             self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
             self.Python = "python3" #"/home/j/jparkins/mobolaji/python"
             self.DNA_DB = "/scratch/j/jparkins/mobolaji/Microbial_cds_db/microbial_all_cds.fasta"
-            self.DNA_DB_Prefix = os.path.splitext(DNA_DB)[0]
-            self.DNA_DB_Extension = os.path.splitext(DNA_DB)[1]
+            self.DNA_DB_Prefix = os.path.splitext(self.DNA_DB)[0]
+            self.DNA_DB_Extension = os.path.splitext(self.DNA_DB)[1]
             self.Prot_DB = "/scratch/j/jparkins/mobolaji/NCBI_nr_db/nr"
-            self.Host = "/home/j/jparkins/mobolaji/Databases/Mouse_cds.fasta"
+            
             self.BBMap_Dir = "/home/j/jparkins/mobolaji/Tools/BBMap/bbmap"
             self.Fastqc = "/home/j/jparkins/mobolaji/Tools/FastQC/fastqc"
             self.Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"

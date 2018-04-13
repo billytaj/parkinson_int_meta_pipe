@@ -71,8 +71,8 @@ class mt_pipe_commands:
         if not(raw_sequence_path_1 is None):
             self.raw_sequence_path_1 = raw_sequence_path_1
             print("raw seqeunce 1:", self.raw_sequence_path_1)
-        
-        self.tool_path_obj = mpp.path_obj(system_mode)    
+        self.system_mode = system_mode
+        self.tool_path_obj = mpp.tool_path_obj(system_mode)    
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
         self.Input_File2 = self.Input_Filepath + "2"
@@ -109,7 +109,7 @@ class mt_pipe_commands:
         #mode: selection of which pbs template to use: default -> low memory
         #dependency_list: if not empty, will append wait args to qsub subprocess call. it's polymorphic
         #returns back the job ID given from qsub
-        if(system_mode == "scinet"):
+        if(self.system_mode == "scinet"):
             pbs_template = ""
             if(mode == "med"):
                 pbs_template = PBS_Submit_HighMem
@@ -190,6 +190,17 @@ class mt_pipe_commands:
                 sys.exit()
         else:
             #docker mode: single cpu
+            # no ID, no qsub.  just run the command
+            pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
+            if(not inner_name is None):
+                pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
+            with open(pbs_script_full_path + ".sh", "w+") as PBS_script_out:
+                for item in command_list:
+                    PBS_script_out.write(item + "\n")
+                PBS_script_out.close()
+            sp.check_output(["sh", pbs_script_full_path + ".sh"])
+                
+            
     
     def create_pre_single_command(self, stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"
@@ -370,11 +381,47 @@ class mt_pipe_commands:
         
         #host-remove the rest
         bwa_hr_pair = ">&2 echo bwa pair host remove | "
-        bwa_hr_pair += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.Host_Contaminants + " " 
+        bwa_hr_pair += self.tool_path_obj.BWA + " mem -t " 
+        bwa_hr_pair += self.Threads_str + " " 
+        bwa_hr_pair += self.Host_Contaminants + " " 
         bwa_hr_pair += cdhit_folder + "pair_1_unique.fastq" + " " 
         bwa_hr_pair += cdhit_folder + "pair_2_unique.fastq" 
         bwa_hr_pair += " > " + host_removal_folder + "pair_no_host.sam"
         
+        # bwa hr pair 1 only
+        bwa_hr_pair_1 = ">&2 echo bwa pair host remove | "
+        bwa_hr_pair_1 += self.tool_path_obj.BWA + " mem -t " 
+        bwa_hr_pair_1 += self.Threads_str + " " 
+        bwa_hr_pair_1 += self.Host_Contaminants + " " 
+        bwa_hr_pair_1 += cdhit_folder + "pair_1_unique.fastq" 
+        bwa_hr_pair_1 += " > " + host_removal_folder + "pair_1_no_host.sam"
+        
+        
+        #separating bwa results back into paired reads
+        samtools_host_pair_1_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
+        samtools_host_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_1_no_host.sam"
+        samtools_host_pair_1_sam_to_bam += " > " + host_removal_folder + "pair_1_no_host.bam"
+        
+        #stuff that doesn't match with the host
+        samtools_no_host_pair_1_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
+        samtools_no_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4" 
+        samtools_no_host_pair_1_bam_to_fastq += " -0 " + host_removal_folder + "pair_1_no_host.fastq" # out
+        samtools_no_host_pair_1_bam_to_fastq += " " + host_removal_folder + "pair_1_no_host.bam" #in
+        
+        #stuff that matches with the host (why keep it?  request from john)
+        samtools_host_pair_1_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
+        samtools_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
+        samtools_host_pair_1_bam_to_fastq += " -0 " + host_removal_folder + "pair_1_host_only.fastq" 
+        samtools_host_pair_1_bam_to_fastq += " " + host_removal_folder + "pair_1_no_host.bam"
+        
+        
+        # bwa hr pair 1 only
+        bwa_hr_pair_2 = ">&2 echo bwa pair host remove | "
+        bwa_hr_pair_2 += self.tool_path_obj.BWA + " mem -t " 
+        bwa_hr_pair_2 += self.Threads_str + " " 
+        bwa_hr_pair_2 += self.Host_Contaminants + " " 
+        bwa_hr_pair_2 += cdhit_folder + "pair_2_unique.fastq" 
+        bwa_hr_pair_2 += " > " + host_removal_folder + "pair_2_no_host.sam"
         
         #separating bwa results back into paired reads
         samtools_host_pair_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
@@ -606,77 +653,16 @@ class mt_pipe_commands:
         move_pair_2 += final_folder
         
         
+        
         COMMANDS_Pre = [
-            #make the pairs align, by sorting
-            sort_pair_1, 
-            sort_pair_2,
-            # remove adapters
-            adapter_removal_line,
-            #trim things
             
-            vsearch_merge,
-            cat_glue,
-            vsearch_filter_0,
-            vsearch_filter_1,
-            vsearch_filter_2,
-            orphan_read_filter,
-            
-            cdhit_orphans,
-            # # move_unpaired_cluster,
-            cdhit_pair_1,
-            cdhit_pair_2,
-            # # move_paired_cluster,
-            # #----host removal
-            copy_host,
-            bwa_hr_prep,
-            # #----SAMTOOLS makes bam files
-            samtools_hr_prep,
-            bwa_hr_orphans,
-            bwa_hr_pair,
-            samtools_hr_orphans_sam_to_bam,
-            samtools_no_host_orphans_bam_to_fastq,
-            samtools_host_orphans_bam_to_fastq,
-            samtools_host_pair_sam_to_bam,
-            samtools_no_host_pair_bam_to_fastq,
-            samtools_host_pair_bam_to_fastq,
-            make_blast_db_host,
-            vsearch_filter_3,
-            vsearch_filter_4,
-            vsearch_filter_5,
-            blat_hr_orphans,
-            blat_hr_pair_1,
-            blat_hr_pair_2,
-            hr_orphans,
-            hr_pair_1,
-            hr_pair_2,
-            # # #-----vector removal
-            copy_vector,
-            bwa_vr_prep,
-            samtools_vr_prep,
-            bwa_vr_orphans,
-            samtools_no_vector_orphans_sam_to_bam,
-            samtools_no_vector_orphans_bam_to_fastq,
-            samtools_vector_orphans_bam_to_fastq,
-            bwa_vr_pair,
-            samtools_vr_pair_sam_to_bam,
-            samtools_no_vector_pair_bam_to_fastq,
-            samtools_vector_pair_bam_to_fastq,
-            make_blast_db_vector, 
-            vsearch_filter_6,
-            vsearch_filter_7,
-            vsearch_filter_8,
-            blat_vr_orphans,
-            blat_vr_pair_1,
-            blat_vr_pair_2,
-            blat_containment_vector_orphans,
-            blat_containment_vector_pair_1,
-            blat_containment_vector_pair_2,
-            move_orphans, 
-            move_pair_1, 
-            move_pair_2
-            
+            bwa_hr_pair_1,
+            samtools_host_pair_1_sam_to_bam,
+            samtools_no_host_pair_1_bam_to_fastq,
+            samtools_host_pair_1_bam_to_fastq
             
         ]
+        
         return COMMANDS_Pre            
                     
     def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name):

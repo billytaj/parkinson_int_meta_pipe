@@ -16,6 +16,9 @@ RUN apt-get -y install cmake
 RUN apt-get -y install libncurses5-dev
 RUN apt-get -y install liblzma-dev
 RUN apt-get -y install perl
+RUN conda update -n base conda -y
+RUN conda install Biopython -y 
+RUN conda install Pandas -y
 RUN echo "hello from custom dockerfile"
 
 WORKDIR /pipeline_tools
@@ -149,18 +152,18 @@ WORKDIR /pipeline_tools
 
 #------------------------------------------------------
 # Install SAMTools
-RUN wget https://sourceforge.net/projects/samtools/files/samtools/1.7/samtools-1.7.tar.bz2 -O samtools.tar.bz2
+RUN wget https://sourceforge.net/projects/samtools/files/samtools/1.8/samtools-1.8.tar.bz2 -O samtools.tar.bz2
 RUN tar --remove-files -xjvf samtools.tar.bz2 && rm samtools.tar.bz2 && mkdir samtools
-WORKDIR samtools-1.7
+WORKDIR samtools-1.8
 RUN make && mv samtools /pipeline_tools/samtools
 WORKDIR /pipeline_tools
-RUN rm -r samtools-1.7
+RUN rm -r samtools-1.8
 
 #---------------------------------------------------
-# Install Trimmomatic
+# Install Trimmomatic and get the adapters files
 RUN wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.36.zip -O Trimmomatic.zip
 RUN unzip Trimmomatic.zip && rm Trimmomatic.zip && mkdir Trimmomatic
-#RUN mv Trimmomatic-0.36/* Trimmomatic && rm -r Trimmomatic-0.36
+RUN mv Trimmomatic-0.36/* Trimmomatic && rm -r Trimmomatic-0.36
 
 
 #----------------------------------------------------
@@ -185,7 +188,9 @@ RUN mkdir WEVOTE && mv WEVOTE-master/bin/* WEVOTE/ && rm -r WEVOTE-master
 # get reference files
 WORKDIR /pipeline_reference_files
 RUN wget ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec_Core -O UniVec_Core.fasta
-
-
+RUN mkdir Trimmomatic_adapters
+RUN mv /pipeline_tools/Trimmomatic/adapters/* /pipeline_reference_files/Trimmomatic_adapters
+RUN wget ftp://ftp.ensembl.org/pub/release-92/fasta/mus_musculus/cds/Mus_musculus.GRCm38.cds.all.fa.gz -O Mouse_cds.gz
+RUN gunzip Mouse_cds.gz && mv Mouse_cds Mouse_cds.fasta
 WORKDIR /
 CMD ["bash"]
