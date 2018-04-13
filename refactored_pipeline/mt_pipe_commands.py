@@ -424,23 +424,21 @@ class mt_pipe_commands:
         bwa_hr_pair_2 += " > " + host_removal_folder + "pair_2_no_host.sam"
         
         #separating bwa results back into paired reads
-        samtools_host_pair_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
-        samtools_host_pair_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_no_host.sam"
-        samtools_host_pair_sam_to_bam += " > " + host_removal_folder + "pair_no_host.bam"
+        samtools_host_pair_2_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
+        samtools_host_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_2_no_host.sam"
+        samtools_host_pair_2_sam_to_bam += " > " + host_removal_folder + "pair_2_no_host.bam"
         
         #stuff that doesn't match with the host
-        samtools_no_host_pair_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
-        samtools_no_host_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 13" 
-        samtools_no_host_pair_bam_to_fastq += " -1 " + host_removal_folder + "pair_1_no_host.fastq" # out
-        samtools_no_host_pair_bam_to_fastq += " -2 " + host_removal_folder + "pair_2_no_host.fastq" # out
-        samtools_no_host_pair_bam_to_fastq += " " + host_removal_folder + "pair_no_host.bam" #in
+        samtools_no_host_pair_2_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
+        samtools_no_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4" 
+        samtools_no_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_no_host.fastq" # out
+        samtools_no_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam" #in
         
         #stuff that matches with the host (why keep it?  request from john)
-        samtools_host_pair_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
-        samtools_host_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
-        samtools_host_pair_bam_to_fastq += " -1 " + host_removal_folder + "pair_1_host_only.fastq" 
-        samtools_host_pair_bam_to_fastq += " -2 " + host_removal_folder + "pair_2_host_only.fastq" 
-        samtools_host_pair_bam_to_fastq += " " + host_removal_folder + "pair_no_host.bam"
+        samtools_host_pair_2_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
+        samtools_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
+        samtools_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_host_only.fastq" 
+        samtools_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam"
         
         #blast prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
@@ -547,12 +545,18 @@ class mt_pipe_commands:
         samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_vectors_only.fastq "  
         samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"
         
-        bwa_vr_pair = ">&2 echo bwa vr pair | " 
-        bwa_vr_pair += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
-        bwa_vr_pair += self.Vector_Contaminants + " " 
-        bwa_vr_pair += blat_hr_folder + "pair_1_no_host.fastq " 
-        bwa_vr_pair += blat_hr_folder + "pair_2_no_host.fastq" 
-        bwa_vr_pair += " > " + vector_removal_folder + "pair_no_vectors.sam"
+        bwa_vr_pair_1 = ">&2 echo bwa vr pair | " 
+        bwa_vr_pair_1 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_vr_pair_1 += self.Vector_Contaminants + " " 
+        bwa_vr_pair_1 += blat_hr_folder + "pair_1_no_host.fastq " 
+        bwa_vr_pair_1 += " > " + vector_removal_folder + "pair_1_no_vectors.sam"
+        
+        bwa_vr_pair_2 = ">&2 echo bwa vr pair | " 
+        bwa_vr_pair_2 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_vr_pair_2 += self.Vector_Contaminants + " " 
+        bwa_vr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq " 
+        bwa_vr_pair_2 += " > " + vector_removal_folder + "pair_2_no_vectors.sam"
+        
         
         samtools_vr_pair_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
         samtools_vr_pair_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " 
@@ -655,11 +659,76 @@ class mt_pipe_commands:
         
         
         COMMANDS_Pre = [
+            #make the pairs align, by sorting
+            sort_pair_1,
+            sort_pair_2,
+            # # remove adapters
+            adapter_removal_line,
+            # #trim things
+            vsearch_merge,
+            cat_glue,
+            vsearch_filter_0,
+            vsearch_filter_1,
+            vsearch_filter_2,
+            orphan_read_filter,
             
+            cdhit_orphans,
+            # # # move_unpaired_cluster,
+            cdhit_pair_1,
+            cdhit_pair_2,
+            # # # move_paired_cluster,
+            # # #----host removal
+            copy_host,
+            bwa_hr_prep,
+            # # #----SAMTOOLS makes bam files
+            samtools_hr_prep,
+            bwa_hr_orphans,
+            samtools_hr_orphans_sam_to_bam,
+            samtools_no_host_orphans_bam_to_fastq,
+            samtools_host_orphans_bam_to_fastq,
             bwa_hr_pair_1,
             samtools_host_pair_1_sam_to_bam,
             samtools_no_host_pair_1_bam_to_fastq,
-            samtools_host_pair_1_bam_to_fastq
+            samtools_host_pair_1_bam_to_fastq,
+            bwa_hr_pair_2,
+            samtools_host_pair_2_sam_to_bam,
+            samtools_no_host_pair_2_bam_to_fastq,
+            samtools_host_pair_2_bam_to_fastq,
+            make_blast_db_host,
+            vsearch_filter_3,
+            vsearch_filter_4,
+            vsearch_filter_5,
+            blat_hr_orphans,
+            blat_hr_pair_1,
+            blat_hr_pair_2,
+            hr_orphans,
+            hr_pair_1,
+            hr_pair_2,
+            # # # #-----vector removal
+            copy_vector,
+            bwa_vr_prep,
+            samtools_vr_prep,
+            bwa_vr_orphans,
+            samtools_no_vector_orphans_sam_to_bam,
+            samtools_no_vector_orphans_bam_to_fastq,
+            samtools_vector_orphans_bam_to_fastq,
+            bwa_vr_pair,
+            samtools_vr_pair_sam_to_bam,
+            samtools_no_vector_pair_bam_to_fastq,
+            samtools_vector_pair_bam_to_fastq,
+            make_blast_db_vector, 
+            vsearch_filter_6,
+            vsearch_filter_7,
+            vsearch_filter_8,
+            blat_vr_orphans,
+            blat_vr_pair_1,
+            blat_vr_pair_2,
+            blat_containment_vector_orphans,
+            blat_containment_vector_pair_1,
+            blat_containment_vector_pair_2,
+            move_orphans, 
+            move_pair_1, 
+            move_pair_2
             
         ]
         
