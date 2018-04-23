@@ -17,11 +17,24 @@ def make_folder(folder_path):
         os.makedirs(folder_path)
 
 class qsub_sync:
+    def __init__(self, system_mode):
+        self.system_mode = system_mode
+
+    #handles where to auto-resume
+    def check_where_resume(self, job_label):
+        job_path = job_label + "/data/final_results"
+        print(job_path)
+        file_list = os.listdir(job_path)
+        if(len(file_list) > 0):
+            return True
+        else:
+            return False
     #handles job syncing
     # op mode:  which job category -> completed, running, in queue, blocked
     # check_mode: how to check our job IDs vs the job category list 
     # -> any: true on existence of 1
     # -> all: true on existence of all 
+    
     def check_job_finished(self, job_id, op_mode, check_mode="all"):
         jobs_list = []
         try:
@@ -84,67 +97,70 @@ class qsub_sync:
             
     def wait_for_sync(self, timeout, job_id, label, message = None):
         #does the actual wait for the qsub job to finish
-        if(job_id is None) or (not job_id):
-            print("Blank job id.  killing")
-            sys.exit()
-        
-        #print("job id list:")
-        #print(job_id)
-        time.sleep(60)
-        print(message)
-        b_lock = True
-        job_status = 0
-        message_instance_timeout = 0
-        lockout_count = int(timeout)
-        
-        retry_counter = 10    
-        while(b_lock):
-            job_status = self.check_job_finished(job_id, "completed", "all")
-            if(job_status == 1):
-                b_lock = False
-            else:
-                
-                #only start the countdown if the job is running, not while it's waiting in the queue.  
-                #job could wait a long time in the queue if someone's clobbering the cluster
-                job_status = self.check_job_finished(job_id, "run", "any")
-                if(job_status == 1):
-                    lockout_count -= 1
-                    #print("job still running")
-                elif(job_status == 0):
-                    #print("something happened.  we're dying")
-                    sys.exit()
-                elif(job_status == 2):
-                    #print("not running")
-                    #none running.  maybe in queue?
-                    job_status = self.check_job_finished(job_id, "queue", "any")
-                    if(job_status == 2):
-                        #print("not in queue")
-                        #nothing in queue.  maybe blocked?
-                        job_status = self.check_job_finished(job_id, "blocked", "any")
-                        if(job_status == 2):
-                            #print("not blocked")
-                            #not in any queue
-                            #print("sync over")
-                            if(retry_counter == 0):
-                                b_lock = False
-                            else:
-                                retry_counter -= 1
-                    #    elif(job_status == 1):
-                    #        print("job blocked")
-                    #elif(job_status == 1):
-                    #    print("job in queue")
-                
-                else:
-                    print("this can't happen in sync.  killing")
-                    sys.exit()
-            
-            if(lockout_count <= 0):
-                print(label, "took too long.  shutting down pipeline.  QSUB Jobs may still be running")
-                print("Use qselect -u <username> | xargs qdel  to remove jobs from qsub")
+        if(self.system_mode == "docker"):
+            print("running in docker.  bypassing sync")
+        else:
+            if(job_id is None) or (not job_id):
+                print("Blank job id.  killing")
                 sys.exit()
             
-            time.sleep(5)
+            #print("job id list:")
+            #print(job_id)
+            time.sleep(60)
+            print(message)
+            b_lock = True
+            job_status = 0
+            message_instance_timeout = 0
+            lockout_count = int(timeout)
             
+            retry_counter = 10    
+            while(b_lock):
+                job_status = self.check_job_finished(job_id, "completed", "all")
+                if(job_status == 1):
+                    b_lock = False
+                else:
+                    
+                    #only start the countdown if the job is running, not while it's waiting in the queue.  
+                    #job could wait a long time in the queue if someone's clobbering the cluster
+                    job_status = self.check_job_finished(job_id, "run", "any")
+                    if(job_status == 1):
+                        lockout_count -= 1
+                        #print("job still running")
+                    elif(job_status == 0):
+                        #print("something happened.  we're dying")
+                        sys.exit()
+                    elif(job_status == 2):
+                        #print("not running")
+                        #none running.  maybe in queue?
+                        job_status = self.check_job_finished(job_id, "queue", "any")
+                        if(job_status == 2):
+                            #print("not in queue")
+                            #nothing in queue.  maybe blocked?
+                            job_status = self.check_job_finished(job_id, "blocked", "any")
+                            if(job_status == 2):
+                                #print("not blocked")
+                                #not in any queue
+                                #print("sync over")
+                                if(retry_counter == 0):
+                                    b_lock = False
+                                else:
+                                    retry_counter -= 1
+                        #    elif(job_status == 1):
+                        #        print("job blocked")
+                        #elif(job_status == 1):
+                        #    print("job in queue")
+                    
+                    else:
+                        print("this can't happen in sync.  killing")
+                        sys.exit()
+                
+                if(lockout_count <= 0):
+                    print(label, "took too long.  shutting down pipeline.  QSUB Jobs may still be running")
+                    print("Use qselect -u <username> | xargs qdel  to remove jobs from qsub")
+                    sys.exit()
+                
+                time.sleep(5)
+                
             
 def main(input_folder, output_folder, system_op):
     
@@ -160,7 +176,7 @@ def main(input_folder, output_folder, system_op):
     # 1: paired
     # 2: error
     operating_mode = 0
-    sync_obj = qsub_sync()
+    sync_obj = qsub_sync(system_op)
     start_time = time.time()
     #note: this also needs to support paired and single-ended data
     #input folder is the main location of the dump.
@@ -195,6 +211,10 @@ def main(input_folder, output_folder, system_op):
         #init a command object, and start making commands
         #sys.exit()
         
+        
+        
+        
+        
         if(operating_mode == double_mode):
             preprocess_label = "preprocess"
             rRNA_filter_label = "rRNA_filter"
@@ -204,10 +224,13 @@ def main(input_folder, output_folder, system_op):
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
             comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, system_mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
             
-            preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
+            if(not sync_obj.check_where_resume(output_folder + preprocess_label)):
+                preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
+            else:  
+                preprocess_job_id = None
             #testing construct only:
             #sync_obj.wait_for_sync(600, preprocess_job_id, "preprocess")
-            """
+            
             rRNA_filter_job_id = []
             
             rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 5, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
@@ -223,8 +246,8 @@ def main(input_folder, output_folder, system_op):
             
             
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
-            rRNA_filter_pair_1_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_1/pair_1_fastq/"
-            rRNA_filter_pair_2_fastq_folder = os.getcwd() + "/rRNA_filter/data/pair_2/pair_2_fastq/"
+            rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
+            rRNA_filter_pair_2_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_2/pair_2_fastq/"
             
             
             #this is gonna be hacky.... we have to wait until the prep stage is finished, but there's no nice way to sense it, through qsub
@@ -320,8 +343,7 @@ def main(input_folder, output_folder, system_op):
             
         elif(operating_mode == single_mode):
             print("not ready")
-        """
-
+        
         """
             # Preprocessing
             

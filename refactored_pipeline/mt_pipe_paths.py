@@ -106,6 +106,7 @@ class tool_path_obj:
             # this too.
             self.Adapter        = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
             self.Host           = reference_file_path + "Mouse_cds.fasta"
+            self.Rfam           = reference_file_path + "Rfam.cm"
             #----------------------------------------------------------
             # external tools
             
@@ -142,6 +143,26 @@ class tool_path_obj:
 
 
             self.sort_reads = refactor_path + "sort_reads_refactor.py"
+            self.Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
+            self.duplicate_repopulate = refactor_path +  "duplicate_repopulation.py"
+            self.Map_reads_contigs = script_path + "Map_read_contigs.py"
+            self.orphaned_read_filter = refactor_path + "orphaned_pair_filter.py"
+            self.BLAT_Contaminant_Filter = refactor_path + "BLAT_Contaminant_Filter.py"
+            self.File_splitter = refactor_path + "file_splitter.py"
+            self.Sort_Reads = script_path + "Read_Classification/Sort_Reads.py"
+            self.rRNA_filter = refactor_path+"rRNA_filter_v2.py"
+            self.Map_reads_gene_BWA = script_path + "Map_read_gene_BWA.py"
+            self.Map_reads_gene_BLAT = script_path + "Map_read_gene_BLAT.py"
+            self.Map_reads_prot_DMND = script_path + "Map_read_prot_DMND.py"
+            self.Spades = "/home/j/jparkins/mobolaji/Tools/SPAdes/SPAdes-3.9.1-Linux/bin/spades.py"
+            self.EC_Annotation_Prep = script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
+            self.Detect_Submit = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
+            self.EC_Annotation_Post = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
+            self.Detect = "/home/j/jparkins/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
+            self.Annotated_taxid = script_path + "Read_Classification/Get_TaxID.py"
+            self.Contrain_classification = script_path + "Read_Classification/Constrain_Classification.py"
+            self.Classification_combine = script_path + "Read_Classification/Combine_WEVOTE.py"
+            
             self.Perl = "/home/j/jparkins/mobolaji/perl"
             self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
             self.Python = "python3" #"/home/j/jparkins/mobolaji/python"
@@ -152,33 +173,20 @@ class tool_path_obj:
             
             self.BBMap_Dir = "/home/j/jparkins/mobolaji/Tools/BBMap/bbmap"
             self.Fastqc = "/home/j/jparkins/mobolaji/Tools/FastQC/fastqc"
-            self.Rfam = "/home/j/jparkins/mobolaji/Databases/Rfam_rRNA.cm"
-            self.Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
-            self.duplicate_repopulate = refactor_path +  "duplicate_repopulation.py"
-            self.Map_reads_contigs = script_path + "Map_read_contigs.py"
-            self.orphaned_read_filter = refactor_path + "orphaned_pair_filter.py"
-            self.BLAT_Contaminant_Filter = refactor_path + "BLAT_Contaminant_Filter.py"
-            self.File_splitter = refactor_path + "file_splitter.py"
-            self.Sort_Reads = script_path + "Read_Classification/Sort_Reads.py"
+            
+            
+            
+            
+            
             #rRNA_Split_Jobs = refactor_path + "rRNA_Split_Jobs.py"
-            self.rRNA_filter = refactor_path+"rRNA_filter_v2.py"
-            self.Map_reads_gene_BWA = script_path + "Map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT = script_path + "Map_read_gene_BLAT.py"
-            self.Map_reads_prot_DMND = script_path + "Map_read_prot_DMND.py"
-            self.Spades = "/home/j/jparkins/mobolaji/Tools/SPAdes/SPAdes-3.9.1-Linux/bin/spades.py"
-
-            self.EC_Annotation_Prep = script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
-            self.Detect_Submit = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
-            self.EC_Annotation_Post = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
-            self.Detect = "/home/j/jparkins/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
+            
+            
 
             self.SWISS_PROT = "/home/j/jparkins/mobolaji/Databases/uniprot_sprot_annotated.fasta"
 
             self.Nodes = "/home/j/jparkins/mobolaji/Databases/taxdump/nodes.dmp"
             self.Names = "/home/j/jparkins/mobolaji/Databases/taxdump/names.dmp"
-            self.Annotated_taxid = script_path + "Read_Classification/Get_TaxID.py"
-            self.Contrain_classification = script_path + "Read_Classification/Constrain_Classification.py"
-            self.Classification_combine = script_path + "Read_Classification/Combine_WEVOTE.py"
+            
 
             self.accession2taxid = "/scratch/j/jparkins/mobolaji/accession2taxid/accession2taxid"
             self.RPKM = script_path + "RPKM.py"

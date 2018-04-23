@@ -199,7 +199,7 @@ class mt_pipe_commands:
                     PBS_script_out.write(item + "\n")
                 PBS_script_out.close()
             sp.check_output(["sh", pbs_script_full_path + ".sh"])
-                
+            #return nothing.  dockerized version has no sync
             
     
     def create_pre_single_command(self, stage_name):
@@ -536,13 +536,13 @@ class mt_pipe_commands:
         samtools_no_vector_orphans_sam_to_bam += " > " + vector_removal_folder + "orphans_no_vectors.bam"
         
         samtools_no_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 2 | " 
-        samtools_no_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4" + " -0 "
-        samtools_no_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.fastq "  
+        samtools_no_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4" 
+        samtools_no_vector_orphans_bam_to_fastq += " -0 " + vector_removal_folder + "orphans_no_vectors.fastq "  
         samtools_no_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"    
         
         samtools_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 3 | "
-        samtools_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" + " -0 " 
-        samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_vectors_only.fastq "  
+        samtools_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
+        samtools_vector_orphans_bam_to_fastq += " -0 " + vector_removal_folder + "orphans_vectors_only.fastq "  
         samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"
         
         bwa_vr_pair_1 = ">&2 echo bwa vr pair | " 
@@ -558,22 +558,37 @@ class mt_pipe_commands:
         bwa_vr_pair_2 += " > " + vector_removal_folder + "pair_2_no_vectors.sam"
         
         
-        samtools_vr_pair_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
-        samtools_vr_pair_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " 
-        samtools_vr_pair_sam_to_bam += vector_removal_folder + "pair_no_vectors.sam" 
-        samtools_vr_pair_sam_to_bam += " > " + vector_removal_folder + "pair_no_vectors.bam"
+        samtools_vr_pair_1_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
+        samtools_vr_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " 
+        samtools_vr_pair_1_sam_to_bam += vector_removal_folder + "pair_1_no_vectors.sam" 
+        samtools_vr_pair_1_sam_to_bam += " > " + vector_removal_folder + "pair_1_no_vectors.bam"
         
-        samtools_no_vector_pair_bam_to_fastq = ">&2 echo samtools vr pair pt 2 | "
-        samtools_no_vector_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 13"
-        samtools_no_vector_pair_bam_to_fastq += " -1 " + vector_removal_folder + "pair_1_no_vectors.fastq" 
-        samtools_no_vector_pair_bam_to_fastq += " -2 " + vector_removal_folder + "pair_2_no_vectors.fastq " 
-        samtools_no_vector_pair_bam_to_fastq += vector_removal_folder + "pair_no_vectors.bam"
+        samtools_no_vector_pair_1_bam_to_fastq = ">&2 echo samtools vr pair pt 2 | "
+        samtools_no_vector_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
+        samtools_no_vector_pair_1_bam_to_fastq += " -0 " + vector_removal_folder + "pair_1_no_vectors.fastq" 
+        samtools_no_vector_pair_1_bam_to_fastq += " " + vector_removal_folder + "pair_1_no_vectors.bam"
 
-        samtools_vector_pair_bam_to_fastq = ">&2 echo samtools vr pair pt 3 | "
-        samtools_vector_pair_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
-        samtools_vector_pair_bam_to_fastq += " -1 " + vector_removal_folder + "pair_1_vectors_only.fastq" 
-        samtools_vector_pair_bam_to_fastq += " -2 " + vector_removal_folder + "pair_2_vectors_only.fastq " 
-        samtools_vector_pair_bam_to_fastq += vector_removal_folder + "pair_no_vectors.bam"
+        samtools_vector_pair_1_bam_to_fastq = ">&2 echo samtools vr pair pt 3 | "
+        samtools_vector_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4" 
+        samtools_vector_pair_1_bam_to_fastq += " -0 " + vector_removal_folder + "pair_1_vectors_only.fastq"  
+        samtools_vector_pair_1_bam_to_fastq += " " + vector_removal_folder + "pair_1_no_vectors.bam"
+        
+        samtools_vr_pair_2_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
+        samtools_vr_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " 
+        samtools_vr_pair_2_sam_to_bam += vector_removal_folder + "pair_2_no_vectors.sam" 
+        samtools_vr_pair_2_sam_to_bam += " > " + vector_removal_folder + "pair_2_no_vectors.bam"
+        
+        samtools_no_vector_pair_2_bam_to_fastq = ">&2 echo samtools vr pair pt 2 | "
+        samtools_no_vector_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
+        samtools_no_vector_pair_2_bam_to_fastq += " -0 " + vector_removal_folder + "pair_2_no_vectors.fastq" 
+        samtools_no_vector_pair_2_bam_to_fastq += " " + vector_removal_folder + "pair_2_no_vectors.bam"
+
+        samtools_vector_pair_2_bam_to_fastq = ">&2 echo samtools vr pair pt 3 | "
+        samtools_vector_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"  
+        samtools_vector_pair_2_bam_to_fastq += " -0 " + vector_removal_folder + "pair_2_vectors_only.fastq" 
+        samtools_vector_pair_2_bam_to_fastq += " " + vector_removal_folder + "pair_2_no_vectors.bam"
+        
+        
         
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
         make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + self.Vector_Contaminants + " -dbtype nucl"
@@ -712,10 +727,15 @@ class mt_pipe_commands:
             samtools_no_vector_orphans_sam_to_bam,
             samtools_no_vector_orphans_bam_to_fastq,
             samtools_vector_orphans_bam_to_fastq,
-            bwa_vr_pair,
-            samtools_vr_pair_sam_to_bam,
-            samtools_no_vector_pair_bam_to_fastq,
-            samtools_vector_pair_bam_to_fastq,
+            bwa_vr_pair_1,
+            bwa_vr_pair_2,
+            samtools_vr_pair_1_sam_to_bam,
+            samtools_no_vector_pair_1_bam_to_fastq,
+            samtools_vector_pair_1_bam_to_fastq,
+            samtools_vr_pair_2_sam_to_bam,
+            samtools_no_vector_pair_2_bam_to_fastq,
+            samtools_vector_pair_2_bam_to_fastq,
+            
             make_blast_db_vector, 
             vsearch_filter_6,
             vsearch_filter_7,

@@ -192,5 +192,9 @@ RUN mkdir Trimmomatic_adapters
 RUN mv /pipeline_tools/Trimmomatic/adapters/* /pipeline_reference_files/Trimmomatic_adapters
 RUN wget ftp://ftp.ensembl.org/pub/release-92/fasta/mus_musculus/cds/Mus_musculus.GRCm38.cds.all.fa.gz -O Mouse_cds.gz
 RUN gunzip Mouse_cds.gz && mv Mouse_cds Mouse_cds.fasta
+RUN wget ftp://ftp.ebi.ac.uk/pub/databases/Rfam/13.0/Rfam.cm.gz
+RUN gunzip Rfam.cm.gz
+RUN /pipeline_tools/infernal/cmpress Rfam.cm
+
 WORKDIR /
 CMD ["bash"]
