@@ -3,6 +3,7 @@
 #-------------------------------------------------------
 # The base version of this code comes from Jordan Ang
 # This code tries to figure out what's been lost due to contig assembly
+# We've got a competing version called "contig duplicate remover"
 #---------------------------------------------------------
 # Now with some commenting!
 # CHANGES:

@@ -1045,6 +1045,14 @@ class mt_pipe_commands:
         bwa_orphans_contigs += spades_folder + "contigs.fasta" + " " 
         bwa_orphans_contigs += dep_loc + "orphans.fastq"
         bwa_orphans_contigs += " > " + bwa_folder + "orphans.sam"
+        
+        
+        contig_duplicate_remover = ">&2 echo Removing consumed contigs from data | "
+        contig_duplicate_remover += self.tool_path_obj.Python + " " + self.tool_path_obj.contig_duplicate_remover + " " 
+        contig_duplicate_remover += dep_loc + "pair_1.fastq "
+        contig_duplicate_remover += dep_loc + "pair_2.fastq " 
+        contig_duplicate_remover += dep_loc + "orphans.fastq " 
+        contig_duplicate_remover += 
         """
         contig_merge = ">&2 echo Contig merge | "
         contig_merge += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_contigs + " " 

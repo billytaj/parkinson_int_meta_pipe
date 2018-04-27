@@ -49,7 +49,7 @@ class tool_path_obj:
             # custom scripts
 
 
-
+            
             self.sort_reads = refactor_path + "sort_reads_refactor.py"
             self.Perl = "/home/j/jparkins/mobolaji/perl"
             self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
@@ -141,27 +141,27 @@ class tool_path_obj:
             # custom scripts
 
 
-
-            self.sort_reads = refactor_path + "sort_reads_refactor.py"
-            self.Filter_rRNA = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
-            self.duplicate_repopulate = refactor_path +  "duplicate_repopulation.py"
-            self.Map_reads_contigs = script_path + "Map_read_contigs.py"
-            self.orphaned_read_filter = refactor_path + "orphaned_pair_filter.py"
-            self.BLAT_Contaminant_Filter = refactor_path + "BLAT_Contaminant_Filter.py"
-            self.File_splitter = refactor_path + "file_splitter.py"
-            self.Sort_Reads = script_path + "Read_Classification/Sort_Reads.py"
-            self.rRNA_filter = refactor_path+"rRNA_filter_v2.py"
-            self.Map_reads_gene_BWA = script_path + "Map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT = script_path + "Map_read_gene_BLAT.py"
-            self.Map_reads_prot_DMND = script_path + "Map_read_prot_DMND.py"
+            self.contig_duplicate_remover   = "contig_duplicate_remover.py"
+            self.sort_reads                 = refactor_path + "sort_reads_refactor.py"
+            self.Filter_rRNA                = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
+            self.duplicate_repopulate       = refactor_path +  "duplicate_repopulation.py"
+            self.Map_reads_contigs          = script_path + "Map_read_contigs.py"
+            self.orphaned_read_filter       = refactor_path + "orphaned_pair_filter.py"
+            self.BLAT_Contaminant_Filter    = refactor_path + "BLAT_Contaminant_Filter.py"
+            self.File_splitter              = refactor_path + "file_splitter.py"
+            self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
+            self.rRNA_filter                = refactor_path+"rRNA_filter_v2.py"
+            self.Map_reads_gene_BWA         = script_path + "Map_read_gene_BWA.py"
+            self.Map_reads_gene_BLAT        = script_path + "Map_read_gene_BLAT.py"
+            self.Map_reads_prot_DMND        = script_path + "Map_read_prot_DMND.py"
             
-            self.EC_Annotation_Prep = script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
-            self.Detect_Submit = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
-            self.EC_Annotation_Post = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
-            self.Detect = "/home/j/jparkins/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
-            self.Annotated_taxid = script_path + "Read_Classification/Get_TaxID.py"
-            self.Contrain_classification = script_path + "Read_Classification/Constrain_Classification.py"
-            self.Classification_combine = script_path + "Read_Classification/Combine_WEVOTE.py"
+            self.EC_Annotation_Prep         = script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
+            self.Detect_Submit              = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
+            self.EC_Annotation_Post         = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
+            self.Detect                     = "/home/j/jparkins/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
+            self.Annotated_taxid            = script_path + "Read_Classification/Get_TaxID.py"
+            self.Contrain_classification    = script_path + "Read_Classification/Constrain_Classification.py"
+            self.Classification_combine     = script_path + "Read_Classification/Combine_WEVOTE.py"
             
             self.Perl = "/home/j/jparkins/mobolaji/perl"
             self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
