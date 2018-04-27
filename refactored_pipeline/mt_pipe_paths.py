@@ -133,7 +133,7 @@ class tool_path_obj:
             self.BLAST_dir          = tool_path + "BLAST_p"
             self.WEVOTE             = tool_path + "WEVOTE/run_WEVOTE_PIPELINE.sh"
             self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTEDB"
-
+            self.Spades             = tool_path + "SPAdes/bin/spades.py"
 
 
             
@@ -154,7 +154,7 @@ class tool_path_obj:
             self.Map_reads_gene_BWA = script_path + "Map_read_gene_BWA.py"
             self.Map_reads_gene_BLAT = script_path + "Map_read_gene_BLAT.py"
             self.Map_reads_prot_DMND = script_path + "Map_read_prot_DMND.py"
-            self.Spades = "/home/j/jparkins/mobolaji/Tools/SPAdes/SPAdes-3.9.1-Linux/bin/spades.py"
+            
             self.EC_Annotation_Prep = script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
             self.Detect_Submit = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
             self.EC_Annotation_Post = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"

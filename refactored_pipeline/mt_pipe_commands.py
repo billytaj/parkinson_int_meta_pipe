@@ -102,7 +102,7 @@ class mt_pipe_commands:
         if not(os.path.exists(folder_path)):
             os.makedirs(folder_path)
     
-    def create_pbs_and_launch(self, job_name, command_list, mode = "low", dependency_list = None, run_job = False,  inner_name = None):
+    def create_pbs_and_launch(self, job_name, command_list, mode = "low", dependency_list = None, run_job = False,  inner_name = None, work_in_background = False):
         #create the pbs job, and launch items
         #job name: string tag for export file name
         #command list:  list of command statements for writing
@@ -198,9 +198,21 @@ class mt_pipe_commands:
                 for item in command_list:
                     PBS_script_out.write(item + "\n")
                 PBS_script_out.close()
-            sp.check_output(["sh", pbs_script_full_path + ".sh"])
-            #return nothing.  dockerized version has no sync
-            
+            if(not work_in_background):
+                try:
+                    sp.check_output(["sh", pbs_script_full_path + ".sh"])
+                except sp.CalledProcessError as e:
+                    return_code = e.returncode
+                    if return_code != 1:
+                        raise
+            else:
+                try:
+                    process_id = sp.Popen(["sh", pbs_script_full_path + ".sh"])
+                    return process_id
+                except sp.CalledProcessError as e:
+                    return_code = e.returncode
+                    if return_code != 1:
+                        raise
     
     def create_pre_single_command(self, stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"
@@ -929,11 +941,13 @@ class mt_pipe_commands:
         COMMANDS_combine = []
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
+        repop_folder = data_folder + "0_repop/"
         final_folder = data_folder + "final_results/"
         preprocess_subfolder = os.getcwd() + "/" + preprocess_stage_name + "/"
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
+        self.make_folder(repop_folder)
         self.make_folder(final_folder)
         
         
@@ -946,36 +960,49 @@ class mt_pipe_commands:
             #need 3, 5(clstr only), and mRNA from the 2nd stage.
             #for the mRNA, we don't really care if it is.  This stage is just supposed to add in the missing duplicates from something that was stripped.
             
-            hq_path = preprocess_subfolder + "data/3_ar_quality_filter/"
+            hq_path = preprocess_subfolder + "data/4_orphan_read_filter/"
             cluster_path = preprocess_subfolder + "data/5_remove_duplicates/"
             
             repop_orphans = ">&2 echo Duplication repopulate Orphans | "
             repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " " 
-            repop_orphans += hq_path + "orphans_hq.fastq" + " "   #in -> way back when things were quality-filtered.  
+            repop_orphans += hq_path + "orphans.fastq" + " "   #in -> way back when things were quality-filtered.  
                                                                                             #      step 2 in preprocess.  could still contain rRNA
             repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
             repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " "           #in -> duplicates filter output
-            repop_orphans += final_folder + "orphans.fastq"        #out
+            repop_orphans += repop_folder + "orphans.fastq"        #out
             
             
             repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
             repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " " 
-            repop_pair_1 += hq_path + "pair_1_hq.fastq" + " " 
+            repop_pair_1 += hq_path + "pair_1_match.fastq" + " " 
             repop_pair_1 += dep_loc + "mRNA/pair_1.fastq" + " " 
             repop_pair_1 += cluster_path + "pair_1_unique.fastq.clstr" + " " 
-            repop_pair_1 += final_folder + "pair_1.fastq"
+            repop_pair_1 += repop_folder + "pair_1.fastq"
             
             repop_pair_2 = ">&2 echo Duplication repopulate pair 2 | "
             repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " " 
-            repop_pair_2 += hq_path + "pair_2_hq.fastq" + " " 
+            repop_pair_2 += hq_path + "pair_2_match.fastq" + " " 
             repop_pair_2 += dep_loc + "mRNA/pair_2.fastq" + " " 
             repop_pair_2 += cluster_path + "pair_2_unique.fastq.clstr" + " " 
-            repop_pair_2 += final_folder + "pair_2.fastq"
+            repop_pair_2 += repop_folder + "pair_2.fastq"
+            
+            orphan_repop_filter = ">&2 echo filtering mRNA for orphans | "
+            orphan_repop_filter += self.tool_path_obj.Python + " " 
+            orphan_repop_filter += self.tool_path_obj.orphaned_read_filter + " " 
+            orphan_repop_filter += repop_folder + "pair_1.fastq " 
+            orphan_repop_filter += repop_folder + "pair_2.fastq " 
+            orphan_repop_filter += repop_folder + "orphans.fastq "
+            orphan_repop_filter += final_folder + "pair_1.fastq " 
+            orphan_repop_filter += final_folder + "pair_2.fastq "
+            orphan_repop_filter += final_folder + "orphans.fastq"
+            
         
             COMMANDS_Combine = [
             repop_orphans,
             repop_pair_1,
-            repop_pair_2
+            repop_pair_2,
+            orphan_repop_filter
+            
             ]
         return COMMANDS_Combine
 
@@ -983,11 +1010,12 @@ class mt_pipe_commands:
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        spades_folder = data_folder + "0_spades/"
+        bwa_folder = data_folder + "1_bwa_align/"
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        
-        spades_folder = data_folder + "0_spades/"
         self.make_folder(spades_folder)
+        self.make_folder(bwa_folder)
         
         #this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
@@ -996,23 +1024,28 @@ class mt_pipe_commands:
         spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
         spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
         spades += " -o " + spades_folder #out
-        """
-        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + self.Contigs
+        
+        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + spades_folder + "contigs.fasta"
         
         #calls BWA, then uses SAMTools to get a report
-        bwa_pair_contigs = ">&2 echo BWA pair contigs | " 
-        bwa_pair_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
-        bwa_pair_contigs += self.Contigs + " " 
-        bwa_pair_contigs += self.Input_File1 + "_all_mRNA.fastq " 
-        bwa_pair_contigs += self.Input_File2 + "_all_mRNA.fastq | " 
-        bwa_pair_contigs += self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_paired.sam"
+        bwa_pair_1_contigs = ">&2 echo BWA pair contigs | " 
+        bwa_pair_1_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
+        bwa_pair_1_contigs += spades_folder + "contigs.fasta" + " " 
+        bwa_pair_1_contigs += dep_loc + "pair_1.fastq"
+        bwa_pair_1_contigs += " > " + bwa_folder + "pair_1.sam"
+        
+        bwa_pair_2_contigs = ">&2 echo BWA pair contigs | " 
+        bwa_pair_2_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
+        bwa_pair_2_contigs += spades_folder + "contigs.fasta" + " " 
+        bwa_pair_2_contigs += dep_loc + "pair_2.fastq"
+        bwa_pair_2_contigs += " > " + bwa_folder + "pair_2.sam"
         
         bwa_orphans_contigs = ">&2 echo BWA orphan contigs | " 
         bwa_orphans_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 " 
-        bwa_orphans_contigs += self.Contigs + " " 
-        bwa_orphans_contigs += self.Input_Filepath + "_all_mRNA_unpaired.fastq | " 
-        bwa_orphans_contigs += self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_contig_unpaired.sam"
-        
+        bwa_orphans_contigs += spades_folder + "contigs.fasta" + " " 
+        bwa_orphans_contigs += dep_loc + "orphans.fastq"
+        bwa_orphans_contigs += " > " + bwa_folder + "orphans.sam"
+        """
         contig_merge = ">&2 echo Contig merge | "
         contig_merge += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_contigs + " " 
         contig_merge += self.Input_File1 + "_all_mRNA.fastq" + " " 
@@ -1025,8 +1058,10 @@ class mt_pipe_commands:
         COMMANDS_Assemble = [
                         #"mkdir -p " + os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0]) + "_SpadesOut",
                         spades,
-                        #bwa_index,
-                        #bwa_paired_contigs,
+                        bwa_index,
+                        bwa_pair_1_contigs,
+                        bwa_pair_2_contigs,
+                        bwa_orphans_contigs
                         #bwa_unpaired_contigs#,
                         #contig_merge
                         ]

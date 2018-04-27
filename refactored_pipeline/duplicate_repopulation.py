@@ -67,28 +67,34 @@ def repopulate_single(ref_filename, mRNA_filename, cluster_filename, output_file
             elif len(line) > 5:
                 seq_id = "@" + line[line.find(">") + 1:line.find("...")]
                 cluster_map[rep].append(seq_id)
-
+                
+    
     #puts the cluster and mRNA IDs together in a single list
     for sequence in mRNA_df["ID"]:
-        if len(cluster_map[sequence]) > 1:
-            for seq_id in cluster_map[sequence]:
-                reduplicated_ids.add(seq_id)
-                print("we're adding from the cluster map:", seq_id)
+        #print("looking at:", sequence)
+        if(sequence in cluster_map):
+            if len(cluster_map[sequence]) > 1:
+                for seq_id in cluster_map[sequence]:
+                    reduplicated_ids.add(seq_id)
+                    #print("we're adding from the cluster map:", seq_id)
+            else:
+                reduplicated_ids.add(sequence)
+                #print("adding from mRNA_df:", sequence)
         else:
             reduplicated_ids.add(sequence)
-            print("adding from mRNA_df:", sequence)
+            #print("adding from mRNA_df:", sequence)
 
     #exports the full mRNA by fetching from ref 
     ref_df[ref_df.ID.isin(sorted(reduplicated_ids))].to_csv(full_mRNA_file, sep = '\n', mode = "w+", header = False, index = False)
 
     print("=================================")
-    print(ref_df[ref_df.ID.isin(sorted(reduplicated_ids))])
+    #print(ref_df[ref_df.ID.isin(sorted(reduplicated_ids))])
 
         
     end_all = clock()
     print ("Reduplicate")
     print ("================================")
-    print ("total runtime:", end_all - start_all, "s") 
+    #print ("total runtime:", end_all - start_all, "s") 
 
 
 if __name__ == "__main__":

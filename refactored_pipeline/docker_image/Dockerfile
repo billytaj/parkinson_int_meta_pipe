@@ -159,6 +159,14 @@ RUN make && mv samtools /pipeline_tools/samtools
 WORKDIR /pipeline_tools
 RUN rm -r samtools-1.8
 
+#-------------------------------------------------------
+# Install SPAdes
+RUN wget http://cab.spbu.ru/files/release3.11.1/SPAdes-3.11.1-Linux.tar.gz -O SPAdes.tar.gz
+RUN tar --remove-files -xzvf SPAdes.tar.gz && rm SPAdes.tar.gz && mkdir SPAdes
+RUN mv SPAdes-3.11.1-Linux/* SPAdes
+RUN rm -r SPAdes-3.11.1-Linux
+
+
 #---------------------------------------------------
 # Install Trimmomatic and get the adapters files
 RUN wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.36.zip -O Trimmomatic.zip

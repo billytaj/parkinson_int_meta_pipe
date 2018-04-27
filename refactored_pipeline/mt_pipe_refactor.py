@@ -24,9 +24,12 @@ class qsub_sync:
     def check_where_resume(self, job_label):
         job_path = job_label + "/data/final_results"
         print(job_path)
-        file_list = os.listdir(job_path)
-        if(len(file_list) > 0):
-            return True
+        if(os.path.exists(job_path)):
+            file_list = os.listdir(job_path)
+            if(len(file_list) > 0):
+                return True
+            else:
+                return False
         else:
             return False
     #handles job syncing
@@ -218,7 +221,12 @@ def main(input_folder, output_folder, system_op):
         if(operating_mode == double_mode):
             preprocess_label = "preprocess"
             rRNA_filter_label = "rRNA_filter"
+            repop_job_label = "duplicate_repopulation"
+            assemble_contigs_label = "assemble_contigs"
             
+            rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
+            rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
+            rRNA_filter_pair_2_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_2/pair_2_fastq/"
                         
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
@@ -233,8 +241,73 @@ def main(input_folder, output_folder, system_op):
             
             rRNA_filter_job_id = []
             
-            rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 5, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
-            
+            if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label)):
+                rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 5, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
+                
+                sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], rRNA_filter_label, "waiting for rRNA splitter")
+                print("moving onto INFERNAL")
+                rRNA_filter_job_id.pop(0)
+                
+                for item in os.listdir(rRNA_filter_orphans_fastq_folder):
+                    file_root_name = item.split('.')[0]
+                    rRNA_filter_job_id.append(
+                        comm.create_pbs_and_launch(
+                            "rRNA_filter", 
+                            comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name), 
+                            inner_name = file_root_name + "_infernal",
+                            #dependency_list = rRNA_filter_job_id[0],
+                            run_job = True,
+                            work_in_background = True
+                        )
+                    )
+                    
+                for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
+                    file_root_name = item.split('.')[0]
+                    rRNA_filter_job_id.append(
+                        comm.create_pbs_and_launch(
+                            "rRNA_filter", 
+                            comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
+                            inner_name = file_root_name + "_infernal",
+                            #dependency_list = rRNA_filter_job_id[0],
+                            run_job = True,
+                            work_in_background = True
+                        )
+                    )
+                    
+                for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
+                    file_root_name = item.split('.')[0]
+                    rRNA_filter_job_id.append(
+                        comm.create_pbs_and_launch(
+                            "rRNA_filter", 
+                            comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
+                            inner_name = file_root_name + "_infernal",
+                            #dependency_list = rRNA_filter_job_id[0],
+                            run_job = True,
+                            work_in_background = True
+                        )
+                    )
+                for item in rRNA_filter_job_id:
+                    item.wait()
+                    
+                #wait for infernal to finish running
+                time.sleep(5)
+                #sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
+                print("rRNA ID list:", rRNA_filter_job_id)
+                rRNA_consolidate_id = comm.create_pbs_and_launch(
+                                            rRNA_filter_label, 
+                                            comm.create_rRNA_filter_post_command(rRNA_filter_label), 
+                                            inner_name = "rRNA_filter_post",
+                                            dependency_list = rRNA_filter_job_id, 
+                                            run_job = True
+                                            )
+                                            
+                
+                #then we need to combine the splits into per-category files
+                #this shouldn't be a qsub job
+                print("Working on cats")
+                time.sleep(1)
+            else:
+                rRNA_consolidate_id = None
             #standalone
             #rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 2, "preprocess"), run_job = True))
             #--------------------------
@@ -245,98 +318,44 @@ def main(input_folder, output_folder, system_op):
             #-------------------------------------------------------------------
             
             
-            rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
-            rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
-            rRNA_filter_pair_2_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_2/pair_2_fastq/"
+            
             
             
             #this is gonna be hacky.... we have to wait until the prep stage is finished, but there's no nice way to sense it, through qsub
             #why delay?  because the following code needs the files present to generate the correct job.  
             #this delay, and timeout are a check against super large runaway jobs.
             
-            sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], rRNA_filter_label, "waiting for rRNA splitter")
-            print("moving onto INFERNAL")
-            rRNA_filter_job_id.pop(0)
             
-            for item in os.listdir(rRNA_filter_orphans_fastq_folder):
-                file_root_name = item.split('.')[0]
-                rRNA_filter_job_id.append(
-                    comm.create_pbs_and_launch(
-                        "rRNA_filter", 
-                        comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name), 
-                        inner_name = file_root_name + "_infernal",
-                        #dependency_list = rRNA_filter_job_id[0],
-                        run_job = True
-                    )
-                )
-                
-            for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
-                file_root_name = item.split('.')[0]
-                rRNA_filter_job_id.append(
-                    comm.create_pbs_and_launch(
-                        "rRNA_filter", 
-                        comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
-                        inner_name = file_root_name + "_infernal",
-                        #dependency_list = rRNA_filter_job_id[0],
-                        run_job = True
-                    )
-                )
-                
-            for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
-                file_root_name = item.split('.')[0]
-                rRNA_filter_job_id.append(
-                    comm.create_pbs_and_launch(
-                        "rRNA_filter", 
-                        comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
-                        inner_name = file_root_name + "_infernal",
-                        #dependency_list = rRNA_filter_job_id[0],
-                        run_job = True
-                    )
-                )
-            #wait for infernal to finish running
-            time.sleep(5)
-            #sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
-            print("rRNA ID list:", rRNA_filter_job_id)
-            rRNA_consolidate_id = comm.create_pbs_and_launch(
-                                        rRNA_filter_label, 
-                                        comm.create_rRNA_filter_post_command(rRNA_filter_label), 
-                                        inner_name = "rRNA_filter_post",
-                                        dependency_list = rRNA_filter_job_id, 
-                                        run_job = True
-                                        )
-                                        
-            
-            #then we need to combine the splits into per-category files
-            #this shouldn't be a qsub job
-            print("Working on cats")
-            time.sleep(1)
             
             
             #-------------------------------------------------------------
             #Next, we have duplicate repopulation
-            repop_job_label = "duplicate_repopulation"
-            repop_job_id = comm.create_pbs_and_launch(
-                repop_job_label, comm.create_repop_command(
-                    repop_job_label, preprocess_label, 
-                    rRNA_filter_label
-                ), 
-                dependency_list = rRNA_consolidate_id,
-                run_job = True
-            )
+            if(not sync_obj.check_where_resume(output_folder +  repop_job_label)):
             
+                repop_job_id = comm.create_pbs_and_launch(
+                    repop_job_label, comm.create_repop_command(
+                        repop_job_label, preprocess_label, 
+                        rRNA_filter_label
+                    ), 
+                    dependency_list = rRNA_consolidate_id,
+                    run_job = True
+                )
+            else:   
+                repop_job_id = None
             
             #----------------------------------------
-            assemble_contigs_label = "assemble_contigs"
-            assemble_contigs_id = comm.create_pbs_and_launch(
-                assemble_contigs_label, 
-                comm.create_assemble_contigs_command(
-                assemble_contigs_label,
-                repop_job_label
-                ),
-                dependency_list = repop_job_id, 
-                run_job = True
-            )
-            
+            if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
+                assemble_contigs_id = comm.create_pbs_and_launch(
+                    assemble_contigs_label, 
+                    comm.create_assemble_contigs_command(
+                    assemble_contigs_label,
+                    repop_job_label
+                    ),
+                    dependency_list = repop_job_id, 
+                    run_job = True
+                )
+            else:
+                assemble_contigs_id = None
             
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
