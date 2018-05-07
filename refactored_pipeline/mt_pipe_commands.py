@@ -1012,10 +1012,14 @@ class mt_pipe_commands:
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
         spades_folder = data_folder + "0_spades/"
         bwa_folder = data_folder + "1_bwa_align/"
+        sam_trimmer_folder = data_folder + "2_clean_sam/"
+        final_folder = data_folder + "final_results/"
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(spades_folder)
         self.make_folder(bwa_folder)
+        self.make_folder(sam_trimmer_folder)
+        self.make_folder(final_folder)
         
         #this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
@@ -1046,13 +1050,33 @@ class mt_pipe_commands:
         bwa_orphans_contigs += dep_loc + "orphans.fastq"
         bwa_orphans_contigs += " > " + bwa_folder + "orphans.sam"
         
+        sam_trimmer_orphans = ">&2 echo cleaning up orphans sam | "
+        sam_trimmer_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.sam_trimmer + " "
+        sam_trimmer_orphans += bwa_folder + "orphans.sam "
+        sam_trimmer_orphans += sam_trimmer_folder + "orphans.sam"
+        
+        sam_trimmer_pair_1 = ">&2 echo cleaning up pair 1 sam | "
+        sam_trimmer_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.sam_trimmer + " "
+        sam_trimmer_pair_1 += bwa_folder + "pair_1.sam "
+        sam_trimmer_pair_1 += sam_trimmer_folder + "pair_1.sam"
+        
+        sam_trimmer_pair_2 = ">&2 echo cleaning up pair 2 sam | "
+        sam_trimmer_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.sam_trimmer + " "
+        sam_trimmer_pair_2 += bwa_folder + "pair_2.sam "
+        sam_trimmer_pair_2 += sam_trimmer_folder + "pair_2.sam"
         
         contig_duplicate_remover = ">&2 echo Removing consumed contigs from data | "
         contig_duplicate_remover += self.tool_path_obj.Python + " " + self.tool_path_obj.contig_duplicate_remover + " " 
         contig_duplicate_remover += dep_loc + "pair_1.fastq "
         contig_duplicate_remover += dep_loc + "pair_2.fastq " 
         contig_duplicate_remover += dep_loc + "orphans.fastq " 
-        contig_duplicate_remover += 
+        contig_duplicate_remover += sam_trimmer_folder + "pair_1.sam "
+        contig_duplicate_remover += sam_trimmer_folder + "pair_2.sam "
+        contig_duplicate_remover += sam_trimmer_folder + "orphans.sam "
+        contig_duplicate_remover += final_folder
+        
+        move_contigs = ">%2 echo Moving contigs to final folder | "
+        move_contigs += "cp " + spades_folder + "contigs.fasta " + final_folder 
         """
         contig_merge = ">&2 echo Contig merge | "
         contig_merge += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_contigs + " " 
@@ -1069,22 +1093,57 @@ class mt_pipe_commands:
                         bwa_index,
                         bwa_pair_1_contigs,
                         bwa_pair_2_contigs,
-                        bwa_orphans_contigs
+                        bwa_orphans_contigs,
+                        sam_trimmer_orphans,
+                        sam_trimmer_pair_1,
+                        sam_trimmer_pair_2,
+                        contig_duplicate_remover,
+                        move_contigs
                         #bwa_unpaired_contigs#,
                         #contig_merge
                         ]
         return COMMANDS_Assemble
         
         
-    def create_BWA_annotate_command(self):    
+    def create_BWA_annotate_command(self, stage_name, dependency_stage_name):    
         
-        bwa_contigs = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.tool_path_obj.DNA_DB + " " + self.Contigs + " | " + self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_contigs_BWA.sam"
-        make_sam_1 = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.tool_path_obj.DNA_DB + " " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " | " + self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_unpaired_unmapped_BWA.sam"
-        make_sam_2 = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " + self.tool_path_obj.DNA_DB + " " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " | " + self.tool_path_obj.SAMTOOLS + " view > " + self.Input_Filepath + "_paired_unmapped_BWA.sam"
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        bwa_folder = data_folder + "0_bwa/"
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+        
+        bwa_contigs = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_contigs += self.tool_path_obj.DNA_DB + " " 
+        bwa_contigs += dep_loc + "contigs.fasta" + " | " 
+        bwa_contigs += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "contigs.sam"
+        
+        bwa_orphans = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_orphans += self.tool_path_obj.DNA_DB + " " 
+        bwa_orphans += dep_loc + "orpahans.fastq" + " | " 
+        bwa_orphans += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "orphans.sam"
+        
+        
+        bwa_pair_1 = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_pair_1 += self.tool_path_obj.DNA_DB + " "
+        bwa_pair_1 += dep_loc + "pair_1.fastq" + " | " 
+        bwa_pair_1 += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "pair_1.sam"
+        
+        bwa_pair_2 = self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_pair_2 += self.tool_path_obj.DNA_DB + " " 
+        bwa_pair_2 += dep_loc + "pair_2.fastq" + " | " 
+        bwa_pair_2 += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "pair_2.sam"
+        
+        
+        
         COMMANDS_Annotate_BWA = [
             bwa_contigs,
-            make_sam_1,
-            make_sam_2,
+            bwa_orphans,
+            bwa_pair_1,
+            bwa_pair_2,
             self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BWA + " " + self.tool_path_obj.DNA_DB + " " + self.Input_Filepath + "_contig_map.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Contigs + " " + self.Input_Filepath + "_contigs_BWA.sam" + " " + self.Input_Filepath + "_contigs_n_BWA.fasta" + " " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" + " " + self.Input_Filepath + "_unpaired_unmapped_BWA.sam" + " " + self.Input_Filepath + "_unpaired_unmapped_n_BWA.fasta" + " " + self.Input_File1 + "_all_mRNA_unmapped.fastq" + " " + self.Input_Filepath + "_paired_unmapped_BWA.sam" + " " + self.Input_File1 + "_unmapped_n_BWA.fasta" + " " + self.Input_File2 + "_all_mRNA_unmapped.fastq" + " " + self.Input_Filepath + "_paired_unmapped_BWA.sam" + " " + self.Input_File2 + "_unmapped_n_BWA.fasta"
         ]
         return COMMANDS_Annotate_BWA

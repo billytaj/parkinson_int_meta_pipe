@@ -12,14 +12,15 @@ if __name__ == "__main__":
     pair_2_path         = sys.argv[2]   #fastq
     orphans_path        = sys.argv[3]   #fastq 
     pair_1_sam_path     = sys.argv[4]   #sam
-    pair_sam_path       = sys.argv[5]   #sam 
+    pair_2_sam_path     = sys.argv[5]   #sam 
     orphans_sam_path    = sys.argv[6]   #sam
     output_path         = sys.argv[7]   #just a location
     
     print("pair 1:", pair_1_path)
     print("pair 2:", pair_2_path)
     print("orphans:", orphans_path)
-    print("pair sam:", pair_sam_path)
+    print("pair 1 sam:", pair_1_sam_path)
+    print("pair 2 sam:", pair_2_sam_path)
     print("orphans sam:", orphans_sam_path)
     print("output loc:", output_path)
     
@@ -36,13 +37,13 @@ if __name__ == "__main__":
     orphans_df.columns = ["ID", "sequence", "junk", "quality"]
     
     #import the various SAM files
-    pair_1_sam_df = pd.read_csv(pair_1_sam_path, header=None, sep="\t", error_bad_lines=False)
+    pair_1_sam_df = pd.read_csv(pair_1_sam_path, error_bad_lines=False, header=None, sep="\t")
     pair_1_sam_df.iloc[:, 1] = pair_1_sam_df.iloc[:, 1].apply(lambda x: bin(int(x))[2:].zfill(11)[8])
     
-    pair_2_sam_df = pd.read_csv(pair_2_sam_path, header=None, sep="\t", error_bad_lines=False)
+    pair_2_sam_df = pd.read_csv(pair_2_sam_path, error_bad_lines=False, header=None, sep="\t")
     pair_2_sam_df.iloc[:, 1] = pair_2_sam_df.iloc[:, 1].apply(lambda x: bin(int(x))[2:].zfill(11)[8])
     
-    orphans_sam_df = pd.read_csv(orphans_sam_path, header=None, sep="\t", error_bad_lines = False)
+    orphans_sam_df = pd.read_csv(orphans_sam_path,  error_bad_lines = False, header=None, sep="\t")
     orphans_sam_df.iloc[:, 1] = orphans_sam_df.iloc[:, 1].apply(lambda x: bin(int(x))[2:].zfill(11)[8])
     
     #why isn't this in a loop? No benefit.  it's just df manipulations
@@ -84,3 +85,7 @@ if __name__ == "__main__":
     pair_1_df[pair_1_df.ID.isin(unmapped_pair_1_sam_df)].to_csv(output_path+"pair_1.fastq", sep='\n', mode = "w+", header=False, index=False)
     pair_2_df[pair_2_df.ID.isin(unmapped_pair_2_sam_df)].to_csv(output_path+"pair_2.fastq", sep='\n', mode = "w+", header=False, index=False)
     orphans_df[orphans_df.ID.isin(unmapped_orphans_sam_df)].to_csv(output_path+"orphans.fastq", sep='\n', mode = "w+", header=False, index=False)
+    
+    #-----------------------------------
+    #old code also wrote a manifest of things that were mapped/unmapped
+    

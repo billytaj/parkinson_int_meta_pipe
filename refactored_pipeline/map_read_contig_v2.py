@@ -45,7 +45,7 @@ mapped_list= []
 
 #####################################
 # FUNCTION:
-def contig_map(sam, unmapped):
+def contig_map(sam, unmapped, mapped_reads, contig2read_map):
 
     # process .sam file, one contig/read (query) at a time:
     with open(sam,"r") as samfile:
@@ -89,8 +89,8 @@ def contig_map(sam, unmapped):
 # extraction of contig-aligned reads and unaligned reads:
 unmapped_paired_reads= set()
 unmapped_unpaired_reads= set()
-contig_map(paired_sam_file, unmapped_paired_reads)      # unmerged reads
-contig_map(unpaired_sam_file, unmapped_unpaired_reads)  # merged reads
+contig_map(paired_sam_file, unmapped_paired_reads, mapped_reads, contig2read_map)      # unmerged reads
+contig_map(unpaired_sam_file, unmapped_unpaired_reads, mapped_reads, contig2read_map)  # merged reads
 
 # WRITE OUTPUT: non-contig unmerged:
 unmapped_paired1_seqs= []
