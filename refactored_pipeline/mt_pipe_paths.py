@@ -49,7 +49,7 @@ class tool_path_obj:
             # custom scripts
 
 
-            
+            self.sam_trimmer = refactor_path + "sam_trimmer.py"
             self.sort_reads = refactor_path + "sort_reads_refactor.py"
             self.Perl = "/home/j/jparkins/mobolaji/perl"
             self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
@@ -107,6 +107,10 @@ class tool_path_obj:
             self.Adapter        = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
             self.Host           = reference_file_path + "Mouse_cds.fasta"
             self.Rfam           = reference_file_path + "Rfam.cm"
+            self.DNA_DB         =   "/dump_site/microbial_all_cds.fasta"
+            self.DNA_DB_Prefix  = os.path.splitext(self.DNA_DB)[0]
+            self.DNA_DB_Extension = os.path.splitext(self.DNA_DB)[1]
+            
             #----------------------------------------------------------
             # external tools
             
@@ -140,8 +144,9 @@ class tool_path_obj:
             #--------------------------------------------
             # custom scripts
 
-
-            self.contig_duplicate_remover   = "contig_duplicate_remover.py"
+            self.map_read_contig_v2         = refactor_path + "map_read_contig_v2.py"
+            self.sam_trimmer                = refactor_path + "sam_trimmer.py"
+            self.contig_duplicate_remover   = script_path + "contig_duplicate_remover.py"
             self.sort_reads                 = refactor_path + "sort_reads_refactor.py"
             self.Filter_rRNA                = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
             self.duplicate_repopulate       = refactor_path +  "duplicate_repopulation.py"
@@ -160,15 +165,13 @@ class tool_path_obj:
             self.EC_Annotation_Post         = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
             self.Detect                     = "/home/j/jparkins/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
             self.Annotated_taxid            = script_path + "Read_Classification/Get_TaxID.py"
-            self.Contrain_classification    = script_path + "Read_Classification/Constrain_Classification.py"
+            self.Constrain_classification    = script_path + "Read_Classification/Constrain_Classification.py"
             self.Classification_combine     = script_path + "Read_Classification/Combine_WEVOTE.py"
             
             self.Perl = "/home/j/jparkins/mobolaji/perl"
             self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
             self.Python = "python3" #"/home/j/jparkins/mobolaji/python"
-            self.DNA_DB = "/scratch/j/jparkins/mobolaji/Microbial_cds_db/microbial_all_cds.fasta"
-            self.DNA_DB_Prefix = os.path.splitext(self.DNA_DB)[0]
-            self.DNA_DB_Extension = os.path.splitext(self.DNA_DB)[1]
+            
             self.Prot_DB = "/scratch/j/jparkins/mobolaji/NCBI_nr_db/nr"
             
             self.BBMap_Dir = "/home/j/jparkins/mobolaji/Tools/BBMap/bbmap"

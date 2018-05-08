@@ -23,14 +23,18 @@ class qsub_sync:
     #handles where to auto-resume
     def check_where_resume(self, job_label):
         job_path = job_label + "/data/final_results"
-        print(job_path)
+        print("looking at:", job_path)
         if(os.path.exists(job_path)):
             file_list = os.listdir(job_path)
             if(len(file_list) > 0):
+                print("bypassing!")
                 return True
             else:
+                print("running")
                 return False
+                
         else:
+            print("doesn't exist: running")
             return False
     #handles job syncing
     # op mode:  which job category -> completed, running, in queue, blocked
@@ -223,6 +227,8 @@ def main(input_folder, output_folder, system_op):
             rRNA_filter_label = "rRNA_filter"
             repop_job_label = "duplicate_repopulation"
             assemble_contigs_label = "assemble_contigs"
+            gene_annotation_BWA_label = "gene_annotation_BWA"
+            gene_annotation_BLAT_label = "gene_annotation_BLAT"
             
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -344,6 +350,7 @@ def main(input_folder, output_folder, system_op):
                 repop_job_id = None
             
             #----------------------------------------
+            # assemble contigs
             if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
                 assemble_contigs_id = comm.create_pbs_and_launch(
                     assemble_contigs_label, 
@@ -357,6 +364,36 @@ def main(input_folder, output_folder, system_op):
             else:
                 assemble_contigs_id = None
             
+            
+            #----------------------------------------------
+            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
+                gene_annotation_BWA_id = comm.create_pbs_and_launch(
+                    gene_annotation_BWA_label,
+                    comm.create_BWA_annotate_command(
+                    gene_annotation_BWA_label,
+                    assemble_contigs_label
+                    ),
+                    dependency_list = assemble_contigs_id,
+                    run_job = True
+                )
+            else:
+                gene_annotation_BWA_id = None
+                
+                
+            #------------------------------------------------
+            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
+                gene_annotation_BLAT_id = comm.create_pbs_and_launch(
+                    gene_annotation_BLAT_label, 
+                    comm.create_BLAT_annotation_command(
+                    gene_annotation_BLAT_label,
+                    gene_annotation_BWA_label
+                    ),
+                    dependency_list = gene_annotation_BWA_id,
+                    run_job = True
+                )
+            else:
+                gene_annotation_BLAT_id = None
+                
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
             

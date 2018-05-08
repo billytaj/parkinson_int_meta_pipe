@@ -3,7 +3,9 @@
 #-------------------------------------------------------
 # The base version of this code comes from Jordan Ang
 # This code tries to figure out what's been lost due to contig assembly
+# may 07,2018
 # We've got a competing version called "contig duplicate remover"
+# code's been changed to only produce the missing contig map
 #---------------------------------------------------------
 # Now with some commenting!
 # CHANGES:
@@ -33,10 +35,11 @@ paired2_seqs= SeqIO.index(paired_file2, "fastq")    # dict of unmerged2 read Seq
 unpaired_file= sys.argv[3]                          # INPUT: merged readIDs and seqs (.fastq)
 unpaired_seqs= SeqIO.index(unpaired_file, "fastq")  # dict of merged read SeqRecords: key=readID
 
-paired_sam_file= sys.argv[4]        # INPUT: unmerged reads that are BWA-aligned&unaligned to contigs (.sam)
-unpaired_sam_file= sys.argv[5]      # INPUT: merged reads that are BWA-aligned&unaligned to contigs (.sam)
+pair_1_sam_file = sys.argv[4]        # INPUT: unmerged reads that are BWA-aligned&unaligned to contigs (.sam)
+pair_2_sam_file = sys.argv[5]
+unpaired_sam_file= sys.argv[6]      # INPUT: merged reads that are BWA-aligned&unaligned to contigs (.sam)
 
-output_file= sys.argv[6]            # OUTPUT: contig<->read map: [contigID, #reads, readIDs ...]
+contig_map_file = sys.argv[7]            # OUTPUT: contig<->read map: [contigID, #reads, readIDs ...]
 
 # tracking BWA-aligned:
 contig2read_map= defaultdict(set)   # dict of BWA-aligned contigID<->readID(s)
@@ -45,7 +48,7 @@ mapped_list= []
 
 #####################################
 # FUNCTION:
-def contig_map(sam, unmapped, mapped_reads, contig2read_map):
+def make_contig_map(sam, unmapped, mapped_reads, contig2read_map):
 
     # process .sam file, one contig/read (query) at a time:
     with open(sam,"r") as samfile:
@@ -75,23 +78,25 @@ def contig_map(sam, unmapped, mapped_reads, contig2read_map):
     # Remove reads previously added to the unmapped set but later found to align to a contig:
     # Occurs for unmerged pairs, where only one of a pair is mapped to a contig, the other will
     # need to be removed from the unmapped set.
-    print '\n' + str(os.path.basename(sam))
-    print 'umapped no. (before double-checking mapped set)= ' + str(len(unmapped))
+    print ('\n' + str(os.path.basename(sam)))
+    print ('umapped no. (before double-checking mapped set)= ' + str(len(unmapped)))
     for read in mapped_reads:                           # Take all mapped reads and
         try:                                            #  if the exist in the unmapped set, then
             unmapped.remove(read)                       #  remove them from the unmapped set.
         except:
             pass
-    print 'umapped no. (after double-checking mapped set)= ' + str(len(unmapped))
+    print ('umapped no. (after double-checking mapped set)= ' + str(len(unmapped)))
 
 #####################################
 
 # extraction of contig-aligned reads and unaligned reads:
 unmapped_paired_reads= set()
 unmapped_unpaired_reads= set()
-contig_map(paired_sam_file, unmapped_paired_reads, mapped_reads, contig2read_map)      # unmerged reads
-contig_map(unpaired_sam_file, unmapped_unpaired_reads, mapped_reads, contig2read_map)  # merged reads
+make_contig_map(pair_1_sam_file, unmapped_paired_reads, mapped_reads, contig2read_map)      # unmerged reads
+make_contig_map(pair_2_sam_file, unmapped_paired_reads, mapped_reads, contig2read_map)
+make_contig_map(unpaired_sam_file, unmapped_unpaired_reads, mapped_reads, contig2read_map)  # merged reads
 
+"""
 # WRITE OUTPUT: non-contig unmerged:
 unmapped_paired1_seqs= []
 unmapped_paired2_seqs= []
@@ -110,9 +115,11 @@ for read in unmapped_unpaired_reads:                    # For the non-contig mer
 with open(os.path.splitext(unpaired_file)[0] + "_unmapped.fastq","w") as out:
     SeqIO.write(unmapped_unpaired_seqs, out, "fastq")   #  and write the sequence to file.
 
+"""
+
 # WRITE OUTPUT: contig<->read map
 # [contigID, #reads in contig, read IDs...]
-with open(output_file,"w") as outfile:
+with open(contig_map_file,"w") as outfile:
     for contig in contig2read_map:                      # For each contig,
         outfile.write(contig + "\t" + str(len(contig2read_map[contig])))
                                                         # write [contigID, #reads in contig, ...]
