@@ -48,33 +48,33 @@ if __name__ == "__main__":
     
     #why isn't this in a loop? No benefit.  it's just df manipulations
     #select mapped and unmapped slices from pair 1
-    mapped_pair_1_sam_df = "@" + pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "1"].iloc[:, 0] 
+    mapped_pair_1_sam_df = "@" + pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "0"].iloc[:, 0] 
     mapped_pair_1_sam_df = mapped_pair_1_sam_df.drop_duplicates()
     mapped_pair_1_sam_df.columns = ["ID"]
-    
-    unmapped_pair_1_sam_df = "@" + pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "0"].iloc[:, 0]
+    # 1 is unmapped, 0 is mapped
+    unmapped_pair_1_sam_df = "@" + pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
     unmapped_pair_1_sam_df = unmapped_pair_1_sam_df.drop_duplicates()
     unmapped_pair_1_sam_df.columns = ["ID"]
     
     unmapped_pair_1_sam_df = unmapped_pair_1_sam_df[~unmapped_pair_1_sam_df.isin(mapped_pair_1_sam_df)]
     
     #select mapped and unmapped slices from pair 2
-    mapped_pair_2_sam_df = "@" + pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "1"].iloc[:, 0] 
+    mapped_pair_2_sam_df = "@" + pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "0"].iloc[:, 0] 
     mapped_pair_2_sam_df = mapped_pair_2_sam_df.drop_duplicates()
     mapped_pair_2_sam_df.columns = ["ID"]
     
-    unmapped_pair_2_sam_df = "@" + pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "0"].iloc[:, 0]
+    unmapped_pair_2_sam_df = "@" + pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
     unmapped_pair_2_sam_df = unmapped_pair_2_sam_df.drop_duplicates()
     unmapped_pair_2_sam_df.columns = ["ID"]
     
     unmapped_pair_2_sam_df = unmapped_pair_2_sam_df[~unmapped_pair_2_sam_df.isin(mapped_pair_2_sam_df)]
     
     #select mapped and unmapped slices from orphans
-    mapped_orphans_sam_df = "@" + orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
+    mapped_orphans_sam_df = "@" + orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "0"].iloc[:, 0]
     mapped_orphans_sam_df = mapped_orphans_sam_df.drop_duplicates()
     mapped_orphans_sam_df.columns = ["ID"]
     
-    unmapped_orphans_sam_df = "@" + orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "0"].iloc[:, 0]
+    unmapped_orphans_sam_df = "@" + orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
     unmapped_orphans_sam_df = unmapped_orphans_sam_df.drop_duplicates()
     unmapped_orphans_sam_df.columns = ["ID"]
     

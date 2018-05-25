@@ -1141,7 +1141,7 @@ class mt_pipe_commands:
         bwa_orphans = ">&2 echo BWA on orphans | "
         bwa_orphans += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
         bwa_orphans += self.tool_path_obj.DNA_DB + " " 
-        bwa_orphans += dep_loc + "orpahans.fastq" + " | " 
+        bwa_orphans += dep_loc + "orphans.fastq" + " | " 
         bwa_orphans += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "orphans.sam"
         
         bwa_pair_1 = ">&2 echo BWA on pair 1 | " 
@@ -1174,6 +1174,10 @@ class mt_pipe_commands:
         map_read_bwa += bwa_folder + "pair_2.sam" + " " 
         map_read_bwa += final_folder + "pair_2.fasta"
         
+        move_contig_map = ">&2 move files | "
+        move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
+        
+        
         COMMANDS_Annotate_BWA = [
             bwa_contigs,
             bwa_orphans,
@@ -1197,24 +1201,30 @@ class mt_pipe_commands:
         blat_merge_folder = data_folder + "1_blat_merge/"
         final_folder = data_folder + "final_results/"
         
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_folder)
+        self.make_folder(blat_merge_folder)
+        self.make_folder(final_folder)
+        
         names_list = ["orphans", "contigs", "pair_1", "pair_2"]
         
-        self.Input_Filepath = input_filepath
+        
         
         COMMANDS_Annotate_BLAT = []
         
         for item in names_list:
             for i in range (0, splits):
-                tag = "_" + str(i)
-                blat_command = BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+                tag = "_" + str(i+1)
+                blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
                 blat_command += self.tool_path_obj.DNA_DB_Prefix + tag + self.tool_path_obj.DNA_DB_Extension + " " 
                 blat_command += dep_loc + item + ".fasta"
                 blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
-                blat_command += blat_folder + item + "_" + i + ".blatout"
+                blat_command += blat_folder + item + "_" + str(i) + ".blatout"
                 
                 COMMANDS_Annotate_BLAT.append(blat_command)
         
-            final_cat = "cat " + blat_folder + item + "_" + "_[1-" + splits + "]" + ".blatout" + " > " + blat_merge_folder + item + ".blatout"
+            final_cat = "cat " + blat_folder + item + "_" + "[1-" + str(splits) + "]" + ".blatout" + " > " + blat_merge_folder + item + ".blatout"
             COMMANDS_Annotate_BLAT.append(final_cat)
         
         return COMMANDS_Annotate_BLAT
@@ -1247,7 +1257,7 @@ class mt_pipe_commands:
         blat_pp += dep_loc_0 + "orphans.fasta" + " " 
         blat_pp += dep_loc_1 + "orphans.blatout" + " " 
         blat_pp += final_folder + "orphans.fasta" + " " 
-        blat_pp += self.dep_loc_0 + "pair_1.fasta" + " " 
+        blat_pp += dep_loc_0 + "pair_1.fasta" + " " 
         blat_pp += dep_loc_1 + "pair_1.blatout" + " " 
         blat_pp += final_folder + "pair_1.fasta" + " " 
         blat_pp += dep_loc_0 + "pair_2.fasta" + " " 

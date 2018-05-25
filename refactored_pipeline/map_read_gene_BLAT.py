@@ -66,11 +66,11 @@ prev_mapping_count= 0
 
 # DEBUG:
 if len(set(BWAreads))==len(BWAreads):
-    print 'BWA-aligned reads are all unique.\n'
+    print ('BWA-aligned reads are all unique.\n')
 else:
-    print 'There are repeating BWA-aligned reads:'
-    print 'no. unique reads= ' + str(len(set(BWAreads)))
-    print 'no. total reads= ' + str(len(BWAreads)) + '\n'
+    print ('There are repeating BWA-aligned reads:')
+    print ('no. unique reads= ' + str(len(set(BWAreads))))
+    print ('no. total reads= ' + str(len(BWAreads)) + '\n')
 BWAreads_count= Counter(BWAreads)                   # dict of read<->no. of contigs
 
 
@@ -81,7 +81,7 @@ BWAreads_count= Counter(BWAreads)                   # dict of read<->no. of cont
 def read_aligned(tsv, seqrec):                          # List of lists [blatout info, read length]=
                                                         #  read_aligned(.blatout file, dict contig/readID<->SeqRecord)
     # get info from .blatout file:
-    print 'Reading ' + str(os.path.basename(tsv)) + '.'
+    print ('Reading ' + str(os.path.basename(tsv)) + '.')
     with open(tsv,"r") as tabfile:
         hits= []                                        # List of lists containing .blatout fields.
         for line in tabfile:                            # In the .blatout file:
@@ -201,24 +201,24 @@ def gene_map(hits):                         # fail-mapped contig/readIDs=
         # This could result in "broken" contigs...
 
     # DEBUG (for this datatype):
-    print 'no. contig reads already mapped by BLAT= ' + str(contigread_inmapped)
-    print 'no. contig reads mapped by BLAT to same gene= ' + str(contigread_inmapped_ingene)
-    print 'no. contig reads mapped by NOT BLAT to same gene= ' + str(contigread_ingene) + ' (should be 0)'
-    print 'no. reads already mapped by BLAT= ' + str(read_inmapped) + ' (should be 0)'
-    print 'no. reads already mapped by BLAT to same gene= ' + str(read_inmapped_ingene) + ' (should be 0)'
-    print 'no. reads already mapped by NOT BLAT to same gene= ' + str(read_ingene) + ' (should be 0)'
+    print ('no. contig reads already mapped by BLAT= ' + str(contigread_inmapped))
+    print ('no. contig reads mapped by BLAT to same gene= ' + str(contigread_inmapped_ingene))
+    print ('no. contig reads mapped by NOT BLAT to same gene= ' + str(contigread_ingene) + ' (should be 0)')
+    print ('no. reads already mapped by BLAT= ' + str(read_inmapped) + ' (should be 0)')
+    print ('no. reads already mapped by BLAT to same gene= ' + str(read_inmapped_ingene) + ' (should be 0)')
+    print ('no. reads already mapped by NOT BLAT to same gene= ' + str(read_ingene) + ' (should be 0)')
 
     # Remove contigs/reads previously added to the unmapped set but later found to have a mapping:
     # This prevents re-annotation by a later program.
     # Such queries end up in the unmapped set when they BLAT-aligned to multiple genes, where one
     # alignment is recorded, while the other alignments fail the "on-the-fly" alignment-threshold filter.
-    print 'umapped no. (before double-checking mapped set)= ' + str(len(unmapped))
+    print ('umapped no. (before double-checking mapped set)= ' + str(len(unmapped)))
     for query in query2gene_map:                        # Take all contigs/reads to be mapped and
         try:                                            #  if they exist in the unmapped set, then
             unmapped.remove(query)                      #  remove them from the unmapped set.
         except:
             pass
-    print 'umapped no. (after double-checking mapped set)= ' + str(len(unmapped))
+    print ('umapped no. (after double-checking mapped set)= ' + str(len(unmapped)))
 
     # return unmapped set:
     return unmapped
@@ -254,7 +254,7 @@ for x in range(0,2):
         if read not in mapped_reads:                    #  that are still unmapped and
             unmapped_reads.add(read)                    #  add them to the unmapped_reads set (won't add duplicates).
 
-    print 'no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before)
+    print ('no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before))
 
     # WRITE OUTPUT: non-BWA&BLAT-aligned contig/readIDs:
     # and seqs (.fasta):
@@ -265,7 +265,7 @@ for x in range(0,2):
         SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
 
     # print no. aligned reads from current readtype set:
-    print str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n'
+    print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
     prev_mapping_count= len(mapped_reads)
 
 # process BLAT output:
@@ -298,7 +298,7 @@ if numsets==4:
     for read in read_seqs_1:
         if read not in mapped_reads:
             unmapped_reads.add(read)
-    print '(1st paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before)
+    print ('(1st paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before))
 
     # add reads never mapped by BLAT in the
     # first place to the unmapped set:
@@ -306,7 +306,7 @@ if numsets==4:
     for read in read_seqs_2:
         if read not in mapped_reads:
             unmapped_reads.add(read)
-    print '(2nd paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before) + ' (should be 0)'
+    print ('(2nd paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before) + ' (should be 0)')
 
     # WRITE unmerged1 OUTPUT: non-BWA&BLAT-aligned:
     unmapped_seqs= []
@@ -323,8 +323,8 @@ if numsets==4:
         SeqIO.write(unmapped_seqs, outfile, "fasta")
 
     # print no. aligned reads from current readtype set:
-    print str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file_1)
-    print '  and ' + os.path.basename(read_file_2) + '\n'
+    print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file_1))
+    print ('  and ' + os.path.basename(read_file_2) + '\n')
     prev_mapping_count= len(mapped_reads)
 
 # WRITE OUTPUT: rewrite gene<->read mapfile to include BLAT-aligned:
@@ -350,5 +350,5 @@ with open(gene_file,"w") as outfile:
     SeqIO.write(genes, outfile, "fasta")
 
 # print BWA+BLAT stats:
-print str(reads_count) + ' reads were mapped with BWA and BLAT.'
-print 'Reads mapped to ' + str(len(genes)) + ' genes.'
+print (str(reads_count) + ' reads were mapped with BWA and BLAT.')
+print ('Reads mapped to ' + str(len(genes)) + ' genes.')

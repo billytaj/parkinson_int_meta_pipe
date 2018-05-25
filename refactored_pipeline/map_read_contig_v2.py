@@ -97,7 +97,7 @@ make_contig_map(pair_2_sam_file, unmapped_paired_reads, mapped_reads, contig2rea
 make_contig_map(unpaired_sam_file, unmapped_unpaired_reads, mapped_reads, contig2read_map)  # merged reads
 
 """
-# WRITE OUTPUT: non-contig unmerged:
+# WRITE OUTPUT: non-contig unmerged: (pair 1, pair 2)
 unmapped_paired1_seqs= []
 unmapped_paired2_seqs= []
 for read in unmapped_paired_reads:                      # For the non-contig unmerged reads,
@@ -108,7 +108,7 @@ with open(os.path.splitext(paired_file1)[0] + "_unmapped.fastq","w") as out:
 with open(os.path.splitext(paired_file2)[0] + "_unmapped.fastq","w") as out:
     SeqIO.write(unmapped_paired2_seqs, out, "fastq")    #  and for the rev read.
 
-# WRITE OUTPUT: non-contig merged
+# WRITE OUTPUT: non-contig merged (orphans)
 unmapped_unpaired_seqs= []
 for read in unmapped_unpaired_reads:                    # For the non-contig merged reads,
     unmapped_unpaired_seqs.append(unpaired_seqs[read])  #  isolate the corresponding SeqRecord,

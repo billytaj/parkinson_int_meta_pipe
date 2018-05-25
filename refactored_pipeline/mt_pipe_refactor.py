@@ -229,6 +229,7 @@ def main(input_folder, output_folder, system_op):
             assemble_contigs_label = "assemble_contigs"
             gene_annotation_BWA_label = "gene_annotation_BWA"
             gene_annotation_BLAT_label = "gene_annotation_BLAT"
+            GA_BLAT_PP_label = "BLAT_postprocess"
             
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -384,7 +385,7 @@ def main(input_folder, output_folder, system_op):
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
                 gene_annotation_BLAT_id = comm.create_pbs_and_launch(
                     gene_annotation_BLAT_label, 
-                    comm.create_BLAT_annotation_command(
+                    comm.create_BLAT_annotate_command(
                     gene_annotation_BLAT_label,
                     gene_annotation_BWA_label
                     ),
@@ -394,8 +395,26 @@ def main(input_folder, output_folder, system_op):
             else:
                 gene_annotation_BLAT_id = None
                 
+            
+            #------------------------------------------------
+            if(not sync_obj.check_where_resume(output_folder + GA_BLAT_PP_label)):
+                GA_BLAT_PP_id = comm.create_pbs_and_launch(
+                    GA_BLAT_PP_label, 
+                    comm.create_BLAT_pp_command(
+                    GA_BLAT_PP_label,
+                    gene_annotation_BWA_label,
+                    gene_annotation_BLAT_label
+                    ),
+                    dependency_list = gene_annotation_BLAT_id,
+                    run_job = True
+                )
+            else:
+                GA_BLAT_PP_id = None
+                
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
+            
+            
             
         elif(operating_mode == single_mode):
             print("not ready")
