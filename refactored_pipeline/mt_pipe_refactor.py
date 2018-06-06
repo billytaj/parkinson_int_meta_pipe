@@ -5,11 +5,10 @@ import sys
 import os
 import os.path
 import subprocess as sp
-import multiprocessing
+import multiprocessing as mp
 import mt_pipe_commands as mpcom
 import mt_pipe_paths as mpfp
 import time
-Threads = str(multiprocessing.cpu_count())
 
 run_jobs = False
 def make_folder(folder_path):
@@ -104,7 +103,7 @@ class qsub_sync:
             
     def wait_for_sync(self, timeout, job_id, label, message = None):
         #does the actual wait for the qsub job to finish
-        if(self.system_mode == "docker"):
+        if((self.system_mode == "docker") or (self.system_mode == "singularity")):
             print("running in docker.  bypassing sync")
         else:
             if(job_id is None) or (not job_id):
@@ -191,6 +190,10 @@ def main(input_folder, output_folder, system_op):
     #for genome in sorted(os.listdir(input_folder)):
     file_list = []
     Network_list = []
+    
+    
+    mp_store = [] #stores the multiprocessing processes
+    
     #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.  
     raw_sequence_path = input_folder #+ "/raw_sequences/"
     if not os.path.exists(raw_sequence_path):
@@ -240,26 +243,50 @@ def main(input_folder, output_folder, system_op):
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
             comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, system_mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
             
+            #need to erase the job ids.  they're no longer needed
             if(not sync_obj.check_where_resume(output_folder + preprocess_label)):
-                preprocess_job_id = comm.create_pbs_and_launch(preprocess_label, comm.create_pre_double_command(preprocess_label), run_job = True)
-            else:  
-                preprocess_job_id = None
-            #testing construct only:
-            #sync_obj.wait_for_sync(600, preprocess_job_id, "preprocess")
+                
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch, 
+                    args = (
+                        preprocess_label, 
+                        comm.create_pre_double_command(preprocess_label), 
+                        run_job = True
+                    )
+                )
+                process.start()
+                process.join()
+                #preprocess_job_id = None
+            
+            #else:
+            #    preprocess_job_id = None
             
             rRNA_filter_job_id = []
             
             if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label)):
-                rRNA_filter_job_id.append(comm.create_pbs_and_launch(rRNA_filter_label, comm.create_rRNA_filter_prep_command(rRNA_filter_label, 5, preprocess_label), dependency_list = preprocess_job_id, run_job = True))
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch, 
+                    args = (
+                        rRNA_filter_label, 
+                        comm.create_rRNA_filter_prep_command(
+                        rRNA_filter_label, 5, preprocess_label), 
+                        #dependency_list = preprocess_job_id, 
+                        run_job = True
+                    )
+                )
+                process.start()
+                process.join()
                 
                 sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], rRNA_filter_label, "waiting for rRNA splitter")
                 print("moving onto INFERNAL")
                 rRNA_filter_job_id.pop(0)
                 
+                
                 for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                     file_root_name = item.split('.')[0]
-                    rRNA_filter_job_id.append(
-                        comm.create_pbs_and_launch(
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch, 
+                        args = (
                             "rRNA_filter", 
                             comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name), 
                             inner_name = file_root_name + "_infernal",
@@ -268,11 +295,15 @@ def main(input_folder, output_folder, system_op):
                             work_in_background = True
                         )
                     )
+                    process.start()
+                    process.append(mp_store)
+                    
                     
                 for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
                     file_root_name = item.split('.')[0]
-                    rRNA_filter_job_id.append(
-                        comm.create_pbs_and_launch(
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch,
+                        args = (
                             "rRNA_filter", 
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
                             inner_name = file_root_name + "_infernal",
@@ -281,11 +312,14 @@ def main(input_folder, output_folder, system_op):
                             work_in_background = True
                         )
                     )
+                    process.start()
+                    process.append(mp_store)
                     
                 for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                     file_root_name = item.split('.')[0]
-                    rRNA_filter_job_id.append(
-                        comm.create_pbs_and_launch(
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch,
+                        args = (
                             "rRNA_filter", 
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
                             inner_name = file_root_name + "_infernal",
@@ -294,138 +328,123 @@ def main(input_folder, output_folder, system_op):
                             work_in_background = True
                         )
                     )
-                for item in rRNA_filter_job_id:
-                    item.wait()
+                    process.start()
+                    process.append(mp_store)
+                    
+                for item in mp_store:
+                    item.join() # wait for things to finish
                     
                 #wait for infernal to finish running
                 time.sleep(5)
                 #sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
                 print("rRNA ID list:", rRNA_filter_job_id)
-                rRNA_consolidate_id = comm.create_pbs_and_launch(
-                                            rRNA_filter_label, 
-                                            comm.create_rRNA_filter_post_command(rRNA_filter_label), 
-                                            inner_name = "rRNA_filter_post",
-                                            dependency_list = rRNA_filter_job_id, 
-                                            run_job = True
-                                            )
-                                            
-                
-                #then we need to combine the splits into per-category files
-                #this shouldn't be a qsub job
-                print("Working on cats")
-                time.sleep(1)
-            else:
-                rRNA_consolidate_id = None
-            #standalone
-            #rRNA_filter_job_id.append(comm.create_pbs_and_launch("rRNA_filter", comm.create_rRNA_filter_prep_command("rRNA_filter", 2, "preprocess"), run_job = True))
-            #--------------------------
-            #print("-----------------------------------")
-            #print(rRNA_filter_job_id)
-            #print(rRNA_filter_job_id[0])
-            #print("-----------------------------------")
-            #-------------------------------------------------------------------
-            
-            
-            
-            
-            
-            #this is gonna be hacky.... we have to wait until the prep stage is finished, but there's no nice way to sense it, through qsub
-            #why delay?  because the following code needs the files present to generate the correct job.  
-            #this delay, and timeout are a check against super large runaway jobs.
-            
-            
-            
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
+                        rRNA_filter_label, 
+                        comm.create_rRNA_filter_post_command(rRNA_filter_label), 
+                        inner_name = "rRNA_filter_post",
+                        #dependency_list = rRNA_filter_job_id, 
+                        run_job = True
+                    )
+                )
+                process.start()
+                process.join()
+              
             
             #-------------------------------------------------------------
             #Next, we have duplicate repopulation
             if(not sync_obj.check_where_resume(output_folder +  repop_job_label)):
             
-                repop_job_id = comm.create_pbs_and_launch(
-                    repop_job_label, comm.create_repop_command(
-                        repop_job_label, preprocess_label, 
-                        rRNA_filter_label
-                    ), 
-                    dependency_list = rRNA_consolidate_id,
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
+                    repop_job_label, 
+                    comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label), 
+                    #dependency_list = rRNA_consolidate_id,
                     run_job = True
+                    )
                 )
-            else:   
-                repop_job_id = None
+                process.start()
+                process.join()
             
             #----------------------------------------
             # assemble contigs
             if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
-                assemble_contigs_id = comm.create_pbs_and_launch(
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
                     assemble_contigs_label, 
-                    comm.create_assemble_contigs_command(
-                    assemble_contigs_label,
-                    repop_job_label
-                    ),
-                    dependency_list = repop_job_id, 
+                    comm.create_assemble_contigs_command(assemble_contigs_label, repop_job_label),
+                    #dependency_list = repop_job_id, 
                     run_job = True
+                    )
                 )
-            else:
-                assemble_contigs_id = None
+                process.start()
+                process.join()
+            #else:
+            #    assemble_contigs_id = None
             
             
             #----------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
-                gene_annotation_BWA_id = comm.create_pbs_and_launch(
+                process = mp.Process(
+                    target - comm.create_pbs_and_launch,
+                    args = (
                     gene_annotation_BWA_label,
-                    comm.create_BWA_annotate_command(
-                    gene_annotation_BWA_label,
-                    assemble_contigs_label
-                    ),
-                    dependency_list = assemble_contigs_id,
+                    comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label),
+                    #dependency_list = assemble_contigs_id,
                     run_job = True
+                    )
                 )
-            else:
-                gene_annotation_BWA_id = None
+                process.start()
+                process.join()
+            #else:
+            #    gene_annotation_BWA_id = None
                 
                 
             #------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
-                gene_annotation_BLAT_id = comm.create_pbs_and_launch(
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
                     gene_annotation_BLAT_label, 
-                    comm.create_BLAT_annotate_command(
-                    gene_annotation_BLAT_label,
-                    gene_annotation_BWA_label
-                    ),
+                    comm.create_BLAT_annotate_command( gene_annotation_BLAT_label, gene_annotation_BWA_label),
                     dependency_list = gene_annotation_BWA_id,
                     run_job = True
+                    )
                 )
-            else:
-                gene_annotation_BLAT_id = None
+                process.start()
+                process.join()
                 
             
             #------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + GA_BLAT_PP_label)):
-                GA_BLAT_PP_id = comm.create_pbs_and_launch(
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
                     GA_BLAT_PP_label, 
-                    comm.create_BLAT_pp_command(
-                    GA_BLAT_PP_label,
-                    gene_annotation_BWA_label,
-                    gene_annotation_BLAT_label
-                    ),
-                    dependency_list = gene_annotation_BLAT_id,
+                    comm.create_BLAT_pp_command(GA_BLAT_PP_label, gene_annotation_BWA_label, gene_annotation_BLAT_label),
+                    #dependency_list = gene_annotation_BLAT_id,
                     run_job = True
+                    )
                 )
-            else:
-                GA_BLAT_PP_id = None
-            
+                process.start()
+                process.join()
+                
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
-                gene_annotation_DIAMOND_id = comm.create_pbs_and_launch(
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
                     gene_annotation_DIAMOND_label,
-                    comm.create_DIAMOND_annotate_command(
-                    gene_annotation_DIAMOND_label,
-                    GA_BLAT_PP_label
-                    ),
-                    dependency_list = GA_BLAT_PP_id,
+                    comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, GA_BLAT_PP_label),
+                    #dependency_list = GA_BLAT_PP_id,
                     run_job = True
-                    
+                    )
                 )
-            else:
-                gene_annotation_DIAMOND_id = None
-             
+                process.start()
+                process.join()
+                
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
             
