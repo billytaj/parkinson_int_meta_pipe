@@ -251,7 +251,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                         preprocess_label, 
                         comm.create_pre_double_command(preprocess_label), 
-                        run_job = True
+                        True
                     )
                 )
                 process.start()
@@ -271,7 +271,7 @@ def main(input_folder, output_folder, system_op):
                         comm.create_rRNA_filter_prep_command(
                         rRNA_filter_label, 5, preprocess_label), 
                         #dependency_list = preprocess_job_id, 
-                        run_job = True
+                        True
                     )
                 )
                 process.start()
@@ -291,8 +291,7 @@ def main(input_folder, output_folder, system_op):
                             comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name), 
                             inner_name = file_root_name + "_infernal",
                             #dependency_list = rRNA_filter_job_id[0],
-                            run_job = True,
-                            work_in_background = True
+                            True
                         )
                     )
                     process.start()
@@ -308,8 +307,7 @@ def main(input_folder, output_folder, system_op):
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
                             inner_name = file_root_name + "_infernal",
                             #dependency_list = rRNA_filter_job_id[0],
-                            run_job = True,
-                            work_in_background = True
+                            True
                         )
                     )
                     process.start()
@@ -324,8 +322,7 @@ def main(input_folder, output_folder, system_op):
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
                             inner_name = file_root_name + "_infernal",
                             #dependency_list = rRNA_filter_job_id[0],
-                            run_job = True,
-                            work_in_background = True
+                            True
                         )
                     )
                     process.start()
@@ -344,8 +341,7 @@ def main(input_folder, output_folder, system_op):
                         rRNA_filter_label, 
                         comm.create_rRNA_filter_post_command(rRNA_filter_label), 
                         inner_name = "rRNA_filter_post",
-                        #dependency_list = rRNA_filter_job_id, 
-                        run_job = True
+                        True
                     )
                 )
                 process.start()
@@ -361,8 +357,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                     repop_job_label, 
                     comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label), 
-                    #dependency_list = rRNA_consolidate_id,
-                    run_job = True
+                    True
                     )
                 )
                 process.start()
@@ -376,8 +371,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                     assemble_contigs_label, 
                     comm.create_assemble_contigs_command(assemble_contigs_label, repop_job_label),
-                    #dependency_list = repop_job_id, 
-                    run_job = True
+                    True
                     )
                 )
                 process.start()
@@ -393,8 +387,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                     gene_annotation_BWA_label,
                     comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label),
-                    #dependency_list = assemble_contigs_id,
-                    run_job = True
+                    True
                     )
                 )
                 process.start()
@@ -411,7 +404,7 @@ def main(input_folder, output_folder, system_op):
                     gene_annotation_BLAT_label, 
                     comm.create_BLAT_annotate_command( gene_annotation_BLAT_label, gene_annotation_BWA_label),
                     dependency_list = gene_annotation_BWA_id,
-                    run_job = True
+                    True
                     )
                 )
                 process.start()
@@ -425,8 +418,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                     GA_BLAT_PP_label, 
                     comm.create_BLAT_pp_command(GA_BLAT_PP_label, gene_annotation_BWA_label, gene_annotation_BLAT_label),
-                    #dependency_list = gene_annotation_BLAT_id,
-                    run_job = True
+                    True
                     )
                 )
                 process.start()
@@ -438,8 +430,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                     gene_annotation_DIAMOND_label,
                     comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, GA_BLAT_PP_label),
-                    #dependency_list = GA_BLAT_PP_id,
-                    run_job = True
+                    True
                     )
                 )
                 process.start()

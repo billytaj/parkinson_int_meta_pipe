@@ -102,7 +102,7 @@ class mt_pipe_commands:
         if not(os.path.exists(folder_path)):
             os.makedirs(folder_path)
     
-    def create_pbs_and_launch(self, job_name, command_list, mode = "low", dependency_list = None, run_job = False,  inner_name = None, work_in_background = False):
+    def create_pbs_and_launch(self, job_name, command_list, run_job = False, mode = "low", dependency_list = None,  inner_name = None, work_in_background = False):
         #create the pbs job, and launch items
         #job name: string tag for export file name
         #command list:  list of command statements for writing
