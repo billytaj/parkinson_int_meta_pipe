@@ -1274,23 +1274,25 @@ class mt_pipe_commands:
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
-        
-        diamond_folder = data_folder + "0_diamond_annotate/"
-        diamond_orphans_folder = diamond_folder + "orphans/"
-        diamond_contig_folder = diamond_folder + "contigs/"
-        diamond_pair_1_folder = diamond_folder + "pair_1/"
-        diamond_pair_2_folder = diamond_folder + "pair_2/"
-        
-        
-        
         final_folder = data_folder + "final_results/"
+        
+        diamond_orphans_folder = final_folder + "orphans/"
+        diamond_contig_folder = final_folder + "contigs/"
+        diamond_pair_1_folder = final_folder + "pair_1/"
+        diamond_pair_2_folder = final_folder + "pair_2/"
+        
+        
+        
+        
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(diamond_folder)
         
         self.make_folder(final_folder)
         folder_list = [diamond_orphans_folder, diamond_contig_folder, diamond_pair_1_folder, diamond_pair_2_folder]
+        for item in folder_list:
+            self.make_folder(item)
+        
         names_list = ["orphans", "contigs", "pair_1", "pair_2"]
         
         COMMANDS_Annotate_Diamond = []

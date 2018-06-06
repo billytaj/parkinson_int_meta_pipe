@@ -230,6 +230,7 @@ def main(input_folder, output_folder, system_op):
             gene_annotation_BWA_label = "gene_annotation_BWA"
             gene_annotation_BLAT_label = "gene_annotation_BLAT"
             GA_BLAT_PP_label = "BLAT_postprocess"
+            gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
             
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -410,7 +411,21 @@ def main(input_folder, output_folder, system_op):
                 )
             else:
                 GA_BLAT_PP_id = None
-                
+            
+            if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
+                gene_annotation_DIAMOND_id = comm.create_pbs_and_launch(
+                    gene_annotation_DIAMOND_label,
+                    comm.create_DIAMOND_annotate_command(
+                    gene_annotation_DIAMOND_label,
+                    GA_BLAT_PP_label
+                    ),
+                    dependency_list = GA_BLAT_PP_id,
+                    run_job = True
+                    
+                )
+            else:
+                gene_annotation_DIAMOND_id = None
+             
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
             
