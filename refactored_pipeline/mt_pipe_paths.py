@@ -195,8 +195,8 @@ class tool_path_obj:
             self.RPKM = script_path + "RPKM.py"
         
         elif(mode == "singularity" or mode == "Singularity"):
-        
-            script_path             = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
+            #temp place for scripts in refactored pipeline.  we'll move it once it's finished
+            script_path             = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/refactored_pipeline/"
             reference_file_path     = "/pipeline_reference_files/"
             refactor_path           = script_path
             tool_path               = "/pipeline_tools/"
