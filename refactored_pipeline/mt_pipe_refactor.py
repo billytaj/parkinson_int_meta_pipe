@@ -295,7 +295,7 @@ def main(input_folder, output_folder, system_op):
                         )
                     )
                     process.start()
-                    process.append(mp_store)
+                    mp_store.append(process)
                     
                     
                 for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
@@ -312,7 +312,7 @@ def main(input_folder, output_folder, system_op):
                         )
                     )
                     process.start()
-                    process.append(mp_store)
+                    mp_store.append(process)
                     
                 for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                     file_root_name = item.split('.')[0]
@@ -328,7 +328,7 @@ def main(input_folder, output_folder, system_op):
                         )
                     )
                     process.start()
-                    process.append(mp_store)
+                    mp_store.append(process)
                     
                 for item in mp_store:
                     item.join() # wait for things to finish
