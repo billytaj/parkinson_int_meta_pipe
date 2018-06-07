@@ -408,7 +408,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                     gene_annotation_BLAT_label, 
                     comm.create_BLAT_annotate_command( gene_annotation_BLAT_label, gene_annotation_BWA_label),
-                    dependency_list = gene_annotation_BWA_id,
+                    #dependency_list = gene_annotation_BWA_id,
                     True
                     )
                 )
