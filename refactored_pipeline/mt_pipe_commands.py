@@ -6,6 +6,7 @@ import os
 import sys
 import mt_pipe_paths as mpp
 import subprocess as sp
+import multiprocessing as mp
 #------------------------------------------------------
 # pragmas needed for command construction
 
@@ -770,6 +771,7 @@ class mt_pipe_commands:
         return COMMANDS_Pre            
                     
     def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name):
+        file_split_count = 20 #mp.cpu_count()
         #split, transform, and throw data into the rRNA filter.  Get back mRNA (goal) and rRNA (garbage)
         dep_loc = os.getcwd() + "/" + dependency_name + "/" + "data/final_results/"
         subfolder = os.getcwd() + "/" + stage_name + "/"
