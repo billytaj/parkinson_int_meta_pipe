@@ -284,14 +284,16 @@ def main(input_folder, output_folder, system_op):
                 
                 for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                     file_root_name = item.split('.')[0]
+                    inner_name = file_root_name + "_infernal"
                     process = mp.Process(
                         target = comm.create_pbs_and_launch, 
                         args = (
                             "rRNA_filter", 
                             comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name), 
-                            inner_name = file_root_name + "_infernal",
+                            
                             #dependency_list = rRNA_filter_job_id[0],
-                            True
+                            True,
+                            inner_name
                         )
                     )
                     process.start()
@@ -300,14 +302,15 @@ def main(input_folder, output_folder, system_op):
                     
                 for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
                     file_root_name = item.split('.')[0]
+                    inner_name = file_root_name + "_infernal"
                     process = mp.Process(
                         target = comm.create_pbs_and_launch,
                         args = (
                             "rRNA_filter", 
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
-                            inner_name = file_root_name + "_infernal",
                             #dependency_list = rRNA_filter_job_id[0],
-                            True
+                            True,
+                            inner_name
                         )
                     )
                     process.start()
@@ -315,14 +318,15 @@ def main(input_folder, output_folder, system_op):
                     
                 for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                     file_root_name = item.split('.')[0]
+                    inner_name = file_root_name + "_infernal"
                     process = mp.Process(
                         target = comm.create_pbs_and_launch,
                         args = (
                             "rRNA_filter", 
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
-                            inner_name = file_root_name + "_infernal",
                             #dependency_list = rRNA_filter_job_id[0],
-                            True
+                            True,
+                            inner_name
                         )
                     )
                     process.start()
@@ -335,13 +339,14 @@ def main(input_folder, output_folder, system_op):
                 time.sleep(5)
                 #sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
                 print("rRNA ID list:", rRNA_filter_job_id)
+                inner_name = "rRNA_filter_post"
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
                         rRNA_filter_label, 
                         comm.create_rRNA_filter_post_command(rRNA_filter_label), 
-                        inner_name = "rRNA_filter_post",
-                        True
+                        True,
+                        inner_name
                     )
                 )
                 process.start()
