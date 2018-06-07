@@ -277,9 +277,7 @@ def main(input_folder, output_folder, system_op):
                 process.start()
                 process.join()
                 
-                sync_obj.wait_for_sync(600, rRNA_filter_job_id[0], rRNA_filter_label, "waiting for rRNA splitter")
-                print("moving onto INFERNAL")
-                rRNA_filter_job_id.pop(0)
+                
                 
                 
                 for item in os.listdir(rRNA_filter_orphans_fastq_folder):
