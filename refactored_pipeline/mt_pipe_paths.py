@@ -194,6 +194,101 @@ class tool_path_obj:
             self.accession2taxid = "/scratch/j/jparkins/mobolaji/accession2taxid/accession2taxid"
             self.RPKM = script_path + "RPKM.py"
         
+        elif(mode == "singularity" or mode == "Singularity"):
+        
+            script_path             = "/home/j/jparkins/billyc59/parkinson_int_meta_pipe/"
+            reference_file_path     = "/pipeline_reference_files/"
+            refactor_path           = script_path
+            tool_path               = "/pipeline_tools/"
+            scratch_path            = "/scratch/j/jparkin/billyc59/"
+            #----------------------------------------------------------
+            # Reference files
+            # this is some NCBI reference file for Vectors
+            self.UniVec_Core    = reference_file_path + "UniVec_Core.fasta"
+            # this too.
+            self.Adapter        = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
+            self.Host           = reference_file_path + "Mouse_cds.fasta"
+            self.Rfam           = reference_file_path + "Rfam.cm"
+            self.DNA_DB         = scratch_path +"microbial_all_cds.fasta"
+            self.DNA_DB_Prefix  = os.path.splitext(self.DNA_DB)[0]
+            self.DNA_DB_Extension = os.path.splitext(self.DNA_DB)[1]
+            
+            #----------------------------------------------------------
+            # external tools
+            
+            self.cdhit_dup          = tool_path + "cdhit_dup/cd-hit-dup" 
+            self.Timmomatic         = tool_path + "Trimmomatic/trimmomatic-0.36.jar"
+            self.AdapterRemoval     = tool_path + "adapterremoval/AdapterRemoval"
+            self.vsearch            = tool_path + "vsearch/vsearch"
+            self.Flash              = tool_path + "FLASH/flash"
+            self.BWA                = tool_path + "BWA/bwa"
+            self.SAMTOOLS           = tool_path + "samtools/samtools"
+            self.BLAT               = tool_path + "PBLAT/pblat"
+            self.DIAMOND            = tool_path + "DIAMOND/diamond"
+            self.Blastdbcmd         = tool_path + "BLAST_p/blastdbcmd"
+            self.Makeblastdb        = tool_path + "BLAST_p/makeblastdb"
+            self.Infernal           = tool_path + "infernal/cmscan"
+            self.Kaiju              = tool_path + "kaiju/kaiju"
+            self.Kaiju2krona        = tool_path + "kaiju/kaiju2krona"
+            self.ktImportText       = tool_path + "KronaTools/scripts/ImportText.pl"
+            self.Centrifuge         = tool_path + "centrifuge/centrifuge"
+            self.Centrifuge_report  = tool_path + "centrifuge/centrifuge-kreport"
+            self.kSLAM              = tool_path + "k-SLAM/SLAM"
+            self.Barrnap            = tool_path + "barrnap/barrnap"
+            self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
+            self.BLAST_dir          = tool_path + "BLAST_p"
+            self.WEVOTE             = tool_path + "WEVOTE/run_WEVOTE_PIPELINE.sh"
+            self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTEDB"
+            self.Spades             = tool_path + "SPAdes/bin/spades.py"
+
+
+            
+            #--------------------------------------------
+            # custom scripts
+
+            self.map_read_contig_v2         = refactor_path + "map_read_contig_v2.py"
+            self.sam_trimmer                = refactor_path + "sam_trimmer.py"
+            self.contig_duplicate_remover   = script_path + "contig_duplicate_remover.py"
+            self.sort_reads                 = refactor_path + "sort_reads_refactor.py"
+            #self.Filter_rRNA                = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
+            self.duplicate_repopulate       = refactor_path +  "duplicate_repopulation.py"
+            self.Map_reads_contigs          = script_path + "Map_read_contigs.py"
+            self.orphaned_read_filter       = refactor_path + "orphaned_pair_filter.py"
+            self.BLAT_Contaminant_Filter    = refactor_path + "BLAT_Contaminant_Filter.py"
+            self.File_splitter              = refactor_path + "file_splitter.py"
+            #self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
+            self.rRNA_filter                = refactor_path+"rRNA_filter_v2.py"
+            self.Map_reads_gene_BWA         = script_path + "Map_read_gene_BWA.py"
+            self.Map_reads_gene_BLAT        = script_path + "Map_read_gene_BLAT.py"
+            self.Map_reads_prot_DMND        = script_path + "Map_read_prot_DMND.py"
+            
+            self.RPKM = script_path + "RPKM.py"
+            
+            #self.EC_Annotation_Prep         = script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
+            #self.Detect_Submit              = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
+            #self.EC_Annotation_Post         = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
+            #self.Detect                     = "/home/j/jparkins/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
+            #self.Annotated_taxid            = script_path + "Read_Classification/Get_TaxID.py"
+            #self.Constrain_classification    = script_path + "Read_Classification/Constrain_Classification.py"
+            #self.Classification_combine     = script_path + "Read_Classification/Combine_WEVOTE.py"
+            
+            #self.Perl = "/home/j/jparkins/mobolaji/perl"
+            #self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
+            self.Python = "python3" #"/home/j/jparkins/mobolaji/python"
+            
+            #self.Prot_DB = "/scratch/j/jparkins/mobolaji/NCBI_nr_db/nr"
+            
+            #self.BBMap_Dir = "/home/j/jparkins/mobolaji/Tools/BBMap/bbmap"
+            #self.Fastqc = "/home/j/jparkins/mobolaji/Tools/FastQC/fastqc"
+            
+            #rRNA_Split_Jobs = refactor_path + "rRNA_Split_Jobs.py"
+            
+            #self.SWISS_PROT = "/home/j/jparkins/mobolaji/Databases/uniprot_sprot_annotated.fasta"
+
+            #self.Nodes = "/home/j/jparkins/mobolaji/Databases/taxdump/nodes.dmp"
+            #self.Names = "/home/j/jparkins/mobolaji/Databases/taxdump/names.dmp"
+            
+            #self.accession2taxid = "/scratch/j/jparkins/mobolaji/accession2taxid/accession2taxid"
             
 #from rRNA_Filter
 

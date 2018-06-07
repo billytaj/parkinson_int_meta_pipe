@@ -241,12 +241,12 @@ class mt_pipe_commands:
         self.make_folder(sorted_raw_folder)
         
         sort_pair_1 = ">&2 echo Sorting pair 1 | "
-        sort_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.Sort_Reads + " "
+        sort_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
         sort_pair_1 += self.raw_sequence_path_0
         sort_pair_1 += " " + sorted_raw_folder + "pair_1_sorted.fastq"
         
         sort_pair_2 = ">&2 echo Sorting pair 2 | "
-        sort_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.Sort_Reads + " "
+        sort_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
         sort_pair_2 += self.raw_sequence_path_1
         sort_pair_2 += " " + sorted_raw_folder + "pair_2_sorted.fastq"
         
