@@ -209,7 +209,7 @@ class tool_path_obj:
             self.Adapter        = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
             self.Host           = reference_file_path + "Mouse_cds.fasta"
             self.Rfam           = reference_file_path + "Rfam.cm"
-            self.DNA_DB         = scratch_path +"microbial_all_cds.fasta"
+            self.DNA_DB         = scratch_path +"/Microbial_cds_db/microbial_all_cds.fasta"
             self.DNA_DB_Prefix  = os.path.splitext(self.DNA_DB)[0]
             self.DNA_DB_Extension = os.path.splitext(self.DNA_DB)[1]
             
