@@ -258,9 +258,9 @@ class tool_path_obj:
             self.File_splitter              = refactor_path + "file_splitter.py"
             #self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
             self.rRNA_filter                = refactor_path+"rRNA_filter_v2.py"
-            self.Map_reads_gene_BWA         = script_path + "Map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT        = script_path + "Map_read_gene_BLAT.py"
-            self.Map_reads_prot_DMND        = script_path + "Map_read_prot_DMND.py"
+            self.Map_reads_gene_BWA         = script_path + "map_read_gene_BWA.py"
+            self.Map_reads_gene_BLAT        = script_path + "map_read_gene_BLAT.py"
+            self.Map_reads_prot_DMND        = script_path + "map_read_prot_DMND.py"
             
             self.RPKM = script_path + "RPKM.py"
             
