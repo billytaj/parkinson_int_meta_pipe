@@ -332,7 +332,8 @@ def main(input_folder, output_folder, system_op):
                     )
                     process.start()
                     mp_store.append(process)
-                 for item in mp_store:
+                    
+                for item in mp_store:
                     item.join() # wait for things to finish
                 mp_store[:] = [] #clear the list
                     
