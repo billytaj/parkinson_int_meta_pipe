@@ -119,6 +119,7 @@ class qsub_sync:
             
     def wait_for_sync(self, timeout, job_id, label, message = None):
         #does the actual wait for the qsub job to finish
+        #no longer needed, with multiprocessing -> join
         if((self.system_mode == "docker") or (self.system_mode == "singularity")):
             print("running in docker.  bypassing sync")
         else:
@@ -277,7 +278,7 @@ def main(input_folder, output_folder, system_op):
             #else:
             #    preprocess_job_id = None
             
-            rRNA_filter_job_id = []
+            #rRNA_filter_job_id = []
             
             if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label)):
                 process = mp.Process(
@@ -310,49 +311,46 @@ def main(input_folder, output_folder, system_op):
                         )
                         process.start()
                         mp_store.append(process)
+                #pausing here for now, because we want to stage the infernal calls
                 for item in mp_store:
                     item.join() # wait for things to finish
                 mp_store[:] = [] #clear the list
                 
-                pair_1_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_1/pair_1_mRNA"
-                if(not sync_obj.check_where_resume(None, pair_1_mRNA_path)):
-                    for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
-                        file_root_name = item.split('.')[0]
-                        inner_name = file_root_name + "_infernal"
-                        process = mp.Process(
-                            target = comm.create_pbs_and_launch,
-                            args = (
-                                "rRNA_filter", 
-                                comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
-                                #dependency_list = rRNA_filter_job_id[0],
-                                True,
-                                inner_name
-                            )
+                
+                for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
+                    file_root_name = item.split('.')[0]
+                    inner_name = file_root_name + "_infernal"
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch,
+                        args = (
+                            "rRNA_filter", 
+                            comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
+                            #dependency_list = rRNA_filter_job_id[0],
+                            True,
+                            inner_name
                         )
-                        process.start()
-                        mp_store.append(process)
-                for item in mp_store:
+                    )
+                    process.start()
+                    mp_store.append(process)
+                 for item in mp_store:
                     item.join() # wait for things to finish
                 mp_store[:] = [] #clear the list
-                
-                pair_2_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_mRNA"
-                if(not sync_obj.check_where_resume(None, orphans_mRNA_path)):
-                    for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
-                        file_root_name = item.split('.')[0]
-                        inner_name = file_root_name + "_infernal"
-                        process = mp.Process(
-                            target = comm.create_pbs_and_launch,
-                            args = (
-                                "rRNA_filter", 
-                                comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
-                                #dependency_list = rRNA_filter_job_id[0],
-                                True,
-                                inner_name
-                            )
+                    
+                for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
+                    file_root_name = item.split('.')[0]
+                    inner_name = file_root_name + "_infernal"
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch,
+                        args = (
+                            "rRNA_filter", 
+                            comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
+                            #dependency_list = rRNA_filter_job_id[0],
+                            True,
+                            inner_name
                         )
-                        process.start()
-                        mp_store.append(process)
-                  
+                    )
+                    process.start()
+                    mp_store.append(process)
                 for item in mp_store:
                     item.join() # wait for things to finish
                 mp_store[:] = [] #clear the list
@@ -374,8 +372,8 @@ def main(input_folder, output_folder, system_op):
                 process.start()
                 process.join()
                 
-            print("ending prematurely")
-            sys.exit()
+            #print("ending prematurely")
+            #sys.exit()
             
             #-------------------------------------------------------------
             #Next, we have duplicate repopulation
