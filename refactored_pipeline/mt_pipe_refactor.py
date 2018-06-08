@@ -411,7 +411,7 @@ def main(input_folder, output_folder, system_op):
             #----------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
                 process = mp.Process(
-                    target - comm.create_pbs_and_launch,
+                    target = comm.create_pbs_and_launch,
                     args = (
                     gene_annotation_BWA_label,
                     comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label),
