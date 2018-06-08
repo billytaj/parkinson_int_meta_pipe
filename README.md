@@ -1,2 +1,2 @@
 # parkinson_int_meta_pipe
-meta transcript/genomics pipeline for parkinson lab
+metatranscriptomic/genomics pipeline for parkinson lab
