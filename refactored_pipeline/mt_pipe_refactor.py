@@ -660,7 +660,12 @@ if __name__ == "__main__":
         sys.exit()
     else:    
         input_folder = sys.argv[1]
+        if(not input_folder.endswith("/")):
+            input_folder += "/"
         output_folder = sys.argv[2]
+        if(not output_folder.endswith("/")):
+            output_folder += "/"
+            
         system_op = sys.argv[3] #scinet or docker
         #scinet_user_name = sys.argv[3]
         if not(os.path.exists(output_folder)):
