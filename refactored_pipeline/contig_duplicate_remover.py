@@ -50,35 +50,35 @@ if __name__ == "__main__":
     
     #why isn't this in a loop? No benefit.  it's just df manipulations
     #select mapped and unmapped slices from pair 1
-    mapped_pair_1_sam_df = "@" + pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "0"].iloc[:, 0]          # grab the first column of all the rows in the original sam df with flag 0.  
+    mapped_pair_1_sam_df = pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "0"].iloc[:, 0]          # grab the first column of all the rows in the original sam df with flag 0.  
                                                                                                         # -> first column is IDs
     mapped_pair_1_sam_df = mapped_pair_1_sam_df.drop_duplicates()                                       # remove all the duplicates (this may happen)
     mapped_pair_1_sam_df.columns = ["ID"]                                                               # label the single column to be "ID"
     
     # 1 is unmapped, 0 is mapped
-    unmapped_pair_1_sam_df = "@" + pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "1"].iloc[:, 0]        # do the same for unmapped -> flag 1
+    unmapped_pair_1_sam_df = pair_1_sam_df.loc[pair_1_sam_df.iloc[:, 1] == "1"].iloc[:, 0]        # do the same for unmapped -> flag 1
     unmapped_pair_1_sam_df = unmapped_pair_1_sam_df.drop_duplicates()
     unmapped_pair_1_sam_df.columns = ["ID"]
     
     unmapped_pair_1_sam_df = unmapped_pair_1_sam_df[~unmapped_pair_1_sam_df.isin(mapped_pair_1_sam_df)] # then, take only the keys found uniquely in unmapped
     
     #select mapped and unmapped slices from pair 2
-    mapped_pair_2_sam_df = "@" + pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "0"].iloc[:, 0] 
+    mapped_pair_2_sam_df = pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "0"].iloc[:, 0] 
     mapped_pair_2_sam_df = mapped_pair_2_sam_df.drop_duplicates()
     mapped_pair_2_sam_df.columns = ["ID"]
     
-    unmapped_pair_2_sam_df = "@" + pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
+    unmapped_pair_2_sam_df = pair_2_sam_df.loc[pair_2_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
     unmapped_pair_2_sam_df = unmapped_pair_2_sam_df.drop_duplicates()
     unmapped_pair_2_sam_df.columns = ["ID"]
     
     unmapped_pair_2_sam_df = unmapped_pair_2_sam_df[~unmapped_pair_2_sam_df.isin(mapped_pair_2_sam_df)]
     
     #select mapped and unmapped slices from orphans
-    mapped_orphans_sam_df = "@" + orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "0"].iloc[:, 0]
+    mapped_orphans_sam_df = orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "0"].iloc[:, 0]
     mapped_orphans_sam_df = mapped_orphans_sam_df.drop_duplicates()
     mapped_orphans_sam_df.columns = ["ID"]
     
-    unmapped_orphans_sam_df = "@" + orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
+    unmapped_orphans_sam_df = orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
     unmapped_orphans_sam_df = unmapped_orphans_sam_df.drop_duplicates()
     unmapped_orphans_sam_df.columns = ["ID"]
     
