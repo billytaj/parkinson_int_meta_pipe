@@ -1001,7 +1001,7 @@ class mt_pipe_commands:
         
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/" #pointing to assemble_contigs
         bwa_folder = data_folder + "0_bwa/"
         final_folder = data_folder + "final_results/"
         
@@ -1151,17 +1151,13 @@ class mt_pipe_commands:
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, count = 5):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/" #BLAT_pp
         final_folder = data_folder + "final_results/"
         
         diamond_orphans_folder = final_folder + "orphans/"
         diamond_contig_folder = final_folder + "contigs/"
         diamond_pair_1_folder = final_folder + "pair_1/"
         diamond_pair_2_folder = final_folder + "pair_2/"
-        
-        
-        
-        
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1211,21 +1207,21 @@ class mt_pipe_commands:
         diamond_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_prot_DMND + " " 
         diamond_pp += self.tool_path_obj.Prot_DB + " " 
         diamond_pp += dep_loc_0 + "_contig_map.tsv" + " " 
-        diamond_pp += dep_loc_0 + "_gene_map.tsv" + " " 
+        diamond_pp += dep_loc_0 + "gene_map.tsv" + " " 
         diamond_pp += final_folder + "gene_map.tsv" + " " 
-        diamond_pp += self.Input_Filepath + "_genes.fna" + " " 
-        diamond_pp += self.Input_Filepath + "_proteins.faa" + " " 
-        diamond_pp += self.Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " 
-        diamond_pp += self.Input_Filepath + "_contigs.dmdout" + " " 
+        diamond_pp += dep_loc_0 + "genes.fna" + " " 
+        diamond_pp += final_folder + "proteins.faa" + " " 
+        diamond_pp += dep_loc_0 + "contigs.fasta" + " " 
+        diamond_pp += dep_loc_1 + "_contigs.dmdout" + " " 
         diamond_pp += final_folder + "_contigs_n_BWA_BLAT_DMD.fasta" + " " 
-        diamond_pp += self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " 
-        diamond_pp += self.Input_Filepath + "_unpaired.dmdout" + " " 
+        diamond_pp += dep_loc_0 + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " 
+        diamond_pp += dep_loc_1 + "_unpaired.dmdout" + " " 
         diamond_pp += final_folder + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " " 
-        diamond_pp += self.Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " 
-        diamond_pp += self.Input_File1 + "_paired.dmdout" + " " 
+        diamond_pp += dep_loc_0 + "_unmapped_n_BWA_BLAT.fasta" + " " 
+        diamond_pp += dep_loc_1 + "_paired.dmdout" + " " 
         diamond_pp += final_folder + "_unmapped_n_BWA_BLAT_DMD.fasta" + " " 
-        diamond_pp += self.Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " " 
-        diamond_pp += self.Input_File2 + "_paired.dmdout" + " " 
+        diamond_pp += dep_loc_0 + "_unmapped_n_BWA_BLAT.fasta" + " " 
+        diamond_pp += dep_loc_1 + "_paired.dmdout" + " " 
         diamond_pp + final_folder + "_unmapped_n_BWA_BLAT_DMD.fasta"
         
         
