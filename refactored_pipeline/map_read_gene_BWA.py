@@ -242,7 +242,7 @@ for x in range(int((len(sys.argv)-4)/3)):
     # and seqs (.fasta):
     unmapped_seqs= []                               # Inintialize list of SeqRecords.
     for read in unmapped_reads:                     # Put corresponding SeqRecords for unmapped_reads
-        unmapped_seqs.append(read_seqs[read])       #  into unmapped_seqs
+        unmapped_seqs.append(read_seqs["@"+read])       #  into unmapped_seqs
     with open(output_file,"w") as out:
         SeqIO.write(unmapped_seqs, out, "fasta")    #  and write it to file.
 
