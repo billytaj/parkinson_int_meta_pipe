@@ -1001,7 +1001,7 @@ class mt_pipe_commands:
         
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/" #pointing to assemble_contigs
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
         bwa_folder = data_folder + "0_bwa/"
         final_folder = data_folder + "final_results/"
         
@@ -1036,21 +1036,21 @@ class mt_pipe_commands:
         
         map_read_bwa = ">&2 echo map read bwa v2 | "
         map_read_bwa += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BWA + " " 
-        map_read_bwa += self.tool_path_obj.DNA_DB + " " 
-        map_read_bwa += dep_loc + "contig_map.tsv " 
-        map_read_bwa += final_folder + "gene_map.tsv " 
-        map_read_bwa += dep_loc + "contigs.fasta " 
-        map_read_bwa += bwa_folder + "contigs.sam " 
-        map_read_bwa += final_folder + "contigs.fasta" + " " 
-        map_read_bwa += dep_loc + "orphans.fastq" + " " 
-        map_read_bwa += bwa_folder + "orphans.sam" + " " 
-        map_read_bwa += final_folder + "orphans.fasta" + " " 
-        map_read_bwa += dep_loc + "pair_1.fastq" + " " 
-        map_read_bwa += bwa_folder + "pair_1.sam" + " " 
-        map_read_bwa += final_folder + "pair_1.fasta" + " " 
-        map_read_bwa += dep_loc + "pair_2.fastq" + " " 
-        map_read_bwa += bwa_folder + "pair_2.sam" + " " 
-        map_read_bwa += final_folder + "pair_2.fasta"
+        map_read_bwa += self.tool_path_obj.DNA_DB + " "         #IN 
+        map_read_bwa += dep_loc + "contig_map.tsv "             #IN
+        map_read_bwa += final_folder + "gene_map.tsv "          #OUT
+        map_read_bwa += dep_loc + "contigs.fasta "              #IN
+        map_read_bwa += bwa_folder + "contigs.sam "             #IN
+        map_read_bwa += final_folder + "contigs.fasta" + " "    #OUT
+        map_read_bwa += dep_loc + "orphans.fastq" + " "         #IN
+        map_read_bwa += bwa_folder + "orphans.sam" + " "        #IN
+        map_read_bwa += final_folder + "orphans.fasta" + " "    #OUT
+        map_read_bwa += dep_loc + "pair_1.fastq" + " "          #IN
+        map_read_bwa += bwa_folder + "pair_1.sam" + " "         #IN
+        map_read_bwa += final_folder + "pair_1.fasta" + " "     #OUT
+        map_read_bwa += dep_loc + "pair_2.fastq" + " "          #IN
+        map_read_bwa += bwa_folder + "pair_2.sam" + " "         #IN
+        map_read_bwa += final_folder + "pair_2.fasta"           #OUT
         
         move_contig_map = ">&2 move files | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
@@ -1151,13 +1151,17 @@ class mt_pipe_commands:
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, count = 5):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/" #BLAT_pp
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
         final_folder = data_folder + "final_results/"
         
         diamond_orphans_folder = final_folder + "orphans/"
         diamond_contig_folder = final_folder + "contigs/"
         diamond_pair_1_folder = final_folder + "pair_1/"
         diamond_pair_2_folder = final_folder + "pair_2/"
+        
+        
+        
+        
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1207,21 +1211,21 @@ class mt_pipe_commands:
         diamond_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_prot_DMND + " " 
         diamond_pp += self.tool_path_obj.Prot_DB + " " 
         diamond_pp += dep_loc_0 + "_contig_map.tsv" + " " 
-        diamond_pp += dep_loc_0 + "gene_map.tsv" + " " 
+        diamond_pp += dep_loc_0 + "_gene_map.tsv" + " " 
         diamond_pp += final_folder + "gene_map.tsv" + " " 
-        diamond_pp += dep_loc_0 + "genes.fna" + " " 
-        diamond_pp += final_folder + "proteins.faa" + " " 
-        diamond_pp += dep_loc_0 + "contigs.fasta" + " " 
-        diamond_pp += dep_loc_1 + "_contigs.dmdout" + " " 
+        diamond_pp += self.Input_Filepath + "_genes.fna" + " " 
+        diamond_pp += self.Input_Filepath + "_proteins.faa" + " " 
+        diamond_pp += self.Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " " 
+        diamond_pp += self.Input_Filepath + "_contigs.dmdout" + " " 
         diamond_pp += final_folder + "_contigs_n_BWA_BLAT_DMD.fasta" + " " 
-        diamond_pp += dep_loc_0 + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " 
-        diamond_pp += dep_loc_1 + "_unpaired.dmdout" + " " 
+        diamond_pp += self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " " 
+        diamond_pp += self.Input_Filepath + "_unpaired.dmdout" + " " 
         diamond_pp += final_folder + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " " 
-        diamond_pp += dep_loc_0 + "_unmapped_n_BWA_BLAT.fasta" + " " 
-        diamond_pp += dep_loc_1 + "_paired.dmdout" + " " 
+        diamond_pp += self.Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " " 
+        diamond_pp += self.Input_File1 + "_paired.dmdout" + " " 
         diamond_pp += final_folder + "_unmapped_n_BWA_BLAT_DMD.fasta" + " " 
-        diamond_pp += dep_loc_0 + "_unmapped_n_BWA_BLAT.fasta" + " " 
-        diamond_pp += dep_loc_1 + "_paired.dmdout" + " " 
+        diamond_pp += self.Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " " 
+        diamond_pp += self.Input_File2 + "_paired.dmdout" + " " 
         diamond_pp + final_folder + "_unmapped_n_BWA_BLAT_DMD.fasta"
         
         

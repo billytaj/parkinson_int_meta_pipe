@@ -77,6 +77,7 @@ if __name__ == "__main__":
     mapped_orphans_sam_df = orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "0"].iloc[:, 0]
     mapped_orphans_sam_df = mapped_orphans_sam_df.drop_duplicates()
     mapped_orphans_sam_df.columns = ["ID"]
+    print(mapped_orphans_sam_df)
     
     unmapped_orphans_sam_df = orphans_sam_df.loc[orphans_sam_df.iloc[:, 1] == "1"].iloc[:, 0]
     unmapped_orphans_sam_df = unmapped_orphans_sam_df.drop_duplicates()
@@ -90,5 +91,8 @@ if __name__ == "__main__":
     pair_2_df[pair_2_df.ID.isin(unmapped_pair_2_sam_df)].to_csv(output_path+"pair_2.fastq", sep='\n', mode = "w+", header=False, index=False)
     orphans_df[orphans_df.ID.isin(unmapped_orphans_sam_df)].to_csv(output_path+"orphans.fastq", sep='\n', mode = "w+", header=False, index=False)
     
+    pair_1_df[pair_1_df.ID.isin(mapped_pair_1_sam_df)].to_csv(output_path+"pair_1_mapped.fastq", sep='\n', mode = "w+", header=False, index=False)       # then export only the rows that are unmapped
+    pair_2_df[pair_2_df.ID.isin(mapped_pair_2_sam_df)].to_csv(output_path+"pair_2_mapped.fastq", sep='\n', mode = "w+", header=False, index=False)
+    orphans_df[orphans_df.ID.isin(mapped_orphans_sam_df)].to_csv(output_path+"orphans_mapped.fastq", sep='\n', mode = "w+", header=False, index=False)
     
     

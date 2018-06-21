@@ -201,17 +201,19 @@ class tool_path_obj:
             refactor_path           = script_path
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"
+            project_path            = "/project/j/jparkin/Lab_Databases/"
             #----------------------------------------------------------
             # Reference files
             # this is some NCBI reference file for Vectors
-            self.UniVec_Core    = reference_file_path + "UniVec_Core.fasta"
+            self.UniVec_Core        = reference_file_path + "UniVec_Core.fasta"
             # this too.
-            self.Adapter        = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
-            self.Host           = reference_file_path + "Mouse_cds.fasta"
-            self.Rfam           = reference_file_path + "Rfam.cm"
-            self.DNA_DB         = scratch_path +"/Microbial_cds_db/microbial_all_cds.fasta"
-            self.DNA_DB_Prefix  = os.path.splitext(self.DNA_DB)[0]
-            self.DNA_DB_Extension = os.path.splitext(self.DNA_DB)[1]
+            self.Adapter            = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
+            self.Host               = reference_file_path + "Mouse_cds.fasta"
+            self.Rfam               = reference_file_path + "Rfam.cm"
+            self.DNA_DB             = scratch_path +"Microbial_cds_db/microbial_all_cds.fasta"
+            self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
+            self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
+            self.Prot_DB            = project_path + "nr/nr"
             
             #----------------------------------------------------------
             # external tools
@@ -276,7 +278,7 @@ class tool_path_obj:
             #self.Perl_Script_Dir = "/home/j/jparkins/mobolaji/Metatranscriptome_Scripts/Xuejian"
             self.Python = "python3" #"/home/j/jparkins/mobolaji/python"
             
-            #self.Prot_DB = "/scratch/j/jparkins/mobolaji/NCBI_nr_db/nr"
+            
             
             #self.BBMap_Dir = "/home/j/jparkins/mobolaji/Tools/BBMap/bbmap"
             #self.Fastqc = "/home/j/jparkins/mobolaji/Tools/FastQC/fastqc"
