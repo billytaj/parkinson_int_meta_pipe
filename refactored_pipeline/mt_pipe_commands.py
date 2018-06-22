@@ -82,7 +82,7 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score = 33, Thread_count = 16, system_mode = "scinet", raw_sequence_path_0 = None, raw_sequence_path_1 = None):
+    def __init__(self, Quality_score = 33, Thread_count = 80, system_mode = "scinet", raw_sequence_path_0 = None, raw_sequence_path_1 = None):
         # path to the raw genome sequence file
         Input_File = os.getcwd()
         if not(raw_sequence_path_0 is None):
@@ -476,7 +476,7 @@ class mt_pipe_commands:
         samtools_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_host_only.fastq" 
         samtools_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam"
         
-        #blast prep
+        #blat prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
         make_blast_db_host += self.tool_path_obj.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
 
@@ -791,8 +791,7 @@ class mt_pipe_commands:
         return COMMANDS_Pre            
                     
     def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name):
-        file_split_count = 20 #mp.cpu_count()
-        #split, transform, and throw data into the rRNA filter.  Get back mRNA (goal) and rRNA (garbage)
+        #split data into mRNA and rRNA so we can focus on the mRNA for the remainder of the analysis steps
         dep_loc = os.getcwd() + "/" + dependency_name + "/" + "data/final_results/"
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
@@ -854,22 +853,24 @@ class mt_pipe_commands:
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
-        
-        convert_fastq_to_fasta = self.tool_path_obj.vsearch 
+
+        convert_fastq_to_fasta = ">&2 echo converting " + category + " split file to fasta | "
+        convert_fastq_to_fasta += self.tool_path_obj.vsearch
         convert_fastq_to_fasta += " --fastq_filter " + fastq_in
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
         convert_fastq_to_fasta += " --fastaout " + fasta_io
         #print("converting", fastq_in )
         #print("placing in", fasta_io )
         
-        infernal_command = self.tool_path_obj.Infernal 
+        infernal_command = ">&2 echo running infernal on " + category + " split file | "
+        infernal_command += self.tool_path_obj.Infernal
         infernal_command += " -o /dev/null --tblout " 
         infernal_command += infernal_out
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += fasta_io
-        
-        rRNA_filtration = self.tool_path_obj.Python + " " 
+
+        rRNA_filtration = self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
         rRNA_filtration += fastq_in + " "
@@ -927,7 +928,7 @@ class mt_pipe_commands:
         orphan_mRNA_filter += final_mRNA_folder + "pair_2.fastq "
         orphan_mRNA_filter += final_mRNA_folder + "orphans.fastq"
         
-        orphan_rRNA_filter = ">&2 echo filtering mRNA for orphans | "
+        orphan_rRNA_filter = ">&2 echo filtering rRNA for orphans | "
         orphan_rRNA_filter += self.tool_path_obj.Python + " " 
         orphan_rRNA_filter += self.tool_path_obj.orphaned_read_filter + " " 
         orphan_rRNA_filter += pre_filter_rRNA_folder + "pair_1.fastq " 
@@ -1049,7 +1050,7 @@ class mt_pipe_commands:
         #this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
         spades += self.tool_path_obj.Python + " " 
-        spades += self.tool_path_obj.Spades + " -k 21,33,55,77 --meta" 
+        spades += self.tool_path_obj.Spades + " -k 21,33,55,77 --meta" #Consider switching to --rna
         spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
         spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
         spades += " -o " + spades_folder #out

@@ -199,6 +199,7 @@ def main(input_folder, output_folder, system_op):
     # 2: error
     operating_mode = 0
     sync_obj = qsub_sync(system_op)
+    thread_count = mp.cpu_count() #should not be hard-coded
     start_time = time.time()
     #note: this also needs to support paired and single-ended data
     #input folder is the main location of the dump.
@@ -257,7 +258,8 @@ def main(input_folder, output_folder, system_op):
                         
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
-            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, system_mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
+            quality_encoding = 33 #This should not be a constant, we need some process to determine the quality encoding ex. vsearch --fastq_chars
+            comm = mpcom.mt_pipe_commands(Quality_score = quality_encoding, Thread_count = thread_count, system_mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
             
             #need to erase the job ids.  they're no longer needed
             if(not sync_obj.check_where_resume(output_folder + preprocess_label)):
@@ -285,7 +287,7 @@ def main(input_folder, output_folder, system_op):
                     args = (
                         rRNA_filter_label, 
                         comm.create_rRNA_filter_prep_command(
-                        rRNA_filter_label, 5, preprocess_label), 
+                        rRNA_filter_label, int(mp.cpu_count()/2), preprocess_label),
                         #dependency_list = preprocess_job_id, 
                         True
                     )
@@ -374,8 +376,8 @@ def main(input_folder, output_folder, system_op):
                 process.start()
                 process.join()
                 
-            print("ending prematurely")
-            sys.exit()
+            #print("ending prematurely")
+            #sys.exit()
             
             #-------------------------------------------------------------
             #Next, we have duplicate repopulation
