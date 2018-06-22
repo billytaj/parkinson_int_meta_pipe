@@ -213,7 +213,7 @@ def main(input_folder, output_folder, system_op):
                 mp_store[:] = [] #clear the list
                 
                 pair_2_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_mRNA"
-                if(not sync_obj.check_where_resume(None, orphans_mRNA_path)):
+                if(not sync_obj.check_where_resume(None, pair_2_mRNA_path)):
                     for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
