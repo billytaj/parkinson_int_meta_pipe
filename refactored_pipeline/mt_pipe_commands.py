@@ -8,52 +8,6 @@ import mt_pipe_paths as mpp
 import subprocess as sp
 import multiprocessing as mp
 #------------------------------------------------------
-# pragmas needed for command construction
-
-PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=00:15:00
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=8
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-PBS_Submit_HighMem = """#!/bin/bash
-#PBS -l nodes=1:m64g:ppn=16,walltime=12:00:00 -q sandy
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=16
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-PBS_Submit_vHighMem = """#!/bin/bash
-#PBS -l nodes=1:m128g:ppn=16,walltime=1:00:00 -q sandy
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=20
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
 
 #--------------------------------------------------------------------------
 # class definition
@@ -103,95 +57,17 @@ class mt_pipe_commands:
         if not(os.path.exists(folder_path)):
             os.makedirs(folder_path)
     
-    def create_pbs_and_launch(self, job_name, command_list, run_job = False, inner_name = None, mode = "low", dependency_list = None,  work_in_background = False):
+    def create_pbs_and_launch(self, job_name, command_list, run_job = False, inner_name = None, work_in_background = False):
         #create the pbs job, and launch items
-        #job name: string tag for export file name
-        #command list:  list of command statements for writing
-        #mode: selection of which pbs template to use: default -> low memory
-        #dependency_list: if not empty, will append wait args to qsub subprocess call. it's polymorphic
-        #returns back the job ID given from qsub
-        if(self.system_mode == "scinet"):
-            pbs_template = ""
-            if(mode == "med"):
-                pbs_template = PBS_Submit_HighMem
-            elif(mode == "high"):
-                pbs_template = PBS_Submit_vHighMem
-            else:
-                pbs_template = PBS_Submit_LowMem
+        #job name:              string tag for export file name
+        #command list:          list of command statements for writing
+        #run_job:               the ability to just generate the shell, and not run it
+        #work_in_background:    the ability to run the job in background.  was used in single-cpu mode, but no longer needed
+        #returns nothing
+        
+        if(self.system_mode == "singularity" or self.system_mode == "docker"):
+            #docker mode, depending on the machine it's applied to, it may be multi-core
             
-            
-            pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
-            if(not inner_name is None):
-                pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
-                
-            try:
-                with open(pbs_script_full_path + ".pbs", "w+") as PBS_script_out:
-                    for line in pbs_template.splitlines():
-                        if "NAME" in line:
-                            line = line.replace("NAME", pbs_script_full_path)
-                        if "ERROR" in line:
-                            line = line.replace("ERROR", pbs_script_full_path + "_ERR")
-                        if "OUTPUT" in line:
-                            line = line.replace("OUTPUT", pbs_script_full_path + "_OUT")
-                        if "COMMANDS" in line:
-                            PBS_script_out.write("\n".join(command_list))
-                            break
-                        
-                        PBS_script_out.write(line + "\n")
-                    PBS_script_out.close()
-                    dep_str = ""
-                    if (isinstance(dependency_list, int)):
-                        #single dep
-                        dep_str = "-W depend=afterok:" + str(dependency_list)
-                        print(dep_str)
-                        if(inner_name is None):
-                            print(job_name, "running with single dependency")
-                        else:
-                            print(inner_name, "running with single dependency")
-                            
-                    elif(isinstance(dependency_list, list)):
-                        # multiple deps
-                        print("mutiple dependencies being used")
-                        dep_str = "-W depend=afterok"
-                        for item in dependency_list:
-                            dep_str += ":"+str(item)
-                        if(inner_name is None):
-                            print(job_name, "running with multiple dependencies")    
-                        else:
-                            print(inner_name, "running with multiple dependencies")
-                    elif(dependency_list is None):
-                        if(inner_name is None):
-                            print(job_name, "running without dependency")
-                        else:
-                            print(inner_name, "running without dependency")
-                    else:
-                        print("This isn't supposed to happen")
-                        
-                    if(run_job): # a lock built for testing syntax, but not run
-                        try:
-                            if not dep_str == "":
-                                print("dep string not empty")
-                                job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs", dep_str])
-                            else:
-                                job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs"])
-                            #return val is a binary string, so we convert, and extract only the numeric part
-                            job_id = job_id.decode('ascii')
-                            job_id = int(job_id.split('.')[0])
-                        
-                            return job_id
-                        except Exception as e:
-                            print("subprocess call error:", e)
-                    else:
-                        return 0
-                    
-                    
-            except Exception as e:
-                # error catchall 
-                print("Failure at pbs creation:", e)
-                sys.exit()
-        else:
-            #docker mode: single cpu
-            # no ID, no qsub.  just run the command
             pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
             if(not inner_name is None):
                 pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
@@ -1160,21 +1036,21 @@ class mt_pipe_commands:
         
         map_read_bwa = ">&2 echo map read bwa v2 | "
         map_read_bwa += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BWA + " " 
-        map_read_bwa += self.tool_path_obj.DNA_DB + " " 
-        map_read_bwa += dep_loc + "contig_map.tsv " 
-        map_read_bwa += final_folder + "gene_map.tsv " 
-        map_read_bwa += dep_loc + "contigs.fasta " 
-        map_read_bwa += bwa_folder + "contigs.sam " 
-        map_read_bwa += final_folder + "contigs.fasta" + " " 
-        map_read_bwa += dep_loc + "orphans.fastq" + " " 
-        map_read_bwa += bwa_folder + "orphans.sam" + " " 
-        map_read_bwa += final_folder + "orphans.fasta" + " " 
-        map_read_bwa += dep_loc + "pair_1.fastq" + " " 
-        map_read_bwa += bwa_folder + "pair_1.sam" + " " 
-        map_read_bwa += final_folder + "pair_1.fasta" + " " 
-        map_read_bwa += dep_loc + "pair_2.fastq" + " " 
-        map_read_bwa += bwa_folder + "pair_2.sam" + " " 
-        map_read_bwa += final_folder + "pair_2.fasta"
+        map_read_bwa += self.tool_path_obj.DNA_DB + " "         #IN 
+        map_read_bwa += dep_loc + "contig_map.tsv "             #IN
+        map_read_bwa += final_folder + "gene_map.tsv "          #OUT
+        map_read_bwa += dep_loc + "contigs.fasta "              #IN
+        map_read_bwa += bwa_folder + "contigs.sam "             #IN
+        map_read_bwa += final_folder + "contigs.fasta" + " "    #OUT
+        map_read_bwa += dep_loc + "orphans.fastq" + " "         #IN
+        map_read_bwa += bwa_folder + "orphans.sam" + " "        #IN
+        map_read_bwa += final_folder + "orphans.fasta" + " "    #OUT
+        map_read_bwa += dep_loc + "pair_1.fastq" + " "          #IN
+        map_read_bwa += bwa_folder + "pair_1.sam" + " "         #IN
+        map_read_bwa += final_folder + "pair_1.fasta" + " "     #OUT
+        map_read_bwa += dep_loc + "pair_2.fastq" + " "          #IN
+        map_read_bwa += bwa_folder + "pair_2.sam" + " "         #IN
+        map_read_bwa += final_folder + "pair_2.fasta"           #OUT
         
         move_contig_map = ">&2 move files | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
