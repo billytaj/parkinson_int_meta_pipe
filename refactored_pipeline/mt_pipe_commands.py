@@ -10,6 +10,26 @@ import multiprocessing as mp
 #------------------------------------------------------
 # pragmas needed for command construction
 
+SLURM_Submit = """#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=40
+#SBATCH --time=4:00:00
+#SBATCH --job-name=NAME
+#SBATCH --error=ERROR
+#SBATCH --output=OUTPUT
+ 
+cd $SLURM_SUBMIT_DIR
+ 
+module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
+ 
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
+NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
+export PATH=$NEWPATH
+
+COMMANDS"""
+
 PBS_Submit_LowMem = """#!/bin/bash
 #PBS -l nodes=1:ppn=8,walltime=00:15:00
 #PBS -N NAME
@@ -19,8 +39,8 @@ PBS_Submit_LowMem = """#!/bin/bash
 module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
 cd $PBS_O_WORKDIR
 export OMP_NUM_THREADS=8
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
+OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
+NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
 export PATH=$NEWPATH
 
 COMMANDS"""
@@ -34,8 +54,8 @@ PBS_Submit_HighMem = """#!/bin/bash
 module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
 cd $PBS_O_WORKDIR
 export OMP_NUM_THREADS=16
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
+OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
+NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
 export PATH=$NEWPATH
 
 COMMANDS"""
@@ -49,8 +69,8 @@ PBS_Submit_vHighMem = """#!/bin/bash
 module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
 cd $PBS_O_WORKDIR
 export OMP_NUM_THREADS=20
-OLDPATH=$PATH:/home/j/jparkins/ctorma/emboss/bin/:/home/j/jparkins/mobolaji/Tools/Barrnap/bin/:/home/j/jparkins/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkins/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkins/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkins/mobolaji/:$OLDPATH
+OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
+NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
 export PATH=$NEWPATH
 
 COMMANDS"""
@@ -62,7 +82,7 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score = 33, Thread_count = 16, system_mode = "scinet", raw_sequence_path_0 = None, raw_sequence_path_1 = None):
+    def __init__(self, Quality_score = 33, Thread_count = 80, system_mode = "scinet", raw_sequence_path_0 = None, raw_sequence_path_1 = None):
         # path to the raw genome sequence file
         Input_File = os.getcwd()
         if not(raw_sequence_path_0 is None):
@@ -108,16 +128,16 @@ class mt_pipe_commands:
         #job name: string tag for export file name
         #command list:  list of command statements for writing
         #mode: selection of which pbs template to use: default -> low memory
-        #dependency_list: if not empty, will append wait args to qsub subprocess call. it's polymorphic
-        #returns back the job ID given from qsub
+        #dependency_list: if not empty, will append wait args to sbatch subprocess call. it's polymorphic
+        #returns back the job ID given from sbatch
         if(self.system_mode == "scinet"):
-            pbs_template = ""
-            if(mode == "med"):
-                pbs_template = PBS_Submit_HighMem
-            elif(mode == "high"):
-                pbs_template = PBS_Submit_vHighMem
-            else:
-                pbs_template = PBS_Submit_LowMem
+            pbs_template = SLURM_Submit
+        #    if(mode == "med"):
+        #        pbs_template = PBS_Submit_HighMem
+        #    elif(mode == "high"):
+        #        pbs_template = PBS_Submit_vHighMem
+        #    else:
+        #        pbs_template = PBS_Submit_LowMem
             
             
             pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
@@ -125,7 +145,7 @@ class mt_pipe_commands:
                 pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
                 
             try:
-                with open(pbs_script_full_path + ".pbs", "w+") as PBS_script_out:
+                with open(pbs_script_full_path + ".sh", "w+") as PBS_script_out:
                     for line in pbs_template.splitlines():
                         if "NAME" in line:
                             line = line.replace("NAME", pbs_script_full_path)
@@ -152,7 +172,7 @@ class mt_pipe_commands:
                     elif(isinstance(dependency_list, list)):
                         # multiple deps
                         print("mutiple dependencies being used")
-                        dep_str = "-W depend=afterok"
+                        dep_str = "-d depend=afterok"
                         for item in dependency_list:
                             dep_str += ":"+str(item)
                         if(inner_name is None):
@@ -171,12 +191,12 @@ class mt_pipe_commands:
                         try:
                             if not dep_str == "":
                                 print("dep string not empty")
-                                job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs", dep_str])
+                                job_id = sp.check_output(["sbatch", pbs_script_full_path+".sh", dep_str])
                             else:
-                                job_id = sp.check_output(["qsub", pbs_script_full_path+".pbs"])
+                                job_id = sp.check_output(["sbatch", pbs_script_full_path+".sh"])
                             #return val is a binary string, so we convert, and extract only the numeric part
                             job_id = job_id.decode('ascii')
-                            job_id = int(job_id.split('.')[0])
+                            job_id = int(job_id.split(' ')[-1])
                         
                             return job_id
                         except Exception as e:
@@ -191,7 +211,7 @@ class mt_pipe_commands:
                 sys.exit()
         else:
             #docker mode: single cpu
-            # no ID, no qsub.  just run the command
+            # no ID, no sbatch.  just run the command
             pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
             if(not inner_name is None):
                 pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
@@ -456,7 +476,7 @@ class mt_pipe_commands:
         samtools_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_host_only.fastq" 
         samtools_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam"
         
-        #blast prep
+        #blat prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
         make_blast_db_host += self.tool_path_obj.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
 
@@ -771,8 +791,7 @@ class mt_pipe_commands:
         return COMMANDS_Pre            
                     
     def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name):
-        file_split_count = 20 #mp.cpu_count()
-        #split, transform, and throw data into the rRNA filter.  Get back mRNA (goal) and rRNA (garbage)
+        #split data into mRNA and rRNA so we can focus on the mRNA for the remainder of the analysis steps
         dep_loc = os.getcwd() + "/" + dependency_name + "/" + "data/final_results/"
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
@@ -834,22 +853,24 @@ class mt_pipe_commands:
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
-        
-        convert_fastq_to_fasta = self.tool_path_obj.vsearch 
+
+        convert_fastq_to_fasta = ">&2 echo converting " + category + " split file to fasta | "
+        convert_fastq_to_fasta += self.tool_path_obj.vsearch
         convert_fastq_to_fasta += " --fastq_filter " + fastq_in
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str 
         convert_fastq_to_fasta += " --fastaout " + fasta_io
         #print("converting", fastq_in )
         #print("placing in", fasta_io )
         
-        infernal_command = self.tool_path_obj.Infernal 
+        infernal_command = ">&2 echo running infernal on " + category + " split file | "
+        infernal_command += self.tool_path_obj.Infernal
         infernal_command += " -o /dev/null --tblout " 
         infernal_command += infernal_out
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += fasta_io
-        
-        rRNA_filtration = self.tool_path_obj.Python + " " 
+
+        rRNA_filtration = self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
         rRNA_filtration += fastq_in + " "
@@ -907,7 +928,7 @@ class mt_pipe_commands:
         orphan_mRNA_filter += final_mRNA_folder + "pair_2.fastq "
         orphan_mRNA_filter += final_mRNA_folder + "orphans.fastq"
         
-        orphan_rRNA_filter = ">&2 echo filtering mRNA for orphans | "
+        orphan_rRNA_filter = ">&2 echo filtering rRNA for orphans | "
         orphan_rRNA_filter += self.tool_path_obj.Python + " " 
         orphan_rRNA_filter += self.tool_path_obj.orphaned_read_filter + " " 
         orphan_rRNA_filter += pre_filter_rRNA_folder + "pair_1.fastq " 
@@ -1029,7 +1050,7 @@ class mt_pipe_commands:
         #this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
         spades += self.tool_path_obj.Python + " " 
-        spades += self.tool_path_obj.Spades + " -k 21,33,55,77 --meta" 
+        spades += self.tool_path_obj.Spades + " -k 21,33,55,77 --meta" #Consider switching to --rna
         spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
         spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
         spades += " -o " + spades_folder #out
@@ -1369,24 +1390,24 @@ class mt_pipe_commands:
         
         kaiju_on_contigs = ">&2 echo kaiju on contigs | "
         kaiju_on_contigs += self.tool_path_obj.Kaiju 
-        kaiju_on_contigs += " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_on_contigs += " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
+        kaiju_on_contigs += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
+        kaiju_on_contigs += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
         kaiju_on_contigs += " -i " + self.Contigs 
         kaiju_on_contigs += " -z " + self.Threads_str 
         kaiju_on_contigs += " -o " + self.Input_Filepath + "_contigs_KaijuOut.tsv"
         
         kaiju_on_orphans = ">&2 echo kaiju on orphans | "
         kaiju_on_orphans += self.tool_path_obj.Kaiju 
-        kaiju_on_orphans += " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_on_orphans += " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
+        kaiju_on_orphans += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
+        kaiju_on_orphans += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
         kaiju_on_orphans += " -i " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" 
         kaiju_on_orphans += " -z " + self.Threads_str 
         kaiju_on_orphans += " -o " + self.Input_Filepath + "_unpaired_KaijuOut.tsv"
         
         kaiju_on_paired = ">&2 echo kaiju on pairs"
         kaiju_on_paired += self.tool_path_obj.Kaiju 
-        kaiju_on_paired += " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_on_paired += " -f " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
+        kaiju_on_paired += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
+        kaiju_on_paired += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
         kaiju_on_paired += " -i " + self.Input_File1 + "_all_mRNA_unmapped.fastq" 
         kaiju_on_paired += " -j " + self.Input_File2 + "_all_mRNA_unmapped.fastq" 
         kaiju_on_paired += " -z " + self.Threads_str 
@@ -1401,7 +1422,7 @@ class mt_pipe_commands:
         
         centrifuge_on_orphans = ">&2 echo centrifuge on orphans | "
         centrifuge_on_orphans += self.tool_path_obj.Centrifuge 
-        centrifuge_on_orphans += " -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" 
+        centrifuge_on_orphans += " -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt" 
         centrifuge_on_orphans += " -1 " + self.Input_File1 + "_all_mRNA_unmapped.fastq" 
         centrifuge_on_orphans += " -2 " + self.Input_File2 + "_all_mRNA_unmapped.fastq" 
         centrifuge_on_orphans += " -U " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" 
@@ -1413,7 +1434,7 @@ class mt_pipe_commands:
         
         centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
         centrifuge_on_contigs += self.tool_path_obj.Centrifuge 
-        centrifuge_on_contigs += " -f -x " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nt" 
+        centrifuge_on_contigs += " -f -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt" 
         centrifuge_on_contigs += " -U " + self.Contigs 
         centrifuge_on_contigs += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" 
         centrifuge_on_contigs += " --phred" + self.Qual_str 
@@ -1455,8 +1476,8 @@ class mt_pipe_commands:
         
         kaiju_to_krona = ">&2 echo kaiju to krona | "
         kaiju_to_krona += self.tool_path_obj.Kaiju2krona 
-        kaiju_to_krona += " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_to_krona += " -n " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/names_nr.dmp" 
+        kaiju_to_krona += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
+        kaiju_to_krona += " -n " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/names_nr.dmp" 
         kaiju_to_krona += " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" 
         kaiju_to_krona += " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
         
@@ -1553,7 +1574,7 @@ class mt_pipe_commands:
     def create_Join_command(self):
         wevote_cat = "cat " + self.Input_Filepath + "*/*_WEVOTEOut.tsv" + " > " + self.Input_Filepath + "_WEVOTEOut.tsv"
         taxid_to_english = self.tool_path_obj.Python + " " + Contrain_classification + " " + "family" + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + Nodes + " " + Names + " " + self.Input_Filepath + "_WEVOTEOut_family.tsv"
-        kaiju_to_krona = Kaiju2krona + " -t " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkins/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
+        kaiju_to_krona = Kaiju2krona + " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
         awk_cleanup_krona = "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         kt_import_text_cleanup = ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         cat_gene_maps = "cat " + self.Input_Filepath + "*/*_gene_map.tsv" + " > " + self.Input_Filepath + "_gene_map.tsv"
