@@ -123,7 +123,7 @@ class mt_pipe_commands:
         if not(os.path.exists(folder_path)):
             os.makedirs(folder_path)
     
-    def create_pbs_and_launch(self, job_name, command_list, run_job = False, inner_name = None, mode = "low", dependency_list = None,  work_in_background = False):
+    def create_pbs_and_launch(self, job_name, command_list, run_job = False, inner_name = None, work_in_background = False):
         #create the pbs job, and launch items
         #job name: string tag for export file name
         #command list:  list of command statements for writing
@@ -139,7 +139,15 @@ class mt_pipe_commands:
         #    else:
         #        pbs_template = PBS_Submit_LowMem
             
-            
+        #job name:              string tag for export file name
+        #command list:          list of command statements for writing
+        #run_job:               the ability to just generate the shell, and not run it
+        #work_in_background:    the ability to run the job in background.  was used in single-cpu mode, but no longer needed
+        #returns nothing
+
+        if(self.system_mode == "singularity" or self.system_mode == "docker"):
+            #docker mode, depending on the machine it's applied to, it may be multi-core
+
             pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
             if(not inner_name is None):
                 pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
@@ -156,7 +164,7 @@ class mt_pipe_commands:
                         if "COMMANDS" in line:
                             PBS_script_out.write("\n".join(command_list))
                             break
-                        
+
                         PBS_script_out.write(line + "\n")
                     PBS_script_out.close()
                     dep_str = ""
@@ -168,7 +176,7 @@ class mt_pipe_commands:
                             print(job_name, "running with single dependency")
                         else:
                             print(inner_name, "running with single dependency")
-                            
+
                     elif(isinstance(dependency_list, list)):
                         # multiple deps
                         print("mutiple dependencies being used")
@@ -176,7 +184,7 @@ class mt_pipe_commands:
                         for item in dependency_list:
                             dep_str += ":"+str(item)
                         if(inner_name is None):
-                            print(job_name, "running with multiple dependencies")    
+                            print(job_name, "running with multiple dependencies")
                         else:
                             print(inner_name, "running with multiple dependencies")
                     elif(dependency_list is None):
@@ -186,7 +194,7 @@ class mt_pipe_commands:
                             print(inner_name, "running without dependency")
                     else:
                         print("This isn't supposed to happen")
-                        
+
                     if(run_job): # a lock built for testing syntax, but not run
                         try:
                             if not dep_str == "":
@@ -197,16 +205,16 @@ class mt_pipe_commands:
                             #return val is a binary string, so we convert, and extract only the numeric part
                             job_id = job_id.decode('ascii')
                             job_id = int(job_id.split(' ')[-1])
-                        
+
                             return job_id
                         except Exception as e:
                             print("subprocess call error:", e)
                     else:
                         return 0
-                    
-                    
+
+
             except Exception as e:
-                # error catchall 
+                # error catchall
                 print("Failure at pbs creation:", e)
                 sys.exit()
         else:
@@ -1181,21 +1189,21 @@ class mt_pipe_commands:
         
         map_read_bwa = ">&2 echo map read bwa v2 | "
         map_read_bwa += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BWA + " " 
-        map_read_bwa += self.tool_path_obj.DNA_DB + " " 
-        map_read_bwa += dep_loc + "contig_map.tsv " 
-        map_read_bwa += final_folder + "gene_map.tsv " 
-        map_read_bwa += dep_loc + "contigs.fasta " 
-        map_read_bwa += bwa_folder + "contigs.sam " 
-        map_read_bwa += final_folder + "contigs.fasta" + " " 
-        map_read_bwa += dep_loc + "orphans.fastq" + " " 
-        map_read_bwa += bwa_folder + "orphans.sam" + " " 
-        map_read_bwa += final_folder + "orphans.fasta" + " " 
-        map_read_bwa += dep_loc + "pair_1.fastq" + " " 
-        map_read_bwa += bwa_folder + "pair_1.sam" + " " 
-        map_read_bwa += final_folder + "pair_1.fasta" + " " 
-        map_read_bwa += dep_loc + "pair_2.fastq" + " " 
-        map_read_bwa += bwa_folder + "pair_2.sam" + " " 
-        map_read_bwa += final_folder + "pair_2.fasta"
+        map_read_bwa += self.tool_path_obj.DNA_DB + " "         #IN
+        map_read_bwa += dep_loc + "contig_map.tsv "             #IN
+        map_read_bwa += final_folder + "gene_map.tsv "          #OUT
+        map_read_bwa += dep_loc + "contigs.fasta "              #IN
+        map_read_bwa += bwa_folder + "contigs.sam "             #IN
+        map_read_bwa += final_folder + "contigs.fasta" + " "    #OUT
+        map_read_bwa += dep_loc + "orphans.fastq" + " "         #IN
+        map_read_bwa += bwa_folder + "orphans.sam" + " "        #IN
+        map_read_bwa += final_folder + "orphans.fasta" + " "    #OUT
+        map_read_bwa += dep_loc + "pair_1.fastq" + " "          #IN
+        map_read_bwa += bwa_folder + "pair_1.sam" + " "         #IN
+        map_read_bwa += final_folder + "pair_1.fasta" + " "     #OUT
+        map_read_bwa += dep_loc + "pair_2.fastq" + " "          #IN
+        map_read_bwa += bwa_folder + "pair_2.sam" + " "         #IN
+        map_read_bwa += final_folder + "pair_2.fasta"           #OUT
         
         move_contig_map = ">&2 move files | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
@@ -1390,24 +1398,24 @@ class mt_pipe_commands:
         
         kaiju_on_contigs = ">&2 echo kaiju on contigs | "
         kaiju_on_contigs += self.tool_path_obj.Kaiju 
-        kaiju_on_contigs += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_on_contigs += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
+        kaiju_on_contigs += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
+        kaiju_on_contigs += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
         kaiju_on_contigs += " -i " + self.Contigs 
         kaiju_on_contigs += " -z " + self.Threads_str 
         kaiju_on_contigs += " -o " + self.Input_Filepath + "_contigs_KaijuOut.tsv"
         
         kaiju_on_orphans = ">&2 echo kaiju on orphans | "
         kaiju_on_orphans += self.tool_path_obj.Kaiju 
-        kaiju_on_orphans += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_on_orphans += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
+        kaiju_on_orphans += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
+        kaiju_on_orphans += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
         kaiju_on_orphans += " -i " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" 
         kaiju_on_orphans += " -z " + self.Threads_str 
         kaiju_on_orphans += " -o " + self.Input_Filepath + "_unpaired_KaijuOut.tsv"
         
         kaiju_on_paired = ">&2 echo kaiju on pairs"
         kaiju_on_paired += self.tool_path_obj.Kaiju 
-        kaiju_on_paired += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_on_paired += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi" 
+        kaiju_on_paired += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
+        kaiju_on_paired += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
         kaiju_on_paired += " -i " + self.Input_File1 + "_all_mRNA_unmapped.fastq" 
         kaiju_on_paired += " -j " + self.Input_File2 + "_all_mRNA_unmapped.fastq" 
         kaiju_on_paired += " -z " + self.Threads_str 
@@ -1422,7 +1430,7 @@ class mt_pipe_commands:
         
         centrifuge_on_orphans = ">&2 echo centrifuge on orphans | "
         centrifuge_on_orphans += self.tool_path_obj.Centrifuge 
-        centrifuge_on_orphans += " -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt" 
+        centrifuge_on_orphans += " -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt"
         centrifuge_on_orphans += " -1 " + self.Input_File1 + "_all_mRNA_unmapped.fastq" 
         centrifuge_on_orphans += " -2 " + self.Input_File2 + "_all_mRNA_unmapped.fastq" 
         centrifuge_on_orphans += " -U " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq" 
@@ -1434,7 +1442,7 @@ class mt_pipe_commands:
         
         centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
         centrifuge_on_contigs += self.tool_path_obj.Centrifuge 
-        centrifuge_on_contigs += " -f -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt" 
+        centrifuge_on_contigs += " -f -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt"
         centrifuge_on_contigs += " -U " + self.Contigs 
         centrifuge_on_contigs += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID" 
         centrifuge_on_contigs += " --phred" + self.Qual_str 
@@ -1476,8 +1484,8 @@ class mt_pipe_commands:
         
         kaiju_to_krona = ">&2 echo kaiju to krona | "
         kaiju_to_krona += self.tool_path_obj.Kaiju2krona 
-        kaiju_to_krona += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" 
-        kaiju_to_krona += " -n " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/names_nr.dmp" 
+        kaiju_to_krona += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
+        kaiju_to_krona += " -n " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/names_nr.dmp"
         kaiju_to_krona += " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" 
         kaiju_to_krona += " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
         

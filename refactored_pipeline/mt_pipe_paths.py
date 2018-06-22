@@ -201,17 +201,19 @@ class tool_path_obj:
             self.refactor_path           = self.script_path
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"
+            project_path            = "/project/j/jparkin/Lab_Databases/"
             #----------------------------------------------------------
             # Reference files
             # this is some NCBI reference file for Vectors
-            self.UniVec_Core    = reference_file_path + "UniVec_Core.fasta"
+            self.UniVec_Core        = reference_file_path + "UniVec_Core.fasta"
             # this too.
-            self.Adapter        = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
-            self.Host           = reference_file_path + "Mouse_cds.fasta"
-            self.Rfam           = reference_file_path + "Rfam.cm"
-            self.DNA_DB         = scratch_path +"microbial_all_cds.fasta"
-            self.DNA_DB_Prefix  = os.path.splitext(self.DNA_DB)[0]
-            self.DNA_DB_Extension = os.path.splitext(self.DNA_DB)[1]
+            self.Adapter            = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
+            self.Host               = reference_file_path + "Mouse_cds.fasta"
+            self.Rfam               = reference_file_path + "Rfam.cm"
+            self.DNA_DB             = scratch_path +"Microbial_cds_db/microbial_all_cds.fasta"
+            self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
+            self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
+            self.Prot_DB            = project_path + "nr/nr"
             
             #----------------------------------------------------------
             # external tools
@@ -258,9 +260,9 @@ class tool_path_obj:
             self.File_splitter              = self.refactor_path + "file_splitter.py"
             #self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
             self.rRNA_filter                = self.refactor_path+"rRNA_filter_v2.py"
-            self.Map_reads_gene_BWA         = self.script_path + "Map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT        = self.script_path + "Map_read_gene_BLAT.py"
-            self.Map_reads_prot_DMND        = self.script_path + "Map_read_prot_DMND.py"
+            self.Map_reads_gene_BWA         = self.script_path + "map_read_gene_BWA.py"
+            self.Map_reads_gene_BLAT        = self.script_path + "map_read_gene_BLAT.py"
+            self.Map_reads_prot_DMND        = self.script_path + "map_read_prot_DMND.py"
             
             self.RPKM = self.script_path + "RPKM.py"
             

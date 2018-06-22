@@ -61,11 +61,11 @@ def repopulate_single(ref_filename, mRNA_filename, cluster_filename, output_file
             if line.startswith(">"):
                 continue
             elif line.startswith("0"):
-                rep = "@" + line[line.find(">") + 1:line.find("...")]
+                rep = line[line.find(">") + 1:line.find("...")]
                 seq_id = rep
                 cluster_map[rep] = [seq_id]
             elif len(line) > 5:
-                seq_id = "@" + line[line.find(">") + 1:line.find("...")]
+                seq_id = line[line.find(">") + 1:line.find("...")]
                 cluster_map[rep].append(seq_id)
                 
     
