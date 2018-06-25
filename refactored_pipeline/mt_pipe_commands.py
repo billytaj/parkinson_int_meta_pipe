@@ -1001,9 +1001,9 @@ class mt_pipe_commands:
             repop_orphans = ">&2 echo Duplication repopulate Orphans | "
             repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
             repop_orphans += hq_path + "orphans.fastq" + " "   #in -> way back when things were quality-filtered.
-                                                                                            #      step 2 in preprocess.  could still contain rRNA
+                                                               #      step 2 in preprocess.  could still contain rRNA
             repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
-            repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " "           #in -> duplicates filter output
+            repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " " #in -> duplicates filter output
             repop_orphans += repop_folder + "orphans.fastq"        #out
 
 
@@ -1251,7 +1251,7 @@ class mt_pipe_commands:
                 blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
                 blat_command += self.tool_path_obj.DNA_DB_Prefix + tag + self.tool_path_obj.DNA_DB_Extension + " "
                 blat_command += dep_loc + item + ".fasta"
-                blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + str(int(self.Threads_str)/splits) + " "
+                blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + str(int(int(self.Threads_str)/splits)) + " "
                 blat_command += blat_folder + item + "_" + str(i) + ".blatout"
                 blat_command += " &"
 
