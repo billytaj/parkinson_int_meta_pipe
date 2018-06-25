@@ -1064,14 +1064,8 @@ class mt_pipe_commands:
             map_read_bwa
         ]
         return COMMANDS_Annotate_BWA
-
-
-        
-    def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, splits = 5):
-        # example input filepath: self.Input_File1, self.Input_File2
-        # example extension: [contigs_n_BWA, unpaired_unmapped_n_BWA, unmapped_BWA]-> leave out the .fasta.  it's implied
-        # example datatype [contigs, unpaired, paired]
-        #This code assumes that the microbial_all_cds has been split into a couple of segments
+    
+    def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, split_num):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
@@ -1085,27 +1079,15 @@ class mt_pipe_commands:
         self.make_folder(blat_merge_folder)
         self.make_folder(final_folder)
         
-        names_list = ["orphans", "contigs", "pair_1", "pair_2"]
+        blat_command = ">&2 echo BLAT annotation " + section + "_" + str(split_num) " | "
+        blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_command += self.tool_path_obj.DNA_DB_Prefix + tag + self.tool_path_obj.DNA_DB_Extension + " " 
+        blat_command += dep_loc + item + ".fasta"
+        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
+        blat_command += blat_folder + section + "_" + str(split_num) + ".blatout"
         
-        
-        
-        COMMANDS_Annotate_BLAT = []
-        
-        for item in names_list:
-            for i in range (0, splits):
-                tag = "_" + str(i+1)
-                blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
-                blat_command += self.tool_path_obj.DNA_DB_Prefix + tag + self.tool_path_obj.DNA_DB_Extension + " " 
-                blat_command += dep_loc + item + ".fasta"
-                blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
-                blat_command += blat_folder + item + "_" + str(i) + ".blatout"
-                
-                COMMANDS_Annotate_BLAT.append(blat_command)
-        
-            final_cat = "cat " + blat_folder + item + "_" + "[1-" + str(splits) + "]" + ".blatout" + " > " + blat_merge_folder + item + ".blatout"
-            COMMANDS_Annotate_BLAT.append(final_cat)
-        
-        return COMMANDS_Annotate_BLAT
+        return [blat_command]
+
 
     def create_BLAT_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"

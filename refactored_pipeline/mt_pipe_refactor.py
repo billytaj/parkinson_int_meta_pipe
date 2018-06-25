@@ -280,35 +280,59 @@ def main(input_folder, output_folder, system_op):
             
             #----------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
-                process = mp.Process(
-                    target = comm.create_pbs_and_launch,
-                    args = (
-                    gene_annotation_BWA_label,
-                    comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label),
-                    True
+                names = ["contigs", "orphans", "pair_1", "pair_2"]
+                mp_store[:] = []
+                for item in names:
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch,
+                        args = (
+                        gene_annotation_BWA_label,
+                        comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label. item),
+                        True
+                        )
                     )
-                )
-                process.start()
-                process.join()
+                    process.start()
+                    mp_store.append(process)
+                
+                for item in mp_store:
+                    item.join()
+                mp_store[:] = [] #clear the list
             #else:
             #    gene_annotation_BWA_id = None
-                
-                
-            #------------------------------------------------
-            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
-                    gene_annotation_BLAT_label, 
-                    comm.create_BLAT_annotate_command( gene_annotation_BLAT_label, gene_annotation_BWA_label),
-                    #dependency_list = gene_annotation_BWA_id,
+                    gene_annotation_BWA,
+                    comm.create_BWA_read_map_command(gene_annotation_BWA_label, assemble_contigs_label),
                     True
                     )
                 )
                 process.start()
                 process.join()
-                
             
+            #------------------------------------------------
+            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
+                split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
+                names = ["contigs", "orphans", "pair_1", "pair_2"]
+                for item in names:
+                    for i in range (1, split+1):
+                        process = mp.Process(
+                            target = comm.create_pbs_and_launch,
+                            args = (
+                            gene_annotation_BLAT_label, 
+                            comm.create_BLAT_annotate_command( gene_annotation_BLAT_label, gene_annotation_BWA_label, item, i),
+                            #dependency_list = gene_annotation_BWA_id,
+                            True
+                            )
+                        )
+                        process.start()
+                        mp_store.append(process)
+                for item in mp_store:        
+                    item.join()
+                mp_store[:] = [] #clear the list
+                
+            print("STOPPING PREMATURELY AT GA:BWA PP")    
+            sys.exit()    
             #------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + GA_BLAT_PP_label)):
                 process = mp.Process(
