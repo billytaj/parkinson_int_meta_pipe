@@ -1313,10 +1313,6 @@ class mt_pipe_commands:
         diamond_pair_1_folder = final_folder + "pair_1/"
         diamond_pair_2_folder = final_folder + "pair_2/"
 
-
-
-
-
         self.make_folder(subfolder)
         self.make_folder(data_folder)
 
@@ -1328,22 +1324,23 @@ class mt_pipe_commands:
         names_list = ["orphans", "contigs", "pair_1", "pair_2"]
 
         COMMANDS_Annotate_Diamond = []
-        for j in range(0, 4):
-            for i in range(1, count+1):
-                tag = "_dmnd_tmp_" + str(i)
+        for j in range(0, 4): #index for names_list and folder_list
+            #for i in range(1, count+1):
+            tag = "_dmnd_tmp_" + names_list[j]
 
-                Diamond_command_list = []
-                "mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
-                diamond_annotate = ">&2 echo gene annotate DIAMOND | "
-                diamond_annotate += self.tool_path_obj.DIAMOND
-                diamond_annotate += " blastx -p " + self.Threads_str
-                diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
-                diamond_annotate += " -q " + dep_loc + names_list[j] + ".fasta"
-                diamond_annotate += " -o " +  folder_list[j] + names_list[j] + ".dmdout"
-                diamond_annotate += " -f 6 -t " + folder_list[j]
-                diamond_annotate += "-k 10 --id 85 --query-cover 65 --min-score 60"
+            #Diamond_command_list = []
+            diamond_annotate = ">&2 echo gene annotate DIAMOND | "
+            diamond_annotate += "mkdir -p " + folder_list[j] + tag + " | "
+            diamond_annotate += self.tool_path_obj.DIAMOND
+            diamond_annotate += " blastx -p " + self.Threads_str
+            diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
+            diamond_annotate += " -q " + dep_loc + names_list[j] + ".fasta"
+            diamond_annotate += " -o " +  folder_list[j] + names_list[j] + ".dmdout"
+            diamond_annotate += " -f 6 -t " + folder_list[j] + tag
+            diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"
 
-                COMMANDS_Annotate_Diamond.append(Diamond_command_list)
+            #COMMANDS_Annotate_Diamond.append(Diamond_command_list)
+            COMMANDS_Annotate_Diamond.append(diamond_annotate)
         return COMMANDS_Annotate_Diamond
 
 

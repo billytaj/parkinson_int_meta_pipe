@@ -196,7 +196,7 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            self.script_path             = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/"
+            self.script_path             = "/home/j/jparkin//mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
             reference_file_path     = "/pipeline_reference_files/"
             self.refactor_path           = self.script_path
             tool_path               = "/pipeline_tools/"
@@ -261,7 +261,7 @@ class tool_path_obj:
             #self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
             self.rRNA_filter                = self.refactor_path+"rRNA_filter_v2.py"
             self.Map_reads_gene_BWA         = self.script_path + "map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT        = self.script_path + "map_read_gene_BLAT.py"
+            self.Map_reads_gene_BLAT        = self.script_path + "map_read_gene_BLAT_refactor.py"
             self.Map_reads_prot_DMND        = self.script_path + "map_read_prot_DMND.py"
             
             self.RPKM = self.script_path + "RPKM.py"
