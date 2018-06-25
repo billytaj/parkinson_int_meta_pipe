@@ -1241,27 +1241,40 @@ class mt_pipe_commands:
 
         names_list = ["orphans", "contigs", "pair_1", "pair_2"]
 
-
-
         COMMANDS_Annotate_BLAT = []
 
+        final_cat = ["wait"] #waits for all the blat jobs to finish before starting the cat jobs
+        move_fastas = []
         for item in names_list:
             for i in range (0, splits):
                 tag = "_" + str(i+1)
                 blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
                 blat_command += self.tool_path_obj.DNA_DB_Prefix + tag + self.tool_path_obj.DNA_DB_Extension + " "
                 blat_command += dep_loc + item + ".fasta"
-                blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
+                blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + str(int(self.Threads_str)/splits) + " "
                 blat_command += blat_folder + item + "_" + str(i) + ".blatout"
+                blat_command += " &"
 
                 COMMANDS_Annotate_BLAT.append(blat_command)
 
-            final_cat = "cat " + blat_folder + item + "_" + "[1-" + str(splits) + "]" + ".blatout" + " > " + blat_merge_folder + item + ".blatout"
-            COMMANDS_Annotate_BLAT.append(final_cat)
+            cat = "cat " + blat_folder + item + "_" + "[1-" + str(splits) + "]" + ".blatout" + " > " + blat_merge_folder + item + ".blatout" + " &"
+            final_cat.append(cat)
+
+            # The next step is only here for debugging until Blat/Blat_pp are joined
+            move_fasta = "cp " + dep_loc + item + ".fasta" + " "
+            move_fasta += final_folder + item + ".fasta"
+            move_fastas.append(move_fasta)
+
+        COMMANDS_Annotate_BLAT.extend(final_cat)
+        COMMANDS_Annotate_BLAT.append("wait") #waits for all the cat jobs to finish
+        # The next step is only here for debugging until Blat/Blat_pp are joined
+        COMMANDS_Annotate_BLAT.extend(move_fastas)
 
         return COMMANDS_Annotate_BLAT
 
     def create_BLAT_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name):
+        #This should be merged with the BLAT step at some later point
+        #currently seperated for debugging purposes
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc_0 = os.getcwd() + "/" + dependency_0_stage_name + "/data/final_results/"
