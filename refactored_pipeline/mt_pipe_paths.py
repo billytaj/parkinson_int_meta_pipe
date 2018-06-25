@@ -261,7 +261,7 @@ class tool_path_obj:
             #self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
             self.rRNA_filter                = self.refactor_path+"rRNA_filter_v2.py"
             self.Map_reads_gene_BWA         = self.script_path + "map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT        = self.script_path + "map_read_gene_BLAT_refactor.py"
+            self.Map_reads_gene_BLAT        = self.script_path + "map_read_gene_BLAT.py"
             self.Map_reads_prot_DMND        = self.script_path + "map_read_prot_DMND.py"
             
             self.RPKM = self.script_path + "RPKM.py"

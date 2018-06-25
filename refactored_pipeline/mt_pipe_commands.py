@@ -1244,7 +1244,7 @@ class mt_pipe_commands:
         COMMANDS_Annotate_BLAT = []
 
         final_cat = ["wait"] #waits for all the blat jobs to finish before starting the cat jobs
-        move_fastas = []
+        copy_outputs = []
         for item in names_list:
             for i in range (0, splits):
                 tag = "_" + str(i+1)
@@ -1261,24 +1261,25 @@ class mt_pipe_commands:
             final_cat.append(cat)
 
             # The next step is only here for debugging until Blat/Blat_pp are joined
-            move_fasta = "cp " + dep_loc + item + ".fasta" + " "
-            move_fasta += final_folder + item + ".fasta"
-            move_fastas.append(move_fasta)
+            copy_output = "cp " + blat_merge_folder + item + ".blatout" + " "
+            copy_output += final_folder + item + ".blatout"
+            copy_outputs.append(copy_output)
 
         COMMANDS_Annotate_BLAT.extend(final_cat)
         COMMANDS_Annotate_BLAT.append("wait") #waits for all the cat jobs to finish
         # The next step is only here for debugging until Blat/Blat_pp are joined
-        COMMANDS_Annotate_BLAT.extend(move_fastas)
+        COMMANDS_Annotate_BLAT.extend(copy_outputs)
 
         return COMMANDS_Annotate_BLAT
 
-    def create_BLAT_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name):
+    def create_BLAT_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name, dependency_2_stage_name):
         #This should be merged with the BLAT step at some later point
         #currently seperated for debugging purposes
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc_0 = os.getcwd() + "/" + dependency_0_stage_name + "/data/final_results/"
         dep_loc_1 = os.getcwd() + "/" + dependency_1_stage_name + "/data/final_results/"
+        dep_loc_2 = os.getcwd() + "/" + dependency_2_stage_name + "/data/final_results/"
 
         blat_folder = data_folder + "0_blat_pp/"
         final_folder = data_folder + "final_results/"
@@ -1292,21 +1293,21 @@ class mt_pipe_commands:
         blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
         blat_pp += dep_loc_0 + "contig_map.tsv" + " "
-        blat_pp += dep_loc_0 + "gene_map.tsv" + " "
+        blat_pp += dep_loc_1 + "gene_map.tsv" + " "
         blat_pp += final_folder + "genes.fna" + " "
         blat_pp += final_folder + "gene_map.tsv "
         blat_pp += final_folder + "genes.fna "
-        blat_pp += dep_loc_0 + "contigs.fasta" + " "
-        blat_pp += dep_loc_1 + "contigs.blatout" + " "
+        blat_pp += dep_loc_1 + "contigs.fasta" + " "
+        blat_pp += dep_loc_2 + "contigs.blatout" + " "
         blat_pp += final_folder + "contigs.fasta" + " "
-        blat_pp += dep_loc_0 + "orphans.fasta" + " "
-        blat_pp += dep_loc_1 + "orphans.blatout" + " "
+        blat_pp += dep_loc_1 + "orphans.fasta" + " "
+        blat_pp += dep_loc_2 + "orphans.blatout" + " "
         blat_pp += final_folder + "orphans.fasta" + " "
-        blat_pp += dep_loc_0 + "pair_1.fasta" + " "
-        blat_pp += dep_loc_1 + "pair_1.blatout" + " "
+        blat_pp += dep_loc_1 + "pair_1.fasta" + " "
+        blat_pp += dep_loc_2 + "pair_1.blatout" + " "
         blat_pp += final_folder + "pair_1.fasta" + " "
-        blat_pp += dep_loc_0 + "pair_2.fasta" + " "
-        blat_pp += dep_loc_1 + "pair_2.blatout" + " "
+        blat_pp += dep_loc_1 + "pair_2.fasta" + " "
+        blat_pp += dep_loc_2 + "pair_2.blatout" + " "
         blat_pp += final_folder + "pair_2.fasta"
 
 

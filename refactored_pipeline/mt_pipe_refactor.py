@@ -449,7 +449,7 @@ def main(input_folder, output_folder, system_op):
                     target = comm.create_pbs_and_launch,
                     args = (
                     GA_BLAT_PP_label,
-                    comm.create_BLAT_pp_command(GA_BLAT_PP_label, gene_annotation_BWA_label, gene_annotation_BLAT_label),
+                    comm.create_BLAT_pp_command(GA_BLAT_PP_label, assemble_contigs_label, gene_annotation_BWA_label, gene_annotation_BLAT_label),
                     True
                     )
                 )
