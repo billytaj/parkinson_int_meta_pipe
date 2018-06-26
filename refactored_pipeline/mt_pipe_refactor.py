@@ -15,7 +15,7 @@ def make_folder(folder_path):
     if not(os.path.exists(folder_path)):
         os.makedirs(folder_path)
 
-class qsub_sync:
+class sync_control:
     def __init__(self, system_mode):
         self.system_mode = system_mode
 
@@ -32,7 +32,7 @@ class qsub_sync:
                 else:
                     print("running")
                     return False
-                    
+
             else:
                 print("doesn't exist: running")
                 return False
@@ -47,16 +47,16 @@ class qsub_sync:
                 else:
                     print("running")
                     return False
-                    
+
             else:
                 print("doesn't exist: running")
                 return False
     #handles job syncing
     # op mode:  which job category -> completed, running, in queue, blocked
-    # check_mode: how to check our job IDs vs the job category list 
+    # check_mode: how to check our job IDs vs the job category list
     # -> any: true on existence of 1
-    # -> all: true on existence of all 
-    
+    # -> all: true on existence of all
+
     def check_job_finished(self, job_id, op_mode, check_mode="all"):
         jobs_list = []
         try:
@@ -71,7 +71,7 @@ class qsub_sync:
             else:
                 print("bad op mode to check_job_finished.  killing")
                 sys.exit()
-               
+
             #print(op_mode)
             #print("Jobs list from qstat:", jobs_list)
             if (isinstance(job_id, int)):
@@ -80,9 +80,9 @@ class qsub_sync:
                     return 1 #match
                 else:
                     return 2 #no match
-                
+
             elif(isinstance(job_id, list)):
-                # multi.  
+                # multi.
                 if(check_mode == "all"):
                     #all: return true only if all are in the list
                     match_count = 0
@@ -93,7 +93,7 @@ class qsub_sync:
                         return 2 #no match
                     else:
                         return 1 #match
-                        
+
                 elif(check_mode == "any"):
                     #any: true on any hit of job id matching the list contents
                     #print("-----------------------------------")
@@ -105,7 +105,7 @@ class qsub_sync:
                         #else:
                             #print("can't find key in list")
                     return 2 #not found
-                
+
             elif(job_id is None):
                 print("bad arg to check job finished")
                 return 0 #error
@@ -116,7 +116,7 @@ class qsub_sync:
             print("exception happened with syncer:", e)
             print("we're ending everything")
             sys.exit()
-            
+
     def wait_for_sync(self, timeout, job_id, label, message = None):
         #does the actual wait for the qsub job to finish
         if((self.system_mode == "docker") or (self.system_mode == "singularity")):
@@ -125,7 +125,7 @@ class qsub_sync:
             if(job_id is None) or (not job_id):
                 print("Blank job id.  killing")
                 sys.exit()
-            
+
             #print("job id list:")
             #print(job_id)
             time.sleep(60)
@@ -134,15 +134,15 @@ class qsub_sync:
             job_status = 0
             message_instance_timeout = 0
             lockout_count = int(timeout)
-            
-            retry_counter = 10    
+
+            retry_counter = 10
             while(b_lock):
                 job_status = self.check_job_finished(job_id, "completed", "all")
                 if(job_status == 1):
                     b_lock = False
                 else:
-                    
-                    #only start the countdown if the job is running, not while it's waiting in the queue.  
+
+                    #only start the countdown if the job is running, not while it's waiting in the queue.
                     #job could wait a long time in the queue if someone's clobbering the cluster
                     job_status = self.check_job_finished(job_id, "run", "any")
                     if(job_status == 1):
@@ -171,25 +171,25 @@ class qsub_sync:
                         #        print("job blocked")
                         #elif(job_status == 1):
                         #    print("job in queue")
-                    
+
                     else:
                         print("this can't happen in sync.  killing")
                         sys.exit()
-                
+
                 if(lockout_count <= 0):
                     print(label, "took too long.  shutting down pipeline.  QSUB Jobs may still be running")
                     print("Use qselect -u <username> | xargs qdel  to remove jobs from qsub")
                     sys.exit()
-                
+
                 time.sleep(5)
-                
-            
+
+
 def main(input_folder, output_folder, system_op):
-    
+
     # constants
     # -----------------------------
-    single_mode = 0
-    double_mode = 1
+    single_mode = 1
+    double_mode = 2
 
     # system vars
     # -------------------------------
@@ -198,19 +198,19 @@ def main(input_folder, output_folder, system_op):
     # 1: paired
     # 2: error
     operating_mode = 0
-    sync_obj = qsub_sync(system_op)
+    sync_obj = sync_control(system_op)
+    thread_count = mp.cpu_count() #should not be hard-coded
     start_time = time.time()
     #note: this also needs to support paired and single-ended data
     #input folder is the main location of the dump.
     #
-    #for genome in sorted(os.listdir(input_folder)):
     file_list = []
     Network_list = []
-    
-    
+
+
     mp_store = [] #stores the multiprocessing processes
-    
-    #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.  
+
+    #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.
     raw_sequence_path = input_folder #+ "/raw_sequences/"
     if not os.path.exists(raw_sequence_path):
         print("No sequences found.  to use pipeline, please place fastq file at:", raw_sequence_path)
@@ -221,7 +221,11 @@ def main(input_folder, output_folder, system_op):
         # for single-ended, have only 1 file.  if doubled, have both files.  Else, stop
         genome_file_count = len(os.listdir(raw_sequence_path))
         print("number of files:", genome_file_count)
-        if(genome_file_count == 1):
+        operating_mode = genome_file_count
+        if(genome_file_count == 0):
+            print("There's no genomes to analyze.  we're shutting down")
+            sys.exit()
+        elif(genome_file_count == 1):
             print("OPERATING IN SINGLE-ENDED MODE")
         elif(genome_file_count == 2):
             print("OPERATING IN PAIRED-MODE")
@@ -229,18 +233,18 @@ def main(input_folder, output_folder, system_op):
             print("Too many genome files here.  Get rid of all non-essentials")
             sys.exit()
         #operating mode denotes whether it's single or paired reads
-        operating_mode = genome_file_count - 1 
-        
+
+
         # is the file too big?
         # split it.
-        
+
         #init a command object, and start making commands
         #sys.exit()
-        
-        
-        
-        
-        
+
+
+
+
+
         if(operating_mode == double_mode):
             preprocess_label = "preprocess"
             rRNA_filter_label = "rRNA_filter"
@@ -250,43 +254,52 @@ def main(input_folder, output_folder, system_op):
             gene_annotation_BLAT_label = "gene_annotation_BLAT"
             GA_BLAT_PP_label = "BLAT_postprocess"
             gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
-            
+
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
             rRNA_filter_pair_2_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_2/pair_2_fastq/"
-                        
+
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
-            comm = mpcom.mt_pipe_commands(Quality_score = 33, Thread_count = 16, system_mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
-            
-            #need to erase the job ids.  they're no longer needed
+            quality_encoding = 33 #This should not be a constant, we need some process to determine the quality encoding ex. vsearch --fastq_chars
+            comm = mpcom.mt_pipe_commands(Quality_score = quality_encoding, Thread_count = thread_count, system_mode = system_op, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
+
+            #Creates our command object, for creating shellscripts.
+            comm = mpcom.mt_pipe_commands(
+                                            Quality_score = quality_encoding,                     #leftover from an argument into one of the tools
+                                            Thread_count = thread_count,                      #leftover, same reason.
+                                            system_mode = system_op,                #docker, or singularity
+                                            raw_sequence_path_0 = raw_pair_0_path,  #
+                                            raw_sequence_path_1 = raw_pair_1_path
+                                        ) #start obj
+
+            #This is the format we use to launch each stage of the pipeline.
+            #We start a multiprocess that starts a subprocess.
+            #The subprocess is created from the comm object
+
+            #The preprocess stage
             if(not sync_obj.check_where_resume(output_folder + preprocess_label)):
-                
+
                 process = mp.Process(
-                    target = comm.create_pbs_and_launch, 
+                    target = comm.create_pbs_and_launch,
                     args = (
-                        preprocess_label, 
-                        comm.create_pre_double_command(preprocess_label), 
+                        preprocess_label,
+                        comm.create_pre_double_command(preprocess_label),
                         True
                     )
                 )
-                process.start()
-                process.join()
-                #preprocess_job_id = None
-            
-            #else:
-            #    preprocess_job_id = None
-            
-            rRNA_filter_job_id = []
-            
+                process.start() #start the multiprocess
+                process.join()  #wait for it to end
+
+            #rRNA removal stage
             if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label)):
                 process = mp.Process(
-                    target = comm.create_pbs_and_launch, 
+                    target = comm.create_pbs_and_launch,
                     args = (
-                        rRNA_filter_label, 
+                        rRNA_filter_label,
                         comm.create_rRNA_filter_prep_command(
-                        rRNA_filter_label, 5, preprocess_label), 
-                        #dependency_list = preprocess_job_id, 
+                        rRNA_filter_label, int(mp.cpu_count()/2), preprocess_label),
+                        #dependency_list = preprocess_job_id,
                         True
                     )
                 )
@@ -298,22 +311,20 @@ def main(input_folder, output_folder, system_op):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
                         process = mp.Process(
-                            target = comm.create_pbs_and_launch, 
+                            target = comm.create_pbs_and_launch,
                             args = (
-                                "rRNA_filter", 
-                                comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name), 
-                                
-                                #dependency_list = rRNA_filter_job_id[0],
+                                "rRNA_filter",
+                                comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name),
                                 True,
                                 inner_name
                             )
                         )
                         process.start()
-                        mp_store.append(process)
+                        mp_store.append(process) # pack all the processes into a list
                 for item in mp_store:
                     item.join() # wait for things to finish
                 mp_store[:] = [] #clear the list
-                
+
                 pair_1_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_1/pair_1_mRNA"
                 if(not sync_obj.check_where_resume(None, pair_1_mRNA_path)):
                     for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
@@ -322,9 +333,8 @@ def main(input_folder, output_folder, system_op):
                         process = mp.Process(
                             target = comm.create_pbs_and_launch,
                             args = (
-                                "rRNA_filter", 
-                                comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name), 
-                                #dependency_list = rRNA_filter_job_id[0],
+                                "rRNA_filter",
+                                comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name),
                                 True,
                                 inner_name
                             )
@@ -334,71 +344,64 @@ def main(input_folder, output_folder, system_op):
                 for item in mp_store:
                     item.join() # wait for things to finish
                 mp_store[:] = [] #clear the list
-                
+
                 pair_2_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_mRNA"
-                if(not sync_obj.check_where_resume(None, orphans_mRNA_path)):
+                if(not sync_obj.check_where_resume(None, pair_2_mRNA_path)):
                     for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
                         process = mp.Process(
                             target = comm.create_pbs_and_launch,
                             args = (
-                                "rRNA_filter", 
-                                comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name), 
-                                #dependency_list = rRNA_filter_job_id[0],
+                                "rRNA_filter",
+                                comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name),
                                 True,
                                 inner_name
                             )
                         )
                         process.start()
                         mp_store.append(process)
-                  
+
                 for item in mp_store:
                     item.join() # wait for things to finish
                 mp_store[:] = [] #clear the list
-                
-                #wait for infernal to finish running
-                #time.sleep(5)
-                #sync_obj.wait_for_sync(800, rRNA_filter_job_id, rRNA_filter_label, "waiting for Infernal")
-                #print("rRNA ID list:", rRNA_filter_job_id)
+
                 inner_name = "rRNA_filter_post"
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
-                        rRNA_filter_label, 
-                        comm.create_rRNA_filter_post_command(rRNA_filter_label), 
+                        rRNA_filter_label,
+                        comm.create_rRNA_filter_post_command(rRNA_filter_label),
                         True,
                         inner_name
                     )
                 )
                 process.start()
                 process.join()
-                
-            print("ending prematurely")
-            sys.exit()
-            
+
+
             #-------------------------------------------------------------
-            #Next, we have duplicate repopulation
+            # Duplicate repopulation
             if(not sync_obj.check_where_resume(output_folder +  repop_job_label)):
-            
+
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
-                    repop_job_label, 
-                    comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label), 
+                    repop_job_label,
+                    comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label),
                     True
                     )
                 )
                 process.start()
                 process.join()
-            
+
             #----------------------------------------
             # assemble contigs
             if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
-                    assemble_contigs_label, 
+                    assemble_contigs_label,
                     comm.create_assemble_contigs_command(assemble_contigs_label, repop_job_label),
                     True
                     )
@@ -407,12 +410,12 @@ def main(input_folder, output_folder, system_op):
                 process.join()
             #else:
             #    assemble_contigs_id = None
-            
-            
+
+
             #----------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
                 process = mp.Process(
-                    target - comm.create_pbs_and_launch,
+                    target = comm.create_pbs_and_launch,
                     args = (
                     gene_annotation_BWA_label,
                     comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label),
@@ -423,14 +426,14 @@ def main(input_folder, output_folder, system_op):
                 process.join()
             #else:
             #    gene_annotation_BWA_id = None
-                
-                
+
+
             #------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
-                    gene_annotation_BLAT_label, 
+                    gene_annotation_BLAT_label,
                     comm.create_BLAT_annotate_command( gene_annotation_BLAT_label, gene_annotation_BWA_label),
                     #dependency_list = gene_annotation_BWA_id,
                     True
@@ -438,21 +441,21 @@ def main(input_folder, output_folder, system_op):
                 )
                 process.start()
                 process.join()
-                
-            
+
+
             #------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + GA_BLAT_PP_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
-                    GA_BLAT_PP_label, 
-                    comm.create_BLAT_pp_command(GA_BLAT_PP_label, gene_annotation_BWA_label, gene_annotation_BLAT_label),
+                    GA_BLAT_PP_label,
+                    comm.create_BLAT_pp_command(GA_BLAT_PP_label, assemble_contigs_label, gene_annotation_BWA_label, gene_annotation_BLAT_label),
                     True
                     )
                 )
                 process.start()
                 process.join()
-                
+
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -464,15 +467,15 @@ def main(input_folder, output_folder, system_op):
                 )
                 process.start()
                 process.join()
-                
+
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
-            
-            
-            
+
+
+
         elif(operating_mode == single_mode):
             print("not ready")
-        
+
         """
             # Preprocessing
             
@@ -652,15 +655,23 @@ def main(input_folder, output_folder, system_op):
         
         if(run_jobs):
             JobID_Join = subprocess.check_output(["qsub", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "-W", "depend=afterok:" + ":".join(Network_list)])
-"""                
+"""
 
 if __name__ == "__main__":
+    # This is where the code starts
+    # There's a few operating modes, mainly "docker", and "singularity".  These modes edit the pipeline filepaths
+
     if(len(sys.argv) < 3):
-        print("no args provided.  try again:  arg(1) input folder, arg(2) output folder, arg(3) docker or scinet")
+        print("no args provided.  try again:  arg(1) input folder, arg(2) output folder, arg(3) docker or singularity")
         sys.exit()
     else:    
         input_folder = sys.argv[1]
+        if(not input_folder.endswith("/")):
+            input_folder += "/"
         output_folder = sys.argv[2]
+        if(not output_folder.endswith("/")):
+            output_folder += "/"
+            
         system_op = sys.argv[3] #scinet or docker
         #scinet_user_name = sys.argv[3]
         if not(os.path.exists(output_folder)):
