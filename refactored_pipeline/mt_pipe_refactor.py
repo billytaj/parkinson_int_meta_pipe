@@ -368,9 +368,6 @@ def main(input_folder, output_folder, system_op):
                 process.join()
             
             
-                
-            print("STOPPING PREMATURELY AT GA:BWA PP")    
-            sys.exit()    
             #------------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
                 names = ["contigs", "orphans", "pair_1", "pair_2"]

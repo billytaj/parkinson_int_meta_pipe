@@ -1143,11 +1143,15 @@ class mt_pipe_commands:
                         ]
         return COMMANDS_Annotate_BLAT_Post
 
-    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, count = 5):
+    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        section_folder = data_folder + section + "/"
+        
+        self.make_folder(section_folder)
         final_folder = data_folder + "final_results/"
+        
         
         diamond_orphans_folder = final_folder + "orphans/"
         diamond_contig_folder = final_folder + "contigs/"
