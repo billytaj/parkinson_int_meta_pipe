@@ -226,13 +226,13 @@ def gene_map(hits):                         # fail-mapped contig/readIDs=
 #####################################
 
 # check number of readtype sets (file inputs)
-numsets= (len(sys.argv)-7)/3
-if numsets not in [2,4]:
+read_sets = int((len(sys.argv)-7)/3)
+if (len(sys.argv)-7) % 3 != 0:
     sys.exit('Incorrect number of readtype sets.')
 
 # process BLAT output:
 # readtype sets: contigs, merged:
-for x in range(0,2):
+for x in range(read_sets):
     read_file= sys.argv[3*x+7]      # INPUT: non-BWA-aligned contig/readIDs and seqs (.fasta)
     read_seqs= SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
                                     # dict of non-BWA-aligned read SeqRecords: key=contig/readID
@@ -267,25 +267,25 @@ for x in range(0,2):
     # print no. aligned reads from current readtype set:
     print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
     prev_mapping_count= len(mapped_reads)
-
+'''
 # process BLAT output:
 # readtype sets: unmerged1, unmerged2
 if numsets==4:
     
     # unmerged1:
     x= 2
-    read_file_1= sys.argv[3*x+5]
+    read_file_1= sys.argv[3*x+7]
     read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
-    BLAT_tab_file_1= sys.argv[3*x+6]
-    output_file_1= sys.argv[3*x+7]
+    BLAT_tab_file_1= sys.argv[3*x+8]
+    output_file_1= sys.argv[3*x+9]
     BLAT_hits_1= read_aligned(BLAT_tab_file_1, read_seqs_1) # Store info in BLAT_hits_1 (list of lists).
 
     # unmerged2:
     x= 3
-    read_file_2= sys.argv[3*x+5]
+    read_file_2= sys.argv[3*x+7]
     read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
-    BLAT_tab_file_2= sys.argv[3*x+6]
-    output_file_2= sys.argv[3*x+7]
+    BLAT_tab_file_2= sys.argv[3*x+8]
+    output_file_2= sys.argv[3*x+9]
     BLAT_hits_2= read_aligned(BLAT_tab_file_2, read_seqs_2) # Store info in BLAT_hits_2 (list of lists).
 
     # process BLAT-aligned reads together:
@@ -326,7 +326,7 @@ if numsets==4:
     print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file_1))
     print ('  and ' + os.path.basename(read_file_2) + '\n')
     prev_mapping_count= len(mapped_reads)
-
+'''
 # WRITE OUTPUT: rewrite gene<->read mapfile to include BLAT-aligned:
 # [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
 reads_count= 0

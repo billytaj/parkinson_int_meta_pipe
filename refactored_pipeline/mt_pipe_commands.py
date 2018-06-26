@@ -1289,12 +1289,13 @@ class mt_pipe_commands:
         self.make_folder(blat_folder)
         self.make_folder(final_folder)
 
+        '''
         blat_pp = ">&2 echo BLAT post-processing | "
         blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
         blat_pp += dep_loc_0 + "contig_map.tsv" + " "
         blat_pp += dep_loc_1 + "gene_map.tsv" + " "
-        blat_pp += final_folder + "genes.fna" + " "
+        blat_pp += dep_loc_1 + "genes.fna" + " "
         blat_pp += final_folder + "gene_map.tsv "
         blat_pp += final_folder + "genes.fna "
         blat_pp += dep_loc_1 + "contigs.fasta" + " "
@@ -1309,7 +1310,27 @@ class mt_pipe_commands:
         blat_pp += dep_loc_1 + "pair_2.fasta" + " "
         blat_pp += dep_loc_2 + "pair_2.blatout" + " "
         blat_pp += final_folder + "pair_2.fasta"
-
+        '''
+        blat_pp = ">&2 echo BLAT post-processing | "
+        blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " "
+        blat_pp += self.tool_path_obj.DNA_DB + " "
+        blat_pp += dep_loc_0 + "contig_map.tsv" + " "
+        blat_pp += dep_loc_1 + "gene_map.tsv" + " "
+        blat_pp += dep_loc_1 + "genes.fna" + " "
+        blat_pp += final_folder + "gene_map.tsv "
+        blat_pp += final_folder + "genes.fna "
+        blat_pp += dep_loc_1 + "contigs.fasta" + " "
+        blat_pp += dep_loc_2 + "contigs.blatout" + " "
+        blat_pp += final_folder + "contigs.fasta" + " "
+        blat_pp += dep_loc_1 + "orphans.fasta" + " "
+        blat_pp += dep_loc_2 + "orphans.blatout" + " "
+        blat_pp += final_folder + "orphans.fasta" + " "
+        blat_pp += dep_loc_1 + "pair_1.fasta" + " "
+        blat_pp += dep_loc_2 + "pair_1.blatout" + " "
+        blat_pp += final_folder + "pair_1.fasta" + " "
+        blat_pp += dep_loc_1 + "pair_2.fasta" + " "
+        blat_pp += dep_loc_2 + "pair_2.blatout" + " "
+        blat_pp += final_folder + "pair_2.fasta"
 
         COMMANDS_Annotate_BLAT_Post = [
                         blat_pp
