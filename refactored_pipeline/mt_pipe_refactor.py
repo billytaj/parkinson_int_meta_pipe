@@ -121,6 +121,7 @@ def main(input_folder, output_folder, system_op):
             assemble_contigs_label = "assemble_contigs"
             gene_annotation_BWA_label = "gene_annotation_BWA"
             gene_annotation_BLAT_label = "gene_annotation_BLAT"
+            GL_BLAT_cat_label = "BLAT_cat_results"
             GA_BLAT_PP_label = "BLAT_postprocess"
             gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
             
@@ -283,12 +284,14 @@ def main(input_folder, output_folder, system_op):
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 mp_store[:] = []
                 for item in names:
+                    inner_name = "BWA_" + item
                     process = mp.Process(
                         target = comm.create_pbs_and_launch,
                         args = (
                         gene_annotation_BWA_label,
-                        comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label. item),
-                        True
+                        comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label, item),
+                        True,
+                        inner_name
                         )
                     )
                     process.start()
@@ -299,12 +302,14 @@ def main(input_folder, output_folder, system_op):
                 mp_store[:] = [] #clear the list
             #else:
             #    gene_annotation_BWA_id = None
+                inner_name = "BWA_pp"
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
-                    gene_annotation_BWA,
-                    comm.create_BWA_read_map_command(gene_annotation_BWA_label, assemble_contigs_label),
-                    True
+                    gene_annotation_BWA_label,
+                    comm.create_BWA_pp_command(gene_annotation_BWA_label, assemble_contigs_label),
+                    True,
+                    inner_name
                     )
                 )
                 process.start()
@@ -316,13 +321,15 @@ def main(input_folder, output_folder, system_op):
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 for item in names:
                     for i in range (1, split+1):
+                        inner_name = "BLAT_"+item + "_"+str(i)
                         process = mp.Process(
                             target = comm.create_pbs_and_launch,
                             args = (
                             gene_annotation_BLAT_label, 
-                            comm.create_BLAT_annotate_command( gene_annotation_BLAT_label, gene_annotation_BWA_label, item, i),
+                            comm.create_BLAT_annotate_command(gene_annotation_BLAT_label, gene_annotation_BWA_label, item, i),
                             #dependency_list = gene_annotation_BWA_id,
-                            True
+                            True,
+                            inner_name
                             )
                         )
                         process.start()
@@ -330,34 +337,59 @@ def main(input_folder, output_folder, system_op):
                 for item in mp_store:        
                     item.join()
                 mp_store[:] = [] #clear the list
+
+                for item in names:
+                    inner_name = item + "_cat"
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch,
+                        args = (
+                        gene_annotation_BLAT_label, 
+                        comm.create_BLAT_cat_command(gene_annotation_BLAT_label, item, split),
+                        True,
+                        inner_name
+                        )
+                    )
+                    process.start()
+                    mp_store.append(process)
+                for item in mp_store:
+                    item.join()
+                mp_store[:] = []
+                inner_name = "BLAT_pp"
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
+                    gene_annotation_BLAT_label, 
+                    comm.create_BLAT_pp_command(gene_annotation_BLAT_label, gene_annotation_BWA_label),
+                    True,
+                    inner_name
+                    )
+                )
+                process.start()
+                process.join()
+            
+            
                 
             print("STOPPING PREMATURELY AT GA:BWA PP")    
             sys.exit()    
-            #------------------------------------------------
-            if(not sync_obj.check_where_resume(output_folder + GA_BLAT_PP_label)):
-                process = mp.Process(
-                    target = comm.create_pbs_and_launch,
-                    args = (
-                    GA_BLAT_PP_label, 
-                    comm.create_BLAT_pp_command(GA_BLAT_PP_label, gene_annotation_BWA_label, gene_annotation_BLAT_label),
-                    True
-                    )
-                )
-                process.start()
-                process.join()
-                
+            #------------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
-                process = mp.Process(
-                    target = comm.create_pbs_and_launch,
-                    args = (
-                    gene_annotation_DIAMOND_label,
-                    comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, GA_BLAT_PP_label),
-                    True
-                    )
-                )
-                process.start()
-                process.join()
+                names = ["contigs", "orphans", "pair_1", "pair_2"]
+                #for i in range(1, 6):
                 
+                for item in names:
+                    inner_name = names + "_run_diamond"
+                    process = mp.Process(
+                        target = comm.create_pbs_and_launch,
+                        args = (
+                        gene_annotation_DIAMOND_label,
+                        comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label),
+                        True,
+                        inner_name
+                        )
+                    )
+                    process.start()
+                    process.join()
+                    
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
             
