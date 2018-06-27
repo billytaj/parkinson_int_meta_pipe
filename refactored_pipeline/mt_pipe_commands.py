@@ -1057,7 +1057,7 @@ class mt_pipe_commands:
         map_read_bwa += bwa_folder + "pair_2.sam" + " "         #IN
         map_read_bwa += final_folder + "pair_2.fasta"           #OUT
         
-        move_contig_map = ">&2 echo ove files | "
+        move_contig_map = ">&2 echo copy contig map | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
         
         
