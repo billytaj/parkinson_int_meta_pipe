@@ -45,9 +45,9 @@ Prot_DB             = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
 contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
 gene2read_file      = sys.argv[3]   # INPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
 new_gene2read_file  = sys.argv[4]   # ->OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
-                                
-gene_file= sys.argv[4]          # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
-prot_file= sys.argv[5]          # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
+gene_file           = sys.argv[5]   # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
+prot_file           = sys.argv[6]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
+
 
 # make dict of contigID<->readsID(s):
 contig2read_map= {}
@@ -81,7 +81,7 @@ prev_mapping_count= 0
 
 # DEBUG:
 if len(set(BWABLATreads))==len(BWABLATreads):
-    print ('BWA&/orBLAT-aligned reads are all unique.\n'
+    print ('BWA&/orBLAT-aligned reads are all unique.\n')
 else:
     print ('There are repeating BWA&/orBLAT-aligned reads:')
     print ('no. unique reads= ' + str(len(set(BWABLATreads))))
@@ -242,9 +242,9 @@ def prot_map(hits):                         # fail-mapped contig/readIDs=
 #####################################
 
 # check number of readtype sets (file inputs)
-numsets= (len(sys.argv)-7)/3
-if numsets not in [2,4]:
-    sys.exit('Incorrect number of readtype sets.')
+read_sets = int((len(sys.argv)-7)/3) 
+if (len(sys.argv)-7) % 3 != 0:
+    sys.exit('Incorrect number of readtype sets: ' + str(len(sys.argv)))
 
 # process DIAMOND output:
 # readtype sets: contigs, merged:
@@ -286,22 +286,22 @@ for x in range(0,2):
 
 # process DMD output:
 # readtype sets: unmerged1, unmerged2
-if numsets==4:
+if read_sets==4:
     
     # unmerged1:
     x= 2
-    read_file_1= sys.argv[3*x+6]
+    read_file_1= sys.argv[3*x+7]
     read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
-    DMD_tab_file_1= sys.argv[3*x+7]
-    output_file_1= sys.argv[3*x+8]
+    DMD_tab_file_1= sys.argv[3*x+8]
+    output_file_1= sys.argv[3*x+9]
     DMD_hits_1= read_aligned(DMD_tab_file_1, read_seqs_1)   # Store info in DMD_hits_1 (list of lists).
 
     # unmerged2:
     x= 3
-    read_file_2= sys.argv[3*x+6]
+    read_file_2= sys.argv[3*x+7]
     read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
-    DMD_tab_file_2= sys.argv[3*x+7]
-    output_file_2= sys.argv[3*x+8]
+    DMD_tab_file_2= sys.argv[3*x+8]
+    output_file_2= sys.argv[3*x+9]
     DMD_hits_2= read_aligned(DMD_tab_file_2, read_seqs_2)   # Store info in DMD_hits_2 (list of lists).
 
     # process DMD-aligned reads together:
@@ -347,7 +347,7 @@ if numsets==4:
 # [BWA&BLAT&DMD-aligned geneID, length, #reads, readIDs ...]
 reads_count= 0
 proteins= []
-with open(gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
+with open(new_gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
 
     # write genes:
     for gene in gene2read_map:                          # Take each BWA&BLAT-aligned gene and

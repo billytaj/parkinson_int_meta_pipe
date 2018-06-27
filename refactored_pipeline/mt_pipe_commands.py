@@ -1298,7 +1298,7 @@ class mt_pipe_commands:
         blat_pp += self.tool_path_obj.DNA_DB + " "
         blat_pp += dep_loc + "contig_map.tsv" + " "
         blat_pp += dep_loc + "gene_map.tsv" + " "
-        blat_pp += dep_loc + "genes.fna" + " "
+        blat_pp += final_folder + "genes.fna" + " "
         blat_pp += final_folder + "gene_map.tsv "
         blat_pp += final_folder + "genes.fna "
         blat_pp += dep_loc + "contigs.fasta" + " "
@@ -1313,9 +1313,14 @@ class mt_pipe_commands:
         blat_pp += dep_loc + "pair_2.fasta" + " "
         blat_pp += blat_merge_folder + "pair_2.blatout" + " "
         blat_pp += final_folder + "pair_2.fasta"
+        
+        move_contig_map = ">&2 echo copy contig map | "
+        move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
+
 
         COMMANDS_Annotate_BLAT_Post = [
-                        blat_pp
+                        blat_pp,
+                        move_contig_map
                         ]
         return COMMANDS_Annotate_BLAT_Post
 
@@ -1383,7 +1388,7 @@ class mt_pipe_commands:
         diamond_pp += final_folder                  + "pair_1.fasta" + " "                                  #OUT
         diamond_pp += dep_loc_0                     + "pair_2.fasta" + " "                                  #IN
         diamond_pp += diamond_folder                + "pair_2.dmdout" + " "                                 #IN
-        diamond_pp + final_folder                   + "pair_2.fasta"                                        #OUT
+        diamond_pp += final_folder                  + "pair_2.fasta"                                        #OUT
 
 
         COMMANDS_Annotate_Diamond_Post = [
