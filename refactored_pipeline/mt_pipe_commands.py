@@ -144,7 +144,9 @@ class mt_pipe_commands:
         #job name:              string tag for export file name
         #command list:          list of command statements for writing
         #run_job:               the ability to just generate the shell, and not run it
+        #inner_name:            to make it so that a new shellscript is generated for each split job -> name override
         #work_in_background:    the ability to run the job in background.  was used in single-cpu mode, but no longer needed
+        
         #returns nothing
 
         #if(self.system_mode == "singularity" or self.system_mode == "docker"):
@@ -1149,10 +1151,9 @@ class mt_pipe_commands:
                         #contig_merge
                         ]
         return COMMANDS_Assemble
-
-
-    def create_BWA_annotate_command(self, stage_name, dependency_stage_name):
-
+        
+    def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
+        # meant to be called multiple times: section -> contigs, orphans, pair_1, pair_2
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
@@ -1163,31 +1164,35 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(bwa_folder)
         self.make_folder(final_folder)
-
-        bwa_contigs = ">&2 echo BWA on contigs | "
-        bwa_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_contigs += self.tool_path_obj.DNA_DB + " "
-        bwa_contigs += dep_loc + "contigs.fasta" + " | "
-        bwa_contigs += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "contigs.sam"
-
-        bwa_orphans = ">&2 echo BWA on orphans | "
-        bwa_orphans += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_orphans += self.tool_path_obj.DNA_DB + " "
-        bwa_orphans += dep_loc + "orphans.fastq" + " | "
-        bwa_orphans += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "orphans.sam"
-
-        bwa_pair_1 = ">&2 echo BWA on pair 1 | "
-        bwa_pair_1 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_pair_1 += self.tool_path_obj.DNA_DB + " "
-        bwa_pair_1 += dep_loc + "pair_1.fastq" + " | "
-        bwa_pair_1 += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "pair_1.sam"
-
-        bwa_pair_2 = ">&2 echo BWA on pair 2 | "
-        bwa_pair_2 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_pair_2 += self.tool_path_obj.DNA_DB + " "
-        bwa_pair_2 += dep_loc + "pair_2.fastq" + " | "
-        bwa_pair_2 += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + "pair_2.sam"
-
+        
+        section_file = ""
+        if(section == "contigs"):
+            section_file = section + ".fasta"
+        else:
+            section_file = section + ".fastq"
+        bwa_job = ">&2 echo BWA on " + section + " | "
+        bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
+        bwa_job += self.tool_path_obj.DNA_DB + " " 
+        bwa_job += dep_loc + section_file + " | " 
+        bwa_job += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + section + ".sam"
+        
+        
+        
+        return [bwa_job]
+        
+    def create_BWA_pp_command(self, stage_name, dependency_stage_name):    
+        
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        bwa_folder = data_folder + "0_bwa/"
+        final_folder = data_folder + "final_results/"
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+        self.make_folder(final_folder)
+        
         map_read_bwa = ">&2 echo map read bwa v2 | "
         map_read_bwa += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BWA + " "
         map_read_bwa += self.tool_path_obj.DNA_DB + " "         #IN
@@ -1205,110 +1210,86 @@ class mt_pipe_commands:
         map_read_bwa += dep_loc + "pair_2.fastq" + " "          #IN
         map_read_bwa += bwa_folder + "pair_2.sam" + " "         #IN
         map_read_bwa += final_folder + "pair_2.fasta"           #OUT
-
-        move_contig_map = ">&2 move files | "
+        
+        move_contig_map = ">&2 echo copy contig map | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
 
 
         COMMANDS_Annotate_BWA = [
-            bwa_contigs,
-            bwa_orphans,
-            bwa_pair_1,
-            bwa_pair_2,
-            map_read_bwa
+            map_read_bwa,
+            move_contig_map
         ]
         return COMMANDS_Annotate_BWA
-
-
-
-    def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, splits = 5):
-        # example input filepath: self.Input_File1, self.Input_File2
-        # example extension: [contigs_n_BWA, unpaired_unmapped_n_BWA, unmapped_BWA]-> leave out the .fasta.  it's implied
-        # example datatype [contigs, unpaired, paired]
-        #This code assumes that the microbial_all_cds has been split into a couple of segments
+    
+    def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, split_num):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
         blat_folder = data_folder + "0_blat/"
-        blat_merge_folder = data_folder + "1_blat_merge/"
-        final_folder = data_folder + "final_results/"
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_folder)
+        #print(self.tool_path_obj.BWA)
+        blat_command = ">&2 echo BLAT annotation " + section + "_" + str(split_num) +" | "
+        blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
+        blat_command += self.tool_path_obj.DNA_DB_Prefix + "_" + str(split_num) + self.tool_path_obj.DNA_DB_Extension + " " 
+        blat_command += dep_loc + section + ".fasta"
+        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
+        blat_command += blat_folder + section + "_" + str(split_num) + ".blatout"
+        
+        #move_file = "cp " + blat_folder + section + "_" + str(split_num) + ".blatout " + final_folder 
+        
+        return [blat_command]#, move_file]
 
+    def create_BLAT_cat_command(self, stage_name, section, split_num):
+        # this is meant to be called for each section: contigs, orphans, pair_1, pair_2
+        subfolder = os.getcwd() + "/" + stage_name + "/"
+        data_folder = subfolder + "data/"
+        blat_folder = data_folder + "0_blat/"
+        blat_merge_folder = data_folder + "1_blat_merge/"
+        
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_folder)
         self.make_folder(blat_merge_folder)
-        self.make_folder(final_folder)
+        
+        cat_command = "cat " + blat_folder + section + "_" +  "[1-" + str(split_num) + "]" + ".blatout" + " > " + blat_merge_folder + section + ".blatout"
+        return [cat_command]
 
-        names_list = ["orphans", "contigs", "pair_1", "pair_2"]
-
-        COMMANDS_Annotate_BLAT = []
-
-        final_cat = ["wait"] #waits for all the blat jobs to finish before starting the cat jobs
-        copy_outputs = []
-        for item in names_list:
-            for i in range (0, splits):
-                tag = "_" + str(i+1)
-                blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
-                blat_command += self.tool_path_obj.DNA_DB_Prefix + tag + self.tool_path_obj.DNA_DB_Extension + " "
-                blat_command += dep_loc + item + ".fasta"
-                blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + str(int(int(self.Threads_str)/splits)) + " "
-                blat_command += blat_folder + item + "_" + str(i) + ".blatout"
-                blat_command += " &"
-
-                COMMANDS_Annotate_BLAT.append(blat_command)
-
-            cat = "cat " + blat_folder + item + "_" + "[1-" + str(splits) + "]" + ".blatout" + " > " + blat_merge_folder + item + ".blatout" + " &"
-            final_cat.append(cat)
-
-            # The next step is only here for debugging until Blat/Blat_pp are joined
-            copy_output = "cp " + blat_merge_folder + item + ".blatout" + " "
-            copy_output += final_folder + item + ".blatout"
-            copy_outputs.append(copy_output)
-
-        COMMANDS_Annotate_BLAT.extend(final_cat)
-        COMMANDS_Annotate_BLAT.append("wait") #waits for all the cat jobs to finish
-        # The next step is only here for debugging until Blat/Blat_pp are joined
-        COMMANDS_Annotate_BLAT.extend(copy_outputs)
-
-        return COMMANDS_Annotate_BLAT
-
-    def create_BLAT_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name, dependency_2_stage_name):
-        #This should be merged with the BLAT step at some later point
-        #currently seperated for debugging purposes
+    def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        dep_loc_0 = os.getcwd() + "/" + dependency_0_stage_name + "/data/final_results/"
-        dep_loc_1 = os.getcwd() + "/" + dependency_1_stage_name + "/data/final_results/"
-        dep_loc_2 = os.getcwd() + "/" + dependency_2_stage_name + "/data/final_results/"
-
-        blat_folder = data_folder + "0_blat_pp/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        blat_merge_folder = data_folder + "1_blat_merge/"
+        
         final_folder = data_folder + "final_results/"
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(blat_folder)
+        self.make_folder(blat_merge_folder)
         self.make_folder(final_folder)
 
         '''
         blat_pp = ">&2 echo BLAT post-processing | "
-        blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " "
-        blat_pp += self.tool_path_obj.DNA_DB + " "
-        blat_pp += dep_loc_0 + "contig_map.tsv" + " "
-        blat_pp += dep_loc_1 + "gene_map.tsv" + " "
-        blat_pp += dep_loc_1 + "genes.fna" + " "
+        blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " " 
+        blat_pp += self.tool_path_obj.DNA_DB + " " 
+        blat_pp += dep_loc + "contig_map.tsv" + " " 
+        blat_pp += dep_loc + "gene_map.tsv" + " " 
+        blat_pp += final_folder + "genes.fna" + " " 
         blat_pp += final_folder + "gene_map.tsv "
         blat_pp += final_folder + "genes.fna "
-        blat_pp += dep_loc_1 + "contigs.fasta" + " "
-        blat_pp += dep_loc_2 + "contigs.blatout" + " "
-        blat_pp += final_folder + "contigs.fasta" + " "
-        blat_pp += dep_loc_1 + "orphans.fasta" + " "
-        blat_pp += dep_loc_2 + "orphans.blatout" + " "
-        blat_pp += final_folder + "orphans.fasta" + " "
-        blat_pp += dep_loc_1 + "pair_1.fasta" + " "
-        blat_pp += dep_loc_2 + "pair_1.blatout" + " "
-        blat_pp += final_folder + "pair_1.fasta" + " "
-        blat_pp += dep_loc_1 + "pair_2.fasta" + " "
-        blat_pp += dep_loc_2 + "pair_2.blatout" + " "
+        blat_pp += dep_loc+ "contigs.fasta" + " " 
+        blat_pp += blat_merge_folder + "contigs.blatout" + " " 
+        blat_pp += final_folder + "contigs.fasta" + " " 
+        blat_pp += dep_loc + "orphans.fasta" + " " 
+        blat_pp += blat_merge_folder+ "orphans.blatout" + " " 
+        blat_pp += final_folder + "orphans.fasta" + " " 
+        blat_pp += dep_loc + "pair_1.fasta" + " " 
+        blat_pp += blat_merge_folder + "pair_1.blatout" + " " 
+        blat_pp += final_folder + "pair_1.fasta" + " " 
+        blat_pp += dep_loc + "pair_2.fasta" + " " 
+        blat_pp += blat_merge_folder + "pair_2.blatout" + " " 
         blat_pp += final_folder + "pair_2.fasta"
         '''
         blat_pp = ">&2 echo BLAT post-processing | "
@@ -1337,50 +1318,37 @@ class mt_pipe_commands:
                         ]
         return COMMANDS_Annotate_BLAT_Post
 
-    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, count = 5):
+    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section, count):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
-        final_folder = data_folder + "final_results/"
-
-        diamond_orphans_folder = final_folder + "orphans/"
-        diamond_contig_folder = final_folder + "contigs/"
-        diamond_pair_1_folder = final_folder + "pair_1/"
-        diamond_pair_2_folder = final_folder + "pair_2/"
-
+        section_folder = data_folder + section + "/"
+        section_temp_folder = section_folder + "temp_" + str(count) + "/"
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-
-        self.make_folder(final_folder)
-        folder_list = [diamond_orphans_folder, diamond_contig_folder, diamond_pair_1_folder, diamond_pair_2_folder]
-        for item in folder_list:
-            self.make_folder(item)
-
-        names_list = ["orphans", "contigs", "pair_1", "pair_2"]
-
-        COMMANDS_Annotate_Diamond = []
-        for j in range(0, 4): #index for names_list and folder_list
-            #for i in range(1, count+1):
-            tag = "_dmnd_tmp_" + names_list[j]
-
-            #Diamond_command_list = []
-            diamond_annotate = ">&2 echo gene annotate DIAMOND | "
-            diamond_annotate += "mkdir -p " + folder_list[j] + tag + " | "
-            diamond_annotate += self.tool_path_obj.DIAMOND
-            diamond_annotate += " blastx -p " + self.Threads_str
-            diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
-            diamond_annotate += " -q " + dep_loc + names_list[j] + ".fasta"
-            diamond_annotate += " -o " +  folder_list[j] + names_list[j] + ".dmdout"
-            diamond_annotate += " -f 6 -t " + folder_list[j] + tag
-            diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"
-
-            #COMMANDS_Annotate_Diamond.append(Diamond_command_list)
-            COMMANDS_Annotate_Diamond.append(diamond_annotate)
-        return COMMANDS_Annotate_Diamond
-
-
-
-    def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name):
+        self.make_folder(section_folder)
+        self.make_folder(section_temp_folder)
+        
+        #COMMANDS_Annotate_Diamond = []
+        #for j in range(0, 4):
+        #    for i in range(1, count+1):
+        #tag = "_dmnd_tmp_" + str(count)
+        
+        #Diamond_command_list = []
+        #"mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
+        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section + " " + str(count) + " | "
+        diamond_annotate += self.tool_path_obj.DIAMOND 
+        diamond_annotate += " blastx -p " + self.Threads_str 
+        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB 
+        diamond_annotate += " -q " + dep_loc + section + ".fasta" 
+        diamond_annotate += " -o " +  section_folder + section + "_" + str(count) + ".dmdout" 
+        diamond_annotate += " -f 6 -t " + section_temp_folder
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"            
+                
+         
+        return [diamond_annotate]
+        
+    def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name):    
         # the command just calls the merger program
 
         subfolder = os.getcwd() + "/" + stage_name + "/"
