@@ -1351,7 +1351,7 @@ class mt_pipe_commands:
          
         return [diamond_annotate]
         
-    def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name):    
+    def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name):    
         # the command just calls the merger program
 
         subfolder = os.getcwd() + "/" + stage_name + "/"
