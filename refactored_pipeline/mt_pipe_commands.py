@@ -1258,9 +1258,10 @@ class mt_pipe_commands:
         return [cat_command]
 
     def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
+        # this call is meant to be run after the BLAT calls have been completed.
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/" # implied to be BWA
         blat_merge_folder = data_folder + "1_blat_merge/"
         
         final_folder = data_folder + "final_results/"
@@ -1295,22 +1296,22 @@ class mt_pipe_commands:
         blat_pp = ">&2 echo BLAT post-processing | "
         blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
-        blat_pp += dep_loc_0 + "contig_map.tsv" + " "
-        blat_pp += dep_loc_1 + "gene_map.tsv" + " "
-        blat_pp += dep_loc_1 + "genes.fna" + " "
+        blat_pp += dep_loc + "contig_map.tsv" + " "
+        blat_pp += dep_loc + "gene_map.tsv" + " "
+        blat_pp += dep_loc + "genes.fna" + " "
         blat_pp += final_folder + "gene_map.tsv "
         blat_pp += final_folder + "genes.fna "
-        blat_pp += dep_loc_1 + "contigs.fasta" + " "
-        blat_pp += dep_loc_2 + "contigs.blatout" + " "
+        blat_pp += dep_loc + "contigs.fasta" + " "
+        blat_pp += blat_merge_folder + "contigs.blatout" + " "
         blat_pp += final_folder + "contigs.fasta" + " "
-        blat_pp += dep_loc_1 + "orphans.fasta" + " "
-        blat_pp += dep_loc_2 + "orphans.blatout" + " "
+        blat_pp += dep_loc + "orphans.fasta" + " "
+        blat_pp += blat_merge_folder + "orphans.blatout" + " "
         blat_pp += final_folder + "orphans.fasta" + " "
-        blat_pp += dep_loc_1 + "pair_1.fasta" + " "
-        blat_pp += dep_loc_2 + "pair_1.blatout" + " "
+        blat_pp += dep_loc + "pair_1.fasta" + " "
+        blat_pp += blat_merge_folder + "pair_1.blatout" + " "
         blat_pp += final_folder + "pair_1.fasta" + " "
-        blat_pp += dep_loc_1 + "pair_2.fasta" + " "
-        blat_pp += dep_loc_2 + "pair_2.blatout" + " "
+        blat_pp += dep_loc + "pair_2.fasta" + " "
+        blat_pp += blat_merge_folder + "pair_2.blatout" + " "
         blat_pp += final_folder + "pair_2.fasta"
 
         COMMANDS_Annotate_BLAT_Post = [
@@ -1318,14 +1319,16 @@ class mt_pipe_commands:
                         ]
         return COMMANDS_Annotate_BLAT_Post
 
-    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section, count):
+    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        diamond_folder = data_folder + "0_diamond/"
         section_folder = data_folder + section + "/"
-        section_temp_folder = section_folder + "temp_" + str(count) + "/"
+        section_temp_folder = section_folder + "temp" + "/"
         self.make_folder(subfolder)
         self.make_folder(data_folder)
+        self.make_folder(diamond_folder)
         self.make_folder(section_folder)
         self.make_folder(section_temp_folder)
         
@@ -1336,12 +1339,12 @@ class mt_pipe_commands:
         
         #Diamond_command_list = []
         #"mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
-        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section + " " + str(count) + " | "
+        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section +  " | "
         diamond_annotate += self.tool_path_obj.DIAMOND 
         diamond_annotate += " blastx -p " + self.Threads_str 
         diamond_annotate += " -d " + self.tool_path_obj.Prot_DB 
         diamond_annotate += " -q " + dep_loc + section + ".fasta" 
-        diamond_annotate += " -o " +  section_folder + section + "_" + str(count) + ".dmdout" 
+        diamond_annotate += " -o " +  diamond_folder + section + ".dmdout" 
         diamond_annotate += " -f 6 -t " + section_temp_folder
         diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"            
                 
@@ -1354,7 +1357,7 @@ class mt_pipe_commands:
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc_0 = os.getcwd() + "/" + dependency_0_stage_name + "/data/final_results/" #implied to be blat pp
-        dep_loc_1 = os.getcwd() + "/" + dependency_1_stage_name + "/data/final_results/" #implied to be diamond annotate
+        diamond_folder = data_folder + "0_diamond/"
         final_folder = data_folder + "final_results/"
 
         self.make_folder(subfolder)
@@ -1362,25 +1365,25 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
 
         diamond_pp = ">&2 echo DIAMOND post process | "
-        diamond_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_prot_DMND + " "
-        diamond_pp += self.tool_path_obj.Prot_DB + " "
-        diamond_pp += dep_loc_0 + "_contig_map.tsv" + " "
-        diamond_pp += dep_loc_0 + "_gene_map.tsv" + " "
-        diamond_pp += final_folder + "gene_map.tsv" + " "
-        diamond_pp += self.Input_Filepath + "_genes.fna" + " "
-        diamond_pp += self.Input_Filepath + "_proteins.faa" + " "
-        diamond_pp += self.Input_Filepath + "_contigs_n_BWA_BLAT.fasta" + " "
-        diamond_pp += self.Input_Filepath + "_contigs.dmdout" + " "
-        diamond_pp += final_folder + "_contigs_n_BWA_BLAT_DMD.fasta" + " "
-        diamond_pp += self.Input_Filepath + "_unpaired_unmapped_n_BWA_BLAT.fasta" + " "
-        diamond_pp += self.Input_Filepath + "_unpaired.dmdout" + " "
-        diamond_pp += final_folder + "_unpaired_unmapped_n_BWA_BLAT_DMD.fasta" + " "
-        diamond_pp += self.Input_File1 + "_unmapped_n_BWA_BLAT.fasta" + " "
-        diamond_pp += self.Input_File1 + "_paired.dmdout" + " "
-        diamond_pp += final_folder + "_unmapped_n_BWA_BLAT_DMD.fasta" + " "
-        diamond_pp += self.Input_File2 + "_unmapped_n_BWA_BLAT.fasta" + " "
-        diamond_pp += self.Input_File2 + "_paired.dmdout" + " "
-        diamond_pp + final_folder + "_unmapped_n_BWA_BLAT_DMD.fasta"
+        diamond_pp += self.tool_path_obj.Python     + " " + self.tool_path_obj.Map_reads_prot_DMND + " "
+        diamond_pp += self.tool_path_obj.Prot_DB    + " "                                                   #IN
+        diamond_pp += dep_loc_0                     + "contig_map.tsv" + " "                               #IN
+        diamond_pp += dep_loc_0                     + "gene_map.tsv" + " "                                 #IN
+        diamond_pp += final_folder                  + "gene_map.tsv" + " "                                  #OUT
+        diamond_pp += dep_loc_0                     + "genes.fna" + " "                                     #IN
+        diamond_pp += final_folder                  + "proteins.faa" + " "                                  #OUT
+        diamond_pp += dep_loc_0                     + "contigs.fasta" + " "                                 #IN
+        diamond_pp += diamond_folder                + "contigs.dmdout" + " "                                #IN
+        diamond_pp += final_folder                  + "contigs.fasta" + " "                                 #OUT
+        diamond_pp += dep_loc_0                     + "orphans.fasta" + " "                                 #IN
+        diamond_pp += diamond_folder                + "orphans.dmdout" + " "                                #IN
+        diamond_pp += final_folder                  + "orphans.fasta" + " "                                 #OUT
+        diamond_pp += dep_loc_0                     + "pair_1.fasta" + " "                                  #IN
+        diamond_pp += diamond_folder                + "pair_1.dmdout" + " "                                 #IN
+        diamond_pp += final_folder                  + "pair_1.fasta" + " "                                  #OUT
+        diamond_pp += dep_loc_0                     + "pair_2.fasta" + " "                                  #IN
+        diamond_pp += diamond_folder                + "pair_2.dmdout" + " "                                 #IN
+        diamond_pp + final_folder                   + "pair_2.fasta"                                        #OUT
 
 
         COMMANDS_Annotate_Diamond_Post = [
