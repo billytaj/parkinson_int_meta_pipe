@@ -213,7 +213,7 @@ class tool_path_obj:
             self.DNA_DB             = scratch_path +"Microbial_cds_db/microbial_all_cds.fasta"
             self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
             self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
-            self.Prot_DB            = project_path + "nr/nr"
+            self.Prot_DB            = project_path + "diamond_v0922/nr"
             
             #----------------------------------------------------------
             # external tools

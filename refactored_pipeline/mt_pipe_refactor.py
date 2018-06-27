@@ -372,20 +372,23 @@ def main(input_folder, output_folder, system_op):
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 #for i in range(1, 6):
-                
-                for item in names:
-                    inner_name = names + "_run_diamond"
-                    process = mp.Process(
-                        target = comm.create_pbs_and_launch,
-                        args = (
-                        gene_annotation_DIAMOND_label,
-                        comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label),
-                        True,
-                        inner_name
+                for count in range(1,6):
+                    for item in names:
+                        inner_name = item + "_run_diamond"
+                        process = mp.Process(
+                            target = comm.create_pbs_and_launch,
+                            args = (
+                            gene_annotation_DIAMOND_label,
+                            comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, item, count),
+                            True,
+                            inner_name
+                            )
                         )
-                    )
-                    process.start()
-                    process.join()
+                        process.start()
+                        mp_store.append(process)
+                for item in mp_store:
+                    item.join()
+                mp_store[:] = []
                     
             end_time = time.time()
             print("Total runtime:", end_time - start_time)

@@ -1057,7 +1057,7 @@ class mt_pipe_commands:
         map_read_bwa += bwa_folder + "pair_2.sam" + " "         #IN
         map_read_bwa += final_folder + "pair_2.fasta"           #OUT
         
-        move_contig_map = ">&2 move files | "
+        move_contig_map = ">&2 echo ove files | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
         
         
@@ -1143,55 +1143,35 @@ class mt_pipe_commands:
                         ]
         return COMMANDS_Annotate_BLAT_Post
 
-    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
+    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section, count):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
         section_folder = data_folder + section + "/"
-        
-        self.make_folder(section_folder)
-        final_folder = data_folder + "final_results/"
-        
-        
-        diamond_orphans_folder = final_folder + "orphans/"
-        diamond_contig_folder = final_folder + "contigs/"
-        diamond_pair_1_folder = final_folder + "pair_1/"
-        diamond_pair_2_folder = final_folder + "pair_2/"
-        
-        
-        
-        
-        
+        section_temp_folder = section_folder + "temp_" + str(count) + "/"
         self.make_folder(subfolder)
         self.make_folder(data_folder)
+        self.make_folder(section_folder)
+        self.make_folder(section_temp_folder)
         
-        self.make_folder(final_folder)
-        folder_list = [diamond_orphans_folder, diamond_contig_folder, diamond_pair_1_folder, diamond_pair_2_folder]
-        for item in folder_list:
-            self.make_folder(item)
+        #COMMANDS_Annotate_Diamond = []
+        #for j in range(0, 4):
+        #    for i in range(1, count+1):
+        #tag = "_dmnd_tmp_" + str(count)
         
-        names_list = ["orphans", "contigs", "pair_1", "pair_2"]
-        
-        COMMANDS_Annotate_Diamond = []
-        for j in range(0, 4):
-            for i in range(1, count+1):
-                tag = "_dmnd_tmp_" + str(i)
+        #Diamond_command_list = []
+        #"mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
+        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section + " " + str(count) + " | "
+        diamond_annotate += self.tool_path_obj.DIAMOND 
+        diamond_annotate += " blastx -p " + self.Threads_str 
+        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB 
+        diamond_annotate += " -q " + dep_loc + section + ".fasta" 
+        diamond_annotate += " -o " +  section_folder + section + "_" + str(count) + ".dmdout" 
+        diamond_annotate += " -f 6 -t " + section_temp_folder
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"            
                 
-                Diamond_command_list = []
-                "mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
-                diamond_annotate = ">&2 echo gene annotate DIAMOND | "
-                diamond_annotate += self.tool_path_obj.DIAMOND 
-                diamond_annotate += " blastx -p " + self.Threads_str 
-                diamond_annotate += " -d " + self.tool_path_obj.Prot_DB 
-                diamond_annotate += " -q " + dep_loc + names_list[j] + ".fasta" 
-                diamond_annotate += " -o " +  folder_list[j] + names_list[j] + ".dmdout" 
-                diamond_annotate += " -f 6 -t " + folder_list[j] 
-                diamond_annotate += "-k 10 --id 85 --query-cover 65 --min-score 60"            
-                
-                COMMANDS_Annotate_Diamond.append(Diamond_command_list)                
-        return COMMANDS_Annotate_Diamond
-
-
+         
+        return [diamond_annotate]
         
     def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name, dependency_1_stage_name):    
         # the command just calls the merger program
