@@ -415,6 +415,7 @@ def main(input_folder, output_folder, system_op):
 
             #----------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
+                """
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 mp_store[:] = []
                 for item in names:
@@ -434,6 +435,7 @@ def main(input_folder, output_folder, system_op):
                 for item in mp_store:
                     item.join()
                 mp_store[:] = [] #clear the list
+                """
             #else:
             #    gene_annotation_BWA_id = None
                 inner_name = "BWA_pp"
@@ -451,6 +453,7 @@ def main(input_folder, output_folder, system_op):
             
             #------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
+                """
                 split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 for item in names:
@@ -488,6 +491,7 @@ def main(input_folder, output_folder, system_op):
                 for item in mp_store:
                     item.join()
                 mp_store[:] = []
+                """
                 inner_name = "BLAT_pp"
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -504,6 +508,8 @@ def main(input_folder, output_folder, system_op):
             
             #------------------------------------------------------
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
+                """
+                # temp bypass to solve diamond pp issues
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 for item in names:
                     inner_name = item + "_run_diamond"
@@ -521,6 +527,7 @@ def main(input_folder, output_folder, system_op):
                 for item in mp_store:
                     item.join()
                 mp_store[:] = []
+                """
                 
                 inner_name = "diamond_pp"
                 process = mp.Process(
