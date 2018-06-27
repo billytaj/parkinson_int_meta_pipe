@@ -508,7 +508,7 @@ def main(input_folder, output_folder, system_op):
                 #for i in range(1, 6):
                 for count in range(1,6):
                     for item in names:
-                        inner_name = item + "_run_diamond"
+                        inner_name = item + "_run_diamond_" + str(count)
                         process = mp.Process(
                             target = comm.create_pbs_and_launch,
                             args = (
