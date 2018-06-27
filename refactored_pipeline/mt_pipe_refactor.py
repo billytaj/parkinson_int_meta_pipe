@@ -532,6 +532,8 @@ def main(input_folder, output_folder, system_op):
                     inner_name
                     )
                 )
+                process.start()
+                process.join()
 
             
             end_time = time.time()
