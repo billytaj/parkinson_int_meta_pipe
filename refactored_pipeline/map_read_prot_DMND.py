@@ -327,14 +327,20 @@ if read_sets==4:
     # WRITE unmerged1 OUTPUT: non-BWA&BLAT&DMD-aligned:
     unmapped_seqs= []
     for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_1[read])
+        read_key = read
+        if(not read.startswith("@")):
+            read_key ="@" + read
+        unmapped_seqs.append(read_seqs_1[read_key])
     with open(output_file_1,"w") as outfile:
         SeqIO.write(unmapped_seqs, outfile, "fasta")
 
     # WRITE unmerged2 OUTPUT: non-BWA&BLAT&DMD-aligned:
     unmapped_seqs= []
     for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_2[read])
+        read_key = read
+        if(not read.startswith("@")):
+            read_key ="@" + read
+        unmapped_seqs.append(read_seqs_2[read_key])
     with open(output_file_2,"w") as outfile:
         SeqIO.write(unmapped_seqs, outfile, "fasta")
 
