@@ -1396,86 +1396,114 @@ class mt_pipe_commands:
         ]
         return COMMANDS_Annotate_Diamond_Post
 
-    def create_taxonomic_annotation_command(self):
+    def create_taxonomic_annotation_command(self, current_stage_name, assemble_contigs_stage, diamond_stage):
+        subfolder = os.getcwd() + "/" + current_stage_name + "/"
+        data_folder = subfolder + "data/"
+        assemble_contigs_folder = os.getcwd() + "/" + assemble_contigs_stage + "/data/final_results/"
+        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
+        ga_taxa_folder = data_folder + "0_gene_taxa/"
+        kaiju_folder = data_folder + "1_kaiju/"
+        centrifuge_folder = data_folder + "2_centrifuge/"
+        wevote_folder = data_folder + "3_wevote/"
+        final_folder = data_folder + "final_results/"
 
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(kaiju_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(wevote_folder)
+        self.make_folder(final_folder)
 
+        # excluding until diamond_pp step is complete
+        '''
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
         get_taxa_from_gene += self.tool_path_obj.Python + " " + self.tool_path_obj.Annotated_taxid + " "
-        get_taxa_from_gene += self.Input_Filepath + "_gene_map.tsv" + " "
+        get_taxa_from_gene += diamond_folder + "gene_map.tsv" + " "
         get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
-        get_taxa_from_gene += self.Input_Filepath + "_TaxIDOut.tsv"
+        get_taxa_from_gene += ga_taxa_folder + "ga_taxon.tsv"
+        '''
 
         kaiju_on_contigs = ">&2 echo kaiju on contigs | "
         kaiju_on_contigs += self.tool_path_obj.Kaiju
         kaiju_on_contigs += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
         kaiju_on_contigs += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
-        kaiju_on_contigs += " -i " + self.Contigs
+        kaiju_on_contigs += " -i " + assemble_contigs_folder + "contigs.fasta"
         kaiju_on_contigs += " -z " + self.Threads_str
-        kaiju_on_contigs += " -o " + self.Input_Filepath + "_contigs_KaijuOut.tsv"
+        kaiju_on_contigs += " -o " + kaiju_folder + "contigs.tsv"
 
         kaiju_on_orphans = ">&2 echo kaiju on orphans | "
         kaiju_on_orphans += self.tool_path_obj.Kaiju
         kaiju_on_orphans += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
         kaiju_on_orphans += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
-        kaiju_on_orphans += " -i " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq"
+        kaiju_on_orphans += " -i " + assemble_contigs_folder + "orphans.fastq"
         kaiju_on_orphans += " -z " + self.Threads_str
-        kaiju_on_orphans += " -o " + self.Input_Filepath + "_unpaired_KaijuOut.tsv"
+        kaiju_on_orphans += " -o " + kaiju_folder + "orphans.tsv"
 
-        kaiju_on_paired = ">&2 echo kaiju on pairs"
+        kaiju_on_paired = ">&2 echo kaiju on pairs | "
+        # will move this to assemble contigs step later
+        kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
+        kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " "
+        kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " | "
+        kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
+        kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " "
+        kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " | "
         kaiju_on_paired += self.tool_path_obj.Kaiju
         kaiju_on_paired += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
         kaiju_on_paired += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
-        kaiju_on_paired += " -i " + self.Input_File1 + "_all_mRNA_unmapped.fastq"
-        kaiju_on_paired += " -j " + self.Input_File2 + "_all_mRNA_unmapped.fastq"
+        kaiju_on_paired += " -i " + assemble_contigs_folder + "pair_1.fastq"
+        kaiju_on_paired += " -j " + assemble_contigs_folder + "pair_2.fastq"
         kaiju_on_paired += " -z " + self.Threads_str
-        kaiju_on_paired += " -o " + self.Input_Filepath + "_paired_KaijuOut.tsv"
+        kaiju_on_paired += " -o " + kaiju_folder + "pairs.tsv"
 
         cat_kaiju = ">&2 echo merging all kaiju results | "
         cat_kaiju += "cat "
-        cat_kaiju += self.Input_Filepath + "_contigs_KaijuOut.tsv" + " "
-        cat_kaiju += self.Input_Filepath + "_unpaired_KaijuOut.tsv" + " "
-        cat_kaiju += self.Input_Filepath + "_paired_KaijuOut.tsv"
-        cat_kaiju += " > " + self.Input_Filepath + "_KaijuOut.tsv"
+        cat_kaiju += kaiju_folder + "contigs.tsv" + " "
+        cat_kaiju += kaiju_folder + "orphans.tsv" + " "
+        cat_kaiju += kaiju_folder + "pairs.tsv"
+        cat_kaiju += " > " + kaiju_folder + "merged_kaiju.tsv"
 
         centrifuge_on_orphans = ">&2 echo centrifuge on orphans | "
         centrifuge_on_orphans += self.tool_path_obj.Centrifuge
         centrifuge_on_orphans += " -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt"
-        centrifuge_on_orphans += " -1 " + self.Input_File1 + "_all_mRNA_unmapped.fastq"
-        centrifuge_on_orphans += " -2 " + self.Input_File2 + "_all_mRNA_unmapped.fastq"
-        centrifuge_on_orphans += " -U " + self.Input_Filepath + "_all_mRNA_unpaired_unmapped.fastq"
+        centrifuge_on_orphans += " -1 " + assemble_contigs_folder + "pair_1.fastq"
+        centrifuge_on_orphans += " -2 " + assemble_contigs_folder + "pair_2.fastq"
+        centrifuge_on_orphans += " -U " + assemble_contigs_folder + "orphans.fastq"
         centrifuge_on_orphans += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_orphans += " --phred" + self.Qual_str
         centrifuge_on_orphans += " -p " + self.Threads_str
-        centrifuge_on_orphans += " -S " + self.Input_Filepath + "_unmapped_CentrifugeOut.tsv"
-        centrifuge_on_orphans += " --report-file " + self.Input_Filepath + "_unmapped_CentrifugeReport.txt"
+        centrifuge_on_orphans += " -S " + centrifuge_folder + "reads.tsv"
+        centrifuge_on_orphans += " --report-file " + centrifuge_folder + "reads.txt"
 
         centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
         centrifuge_on_contigs += self.tool_path_obj.Centrifuge
         centrifuge_on_contigs += " -f -x " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt"
-        centrifuge_on_contigs += " -U " + self.Contigs
+        centrifuge_on_contigs += " -U " + assemble_contigs_folder + "contigs.fasta"
         centrifuge_on_contigs += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_contigs += " --phred" + self.Qual_str
         centrifuge_on_contigs += " -p " + self.Threads_str
-        centrifuge_on_contigs += " -S " + self.Input_Filepath + "_contigs_CentrifugeOut.tsv"
-        centrifuge_on_contigs += " --report-file " + self.Input_Filepath + "_contigs_CentrifugeReport.txt"
+        centrifuge_on_contigs += " -S " + centrifuge_folder + "contigs.tsv"
+        centrifuge_on_contigs += " --report-file " + centrifuge_folder + "contigs.txt"
 
         cat_centrifuge = ">&2 echo combining all centrifuge results | "
         cat_centrifuge += "cat "
-        cat_centrifuge += self.Input_Filepath + "_unmapped_CentrifugeOut.tsv" + " "
-        cat_centrifuge += self.Input_Filepath + "_contigs_CentrifugeOut.tsv"
-        cat_centrifuge += " > " + self.Input_Filepath + "_CentrifugeOut.tsv"
+        cat_centrifuge += centrifuge_folder + "reads.tsv" + " "
+        cat_centrifuge += centrifuge_folder + "contigs.tsv"
+        cat_centrifuge += " > " + centrifuge_folder + "merged_centrifuge.tsv"
 
+        # excluding until diamond_pp step is complete
+        '''
         wevote_combine = ">&2 echo combining various TSVs for wevote | "
         wevote_combine += self.tool_path_obj.Python + " " + self.tool_path_obj.Classification_combine + " "
-        wevote_combine += self.Input_Filepath + "_contig_map.tsv"
-        wevote_combine += " " + self.Input_Filepath + "_WEVOTEOut_ensemble.csv" + " "
-        wevote_combine += self.Input_Filepath + "_TaxIDOut.tsv" + " "
-        wevote_combine += self.Input_Filepath + "_KaijuOut.tsv" + " "
-        wevote_combine += self.Input_Filepath + "_CentrifugeOut.tsv"
+        wevote_combine += self.assemble_contigs_folder + "contig_map.tsv"
+        wevote_combine += " " + wevote_folder + "ensemble.csv" + " "
+        wevote_combine += ga_taxa_folder + "ga_taxon.tsv" + " "
+        wevote_combine += kaiju_folder + "merged_kaiju.tsv" + " "
+        wevote_combine += centrifuge_folder + "merged_centrifuge.tsv"
 
         wevote_call = ">&2 echo Running WEVOTE | "
         wevote_call += self.tool_path_obj.WEVOTE
-        wevote_call += " -o " + self.Input_Filepath + "_WEVOTEOut"
+        wevote_call += " -o " + wevote_folder + "wevote"
         wevote_call += " --db " + self.tool_path_obj.WEVOTEDB + " -c"
 
         awk_cleanup = ">&2 echo AWK cleanup of WEVOTE results | "
@@ -1501,28 +1529,27 @@ class mt_pipe_commands:
         awk_cleanup_krona = "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         
         kt_import_text_cleanup = self.tool_path_obj.ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
-        
+        '''
         COMMANDS_Classify = [
-            get_taxa_from_gene,
+            #get_taxa_from_gene,
             kaiju_on_contigs,
-            kaiju_on_unpaired,
+            kaiju_on_orphans,
             kaiju_on_paired,
             cat_kaiju,
-            centrifuge_on_unmapped,
+            centrifuge_on_orphans,
             centrifuge_on_contigs,
             cat_centrifuge,
-            wevote_combine,
-            "mkdir -p " + self.Input_Filepath + "_WEVOTEOut",
-            "cp "  + self.Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + self.Input_Filepath + "_WEVOTEOut",
-            "cd " + os.path.dirname(WEVOTE),
-            wevote_call,
-            "cd $PBS_O_WORKDIR",
-            awk_cleanup,
-            taxid_to_english,
-            kaiju_to_krona,
-            awk_cleanup_krona,
-            kt_import_text_cleanup
-            
+            #wevote_combine,
+            #"mkdir -p " + self.Input_Filepath + "_WEVOTEOut",
+            #"cp "  + self.Input_Filepath + "_WEVOTEOut_ensemble.csv" + " " + self.Input_Filepath + "_WEVOTEOut",
+            #"cd " + os.path.dirname(WEVOTE),
+            #wevote_call,
+            #"cd $PBS_O_WORKDIR",
+            #awk_cleanup,
+            #taxid_to_english,
+            #kaiju_to_krona,
+            #awk_cleanup_krona,
+            #kt_import_text_cleanup
             ]
         return COMMANDS_Classify 
 

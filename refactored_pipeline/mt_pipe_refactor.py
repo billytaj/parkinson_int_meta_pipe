@@ -255,6 +255,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             GL_BLAT_cat_label = "BLAT_cat_results"
             GA_BLAT_PP_label = "BLAT_postprocess"
             gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
+            taxon_annotation_label = "taxonomic_annotation"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -397,7 +398,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
 
             #----------------------------------------
-            # assemble contigs
+            # Assemble contigs
             if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -414,6 +415,7 @@ def main(input_folder, output_folder, system_op, user_mode):
 
 
             #----------------------------------------------
+            # BWA gene annotation
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -452,6 +454,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
             
             #------------------------------------------------
+            # BLAT gene annotation
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
 
                 split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
@@ -504,9 +507,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            
-            
+
+
             #------------------------------------------------------
+            # Diamond gene annotation
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -527,7 +531,6 @@ def main(input_folder, output_folder, system_op, user_mode):
                     item.join()
                 mp_store[:] = []
 
-                
                 inner_name = "diamond_pp"
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -541,7 +544,20 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
 
-            
+            # ------------------------------------------------------
+            # Taxonomic annotation
+            if(not sync_obj.check_where_resume(output_folder + taxon_annotation_label)):
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
+                    taxon_annotation_label,
+                    comm.create_taxonomic_annotation_command(taxon_annotation_label, assemble_contigs_label, gene_annotation_DIAMOND_label),
+                    True
+                    )
+                )
+                process.start()
+                process.join()
+
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
 
