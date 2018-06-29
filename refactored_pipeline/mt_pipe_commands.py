@@ -82,7 +82,7 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score = 33, Thread_count = 80, system_mode = "scinet", raw_sequence_path_0 = None, raw_sequence_path_1 = None):
+    def __init__(self, Quality_score = 33, Thread_count = 80, system_mode = "scinet", user_mode = "billy",  raw_sequence_path_0 = None, raw_sequence_path_1 = None):
         # path to the raw genome sequence file
         Input_File = os.getcwd()
         if not(raw_sequence_path_0 is None):
@@ -93,7 +93,7 @@ class mt_pipe_commands:
             self.raw_sequence_path_1 = raw_sequence_path_1
             print("raw seqeunce 1:", self.raw_sequence_path_1)
         self.system_mode = system_mode
-        self.tool_path_obj = mpp.tool_path_obj(system_mode)    
+        self.tool_path_obj = mpp.tool_path_obj(system_mode, user_mode)    
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
         self.Input_File2 = self.Input_Filepath + "2"
@@ -1370,25 +1370,25 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
 
         diamond_pp = ">&2 echo DIAMOND post process | "
-        diamond_pp += self.tool_path_obj.Python     + " " + self.tool_path_obj.Map_reads_prot_DMND + " "
-        diamond_pp += self.tool_path_obj.Prot_DB    + " "                                                   #IN
-        diamond_pp += dep_loc_0                     + "contig_map.tsv" + " "                               #IN
-        diamond_pp += dep_loc_0                     + "gene_map.tsv" + " "                                 #IN
-        diamond_pp += final_folder                  + "gene_map.tsv" + " "                                  #OUT
-        diamond_pp += dep_loc_0                     + "genes.fna" + " "                                     #IN
-        diamond_pp += final_folder                  + "proteins.faa" + " "                                  #OUT
-        diamond_pp += dep_loc_0                     + "contigs.fasta" + " "                                 #IN
-        diamond_pp += diamond_folder                + "contigs.dmdout" + " "                                #IN
-        diamond_pp += final_folder                  + "contigs.fasta" + " "                                 #OUT
-        diamond_pp += dep_loc_0                     + "orphans.fasta" + " "                                 #IN
-        diamond_pp += diamond_folder                + "orphans.dmdout" + " "                                #IN
-        diamond_pp += final_folder                  + "orphans.fasta" + " "                                 #OUT
-        diamond_pp += dep_loc_0                     + "pair_1.fasta" + " "                                  #IN
-        diamond_pp += diamond_folder                + "pair_1.dmdout" + " "                                 #IN
-        diamond_pp += final_folder                  + "pair_1.fasta" + " "                                  #OUT
-        diamond_pp += dep_loc_0                     + "pair_2.fasta" + " "                                  #IN
-        diamond_pp += diamond_folder                + "pair_2.dmdout" + " "                                 #IN
-        diamond_pp += final_folder                  + "pair_2.fasta"                                        #OUT
+        diamond_pp += self.tool_path_obj.Python         + " " + self.tool_path_obj.Map_reads_prot_DMND + " "
+        diamond_pp += self.tool_path_obj.Prot_DB_plain  + " "                                                   #IN
+        diamond_pp += dep_loc_0                         + "contig_map.tsv" + " "                                #IN
+        diamond_pp += dep_loc_0                         + "gene_map.tsv" + " "                                  #IN
+        diamond_pp += final_folder                      + "gene_map.tsv" + " "                                  #OUT
+        diamond_pp += dep_loc_0                         + "genes.fna" + " "                                     #IN
+        diamond_pp += final_folder                      + "proteins.faa" + " "                                  #OUT
+        diamond_pp += dep_loc_0                         + "contigs.fasta" + " "                                 #IN
+        diamond_pp += diamond_folder                    + "contigs.dmdout" + " "                                #IN
+        diamond_pp += final_folder                      + "contigs.fasta" + " "                                 #OUT
+        diamond_pp += dep_loc_0                         + "orphans.fasta" + " "                                 #IN
+        diamond_pp += diamond_folder                    + "orphans.dmdout" + " "                                #IN
+        diamond_pp += final_folder                      + "orphans.fasta" + " "                                 #OUT
+        diamond_pp += dep_loc_0                         + "pair_1.fasta" + " "                                  #IN
+        diamond_pp += diamond_folder                    + "pair_1.dmdout" + " "                                 #IN
+        diamond_pp += final_folder                      + "pair_1.fasta" + " "                                  #OUT
+        diamond_pp += dep_loc_0                         + "pair_2.fasta" + " "                                  #IN
+        diamond_pp += diamond_folder                    + "pair_2.dmdout" + " "                                 #IN
+        diamond_pp += final_folder                      + "pair_2.fasta"                                        #OUT
 
 
         COMMANDS_Annotate_Diamond_Post = [

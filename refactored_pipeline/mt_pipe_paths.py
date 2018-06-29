@@ -1,7 +1,7 @@
 import os
 
 class tool_path_obj:
-    def __init__ (self, mode = "scinet"):
+    def __init__ (self, mode = "scinet", name = "billy"):
             
         
         
@@ -196,9 +196,13 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            self.script_path             = "/home/j/jparkin//mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+            
+            self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
+            if(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
+                self.script_path = "/home/j/jparkin//mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+                
             reference_file_path     = "/pipeline_reference_files/"
-            self.refactor_path           = self.script_path
+            self.refactor_path      = self.script_path
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"
             project_path            = "/project/j/jparkin/Lab_Databases/"
@@ -213,11 +217,12 @@ class tool_path_obj:
             self.DNA_DB             = scratch_path +"Microbial_cds_db/microbial_all_cds.fasta"
             self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
             self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
-            self.Prot_DB            = project_path + "diamond_v0922/nr"
+            self.Prot_DB            = project_path + "diamond_v0922/nr.dmnd"
+            self.Prot_DB_plain      = project_path + "nr/nr"
             
             #----------------------------------------------------------
             # external tools
-            
+            self.Python             =             "python3"
             self.cdhit_dup          = tool_path + "cdhit_dup/cd-hit-dup" 
             self.Timmomatic         = tool_path + "Trimmomatic/trimmomatic-0.36.jar"
             self.AdapterRemoval     = tool_path + "adapterremoval/AdapterRemoval"
@@ -248,21 +253,19 @@ class tool_path_obj:
             #--------------------------------------------
             # custom scripts
 
-            self.map_read_contig_v2         = self.refactor_path + "map_read_contig_v2.py"
-            self.sam_trimmer                = self.refactor_path + "sam_trimmer.py"
-            self.contig_duplicate_remover   = self.script_path + "contig_duplicate_remover.py"
-            self.sort_reads                 = self.refactor_path + "sort_reads_refactor.py"
-            #self.Filter_rRNA                = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
-            self.duplicate_repopulate       = self.refactor_path +  "duplicate_repopulation.py"
-            self.Map_reads_contigs          = self.script_path + "Map_read_contigs.py"
-            self.orphaned_read_filter       = self.refactor_path + "orphaned_pair_filter.py"
-            self.BLAT_Contaminant_Filter    = self.refactor_path + "BLAT_Contaminant_Filter.py"
-            self.File_splitter              = self.refactor_path + "file_splitter.py"
-            #self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
-            self.rRNA_filter                = self.refactor_path+"rRNA_filter_v2.py"
-            self.Map_reads_gene_BWA         = self.script_path + "map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT        = self.script_path + "map_read_gene_BLAT.py"
-            self.Map_reads_prot_DMND        = self.script_path + "map_read_prot_DMND.py"
+            self.map_read_contig_v2         = self.refactor_path    + "map_read_contig_v2.py"
+            self.sam_trimmer                = self.refactor_path    + "sam_trimmer.py"
+            self.contig_duplicate_remover   = self.script_path      + "contig_duplicate_remover.py"
+            self.sort_reads                 = self.refactor_path    + "sort_reads_refactor.py"
+            self.duplicate_repopulate       = self.refactor_path    + "duplicate_repopulation.py"
+            self.Map_reads_contigs          = self.script_path      + "Map_read_contigs.py"
+            self.orphaned_read_filter       = self.refactor_path    + "orphaned_pair_filter.py"
+            self.BLAT_Contaminant_Filter    = self.refactor_path    + "BLAT_Contaminant_Filter.py"
+            self.File_splitter              = self.refactor_path    + "file_splitter.py"
+            self.rRNA_filter                = self.refactor_path    +"rRNA_filter_v2.py"
+            self.Map_reads_gene_BWA         = self.script_path      + "map_read_gene_BWA.py"
+            self.Map_reads_gene_BLAT        = self.script_path      + "map_read_gene_BLAT.py"
+            self.Map_reads_prot_DMND        = self.script_path      + "map_read_prot_DMND.py"
             
             self.RPKM = self.script_path + "RPKM.py"
             
@@ -276,7 +279,7 @@ class tool_path_obj:
             
             #self.Perl = "/home/j/jparkin/mobolaji/perl"
             #self.Perl_Script_Dir = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/Xuejian"
-            self.Python = "python3" #"/home/j/jparkin/mobolaji/python"
+             #"/home/j/jparkin/mobolaji/python"
             
             #self.Prot_DB = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/nr"
             

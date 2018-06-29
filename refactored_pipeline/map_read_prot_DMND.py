@@ -102,7 +102,7 @@ def read_aligned(tsv, seqrec):                          # List of lists [dmdout 
         for line in tabfile:                            # In the .dmdout file:
             if len(line)>=2:                            # If length of line >= 2,
                 info_list= line.strip("\n").split("\t") #  make a list from .dmdout tab-delimited fields,
-                query= info_list[0]                     #  get the queryID= contig/readID,
+                query = info_list[0]                     #  get the queryID= contig/readID, -> 
                 info_list.append(len(seqrec[query].seq))#  add query length (int) to end of list,
                 hits.append(info_list)                  #  and append the list to the hits list.
 
@@ -254,6 +254,8 @@ for x in range(0,2):
                                     # dict of non-BWA&BLAT-aligned read SeqRecords: key=contig/readID
                                     #  (second argument specifies filetype, e.g., "fasta")
     DMD_tab_file= sys.argv[3*x+8]  # INPUT: DMD-aligned contig/readIDs (.dmdout)
+    if(os.path.getsize(DMD_tab_file) == 0):
+        sys.exit(DMD_tab_file, "is empty.  aborting")
     output_file= sys.argv[3*x+9]    # OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs and seqs (.fasta)
 
     # read DMD output & get read/contig lengths:
@@ -293,6 +295,8 @@ if read_sets==4:
     read_file_1= sys.argv[3*x+7]
     read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
     DMD_tab_file_1= sys.argv[3*x+8]
+    if(os.path.getsize(DMD_tab_file_1) == 0):
+        sys.exit(DMD_tab_file_1, "is empty.  aborting")
     output_file_1= sys.argv[3*x+9]
     DMD_hits_1= read_aligned(DMD_tab_file_1, read_seqs_1)   # Store info in DMD_hits_1 (list of lists).
 
@@ -301,6 +305,8 @@ if read_sets==4:
     read_file_2= sys.argv[3*x+7]
     read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
     DMD_tab_file_2= sys.argv[3*x+8]
+    if(os.path.getsize(DMD_tab_file_2) == 0):
+        sys.exit(DMD_tab_file_2, "is empty.  aborting")
     output_file_2= sys.argv[3*x+9]
     DMD_hits_2= read_aligned(DMD_tab_file_2, read_seqs_2)   # Store info in DMD_hits_2 (list of lists).
 
@@ -327,14 +333,27 @@ if read_sets==4:
     # WRITE unmerged1 OUTPUT: non-BWA&BLAT&DMD-aligned:
     unmapped_seqs= []
     for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_1[read])
+        read_key = read
+        #if(not read.startswith("@")):
+        #    read_key = "@" + read
+        if(read_key in read_seqs_1):
+            unmapped_seqs.append(read_seqs_1[read_key])
+        else:
+            print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
     with open(output_file_1,"w") as outfile:
         SeqIO.write(unmapped_seqs, outfile, "fasta")
 
     # WRITE unmerged2 OUTPUT: non-BWA&BLAT&DMD-aligned:
     unmapped_seqs= []
     for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_2[read])
+        read_key = read
+        #if(not read.startswith("@")):
+        #    read_key = "@" + read
+        if(read_key in read_seqs_2):    
+            unmapped_seqs.append(read_seqs_2[read_key])
+        
+        else:
+            print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
     with open(output_file_2,"w") as outfile:
         SeqIO.write(unmapped_seqs, outfile, "fasta")
 
