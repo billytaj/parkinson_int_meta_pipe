@@ -1,7 +1,7 @@
 import os
 
 class tool_path_obj:
-    def __init__ (self, mode = "scinet"):
+    def __init__ (self, mode = "scinet", name = "billy"):
             
         
         
@@ -196,7 +196,11 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" #"/home/j/jparkin//mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+            
+            self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
+            if(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
+                self.script_path = "/home/j/jparkin//mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+                
             reference_file_path     = "/pipeline_reference_files/"
             self.refactor_path      = self.script_path
             tool_path               = "/pipeline_tools/"

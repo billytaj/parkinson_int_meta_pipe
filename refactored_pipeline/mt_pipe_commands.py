@@ -82,7 +82,7 @@ class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score = 33, Thread_count = 80, system_mode = "scinet", raw_sequence_path_0 = None, raw_sequence_path_1 = None):
+    def __init__(self, Quality_score = 33, Thread_count = 80, system_mode = "scinet", user_mode = "billy",  raw_sequence_path_0 = None, raw_sequence_path_1 = None):
         # path to the raw genome sequence file
         Input_File = os.getcwd()
         if not(raw_sequence_path_0 is None):
@@ -93,7 +93,7 @@ class mt_pipe_commands:
             self.raw_sequence_path_1 = raw_sequence_path_1
             print("raw seqeunce 1:", self.raw_sequence_path_1)
         self.system_mode = system_mode
-        self.tool_path_obj = mpp.tool_path_obj(system_mode)    
+        self.tool_path_obj = mpp.tool_path_obj(system_mode, user_mode)    
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.Input_File1 = self.Input_Filepath + "1"
         self.Input_File2 = self.Input_Filepath + "2"
