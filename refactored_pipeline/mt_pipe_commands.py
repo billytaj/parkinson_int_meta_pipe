@@ -1050,12 +1050,14 @@ class mt_pipe_commands:
         spades_folder = data_folder + "0_spades/"
         bwa_folder = data_folder + "1_bwa_align/"
         sam_trimmer_folder = data_folder + "2_clean_sam/"
+        mapped_reads_folder = data_folder + "3_mapped_reads/"
         final_folder = data_folder + "final_results/"
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(spades_folder)
         self.make_folder(bwa_folder)
         self.make_folder(sam_trimmer_folder)
+        self.make_folder(mapped_reads_folder)
         self.make_folder(final_folder)
 
         #this assembles contigs
@@ -1110,7 +1112,7 @@ class mt_pipe_commands:
         contig_duplicate_remover += sam_trimmer_folder + "pair_1.sam "
         contig_duplicate_remover += sam_trimmer_folder + "pair_2.sam "
         contig_duplicate_remover += sam_trimmer_folder + "orphans.sam "
-        contig_duplicate_remover += final_folder
+        contig_duplicate_remover += mapped_reads_folder
 
         map_read_contig_v2 = ">&2 echo map read contig v2 | "
         map_read_contig_v2 += self.tool_path_obj.Python + " " + self.tool_path_obj.map_read_contig_v2 + " "
@@ -1124,6 +1126,25 @@ class mt_pipe_commands:
 
         move_contigs = ">&2 echo Moving contigs to final folder | "
         move_contigs += "cp " + spades_folder + "contigs.fasta " + final_folder
+
+        orphan_assembly_filter = ">&2 echo filtering paired reads for orphans | "
+        orphan_assembly_filter += self.tool_path_obj.Python + " "
+        orphan_assembly_filter += self.tool_path_obj.orphaned_read_filter + " "
+        orphan_assembly_filter += mapped_reads_folder + "pair_1.fastq "
+        orphan_assembly_filter += mapped_reads_folder + "pair_2.fastq "
+        orphan_assembly_filter += mapped_reads_folder + "orphans.fastq "
+        orphan_assembly_filter += final_folder + "pair_1.fastq "
+        orphan_assembly_filter += final_folder + "pair_2.fastq "
+        orphan_assembly_filter += final_folder + "orphans.fastq"
+
+        sort_paired = ">&2 echo sorting paired reads | "
+        sort_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
+        sort_paired += final_folder + "pair_1.fastq" + " "
+        sort_paired += final_folder + "pair_1_sorted.fastq" + " | "
+        sort_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
+        sort_paired += final_folder + "pair_2.fastq" + " "
+        sort_paired += final_folder + "pair_2_sorted.fastq"
+
         """
         contig_merge = ">&2 echo Contig merge | "
         contig_merge += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_contigs + " " 
@@ -1146,9 +1167,11 @@ class mt_pipe_commands:
                         sam_trimmer_pair_2,
                         contig_duplicate_remover,
                         map_read_contig_v2,
-                        move_contigs
+                        move_contigs,
                         #bwa_unpaired_contigs#,
                         #contig_merge
+                        orphan_assembly_filter,
+                        sort_paired
                         ]
         return COMMANDS_Assemble
         
@@ -1271,28 +1294,6 @@ class mt_pipe_commands:
         self.make_folder(blat_merge_folder)
         self.make_folder(final_folder)
 
-        '''
-        blat_pp = ">&2 echo BLAT post-processing | "
-        blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " " 
-        blat_pp += self.tool_path_obj.DNA_DB + " " 
-        blat_pp += dep_loc + "contig_map.tsv" + " " 
-        blat_pp += dep_loc + "gene_map.tsv" + " " 
-        blat_pp += final_folder + "genes.fna" + " " 
-        blat_pp += final_folder + "gene_map.tsv "
-        blat_pp += final_folder + "genes.fna "
-        blat_pp += dep_loc+ "contigs.fasta" + " " 
-        blat_pp += blat_merge_folder + "contigs.blatout" + " " 
-        blat_pp += final_folder + "contigs.fasta" + " " 
-        blat_pp += dep_loc + "orphans.fasta" + " " 
-        blat_pp += blat_merge_folder+ "orphans.blatout" + " " 
-        blat_pp += final_folder + "orphans.fasta" + " " 
-        blat_pp += dep_loc + "pair_1.fasta" + " " 
-        blat_pp += blat_merge_folder + "pair_1.blatout" + " " 
-        blat_pp += final_folder + "pair_1.fasta" + " " 
-        blat_pp += dep_loc + "pair_2.fasta" + " " 
-        blat_pp += blat_merge_folder + "pair_2.blatout" + " " 
-        blat_pp += final_folder + "pair_2.fasta"
-        '''
         blat_pp = ">&2 echo BLAT post-processing | "
         blat_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BLAT + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
@@ -1442,12 +1443,12 @@ class mt_pipe_commands:
 
         kaiju_on_paired = ">&2 echo kaiju on pairs | "
         # will move this to assemble contigs step later
-        kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " "
-        kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " | "
-        kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " "
-        kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " | "
+        #kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
+        #kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " "
+        #kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " | "
+        #kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
+        #kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " "
+        #kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " | "
         kaiju_on_paired += self.tool_path_obj.Kaiju
         kaiju_on_paired += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
         kaiju_on_paired += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"

@@ -199,7 +199,7 @@ class tool_path_obj:
             
             self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
             if(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
-                self.script_path = "/home/j/jparkin//mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+                self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
                 
             reference_file_path     = "/pipeline_reference_files/"
             self.refactor_path      = self.script_path
