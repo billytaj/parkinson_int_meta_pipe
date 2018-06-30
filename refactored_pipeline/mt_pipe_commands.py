@@ -1416,14 +1416,11 @@ class mt_pipe_commands:
         self.make_folder(wevote_folder)
         self.make_folder(final_folder)
 
-        # excluding until diamond_pp step is complete
-        '''
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
         get_taxa_from_gene += self.tool_path_obj.Python + " " + self.tool_path_obj.Annotated_taxid + " "
         get_taxa_from_gene += diamond_folder + "gene_map.tsv" + " "
         get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
         get_taxa_from_gene += ga_taxa_folder + "ga_taxon.tsv"
-        '''
 
         kaiju_on_contigs = ">&2 echo kaiju on contigs | "
         kaiju_on_contigs += self.tool_path_obj.Kaiju
@@ -1442,13 +1439,6 @@ class mt_pipe_commands:
         kaiju_on_orphans += " -o " + kaiju_folder + "orphans.tsv"
 
         kaiju_on_paired = ">&2 echo kaiju on pairs | "
-        # will move this to assemble contigs step later
-        #kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        #kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " "
-        #kaiju_on_paired += assemble_contigs_folder + "pair_1.fastq" + " | "
-        #kaiju_on_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        #kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " "
-        #kaiju_on_paired += assemble_contigs_folder + "pair_2.fastq" + " | "
         kaiju_on_paired += self.tool_path_obj.Kaiju
         kaiju_on_paired += " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp"
         kaiju_on_paired += " -f " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
@@ -1532,7 +1522,7 @@ class mt_pipe_commands:
         kt_import_text_cleanup = self.tool_path_obj.ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
         '''
         COMMANDS_Classify = [
-            #get_taxa_from_gene,
+            get_taxa_from_gene,
             kaiju_on_contigs,
             kaiju_on_orphans,
             kaiju_on_paired,

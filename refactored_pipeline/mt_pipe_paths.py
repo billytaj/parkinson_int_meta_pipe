@@ -273,7 +273,7 @@ class tool_path_obj:
             #self.Detect_Submit              = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
             #self.EC_Annotation_Post         = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
             #self.Detect                     = "/home/j/jparkin/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
-            #self.Annotated_taxid            = script_path + "Read_Classification/Get_TaxID.py"
+            self.Annotated_taxid            = self.script_path + "Read_Classification/Get_TaxID.py"
             #self.Constrain_classification    = script_path + "Read_Classification/Constrain_Classification.py"
             #self.Classification_combine     = script_path + "Read_Classification/Combine_WEVOTE.py"
             
@@ -293,7 +293,7 @@ class tool_path_obj:
             #self.Nodes = "/home/j/jparkin/mobolaji/Databases/taxdump/nodes.dmp"
             #self.Names = "/home/j/jparkin/mobolaji/Databases/taxdump/names.dmp"
             
-            #self.accession2taxid = "/scratch/j/jparkin/mobolaji/accession2taxid/accession2taxid"
+            self.accession2taxid = "/scratch/j/jparkin/mobolaji/accession2taxid/accession2taxid"
             
 #from rRNA_Filter
 
