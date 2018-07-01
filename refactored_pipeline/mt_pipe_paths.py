@@ -1,7 +1,7 @@
 import os
 
 class tool_path_obj:
-    def __init__ (self, mode = "scinet"):
+    def __init__ (self, mode = "scinet", name = "billy"):
             
         
         
@@ -196,9 +196,13 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            self.script_path             = "/home/j/jparkin//mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+            
+            self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
+            if(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
+                self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+                
             reference_file_path     = "/pipeline_reference_files/"
-            self.refactor_path           = self.script_path
+            self.refactor_path      = self.script_path
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"
             project_path            = "/project/j/jparkin/Lab_Databases/"
@@ -213,11 +217,18 @@ class tool_path_obj:
             self.DNA_DB             = scratch_path +"Microbial_cds_db/microbial_all_cds.fasta"
             self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
             self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
-            self.Prot_DB            = project_path + "diamond_v0922/nr"
-            
+            self.Prot_DB            = project_path + "diamond_v0922/nr.dmnd"
+            self.Prot_DB_plain      = project_path + "nr/nr"
+            # currently not in singularity package
+            self.accession2taxid = "/scratch/j/jparkin/mobolaji/accession2taxid/accession2taxid"
+            self.nodes = "/home/j/jparkin/mobolaji/Databases/taxdump/nodes.dmp"
+            self.names = "/home/j/jparkin/mobolaji/Databases/taxdump/names.dmp"
+            self.Kaiju_db = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
+            self.Centrifuge_db = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt"
+
             #----------------------------------------------------------
             # external tools
-            
+            self.Python             =             "python3"
             self.cdhit_dup          = tool_path + "cdhit_dup/cd-hit-dup" 
             self.Timmomatic         = tool_path + "Trimmomatic/trimmomatic-0.36.jar"
             self.AdapterRemoval     = tool_path + "adapterremoval/AdapterRemoval"
@@ -233,14 +244,16 @@ class tool_path_obj:
             self.Kaiju              = tool_path + "kaiju/kaiju"
             self.Kaiju2krona        = tool_path + "kaiju/kaiju2krona"
             self.ktImportText       = tool_path + "KronaTools/scripts/ImportText.pl"
-            self.Centrifuge         = tool_path + "centrifuge/centrifuge"
+            # missing centrifuge-build and centrifuge-class
+            self.Centrifuge         = "/home/j/jparkin/mobolaji/Tools/Centrifuge/centrifuge/centrifuge" #tool_path + "centrifuge/centrifuge"
             self.Centrifuge_report  = tool_path + "centrifuge/centrifuge-kreport"
             self.kSLAM              = tool_path + "k-SLAM/SLAM"
             self.Barrnap            = tool_path + "barrnap/barrnap"
             self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
             self.BLAST_dir          = tool_path + "BLAST_p"
-            self.WEVOTE             = tool_path + "WEVOTE/run_WEVOTE_PIPELINE.sh"
-            self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTEDB"
+            # missing in singularity package
+            self.WEVOTE             = "/home/j/jparkin/mobolaji/Tools/WEVOTE/WEVOTE/bin/WEVOTE" #tool_path + "WEVOTE/run_WEVOTE_PIPELINE.sh"
+            self.WEVOTEDB           = "/home/j/jparkin/mobolaji/Tools/WEVOTE/WEVOTE/WEVOTEDB" #tool_path + "WEVOTE/WEVOTEDB"
             self.Spades             = tool_path + "SPAdes/bin/spades.py"
 
 
@@ -248,52 +261,33 @@ class tool_path_obj:
             #--------------------------------------------
             # custom scripts
 
-            self.map_read_contig_v2         = self.refactor_path + "map_read_contig_v2.py"
-            self.sam_trimmer                = self.refactor_path + "sam_trimmer.py"
-            self.contig_duplicate_remover   = self.script_path + "contig_duplicate_remover.py"
-            self.sort_reads                 = self.refactor_path + "sort_reads_refactor.py"
-            #self.Filter_rRNA                = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/Mobolaji/rRNA_Filter.py"
-            self.duplicate_repopulate       = self.refactor_path +  "duplicate_repopulation.py"
-            self.Map_reads_contigs          = self.script_path + "Map_read_contigs.py"
-            self.orphaned_read_filter       = self.refactor_path + "orphaned_pair_filter.py"
-            self.BLAT_Contaminant_Filter    = self.refactor_path + "BLAT_Contaminant_Filter.py"
-            self.File_splitter              = self.refactor_path + "file_splitter.py"
-            #self.Sort_Reads                 = script_path + "Read_Classification/Sort_Reads.py"
-            self.rRNA_filter                = self.refactor_path+"rRNA_filter_v2.py"
-            self.Map_reads_gene_BWA         = self.script_path + "map_read_gene_BWA.py"
-            self.Map_reads_gene_BLAT        = self.script_path + "map_read_gene_BLAT.py"
-            self.Map_reads_prot_DMND        = self.script_path + "map_read_prot_DMND.py"
+            self.map_read_contig_v2         = self.refactor_path    + "map_read_contig_v2.py"
+            self.sam_trimmer                = self.refactor_path    + "sam_trimmer.py"
+            self.contig_duplicate_remover   = self.script_path      + "contig_duplicate_remover.py"
+            self.sort_reads                 = self.refactor_path    + "sort_reads_refactor.py"
+            self.duplicate_repopulate       = self.refactor_path    + "duplicate_repopulation.py"
+            self.Map_reads_contigs          = self.script_path      + "Map_read_contigs.py"
+            self.orphaned_read_filter       = self.refactor_path    + "orphaned_pair_filter.py"
+            self.BLAT_Contaminant_Filter    = self.refactor_path    + "BLAT_Contaminant_Filter.py"
+            self.File_splitter              = self.refactor_path    + "file_splitter.py"
+            self.rRNA_filter                = self.refactor_path    +"rRNA_filter_v2.py"
+            self.Map_reads_gene_BWA         = self.script_path      + "map_read_gene_BWA.py"
+            self.Map_reads_gene_BLAT        = self.script_path      + "map_read_gene_BLAT.py"
+            self.Map_reads_prot_DMND        = self.script_path      + "map_read_prot_DMND.py"
             
             self.RPKM = self.script_path + "RPKM.py"
             
-            #self.EC_Annotation_Prep         = script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
-            #self.Detect_Submit              = script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
-            #self.EC_Annotation_Post         = script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
-            #self.Detect                     = "/home/j/jparkin/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
-            #self.Annotated_taxid            = script_path + "Read_Classification/Get_TaxID.py"
-            #self.Constrain_classification    = script_path + "Read_Classification/Constrain_Classification.py"
-            #self.Classification_combine     = script_path + "Read_Classification/Combine_WEVOTE.py"
-            
-            #self.Perl = "/home/j/jparkin/mobolaji/perl"
-            #self.Perl_Script_Dir = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/Xuejian"
-            self.Python = "python3" #"/home/j/jparkin/mobolaji/python"
-            
-            #self.Prot_DB = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/nr"
-            
-            #self.BBMap_Dir = "/home/j/jparkin/mobolaji/Tools/BBMap/bbmap"
+            self.EC_Annotation_Prep         = self.script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
+            self.Detect_Submit              = self.script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
+            self.EC_Annotation_Post         = self.script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
+            self.Detect                     = "/home/j/jparkin/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
+            self.Annotated_taxid            = self.script_path + "Read_Classification/Get_TaxID.py"
+            self.Constrain_classification    = self.script_path + "Read_Classification/Constrain_Classification.py"
+            self.Classification_combine     = self.script_path + "Read_Classification/Combine_WEVOTE.py"
+
             #self.Fastqc = "/home/j/jparkin/mobolaji/Tools/FastQC/fastqc"
             
             #rRNA_Split_Jobs = refactor_path + "rRNA_Split_Jobs.py"
             
             #self.SWISS_PROT = "/home/j/jparkin/mobolaji/Databases/uniprot_sprot_annotated.fasta"
-
-            #self.Nodes = "/home/j/jparkin/mobolaji/Databases/taxdump/nodes.dmp"
-            #self.Names = "/home/j/jparkin/mobolaji/Databases/taxdump/names.dmp"
-            
-            #self.accession2taxid = "/scratch/j/jparkin/mobolaji/accession2taxid/accession2taxid"
-            
-#from rRNA_Filter
-
-#Infernal = "/home/j/jparkin/mobolaji/Tools/Infernal/infernal-1.1.2-linux-intel-gcc/binaries/cmsearch"
-#Rfam = "/home/j/jparkin/mobolaji/Databases/Rfam_rRNA.cm"
 

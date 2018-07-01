@@ -14,7 +14,7 @@ read2taxid_map_out = sys.argv[3]
 
 gene2read_dict = {}
 
-with open(gene2read_map_out, "r") as gene2read:
+with open(gene2read_map_in, "r") as gene2read:
     for line in gene2read:
         if len(line) > 5:
             entry = line.split("\t")
