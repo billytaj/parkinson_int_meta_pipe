@@ -86,7 +86,7 @@ RUN rm -r cd-hit-v4.6.8-2017-1208
 RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz
 RUN tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz && mkdir /pipeline_tools/centrifuge
 WORKDIR centrifuge-1.0.3
-RUN make && mv centrifuge /pipeline_tools/centrifuge && mv centrifuge-kreport /pipeline_tools/centrifuge
+RUN make && mv centrifuge ../centrifuge && mv centrifuge-class ../centrifuge && mv centrifuge-kreport ../centrifuge && mv centrifuge-build ../centrifuge
 WORKDIR /pipeline_tools
 RUN rm -r centrifuge-1.0.3
 
@@ -188,9 +188,11 @@ RUN rm -r vsearch-2.7.1
 RUN wget https://github.com/aametwally/WEVOTE/archive/master.zip -O wevote.zip
 RUN unzip wevote.zip && rm wevote.zip
 WORKDIR WEVOTE-master
-RUN ./install.sh 
+RUN mkdir ../WEVOTE 
+RUN ./install.sh && mkdir WEVOTE_db 
+RUN mv bin/WEVOTE ../WEVOTE && mv downloadTaxonomyDB.sh ../WEVOTE && mkdir ../WEVOTE/WEVOTE_db && sh ../WEVOTE/downloadTaxonomyDB.sh ../WEVOTE/WEVOTE_db
 WORKDIR /pipeline_tools
-RUN mkdir WEVOTE && mv WEVOTE-master/bin/* WEVOTE/ && rm -r WEVOTE-master
+RUN rm -r WEVOTE-master
 
 #--------------------------------------------
 # get reference files

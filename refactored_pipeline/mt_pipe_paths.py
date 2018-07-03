@@ -1,7 +1,7 @@
 import os
 
 class tool_path_obj:
-    def __init__ (self, mode = "scinet", name = "billy"):
+    def __init__ (self, mode = "scinet", name = "None"):
             
         
         
@@ -67,7 +67,7 @@ class tool_path_obj:
             self.Map_reads_contigs = self.script_path + "Map_read_contigs.py"
             self.orphaned_read_filter = self.refactor_path + "orphaned_pair_filter.py"
             self.BLAT_Contaminant_Filter = self.refactor_path + "BLAT_Contaminant_Filter.py"
-            self.File_splitter = self.refactor_path + "file_splitter.py"
+            self.File_splitter = self.refactor_path + "seq_file_splitter.py"
             self.Sort_Reads = self.script_path + "Read_Classification/Sort_Reads.py"
             #rRNA_Split_Jobs = refactor_path + "rRNA_Split_Jobs.py"
             self.rRNA_filter = self.refactor_path+"rRNA_filter_v2.py"
@@ -153,7 +153,7 @@ class tool_path_obj:
             self.Map_reads_contigs          = self.script_path + "Map_read_contigs.py"
             self.orphaned_read_filter       = self.refactor_path + "orphaned_pair_filter.py"
             self.BLAT_Contaminant_Filter    = self.refactor_path + "BLAT_Contaminant_Filter.py"
-            self.File_splitter              = self.refactor_path + "file_splitter.py"
+            self.File_splitter              = self.refactor_path + "seq_file_splitter.py"
             self.Sort_Reads                 = self.script_path + "Read_Classification/Sort_Reads.py"
             self.rRNA_filter                = self.refactor_path+"rRNA_filter_v2.py"
             self.Map_reads_gene_BWA         = self.script_path + "Map_read_gene_BWA.py"
@@ -196,10 +196,12 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            
-            self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
-            if(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
+            if(self.name == "billy" or self.name == "Billy"):
+                self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
+            elif(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
                 self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+            else:
+                sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
                 
             reference_file_path     = "/pipeline_reference_files/"
             self.refactor_path      = self.script_path
@@ -244,16 +246,15 @@ class tool_path_obj:
             self.Kaiju              = tool_path + "kaiju/kaiju"
             self.Kaiju2krona        = tool_path + "kaiju/kaiju2krona"
             self.ktImportText       = tool_path + "KronaTools/scripts/ImportText.pl"
-            # missing centrifuge-build and centrifuge-class
-            self.Centrifuge         = "/home/j/jparkin/mobolaji/Tools/Centrifuge/centrifuge/centrifuge" #tool_path + "centrifuge/centrifuge"
+            self.Centrifuge         = tool_path + "centrifuge/centrifuge"
             self.Centrifuge_report  = tool_path + "centrifuge/centrifuge-kreport"
+            self.Centrifuge_build   = tool_path + "centrifuge-build"
             self.kSLAM              = tool_path + "k-SLAM/SLAM"
             self.Barrnap            = tool_path + "barrnap/barrnap"
             self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
             self.BLAST_dir          = tool_path + "BLAST_p"
-            # missing in singularity package
-            self.WEVOTE             = "/home/j/jparkin/mobolaji/Tools/WEVOTE/WEVOTE/bin/WEVOTE" #tool_path + "WEVOTE/run_WEVOTE_PIPELINE.sh"
-            self.WEVOTEDB           = "/home/j/jparkin/mobolaji/Tools/WEVOTE/WEVOTE/WEVOTEDB" #tool_path + "WEVOTE/WEVOTEDB"
+            self.WEVOTE             = tool_path + "WEVOTE/WEVOTE"
+            self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTE_db" #points to the location of taxdump, needed by WEVOTE
             self.Spades             = tool_path + "SPAdes/bin/spades.py"
 
 
@@ -269,7 +270,7 @@ class tool_path_obj:
             self.Map_reads_contigs          = self.script_path      + "Map_read_contigs.py"
             self.orphaned_read_filter       = self.refactor_path    + "orphaned_pair_filter.py"
             self.BLAT_Contaminant_Filter    = self.refactor_path    + "BLAT_Contaminant_Filter.py"
-            self.File_splitter              = self.refactor_path    + "file_splitter.py"
+            self.File_splitter              = self.refactor_path    + "seq_file_splitter.py"
             self.rRNA_filter                = self.refactor_path    +"rRNA_filter_v2.py"
             self.Map_reads_gene_BWA         = self.script_path      + "map_read_gene_BWA.py"
             self.Map_reads_gene_BLAT        = self.script_path      + "map_read_gene_BLAT.py"
