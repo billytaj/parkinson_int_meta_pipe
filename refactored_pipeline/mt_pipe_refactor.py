@@ -18,7 +18,8 @@ def make_folder(folder_path):
 class sync_control:
     def __init__(self, system_mode):
         self.system_mode = system_mode
-
+        
+        
     #handles where to auto-resume
     def check_where_resume(self, job_label = None, full_path = None):
         if(job_label):
@@ -209,6 +210,27 @@ def main(input_folder, output_folder, system_op, user_mode):
 
 
     mp_store = [] #stores the multiprocessing processes
+    
+    #--------------------------------------------------
+    #profiling vars
+    start_time              = 0
+    end_time                = 0
+    preprocess_start        = 0
+    preprocess_end          = 0
+    rRNA_filter_start       = 0
+    rRNA_filter_end         = 0
+    repop_start             = 0
+    repop_end               = 0
+    assemble_contigs_start  = 0
+    assemble_contigs_end    = 0
+    GA_BWA_start            = 0
+    GA_BWA_end              = 0
+    GA_BLAT_start           = 0
+    GA_BLAT_end             = 0
+    GA_DIAMOND_start        = 0
+    GA_DIAMOND_end          = 0
+    TA_start                = 0
+    TA_end                  = 0
 
     #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.
     raw_sequence_path = input_folder #+ "/raw_sequences/"
@@ -280,6 +302,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #The subprocess is created from the comm object
 
             #The preprocess stage
+            preprocess_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + preprocess_label)):
 
                 process = mp.Process(
@@ -292,8 +315,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start() #start the multiprocess
                 process.join()  #wait for it to end
-
+            preprocess_end = time.time()
+            
             #rRNA removal stage
+            rRNA_filter_start = time.time()
             if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -381,9 +406,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
 
-
+            rRNA_filter_end = time.time()
             #-------------------------------------------------------------
             # Duplicate repopulation
+            repop_start = time.time()
             if(not sync_obj.check_where_resume(output_folder +  repop_job_label)):
 
                 process = mp.Process(
@@ -396,9 +422,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
+            repop_end = time.time()
             #----------------------------------------
             # Assemble contigs
+            assemble_contigs_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -410,12 +437,11 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            #else:
-            #    assemble_contigs_id = None
-
+            assemble_contigs_end = time.time()
 
             #----------------------------------------------
             # BWA gene annotation
+            GA_BWA_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -452,9 +478,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            
+            GA_BWA_end = time.time()
             #------------------------------------------------
             # BLAT gene annotation
+            GA_BLAT_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
 
                 split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
@@ -507,10 +534,11 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
+            GA_BLAT_end = time.time()
 
             #------------------------------------------------------
             # Diamond gene annotation
+            GA_DIAMOND_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -543,9 +571,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
+            GA_DIAMOND_end = time.time()
             # ------------------------------------------------------
             # Taxonomic annotation
+            TA_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + taxon_annotation_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -557,10 +586,16 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
+            TA_end = time.time()
             end_time = time.time()
-            print("Total runtime:", end_time - start_time)
-
+            print("Total runtime:", end_time - start_time, "s")
+            print("preprocess:", preprocess_end - preprocess_start, "s")
+            print("rRNA filter:", rRNA_filter_end - rRNA_filter_start, "s")
+            print("repop:", repop_end - repop_start, "s")
+            print("assemble contigs:", assemble_contigs_end - assemble_contigs_start, "s")
+            print("GA BWA:", GA_BWA_end - GA_BWA_start, "s")
+            print("GA BLAT:", GA_BLAT_end, GA_BLAT_start, "s")
+            print("TA:", TA_end - TA_start, "s")
 
 
         elif(operating_mode == single_mode):
