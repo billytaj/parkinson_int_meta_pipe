@@ -255,6 +255,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             GL_BLAT_cat_label = "BLAT_cat_results"
             GA_BLAT_PP_label = "BLAT_postprocess"
             gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
+            taxon_annotation_label = "taxonomic_annotation"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -263,7 +264,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
             quality_encoding = 33 #This should not be a constant, we need some process to determine the quality encoding ex. vsearch --fastq_chars
-            comm = mpcom.mt_pipe_commands(Quality_score = quality_encoding, Thread_count = thread_count, system_mode = system_op, user_mode = user_mode = raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
+            comm = mpcom.mt_pipe_commands(Quality_score = quality_encoding, Thread_count = thread_count, system_mode = system_op, user_mode = user_mode, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
 
             #Creates our command object, for creating shellscripts.
             comm = mpcom.mt_pipe_commands(
@@ -397,7 +398,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
 
             #----------------------------------------
-            # assemble contigs
+            # Assemble contigs
             if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -414,8 +415,9 @@ def main(input_folder, output_folder, system_op, user_mode):
 
 
             #----------------------------------------------
+            # BWA gene annotation
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
-                
+
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 mp_store[:] = []
                 for item in names:
@@ -435,7 +437,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 for item in mp_store:
                     item.join()
                 mp_store[:] = [] #clear the list
-                
+
             #else:
             #    gene_annotation_BWA_id = None
                 inner_name = "BWA_pp"
@@ -452,8 +454,9 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
             
             #------------------------------------------------
+            # BLAT gene annotation
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
-                
+
                 split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 for item in names:
@@ -491,7 +494,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 for item in mp_store:
                     item.join()
                 mp_store[:] = []
-                
+
                 inner_name = "BLAT_pp"
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -504,12 +507,12 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            
-            
+
+
             #------------------------------------------------------
+            # Diamond gene annotation
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
-                
-                # temp bypass to solve diamond pp issues
+
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 for item in names:
                     inner_name = item + "_run_diamond"
@@ -527,8 +530,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 for item in mp_store:
                     item.join()
                 mp_store[:] = []
-                
-                
+
                 inner_name = "diamond_pp"
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -542,7 +544,20 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
 
-            
+            # ------------------------------------------------------
+            # Taxonomic annotation
+            if(not sync_obj.check_where_resume(output_folder + taxon_annotation_label)):
+                process = mp.Process(
+                    target = comm.create_pbs_and_launch,
+                    args = (
+                    taxon_annotation_label,
+                    comm.create_taxonomic_annotation_command(taxon_annotation_label, assemble_contigs_label, gene_annotation_DIAMOND_label),
+                    True
+                    )
+                )
+                process.start()
+                process.join()
+
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
 
@@ -739,7 +754,7 @@ if __name__ == "__main__":
     if(len(sys.argv) < 4):
         print("no args provided.  try again:")
         print("arg(1) input folder")
-        print("arg(2) output folder") 
+        print("arg(2) output folder")
         print("arg(3) docker or singularity")
         print("arg(4): billy or bj: for pipeline path location modes")
         sys.exit()
