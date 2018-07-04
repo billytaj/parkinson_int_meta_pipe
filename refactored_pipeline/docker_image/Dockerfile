@@ -191,21 +191,23 @@ RUN unzip wevote.zip && rm wevote.zip
 WORKDIR WEVOTE-master
 RUN mkdir ../WEVOTE 
 RUN ./install.sh && mkdir WEVOTE_db 
-RUN mv bin/WEVOTE ../WEVOTE && mv downloadTaxonomyDB.sh ../WEVOTE && mkdir ../WEVOTE/WEVOTE_db && sh ../WEVOTE/downloadTaxonomyDB.sh ../WEVOTE/WEVOTE_db
+RUN mv bin/WEVOTE ../WEVOTE && mv downloadTaxonomyDB.sh ../WEVOTE && mkdir ../WEVOTE/WEVOTE_db
 WORKDIR /pipeline_tools
 RUN rm -r WEVOTE-master
 
 #--------------------------------------------
 # get reference files
+# 
 WORKDIR /pipeline_reference_files
-RUN wget ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec_Core -O UniVec_Core.fasta
-RUN mkdir Trimmomatic_adapters
-RUN mv /pipeline_tools/Trimmomatic/adapters/* /pipeline_reference_files/Trimmomatic_adapters
-RUN wget ftp://ftp.ensembl.org/pub/release-92/fasta/mus_musculus/cds/Mus_musculus.GRCm38.cds.all.fa.gz -O Mouse_cds.gz
-RUN gunzip Mouse_cds.gz && mv Mouse_cds Mouse_cds.fasta
-RUN wget ftp://ftp.ebi.ac.uk/pub/databases/Rfam/13.0/Rfam.cm.gz
-RUN gunzip Rfam.cm.gz
-RUN /pipeline_tools/infernal/cmpress Rfam.cm
+#there's a bunch of DBs that need to be downloaded too.  including the wevote files, called by the download script they supply, and the priam DB files. 
+#RUN wget ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec_Core -O UniVec_Core.fasta
+#RUN mkdir Trimmomatic_adapters
+#RUN mv /pipeline_tools/Trimmomatic/adapters/* /pipeline_reference_files/Trimmomatic_adapters
+#RUN wget ftp://ftp.ensembl.org/pub/release-92/fasta/mus_musculus/cds/Mus_musculus.GRCm38.cds.all.fa.gz -O Mouse_cds.gz
+#RUN gunzip Mouse_cds.gz && mv Mouse_cds Mouse_cds.fasta
+#RUN wget ftp://ftp.ebi.ac.uk/pub/databases/Rfam/13.0/Rfam.cm.gz
+#RUN gunzip Rfam.cm.gz
+#RUN /pipeline_tools/infernal/cmpress Rfam.cm
 
 WORKDIR /
 CMD ["bash"]
