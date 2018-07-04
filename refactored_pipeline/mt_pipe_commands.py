@@ -1543,35 +1543,48 @@ class mt_pipe_commands:
             ]
         return COMMANDS_Classify 
 
-    def create_EC_preprocess_command(self):    
-        COMMANDS_EC_Preprocess = [
-                        "mkdir -p " + self.EC_Split,
-                        "mkdir -p " + self.EC_Output,
-                        self.tool_path_obj.Python + " " + File_splitter + " " + "1000" + " " + self.Input_Filepath + "_proteins.faa" + " " + self.EC_Split,
-                        ]
-        return COMMANDS_EC_Preprocess
+    def create_EC_DETECT_prep(self, current_stage_name, diamond_stage, file_split_count):
+        subfolder = os.getcwd() + "/" + current_stage_name + "/"
+        data_folder = subfolder + "data/"
+        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
+        proteins_folder = data_folder + "0_proteins/"
+        detect_folder = data_folder + "1_detect/"
+        final_folder = data_folder + "final_results/"
 
-    def create_EC_detect_command(self, JobID_EC_preprocess):
-        self.Input_Filepath = os.path.splitext(Input_File)[0]
-        self.EC_Split = os.path.join(self.Input_Filepath + "_EC_Annotation", "Split")
-        self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
-        #This call has the qalter embedded.
-        #get rid of this later
-        self.Threads_str = Thread_count
-        COMMANDS_Detect = [
-                        "JOBS=$(" + self.tool_path_obj.Python + " " + self.tool_path_obj.Detect_Submit + " " + self.EC_Split + " " + self.EC_Output + " " + self.Threads_str + " " + JobID_EC_Preprocess.strip("\n") + ");" + "qalter -W depend=afterok:$JOBS $JOB2"
-                        ]
-        return COMMANDS_Detect
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(proteins_folder)
+        self.make_folder(detect_folder)
+        self.make_folder(final_folder)
 
-    def create_EC_detect_combine_command(self):
-        self.Input_Filepath = os.path.splitext(Input_File)[0]
-        self.Input_FName = os.path.basename(Input_File)
-        self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
-        COMMANDS_Combine_Detect = ["cat " + os.path.join(self.EC_Output, "Detect", "*.toppred") + " > " + os.path.join(self.EC_Output, "Detect", os.path.splitext(self.Input_FName)[0] + "_proteins.toppred")]
+        file_splitter = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+        file_splitter += diamond_folder + "proteins.faa" + " "
+        file_splitter += proteins_folder + "proteins" + " "
+        file_splitter += str(file_split_count)
 
-        return COMMANDS_Combine_Detect
+        COMMANDS_DETECT_prep = [
+            file_splitter
+            ]
+        return COMMANDS_DETECT_prep
+
+    def create_EC_DETECT_command(self, current_stage_name, prot_name):
+        subfolder = os.getcwd() + "/" + current_stage_name + "/"
+        data_folder = subfolder + "data/" + "/"
+        proteins_folder = data_folder + "0_proteins/"
+        detect_folder = data_folder + "1_detect/"
+
+        detect_protein = self.tool_path_obj.Python + " "
+        detect_protein += self.tool_path_obj.Detect_Submit + " "
+        detect_protein += proteins_folder + prot_name + " "
+        detect_protein += detect_folder + prot_name + " " + self.Threads_str
+
+        COMMANDS_DETECT = [
+            detect_protein
+            ]
+
+        return COMMANDS_DETECT
         
-    def create_EC_PRIAM_command(self): 
+    def create_EC_PRIAM_DIAMOND_command(self):
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
         COMMANDS_PRIAM = [
@@ -1579,9 +1592,7 @@ class mt_pipe_commands:
         "cd " + os.path.join(self.EC_Output, "PRIAM"),
         "java -jar" + " " + self.tool_path_obj.Priam + " -n " + os.path.splitext(self.Input_FName)[0] + "_PRIAM" + " -i " + self.Input_Filepath + "_proteins.faa" + " -p " + os.path.join(os.path.dirname(Priam), "PRIAM_MAR15") + " -od " + os.path.join(self.EC_Output, "PRIAM") +" -e T -pt 0.5 -mo -1 -mp 70 -cc T -cg T -bd " + self.tool_path_obj.BLAST_dir,
         ]
-        return COMMANDS_PRIAM
 
-    def create_EC_Diamond_command(self):    
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
         COMMANDS_EC_Diamond = [
@@ -1589,7 +1600,8 @@ class mt_pipe_commands:
         "cd " + os.path.join(self.EC_Output, "Diamond"),
         self.tool_path_obj.DIAMOND + " blastp -p " + self.Threads_str + " --query "+ self.Input_Filepath + "_proteins.faa" + " --db "+ self.tool_path_obj.SWISS_PROT + " --outfmt "+ "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident" + " --out " + os.path.join(self.EC_Output, "Diamond", os.path.splitext(self.Input_FName)[0] + ".blastout") + " --evalue 0.0000000001 --max-target-seqs 1"
         ]
-        return COMMANDS_EC_Diamond
+
+        return COMMANDS_PRIAM_DIAMOND
 
     def create_EC_postprocess_command(self):
         COMMANDS_EC_Postprocess = [
