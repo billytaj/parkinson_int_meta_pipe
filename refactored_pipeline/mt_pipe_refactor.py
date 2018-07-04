@@ -18,7 +18,8 @@ def make_folder(folder_path):
 class sync_control:
     def __init__(self, system_mode):
         self.system_mode = system_mode
-
+        
+        
     #handles where to auto-resume
     def check_where_resume(self, job_label = None, full_path = None):
         if(job_label):
@@ -200,7 +201,7 @@ def main(input_folder, output_folder, system_op, user_mode):
     operating_mode = 0
     sync_obj = sync_control(system_op)
     thread_count = mp.cpu_count() #should not be hard-coded
-    start_time = time.time()
+    
     #note: this also needs to support paired and single-ended data
     #input folder is the main location of the dump.
     #
@@ -209,7 +210,30 @@ def main(input_folder, output_folder, system_op, user_mode):
 
 
     mp_store = [] #stores the multiprocessing processes
+    
+    #--------------------------------------------------
+    #profiling vars
+    start_time              = 0
+    end_time                = 0
+    preprocess_start        = 0
+    preprocess_end          = 0
+    rRNA_filter_start       = 0
+    rRNA_filter_end         = 0
+    repop_start             = 0
+    repop_end               = 0
+    assemble_contigs_start  = 0
+    assemble_contigs_end    = 0
+    GA_BWA_start            = 0
+    GA_BWA_end              = 0
+    GA_BLAT_start           = 0
+    GA_BLAT_end             = 0
+    GA_DIAMOND_start        = 0
+    GA_DIAMOND_end          = 0
+    TA_start                = 0
+    TA_end                  = 0
 
+    
+    start_time = time.time()
     #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.
     raw_sequence_path = input_folder #+ "/raw_sequences/"
     if not os.path.exists(raw_sequence_path):
@@ -256,7 +280,6 @@ def main(input_folder, output_folder, system_op, user_mode):
             GA_BLAT_PP_label = "BLAT_postprocess"
             gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
             taxon_annotation_label = "taxonomic_annotation"
-            ec_annotation_label = "enzyme_function_annotation"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -281,6 +304,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #The subprocess is created from the comm object
 
             #The preprocess stage
+            preprocess_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + preprocess_label)):
 
                 process = mp.Process(
@@ -293,8 +317,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start() #start the multiprocess
                 process.join()  #wait for it to end
-
+            preprocess_end = time.time()
+            
             #rRNA removal stage
+            rRNA_filter_start = time.time()
             if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -382,9 +408,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
 
-
+            rRNA_filter_end = time.time()
             #-------------------------------------------------------------
             # Duplicate repopulation
+            repop_start = time.time()
             if(not sync_obj.check_where_resume(output_folder +  repop_job_label)):
 
                 process = mp.Process(
@@ -397,9 +424,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
+            repop_end = time.time()
             #----------------------------------------
             # Assemble contigs
+            assemble_contigs_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -411,12 +439,11 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            #else:
-            #    assemble_contigs_id = None
-
+            assemble_contigs_end = time.time()
 
             #----------------------------------------------
             # BWA gene annotation
+            GA_BWA_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -453,9 +480,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            
+            GA_BWA_end = time.time()
             #------------------------------------------------
             # BLAT gene annotation
+            GA_BLAT_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
 
                 split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
@@ -508,10 +536,11 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
+            GA_BLAT_end = time.time()
 
             #------------------------------------------------------
             # Diamond gene annotation
+            GA_DIAMOND_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -544,9 +573,10 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
+            GA_DIAMOND_end = time.time()
             # ------------------------------------------------------
             # Taxonomic annotation
+            TA_start = time.time()
             if(not sync_obj.check_where_resume(output_folder + taxon_annotation_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -558,72 +588,18 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-
-            # ------------------------------------------------------
-            # EC annotation
-            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label)):
-                # Preparing folders for DETECT
-                process = mp.Process(
-                    target=comm.create_pbs_and_launch,
-                    args=(
-                        taxon_annotation_label,
-                        comm.create_EC_DETECT_prep(ec_annotation_label, gene_annotation_DIAMOND_label, int(mp.cpu_count()/2)),
-                        True
-                    )
-                )
-                process.start()
-                process.join()
-
-                # Running DETECT on split protien files
-                proteins_path = output_folder + ec_annotation_label + "/data/0_proteins/"
-                if (not sync_obj.check_where_resume(None, proteins_path)):
-                    for item in os.listdir(proteins_path):
-                        file_root_name = os.path.splitext(item)[0]
-                        inner_name = file_root_name + "_detect"
-                        process = mp.Process(
-                            target=comm.create_pbs_and_launch,
-                            args=(
-                                ec_annotation_label,
-                                comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
-                                True,
-                                inner_name
-                            )
-                        )
-                        process.start()
-                        mp_store.append(process)  # pack all the processes into a list
-                for item in mp_store:
-                    item.join()  # wait for things to finish
-                mp_store[:] = []  # clear the list
-
-            DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
-            if (not sync_obj.check_where_resume(output_folder + DETECT_path)):
-                process = mp.Process(
-                    target=comm.create_pbs_and_launch,
-                    args=(
-                        ec_annotation_label,
-                        comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, assemble_contigs_label,
-                                                                 gene_annotation_DIAMOND_label),
-                        True
-                    )
-                )
-                process.start()
-                process.join()
-
-                inner_name = "ea_post"
-                process = mp.Process(
-                    target=comm.create_pbs_and_launch,
-                    args=(
-                        ec_annotation_label,
-                        comm.create_EC_postprocess_command(ec_annotation_label),
-                        True,
-                        inner_name
-                    )
-                )
-                process.start()
-                process.join()
-
+            TA_end = time.time()
             end_time = time.time()
-            print("Total runtime:", end_time - start_time)
+            print("Total runtime:", end_time - start_time, "s", "start:", start_time, "end:", end_time)
+            print("preprocess:", preprocess_end - preprocess_start, "s", "start:", preprocess_start, "end:", preprocess_end)
+            print("rRNA filter:", rRNA_filter_end - rRNA_filter_start, "s", "start:", rRNA_filter_start, "end:", rRNA_filter_end)
+            print("repop:", repop_end - repop_start, "s", "start:", repop_start, "end:", repop_end)
+            print("assemble contigs:", assemble_contigs_end - assemble_contigs_start, "s", "start:", assemble_contigs_start, "end:", assemble_contigs_end)
+            print("GA BWA:", GA_BWA_end - GA_BWA_start, "s", "start:", GA_BWA_start, "end:", GA_BWA_end)
+            print("GA BLAT:", GA_BLAT_end - GA_BLAT_start, "s", "start:", GA_BLAT_start, "end:", GA_BLAT_end)
+            print("GA DIAMOND:", GA_DIAMOND_end - GA_DIAMOND_start, "s", "start:", GA_DIAMOND_start, "end:", GA_DIAMOND_end)
+            print("TA:", TA_end - TA_start, "s", "start:", TA_start, "end:", TA_end)
+
 
         elif(operating_mode == single_mode):
             print("not ready")
