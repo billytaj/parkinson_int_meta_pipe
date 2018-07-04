@@ -1,26 +1,19 @@
 #!/usr/bin/env python
 
-import os
 import os.path
 import sys
-import shutil
 
 Input_File = sys.argv[1]
 Input_Name = os.path.splitext(os.path.basename(Input_File))[0]
-Output_Dir = sys.argv[2]
-
-SWISS_PROT = "/home/j/jparkins/mobolaji/Databases/uniprot_sprot_annotated.fasta"
-SWISS_PROT_MAP = "/home/j/jparkins/mobolaji/Databases/SwissProt_EC_Mapping.tsv"
-
-detect_dir = os.path.join(Output_Dir, "Detect")
-priam_dir = os.path.join(Output_Dir, "PRIAM")
-diamond_dir = os.path.join(Output_Dir, "Diamond")
-con_dir = os.path.join(Output_Dir, "Consolidated")
-try:
-    os.mkdir(con_dir)
-except:
-    shutil.rmtree(con_dir)
-    os.mkdir(con_dir)
+detect_file = sys.argv[2]
+detect_dir = os.path.dirname(detect_file)
+priam_file = sys.argv[3]
+priam_dir = os.path.dirname(priam_file)
+diamond_file = sys.argv[4]
+diamond_dir = os.path.dirname(diamond_file)
+SWISS_PROT = sys.argv[5]
+SWISS_PROT_MAP = sys.argv[6]
+Output_Dir = sys.argv[7]
 
 mapping_dict = {}
 with open(SWISS_PROT_MAP, "r") as mapping:
@@ -28,9 +21,9 @@ with open(SWISS_PROT_MAP, "r") as mapping:
         line_as_list = line.split("\t")
         mapping_dict[line_as_list[0]] = set(line_as_list[2:])
 
-detect_ECs = os.path.join(detect_dir, Input_Name + ".toppred")
-with open(detect_ECs, "r") as topred:
-    with open(os.path.join(detect_dir, Input_Name + ".toppred.cutoff"), "w") as cutoff:
+detect_ECs = os.path.join(detect_dir, Input_Name + ".toppred.cutoff")
+with open(detect_file, "r") as topred:
+    with open(detect_ECs, "w") as cutoff:
         for line in topred.readlines():
             line_as_list = line.split("\t")
             if line_as_list[2] == "probability":
@@ -39,7 +32,7 @@ with open(detect_ECs, "r") as topred:
                 cutoff.write(line)
 
 priam_ECs = os.path.join(priam_dir, Input_Name + ".ECs")
-with open(os.path.join(priam_dir, "RESULTS", "paj_" + Input_Name.split("_proteins")[0] + "_PRIAM" + "_seqsECs.tab"), "r") as ECs:
+with open(priam_file, "r") as ECs:
     with open(priam_ECs, "w") as processedECs:
         for line in ECs.readlines():
             line_as_list = line.split("\t")
@@ -51,7 +44,7 @@ with open(os.path.join(priam_dir, "RESULTS", "paj_" + Input_Name.split("_protein
                 processedECs.write(line)
 
 diamond_ECs = os.path.join(diamond_dir, Input_Name + ".ECs")
-with open(os.path.join(diamond_dir, Input_Name.split("_proteins")[0] + ".blastout"), "r") as blastout:
+with open(diamond_file, "r") as blastout:
     with open(diamond_ECs, "w") as ecout:
         for line in blastout.readlines():
             line_as_list = line.strip().split("\t")
@@ -59,7 +52,7 @@ with open(os.path.join(diamond_dir, Input_Name.split("_proteins")[0] + ".blastou
                 if line_as_list[1] in mapping_dict[EC]:
                     ecout.write("\t".join([line_as_list[0], EC + "\n"]))
 
-with open(os.path.join(con_dir, Input_Name + ".ECs_PB"), "w") as PB_out:
+with open(os.path.join(Output_Dir, Input_Name + ".ECs_PB"), "w") as PB_out:
     with open(priam_ECs, "r") as priam_ECs_in:
         priam_preds = priam_ECs_in.readlines()
     with open(diamond_ECs, "r") as diamond_ECs_in:
@@ -82,5 +75,5 @@ for pred in detect_preds:
 for pred in PB_preds:
     if len(pred.split("\t")[1].split(".")) == 4:
         All_preds.add(pred)
-with open(os.path.join(con_dir, Input_Name + ".ECs_All"), "w") as ec_out:
+with open(os.path.join(Output_Dir, Input_Name + ".ECs_All"), "w") as ec_out:
     ec_out.writelines(sorted(All_preds))

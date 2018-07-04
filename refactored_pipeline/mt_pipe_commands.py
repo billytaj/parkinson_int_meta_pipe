@@ -1629,6 +1629,7 @@ class mt_pipe_commands:
         detect_folder = data_folder + "1_detect/"
         PRIAM_folder = data_folder + "2_priam/"
         diamond_ea_folder = data_folder + "3_diamond/"
+        final_folder = data_folder + "final_results/"
 
         combine_detect = "cat " + detect_folder + "*.toppred"
         combine_detect += " > " + detect_folder + "proteins.toppred"
@@ -1641,7 +1642,8 @@ class mt_pipe_commands:
         postprocess_command += os.path.join(PRIAM_folder, "RESULTS", "paj_proteins_priam_seqsECs.tab") + " "
         postprocess_command += diamond_ea_folder + "proteins.blastout" + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
-        postprocess_command += self.tool_path_obj.SWISS_PROT_map
+        postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
+        postprocess_command += final_folder
 
 
         COMMANDS_EC_Postprocess = [
