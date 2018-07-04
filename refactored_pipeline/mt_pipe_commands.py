@@ -1622,11 +1622,32 @@ class mt_pipe_commands:
 
         return COMMANDS_PRIAM_DIAMOND
 
-    def create_EC_postprocess_command(self):
+    def create_EC_postprocess_command(self, current_stage_name, diamond_stage):
+        subfolder = os.getcwd() + "/" + current_stage_name + "/"
+        data_folder = subfolder + "data/"
+        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
+        detect_folder = data_folder + "1_detect/"
+        PRIAM_folder = data_folder + "2_priam/"
+        diamond_ea_folder = data_folder + "3_diamond/"
+
+        combine_detect = "cat " + detect_folder + "*.toppred"
+        combine_detect += " > " + detect_folder + "proteins.toppred"
+
+        postprocess_command = ">&2 echo combining enzyme annotation output | "
+        postprocess_command += self.tool_path_obj.Python + " "
+        postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
+        postprocess_command += diamond_folder + "proteins.faa" + " "
+        postprocess_command += detect_folder + "proteins.toppred" + " "
+        postprocess_command += os.path.join(PRIAM_folder, "RESULTS", "paj_proteins_priam_seqsECs.tab") + " "
+        postprocess_command += diamond_ea_folder + "proteins.blastout" + " "
+        postprocess_command += self.tool_path_obj.SWISS_PROT + " "
+        postprocess_command += self.tool_path_obj.SWISS_PROT_map
+
+
         COMMANDS_EC_Postprocess = [
-        self.tool_path_obj.Python + " " + self.tool_path_obj.EC_Annotation_Post + " " + self.Input_Filepath + "_proteins.faa" + " " + self.EC_Output
-        #Produce_Table
-        ]
+            combine_detect,
+            postprocess_command
+            ]
                 
         return COMMANDS_EC_Postprocess
 
