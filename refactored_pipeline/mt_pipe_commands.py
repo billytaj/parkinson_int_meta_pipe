@@ -6,7 +6,6 @@ import os
 import sys
 import mt_pipe_paths as mpp
 import subprocess as sp
-import multiprocessing as mp
 #------------------------------------------------------
 # pragmas needed for command construction
 
@@ -24,51 +23,6 @@ module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extr
  
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-PBS_Submit_LowMem = """#!/bin/bash
-#PBS -l nodes=1:ppn=8,walltime=00:15:00
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=8
-OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-PBS_Submit_HighMem = """#!/bin/bash
-#PBS -l nodes=1:m64g:ppn=16,walltime=12:00:00 -q sandy
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=16
-OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-PBS_Submit_vHighMem = """#!/bin/bash
-#PBS -l nodes=1:m128g:ppn=16,walltime=1:00:00 -q sandy
-#PBS -N NAME
-#PBS -e ERROR
-#PBS -o OUTPUT
-
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
-cd $PBS_O_WORKDIR
-export OMP_NUM_THREADS=20
 OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
 NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
 export PATH=$NEWPATH
@@ -93,27 +47,13 @@ class mt_pipe_commands:
             self.raw_sequence_path_1 = raw_sequence_path_1
             print("raw seqeunce 1:", self.raw_sequence_path_1)
         self.system_mode = system_mode
-        self.tool_path_obj = mpp.tool_path_obj(system_mode, user_mode)    
-        self.Input_Filepath = os.path.splitext(Input_File)[0]
-        self.Input_File1 = self.Input_Filepath + "1"
-        self.Input_File2 = self.Input_Filepath + "2"
-        self.Input_FName = os.path.basename(Input_File)
+        self.tool_path_obj = mpp.tool_path_obj(system_mode, user_mode)
         
         self.Qual_str = str(Quality_score)
         self.Input_Path = os.path.dirname(Input_File)
-        self.Contigs = os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0] + "_SpadesOut", "contigs.fasta")
         self.Threads_str= str(Thread_count)
-        self.EC_Split = os.path.join(self.Input_Filepath + "_EC_Annotation", "Split")
-        self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
-        self.Host_Contaminants = self.Input_Filepath + "_host_contaminents_seq.fasta"
-        self.Vector_Contaminants = self.Input_Filepath + "_vector_contaminants_seq.fasta"
         
-        print("input filepath:", self.Input_Filepath)
-        #print("input file 1:", self.Input_File1)
-        #print("input file 2:", self.Input_File2)
-        #print("input FName:", self.Input_FName)
-        #print("input path:", self.Input_Path)
-        print("where are we now:", os.getcwd())
+        print("input filepath:", Input_File)
     
     #-----------------------------------------------------------
     # support functions
@@ -1653,34 +1593,33 @@ class mt_pipe_commands:
                 
         return COMMANDS_EC_Postprocess
 
-    def create_Network_generation_command(self):
+    def create_Network_generation_command(self, current_stage_name, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+        subfolder = os.getcwd() + "/" + current_stage_name + "/"
+        data_folder = subfolder + "data/"
+        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
+        ta_folder = os.getcwd() + "/" + taxonomic_annotation_stage + "/data/final_results/"
+        ea_folder = os.getcwd() + "/" + enzyme_annotation_stage + "/data/final_results/"
+        final_folder = data_folder + "final_results/"
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(final_folder)
+
+        network_generation = ">&2 echo generating RPKM table and Cytoscape network | "
+        network_generation += self.tool_path_obj.Python + " "
+        network_generation += self.tool_path_obj.RPKM + " "
+        network_generation += self.tool_path_obj.nodes + " "
+        network_generation += ta_folder + "taxonomic_classifications.tsv" + " "
+        network_generation += diamond_folder + "gene_map.tsv" + " "
+        network_generation += ea_folder + "proteins.ECs_All" + " "
+        network_generation += final_folder + "RPKM_table.tsv" + " "
+        network_generation += final_folder + "Cytoscape_network.tsv" + " "
+
         COMMANDS_Network = [
-        self.tool_path_obj.Python + " " + self.tool_path_obj.RPKM + " " + self.tool_path_obj.Nodes + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + os.path.join(self.Input_Filepath + "_EC_Annotation", "Output", "Consolidated", os.path.splitext(self.Input_FName)[0] + "_proteins.ECs_All") + " " + self.Input_Filepath + "_RPKM.tsv" + " " + self.Input_Filepath + "_Cytoscape.tsv"
-        ]
+            network_generation
+            ]
         return COMMANDS_Network
 
-    def create_Join_command(self):
-        wevote_cat = "cat " + self.Input_Filepath + "*/*_WEVOTEOut.tsv" + " > " + self.Input_Filepath + "_WEVOTEOut.tsv"
-        taxid_to_english = self.tool_path_obj.Python + " " + Contrain_classification + " " + "family" + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + Nodes + " " + Names + " " + self.Input_Filepath + "_WEVOTEOut_family.tsv"
-        kaiju_to_krona = Kaiju2krona + " -t " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nodes_nr.dmp" + " -n " + "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/names_nr.dmp" + " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv" + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
-        awk_cleanup_krona = "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
-        kt_import_text_cleanup = ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
-        cat_gene_maps = "cat " + self.Input_Filepath + "*/*_gene_map.tsv" + " > " + self.Input_Filepath + "_gene_map.tsv"
-        cat_EC = "cat " + os.path.join(self.Input_Filepath + "*/*_EC_Annotation", "Output", "Consolidated", "*_proteins.ECs_All") + " > " + self.Input_Filepath + "_proteins.ECs_All"
-        get_RPKM = self.tool_path_obj.Python + " " + self.tool_path_obj.RPKM + " " + self.tool_path_obj.Nodes + " " + self.Input_Filepath + "_WEVOTEOut.tsv" + " " + self.Input_Filepath + "_gene_map.tsv" + " " + self.Input_Filepath + "_proteins.ECs_All" + " " + self.Input_Filepath + "_RPKM.tsv" + " " + self.Input_Filepath + "_Cytoscape.tsv"
-        
-        COMMANDS_Join = [
-        wevote_cat,
-        taxid_to_english,
-        kaiju_to_krona,
-        awk_cleanup_krona,
-        kt_import_text_cleanup,
-        cat_gene_maps,
-        cat_EC,
-        get_RPKM
-        ]
-        
-        return COMMANDS_Join
-                        
-                    
-                    
+    def create_visualization_command(self):
+        COMMANDS_visualization = []
+        return COMMANDS_visualization
