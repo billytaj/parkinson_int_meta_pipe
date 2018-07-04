@@ -4,6 +4,7 @@ class tool_path_obj:
     def __init__ (self, mode = "scinet", name = "None"):
             
         
+        self.name = name
         
         if(mode == "scinet"):
             #--------------------------------------------
