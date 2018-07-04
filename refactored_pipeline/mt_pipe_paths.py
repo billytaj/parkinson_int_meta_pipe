@@ -232,6 +232,8 @@ class tool_path_obj:
             #----------------------------------------------------------
             # external tools
             self.Python             =             "python3"
+            #Need to add
+            self.Java               =             "java -jar"
             self.cdhit_dup          = tool_path + "cdhit_dup/cd-hit-dup" 
             self.Timmomatic         = tool_path + "Trimmomatic/trimmomatic-0.36.jar"
             self.AdapterRemoval     = tool_path + "adapterremoval/AdapterRemoval"
@@ -253,6 +255,8 @@ class tool_path_obj:
             self.kSLAM              = tool_path + "k-SLAM/SLAM"
             self.Barrnap            = tool_path + "barrnap/barrnap"
             self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
+            #Need to add
+            self.PriamDB            = tool_path + "PRIAM_search/PRIAM_MAR15"
             self.BLAST_dir          = tool_path + "BLAST_p"
             self.WEVOTE             = tool_path + "WEVOTE/WEVOTE"
             self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTE_db" #points to the location of taxdump, needed by WEVOTE

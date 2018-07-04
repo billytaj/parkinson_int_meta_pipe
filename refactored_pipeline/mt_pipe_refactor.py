@@ -559,9 +559,6 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
 
-            end_time = time.time()
-            print("Total runtime:", end_time - start_time)
-
             # ------------------------------------------------------
             # EC annotation
             if (not sync_obj.check_where_resume(output_folder + ec_annotation_label)):
@@ -587,7 +584,8 @@ def main(input_folder, output_folder, system_op, user_mode):
                             target=comm.create_pbs_and_launch,
                             args=(
                                 ec_annotation_label,
-                                comm.create_EC_DETECT_command(ec_annotation_label, file_root_name), True,
+                                comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
+                                True,
                                 inner_name
                             )
                         )
@@ -596,6 +594,33 @@ def main(input_folder, output_folder, system_op, user_mode):
                 for item in mp_store:
                     item.join()  # wait for things to finish
                 mp_store[:] = []  # clear the list
+
+            DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
+            if (not sync_obj.check_where_resume(output_folder + DETECT_path)):
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        ec_annotation_label,
+                        comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, assemble_contigs_label,
+                                                                 gene_annotation_DIAMOND_label),
+                        True
+                    )
+                )
+                process.start()
+                process.join()
+
+                inner_name = "ea_post"
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        ec_annotation_label,
+                        comm.create_EC_postprocess_command(ec_annotation_label),
+                        True,
+                        inner_name
+                    )
+                )
+                process.start()
+                process.join()
 
             end_time = time.time()
             print("Total runtime:", end_time - start_time)

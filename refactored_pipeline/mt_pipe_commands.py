@@ -1557,9 +1557,10 @@ class mt_pipe_commands:
         self.make_folder(detect_folder)
         self.make_folder(final_folder)
 
-        file_splitter = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+        file_splitter = ">&2 echo splitting protein files for Detect | "
+        file_splitter += self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
         file_splitter += diamond_folder + "proteins.faa" + " "
-        file_splitter += proteins_folder + "proteins" + " "
+        file_splitter += proteins_folder + "protein" + " "
         file_splitter += str(file_split_count)
 
         COMMANDS_DETECT_prep = [
@@ -1573,7 +1574,8 @@ class mt_pipe_commands:
         proteins_folder = data_folder + "0_proteins/"
         detect_folder = data_folder + "1_detect/"
 
-        detect_protein = self.tool_path_obj.Python + " "
+        detect_protein = ">&2 echo running detect on split file " + prot_name + " | "
+        detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect_Submit + " "
         detect_protein += proteins_folder + prot_name + " "
         detect_protein += detect_folder + prot_name + " " + self.Threads_str
@@ -1584,14 +1586,29 @@ class mt_pipe_commands:
 
         return COMMANDS_DETECT
         
-    def create_EC_PRIAM_DIAMOND_command(self):
-        self.Input_Filepath = os.path.splitext(Input_File)[0]
-        self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
-        COMMANDS_PRIAM = [
-        "mkdir -p " + os.path.join(self.EC_Output, "PRIAM"),
-        "cd " + os.path.join(self.EC_Output, "PRIAM"),
-        "java -jar" + " " + self.tool_path_obj.Priam + " -n " + os.path.splitext(self.Input_FName)[0] + "_PRIAM" + " -i " + self.Input_Filepath + "_proteins.faa" + " -p " + os.path.join(os.path.dirname(Priam), "PRIAM_MAR15") + " -od " + os.path.join(self.EC_Output, "PRIAM") +" -e T -pt 0.5 -mo -1 -mp 70 -cc T -cg T -bd " + self.tool_path_obj.BLAST_dir,
-        ]
+    def create_EC_PRIAM_DIAMOND_command(self, current_stage_name, diamond_stage):
+        subfolder = os.getcwd() + "/" + current_stage_name + "/"
+        data_folder = subfolder + "data/"
+        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
+        PRIAM_folder = data_folder + "2_priam/"
+        diamond_ea_folder = data_folder + "3_diamond/"
+        final_folder = data_folder + "final_results/"
+
+        self.make_folder(PRIAM_folder)
+        self.make_folder(diamond_ea_folder)
+
+        PRIAM_command = ">&2 echo running PRIAM | "
+        PRIAM_command += self.tool_path_obj.Java + " "
+        PRIAM_command += self.tool_path_obj.Priam
+        PRIAM_command += " -n " + "proteins_priam" + " "
+        PRIAM_command += " -i " + diamond_folder + "proteins.faa"
+        PRIAM_command += " -p " + self.tool_path_obj.PriamDB
+        PRIAM_command += " -od " + PRIAM_folder
+        PRIAM_command += " -e T -pt 0.5 -mo -1 -mp 70 -cc T -cg T -bd "
+        PRIAM_command += self.tool_path_obj.BLAST_dir
+
+        diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
+        diamond_ea_command +=
 
         self.Input_Filepath = os.path.splitext(Input_File)[0]
         self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
@@ -1600,6 +1617,11 @@ class mt_pipe_commands:
         "cd " + os.path.join(self.EC_Output, "Diamond"),
         self.tool_path_obj.DIAMOND + " blastp -p " + self.Threads_str + " --query "+ self.Input_Filepath + "_proteins.faa" + " --db "+ self.tool_path_obj.SWISS_PROT + " --outfmt "+ "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident" + " --out " + os.path.join(self.EC_Output, "Diamond", os.path.splitext(self.Input_FName)[0] + ".blastout") + " --evalue 0.0000000001 --max-target-seqs 1"
         ]
+
+        COMMANDS_PRIAM_DIAMOND = [
+            PRIAM_command,
+            diamond_ea_command
+            ]
 
         return COMMANDS_PRIAM_DIAMOND
 
