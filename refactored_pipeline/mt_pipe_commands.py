@@ -1592,7 +1592,6 @@ class mt_pipe_commands:
         diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
         PRIAM_folder = data_folder + "2_priam/"
         diamond_ea_folder = data_folder + "3_diamond/"
-        final_folder = data_folder + "final_results/"
 
         self.make_folder(PRIAM_folder)
         self.make_folder(diamond_ea_folder)
@@ -1608,15 +1607,13 @@ class mt_pipe_commands:
         PRIAM_command += self.tool_path_obj.BLAST_dir
 
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
-        diamond_ea_command +=
-
-        self.Input_Filepath = os.path.splitext(Input_File)[0]
-        self.EC_Output = os.path.join(self.Input_Filepath + "_EC_Annotation", "Output")
-        COMMANDS_EC_Diamond = [
-        "mkdir -p " + os.path.join(self.EC_Output, "Diamond"),
-        "cd " + os.path.join(self.EC_Output, "Diamond"),
-        self.tool_path_obj.DIAMOND + " blastp -p " + self.Threads_str + " --query "+ self.Input_Filepath + "_proteins.faa" + " --db "+ self.tool_path_obj.SWISS_PROT + " --outfmt "+ "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident" + " --out " + os.path.join(self.EC_Output, "Diamond", os.path.splitext(self.Input_FName)[0] + ".blastout") + " --evalue 0.0000000001 --max-target-seqs 1"
-        ]
+        diamond_ea_command += self.tool_path_obj.DIAMOND + " blastp"
+        diamond_ea_command += " -p " + self.Threads_str
+        diamond_ea_command += " -query " + diamond_folder + "proteins.faa"
+        diamond_ea_command += " --db " + self.tool_path_obj.SWISS_PROT
+        diamond_ea_command += " --outfmt " + "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident"
+        diamond_ea_command += " --out " + diamond_ea_folder + "proteins.blastout"
+        diamond_ea_command += " --evalue 0.0000000001 --max-target-seqs 1"
 
         COMMANDS_PRIAM_DIAMOND = [
             PRIAM_command,
