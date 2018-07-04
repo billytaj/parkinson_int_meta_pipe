@@ -16,6 +16,7 @@ RUN apt-get -y install cmake
 RUN apt-get -y install libncurses5-dev
 RUN apt-get -y install liblzma-dev
 RUN apt-get -y install perl
+RUN apt-get -y install openjdk-8-jre
 RUN conda update -n base conda -y
 RUN conda install Biopython -y 
 RUN conda install Pandas -y
