@@ -228,10 +228,15 @@ class tool_path_obj:
             self.names = "/home/j/jparkin/mobolaji/Databases/taxdump/names.dmp"
             self.Kaiju_db = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
             self.Centrifuge_db = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt"
+            # More
+            self.SWISS_PROT = "/home/j/jparkin/mobolaji/Databases/uniprot_sprot_annotated.fasta"
+            self.SWISS_PROT_map = "/home/j/jparkin/mobolaji/Databases/SwissProt_EC_Mapping.tsv"
 
             #----------------------------------------------------------
             # external tools
             self.Python             =             "python3"
+            #Need to add
+            self.Java               =             "java -jar"
             self.cdhit_dup          = tool_path + "cdhit_dup/cd-hit-dup" 
             self.Timmomatic         = tool_path + "Trimmomatic/trimmomatic-0.36.jar"
             self.AdapterRemoval     = tool_path + "adapterremoval/AdapterRemoval"
@@ -253,6 +258,8 @@ class tool_path_obj:
             self.kSLAM              = tool_path + "k-SLAM/SLAM"
             self.Barrnap            = tool_path + "barrnap/barrnap"
             self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
+            #Need to add
+            self.PriamDB            = tool_path + "PRIAM_search/PRIAM_MAR15"
             self.BLAST_dir          = tool_path + "BLAST_p"
             self.WEVOTE             = tool_path + "WEVOTE/WEVOTE"
             self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTE_db" #points to the location of taxdump, needed by WEVOTE
@@ -272,24 +279,19 @@ class tool_path_obj:
             self.orphaned_read_filter       = self.refactor_path    + "orphaned_pair_filter.py"
             self.BLAT_Contaminant_Filter    = self.refactor_path    + "BLAT_Contaminant_Filter.py"
             self.File_splitter              = self.refactor_path    + "seq_file_splitter.py"
-            self.rRNA_filter                = self.refactor_path    +"rRNA_filter_v2.py"
+            self.rRNA_filter                = self.refactor_path    + "rRNA_filter_v2.py"
             self.Map_reads_gene_BWA         = self.script_path      + "map_read_gene_BWA.py"
             self.Map_reads_gene_BLAT        = self.script_path      + "map_read_gene_BLAT.py"
             self.Map_reads_prot_DMND        = self.script_path      + "map_read_prot_DMND.py"
             
             self.RPKM = self.script_path + "RPKM.py"
-            
-            self.EC_Annotation_Prep         = self.script_path + "EC_Prediction_Scripts/0_Preprocess_Input.py"
-            self.Detect_Submit              = self.script_path + "EC_Prediction_Scripts/1-1a_Detect_Submission.py"
-            self.EC_Annotation_Post         = self.script_path + "EC_Prediction_Scripts/4a_EC_Consolidation.py"
+
+            #Will have to modify this script to take more explicit arguments
+            self.EC_Annotation_Post         = self.refactor_path + "EC_Consolidation.py"
             self.Detect                     = "/home/j/jparkin/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
             self.Annotated_taxid            = self.script_path + "Read_Classification/Get_TaxID.py"
             self.Constrain_classification    = self.script_path + "Read_Classification/Constrain_Classification.py"
             self.Classification_combine     = self.script_path + "Read_Classification/Combine_WEVOTE.py"
 
             #self.Fastqc = "/home/j/jparkin/mobolaji/Tools/FastQC/fastqc"
-            
-            #rRNA_Split_Jobs = refactor_path + "rRNA_Split_Jobs.py"
-            
-            #self.SWISS_PROT = "/home/j/jparkin/mobolaji/Databases/uniprot_sprot_annotated.fasta"
 

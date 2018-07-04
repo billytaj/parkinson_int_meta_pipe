@@ -256,6 +256,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             GA_BLAT_PP_label = "BLAT_postprocess"
             gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
             taxon_annotation_label = "taxonomic_annotation"
+            ec_annotation_label = "enzyme_function_annotation"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -558,10 +559,71 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
 
+            # ------------------------------------------------------
+            # EC annotation
+            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label)):
+                # Preparing folders for DETECT
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        taxon_annotation_label,
+                        comm.create_EC_DETECT_prep(ec_annotation_label, gene_annotation_DIAMOND_label, int(mp.cpu_count()/2)),
+                        True
+                    )
+                )
+                process.start()
+                process.join()
+
+                # Running DETECT on split protien files
+                proteins_path = output_folder + ec_annotation_label + "/data/0_proteins/"
+                if (not sync_obj.check_where_resume(None, proteins_path)):
+                    for item in os.listdir(proteins_path):
+                        file_root_name = os.path.splitext(item)[0]
+                        inner_name = file_root_name + "_detect"
+                        process = mp.Process(
+                            target=comm.create_pbs_and_launch,
+                            args=(
+                                ec_annotation_label,
+                                comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
+                                True,
+                                inner_name
+                            )
+                        )
+                        process.start()
+                        mp_store.append(process)  # pack all the processes into a list
+                for item in mp_store:
+                    item.join()  # wait for things to finish
+                mp_store[:] = []  # clear the list
+
+            DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
+            if (not sync_obj.check_where_resume(output_folder + DETECT_path)):
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        ec_annotation_label,
+                        comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, assemble_contigs_label,
+                                                                 gene_annotation_DIAMOND_label),
+                        True
+                    )
+                )
+                process.start()
+                process.join()
+
+                inner_name = "ea_post"
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        ec_annotation_label,
+                        comm.create_EC_postprocess_command(ec_annotation_label),
+                        True,
+                        inner_name
+                    )
+                )
+                process.start()
+                process.join()
+
             end_time = time.time()
             print("Total runtime:", end_time - start_time)
-
-
 
         elif(operating_mode == single_mode):
             print("not ready")
