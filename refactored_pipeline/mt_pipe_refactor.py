@@ -280,6 +280,8 @@ def main(input_folder, output_folder, system_op, user_mode):
             GA_BLAT_PP_label = "BLAT_postprocess"
             gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
             taxon_annotation_label = "taxonomic_annotation"
+            ec_annotation_label = "enzyme_annotation"
+            network_label = "RPKM_network"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -590,8 +592,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
             TA_end = time.time()
             
-             # ------------------------------------------------------
- 
+            # ------------------------------------------------------
             # EC annotation
             if (not sync_obj.check_where_resume(output_folder + ec_annotation_label)):
                 # Preparing folders for DETECT
@@ -629,7 +630,8 @@ def main(input_folder, output_folder, system_op, user_mode):
                 mp_store[:] = []  # clear the list
  
             DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
-            
+
+            # Running Priam and Diamond
             if (not sync_obj.check_where_resume(output_folder + DETECT_path)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
@@ -654,8 +656,20 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            
-            
+
+            # ------------------------------------------------------
+            # RPKM Table and Cytoscape Network
+            if (not sync_obj.check_where_resume(output_folder + network_label)):
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        network_label,
+                        comm.create_Network_generation_command(network_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label),
+                        True
+                    )
+                )
+                process.start()
+                process.join()
             
             end_time = time.time()
             print("Total runtime:", end_time - start_time, "s", "start:", start_time, "end:", end_time)
