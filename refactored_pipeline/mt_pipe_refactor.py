@@ -618,21 +618,20 @@ def main(input_folder, output_folder, system_op, user_mode):
  
                 # Running DETECT on split protien files 
                 proteins_path = output_folder + ec_annotation_label + "/data/0_proteins/"
-                if (not sync_obj.check_where_resume(None, proteins_path)):
-                    for item in os.listdir(proteins_path):
-                        file_root_name = os.path.splitext(item)[0]
-                        inner_name = file_root_name + "_detect"
-                        process = mp.Process(
-                            target=comm.create_pbs_and_launch,
-                            args=(
-                                ec_annotation_label,
-                                comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
-                                True,
-                                inner_name
-                            )
+                for item in os.listdir(proteins_path):
+                    file_root_name = os.path.splitext(item)[0]
+                    inner_name = file_root_name + "_detect"
+                    process = mp.Process(
+                        target=comm.create_pbs_and_launch,
+                        args=(
+                            ec_annotation_label,
+                            comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
+                            True,
+                            inner_name
                         )
-                        process.start()
-                        mp_store.append(process)  # pack all the processes into a list
+                    )
+                    process.start()
+                    mp_store.append(process)  # pack all the processes into a list
  
                 for item in mp_store:
                     item.join()  # wait for things to finish
@@ -647,7 +646,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                     target=comm.create_pbs_and_launch,
                     args=(
                         ec_annotation_label,
-                        comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, assemble_contigs_label, gene_annotation_DIAMOND_label),
+                        comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
                         True
                     )
                 )
@@ -659,7 +658,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                     target=comm.create_pbs_and_launch,
                     args=(
                         ec_annotation_label,
-                        comm.create_EC_postprocess_command(ec_annotation_label),
+                        comm.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
                         True,
                         inner_name
                     )

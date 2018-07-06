@@ -148,6 +148,7 @@ class tool_path_obj:
             #----------------------------------------------------------
             # external tools
             self.Python             =             "python3"
+            self.Python2            =             "python2"
             #Need to add
             self.Java               =             "java -jar"
             self.cdhit_dup          = tool_path + "cdhit_dup/cd-hit-dup" 
