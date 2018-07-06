@@ -109,15 +109,16 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            if(self.name == "billy" or self.name == "Billy"):
-                self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
-            elif(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
-                self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
-            else:
-                sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
-                
+            #if(self.name == "billy" or self.name == "Billy"):
+            #    self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
+            #elif(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
+            #    self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+            #else:
+            #    sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
+            #
+            
+            script_path             = "/pipeline/"
             reference_file_path     = "/pipeline_reference_files/"
-            self.refactor_path      = self.script_path
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"
             database_path           = "/project/j/jparkin/Lab_Databases/"
@@ -187,7 +188,6 @@ class tool_path_obj:
             self.contig_duplicate_remover   = script_path   + "contig_duplicate_remover.py"
             self.sort_reads                 = script_path   + "sort_reads_refactor.py"
             self.duplicate_repopulate       = script_path   + "duplicate_repopulation.py"
-            self.Map_reads_contigs          = script_path   + "Map_read_contigs.py"
             self.orphaned_read_filter       = script_path   + "orphaned_pair_filter.py"
             self.BLAT_Contaminant_Filter    = script_path   + "BLAT_Contaminant_Filter.py"
             self.File_splitter              = script_path   + "seq_file_splitter.py"
