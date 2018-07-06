@@ -217,7 +217,7 @@ RUN rm -r WEVOTE-master
 # add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
 WORKDIR /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_refactor.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_path.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_paths.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_commands.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_contig_v2.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/sam_trimmer.py /pipeline
@@ -230,7 +230,7 @@ ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refact
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/rRNA_filter_v2.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_gene_BWA.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_gene_BLAT.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_gene_DMND.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_prot_DMND.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/RPKM.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Get_TaxID.py /pipeline
 ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Constrain_Classification.py /pipeline
