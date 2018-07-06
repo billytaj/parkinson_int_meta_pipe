@@ -101,7 +101,9 @@ RUN tar --remove-files -xzvf DIAMOND.tar.gz -C DIAMOND && rm DIAMOND.tar.gz
 #-----------------------------------------------------
 # Install DETECT_V2
 RUN mkdir DETECT
-RUN wget -P DETECT_V2 https://github.com/ParkinsonLab/DETECT-v2/blob/master/DETECT%20enzyme%20annotation%20tool/detect.py
+WORKDIR /pipeline_tools/DETECT
+RUN wget https://raw.githubusercontent.com/ParkinsonLab/DETECT-v2/master/DETECT%20enzyme%20annotation%20tool/detect.py
+WORKDIR /pipeline_tools
 
 #------------------------------------------------------
 # Install FLASH (Fast length adjustment of Short Reads)

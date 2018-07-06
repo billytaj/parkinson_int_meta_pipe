@@ -23,23 +23,8 @@ RUN echo "hello from custom dockerfile"
 
 WORKDIR /pipeline_tools
 
-
-#----------------------------------------------------
-# Install Centrifuge
-RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz
-RUN tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz && mkdir /pipeline_tools/centrifuge
-WORKDIR centrifuge-1.0.3
-RUN make && mv centrifuge ../centrifuge && mv centrifuge-class ../centrifuge && mv centrifuge-kreport ../centrifuge && mv centrifuge-build ../centrifuge
+# Install DETECT_V2
+RUN mkdir DETECT
+WORKDIR /pipeline_tools/DETECT
+RUN wget https://raw.githubusercontent.com/ParkinsonLab/DETECT-v2/master/DETECT%20enzyme%20annotation%20tool/detect.py
 WORKDIR /pipeline_tools
-RUN rm -r centrifuge-1.0.3
-
-#------------------------------------
-# Install WEVOTE
-RUN wget https://github.com/aametwally/WEVOTE/archive/master.zip -O wevote.zip
-RUN unzip wevote.zip && rm wevote.zip
-WORKDIR WEVOTE-master
-RUN mkdir ../WEVOTE 
-RUN ./install.sh && mkdir WEVOTE_db 
-RUN mv bin/WEVOTE ../WEVOTE && mv downloadTaxonomyDB.sh ../WEVOTE && mkdir ../WEVOTE/WEVOTE_db && sh ../WEVOTE/downloadTaxonomyDB.sh ../WEVOTE/WEVOTE_db
-WORKDIR /pipeline_tools
-RUN rm -r WEVOTE-master

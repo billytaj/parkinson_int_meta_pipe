@@ -142,8 +142,9 @@ class tool_path_obj:
             self.Kaiju_db           = database_path + "kaiju_db/kaiju_db_nr.fmi"
             self.Centrifuge_db      = database_path + "centrifuge_db"
             # More
-            self.SWISS_PROT         = database_path + "swiss_prot_db/uniprot_sprot_annotated.fasta"
+            self.SWISS_PROT         = database_path + "swiss_prot_db/swiss_prot_db"
             self.SWISS_PROT_map     = database_path + "swiss_prot_db/SwissProt_EC_Mapping.tsv"
+            self.PriamDB            = database_path + "PRIAM_db/"
 
             #----------------------------------------------------------
             # external tools
@@ -173,12 +174,12 @@ class tool_path_obj:
             self.Barrnap            = tool_path + "barrnap/barrnap"
             self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
             #Need to add
-            self.PriamDB            = tool_path + "PRIAM_search/PRIAM_MAR15"
+            
             self.BLAST_dir          = tool_path + "BLAST_p"
             self.WEVOTE             = tool_path + "WEVOTE/WEVOTE"
             self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTE_db" #points to the location of taxdump, needed by WEVOTE
             self.Spades             = tool_path + "SPAdes/bin/spades.py"
-            self.Detect             = tool_path + "DETECT_V2/detect.py"
+            
 
             
             #--------------------------------------------
@@ -206,5 +207,6 @@ class tool_path_obj:
             self.Constrain_classification   = script_path   + "Read_Classification/Constrain_Classification.py"
             self.Classification_combine     = script_path   + "Read_Classification/Combine_WEVOTE.py"
 
+            self.Detect                     = script_path   + "detect_2_py3.py"
             #self.Fastqc = "/home/j/jparkin/mobolaji/Tools/FastQC/fastqc"
 
