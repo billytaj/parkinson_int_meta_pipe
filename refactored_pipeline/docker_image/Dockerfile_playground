@@ -26,5 +26,5 @@ WORKDIR /pipeline_tools
 # Install DETECT_V2
 RUN mkdir DETECT
 WORKDIR /pipeline_tools/DETECT
-RUN wget https://raw.githubusercontent.com/ParkinsonLab/DETECT-v2/master/DETECT%20enzyme%20annotation%20tool/detect.py
+RUN wget https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/detect_2_py3.py
 WORKDIR /pipeline_tools
