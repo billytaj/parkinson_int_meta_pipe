@@ -1515,7 +1515,7 @@ class mt_pipe_commands:
         detect_folder = data_folder + "1_detect/"
 
         detect_protein = ">&2 echo running detect on split file " + prot_name + " | "
-        detect_protein += self.tool_path_obj.Python2 + " "
+        detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
         detect_protein += proteins_folder + prot_name + ".fasta"
         detect_protein += " --output_file " + detect_folder + prot_name + ".detect"
