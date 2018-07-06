@@ -231,7 +231,14 @@ def main(input_folder, output_folder, system_op, user_mode):
     GA_DIAMOND_end          = 0
     TA_start                = 0
     TA_end                  = 0
-
+    EC_start                = 0
+    EC_end                  = 0
+    EC_DETECT_start         = 0
+    EC_DETECT_end           = 0
+    EC_PRIAM_DIAMOND_start  = 0
+    EC_PRIAM_DIAMOND_end    = 0
+    Cytoscape_start         = 0
+    Cytoscape_end           = 0
     
     start_time = time.time()
     #only seems to look for *1.fastq, and nothing else.  the whole loop is wasting time.
@@ -594,6 +601,8 @@ def main(input_folder, output_folder, system_op, user_mode):
             
             # ------------------------------------------------------
             # EC annotation
+            EC_start = time.time()
+            EC_DETECT_start = time.time()
             if (not sync_obj.check_where_resume(output_folder + ec_annotation_label)):
                 # Preparing folders for DETECT
                 process = mp.Process(
@@ -609,35 +618,35 @@ def main(input_folder, output_folder, system_op, user_mode):
  
                 # Running DETECT on split protien files 
                 proteins_path = output_folder + ec_annotation_label + "/data/0_proteins/"
-                if (not sync_obj.check_where_resume(None, proteins_path)):
-                    for item in os.listdir(proteins_path):
-                        file_root_name = os.path.splitext(item)[0]
-                        inner_name = file_root_name + "_detect"
-                        process = mp.Process(
-                            target=comm.create_pbs_and_launch,
-                            args=(
-                                ec_annotation_label,
-                                comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
-                                True,
-                                inner_name
-                            )
+                for item in os.listdir(proteins_path):
+                    file_root_name = os.path.splitext(item)[0]
+                    inner_name = file_root_name + "_detect"
+                    process = mp.Process(
+                        target=comm.create_pbs_and_launch,
+                        args=(
+                            ec_annotation_label,
+                            comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
+                            True,
+                            inner_name
                         )
-                        process.start()
-                        mp_store.append(process)  # pack all the processes into a list
+                    )
+                    process.start()
+                    mp_store.append(process)  # pack all the processes into a list
  
                 for item in mp_store:
                     item.join()  # wait for things to finish
                 mp_store[:] = []  # clear the list
- 
+            EC_DETECT_end = time.time()
             DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
 
             # Running Priam and Diamond
+            EC_PRIAM_DIAMOND_start = time.time()
             if (not sync_obj.check_where_resume(output_folder + DETECT_path)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
                         ec_annotation_label,
-                        comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, assemble_contigs_label, gene_annotation_DIAMOND_label),
+                        comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
                         True
                     )
                 )
@@ -649,16 +658,18 @@ def main(input_folder, output_folder, system_op, user_mode):
                     target=comm.create_pbs_and_launch,
                     args=(
                         ec_annotation_label,
-                        comm.create_EC_postprocess_command(ec_annotation_label),
+                        comm.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
                         True,
                         inner_name
                     )
                 )
                 process.start()
                 process.join()
-
+            EC_PRIAM_DIAMOND_end = time.time()
+            EC_end = time.time()
             # ------------------------------------------------------
             # RPKM Table and Cytoscape Network
+            Cytoscape_start = time.time()
             if (not sync_obj.check_where_resume(output_folder + network_label)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
@@ -671,6 +682,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
             
+            Cytoscape_end = time.time()
             end_time = time.time()
             print("Total runtime:", end_time - start_time, "s", "start:", start_time, "end:", end_time)
             print("preprocess:", preprocess_end - preprocess_start, "s", "start:", preprocess_start, "end:", preprocess_end)
@@ -681,191 +693,15 @@ def main(input_folder, output_folder, system_op, user_mode):
             print("GA BLAT:", GA_BLAT_end - GA_BLAT_start, "s", "start:", GA_BLAT_start, "end:", GA_BLAT_end)
             print("GA DIAMOND:", GA_DIAMOND_end - GA_DIAMOND_start, "s", "start:", GA_DIAMOND_start, "end:", GA_DIAMOND_end)
             print("TA:", TA_end - TA_start, "s", "start:", TA_start, "end:", TA_end)
-
+            print("EC:", EC_end - EC_start, "s", "start:", EC_start, "end:", EC_end)
+            print("EC DETECT:", EC_DETECT_end - EC_DETECT_start, "s", "start:", EC_DETECT_start, "end:", EC_DETECT_end)
+            print("EC PRIAM + DIAMOND:", EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_end, "s", "start:", EC_PRIAM_DIAMOND_start, "end:", EC_PRIAM_DIAMOND_end)
+            print("Cytoscape:", Cytoscape_end - Cytoscape_start, "s", "start:", Cytoscape_start, "end:", Cytoscape_end)
 
         elif(operating_mode == single_mode):
             print("not ready")
 
-        """
-            # Preprocessing
-            
-
-            create_pbs_job("Preprocess", Input_FName, COMMANDS_Pre)        
-            if(run_jobs):
-                JobID_Pre = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Preprocess.pbs"])
-
-            
-            create_pbs_job("rRNA_Submit", Input_FName, COMMANDS_rRNA)
-            if(run_jobs):
-                JobID_rRNA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_rRNA_Submit.pbs", "-W", "depend=afterok:" + JobID_Pre.strip("\n")])
-
-
-            create_pbs_job("Combine", Input_FName, COMMANDS_Combine)
-            if(run_jobs):
-                JobID_Combine = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Combine.pbs", "-W", "depend=afterok:" + JobID_rRNA.strip("\n")])
-
-                subprocess.call(["qalter", "-v", "JOB2=" + JobID_Combine.strip("\n").split(".")[0], JobID_rRNA.strip("\n")])
-
-            #BIGG Database, AGORA Nature paper, Additional functionality
-            # Transcript Assembly
-            Contigs = os.path.join(Input_Path, os.path.splitext(Input_FName)[0] + "_SpadesOut", "contigs.fasta")
-
-            create_pbs_job("Assemble", Input_FName, COMMANDS_Assemble)        
-            if(run_jobs):
-                JobID_Assemble = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Assemble.pbs", "-W", "depend=afterok:" + JobID_Combine.strip("\n")])
-
-            # Protein Annotation BWA
-            create_pbs_job("Annotate_BWA", Input_FName, COMMANDS_Annotate_BWA, "med")        
-            if(run_jobs):
-                JobID_Annotate_BWA = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BWA.pbs", "-W", "depend=afterok:" + JobID_Assemble.strip("\n")])
-
-            # Protein Annotation BLAT 1
-            create_pbs_job("Annotate_BLAT1", Input_FName, COMMANDS_Annotate_BLAT1, "med")        
-            if(run_jobs):
-                JobID_Annotate_BLAT1 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT1.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
-            # Protein Annotation BLAT 2
-            create_pbs_job("Annotate_BLAT2", Input_FName, COMMANDS_Annotate_BLAT2, "med")
-            if(run_jobs):
-                JobID_Annotate_BLAT2 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT2.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
-            # Protein Annotation BLAT 3
-            create_pbs_job("Annotate_BLAT3", Input_FName, COMMANDS_Annotate_BLAT3, "med")       
-            if(run_jobs):
-                JobID_Annotate_BLAT3 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT3.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
-            # Protein Annotation BLAT 4
-            create_pbs_job("Annotate_BLAT4", Input_FName, COMMANDS_Annotate_BLAT4, "med")
-            if(run_jobs):
-                JobID_Annotate_BLAT4 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT4.pbs", "-W", "depend=afterok:" + JobID_Annotate_BWA.strip("\n")])
-
-            # Protein Annotation BLAT Postprocessing
-            create_pbs_job("Annotate_BLAT_Postprocessing", Input_FName, COMMANDS_Annotate_BLAT_Post)
-            if(run_jobs):
-                JobID_Annotate_BLAT_Post = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_BLAT_Postprocessing.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT1.strip("\n") + ":" + JobID_Annotate_BLAT2.strip("\n") + ":" + JobID_Annotate_BLAT3.strip("\n") + ":" + JobID_Annotate_BLAT4.strip("\n")])
-
-
-            # Protein Annotation Diamond 1
-            create_pbs_job("Annotate_DMD", Input_FName, COMMANDS_Annotate_Diamond1)        
-            if(run_jobs):
-                JobID_Annotate_Diamond1 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD1.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
-            # Protein Annotation Diamond 2
-            create_pbs_job("Annotate_DMD2", Input_FName, COMMANDS_Annotate_Diamond2)  
-            if(run_jobs):
-                JobID_Annotate_Diamond2 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD2.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
-            # Protein Annotation Diamond 3
-            create_pbs_job("Annotate_DMD3", Input_FName, COMMANDS_Annotate_Diamond3)
-            if(run_jobs):
-                JobID_Annotate_Diamond3 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD3.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
-            # Protein Annotation Diamond 4
-          
-            create_pbs_job("Annotate_DMD4", Input_FName, COMMANDS_Annotate_Diamond4)                
-            if(run_jobs):
-                JobID_Annotate_Diamond4 = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD4.pbs", "-W", "depend=afterok:" + JobID_Annotate_BLAT_Post.strip("\n")])
-
-            # Protein Annotation Diamond Postprocess
-            create_pbs_job("Annotate_DMD_Postprocessing", Input_FName, COMMANDS_Annotate_Diamond_Post)
-            if(run_jobs):
-                JobID_Annotate_Diamond_Post = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Annotate_DMD_Postprocess.pbs", "-W", "depend=afterany:" + JobID_Annotate_Diamond1.strip("\n") + ":" + JobID_Annotate_Diamond2.strip("\n") + ":" + JobID_Annotate_Diamond3.strip("\n") + ":" + JobID_Annotate_Diamond4.strip("\n")])
-            
-            # Classify Reads
-            create_pbs_job("Classify", Input_FName, COMMANDS_Classify, "high")
-            if(run_jobs):
-                JobID_Classify = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Classify.pbs", "-W", "depend=afterok:" + JobID_Annotate_Diamond_Post.strip("\n")])
-            
-            # Prepare EC annotation files
-            EC_Split = os.path.join(Input_Filepath + "_EC_Annotation", "Split")
-            EC_Output = os.path.join(Input_Filepath + "_EC_Annotation", "Output")
-            
-            create_pbs_job("EC_Preprocess", Input_FName, COMMANDS_EC_Preprocess)
-            if(run_jobs):
-                JobID_EC_Preprocess = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_EC_Preprocess.pbs", "-W", "depend=afterok:" + JobID_Annotate_Diamond_Post.strip("\n")])
-
-            #EC detection
-            create_pbs_job("Detect", Input_FName, COMMANDS_Detect)        
-            if(run_jobs):
-                JobID_Detect = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Detect.pbs", "-W", "depend=afterok:" + JobID_EC_Preprocess.strip("\n")])
-
-            #Combine the EC files
-            create_pbs_job("Combine_Detect", Input_FName, COMMANDS_Combine_Detect)
-            if(run_jobs):
-                JobID_Combine_Detect = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Combine_Detect.pbs", "-W", "depend=afterok:" + JobID_Detect.strip("\n")])
-            
-                subprocess.call(["qalter", "-v", "JOB2=" + JobID_Combine_Detect.strip("\n").split(".")[0], JobID_Detect.strip("\n")])
-
-            
-            #PRIAM stage
-            create_pbs_job("PRIAM", Input_FName, COMMANDS_PRIAM)        
-            if(run_jobs):
-                JobID_PRIAM = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_PRIAM.pbs", "-W", "depend=afterok:" + JobID_EC_Preprocess.strip("\n")])
-
-            # EC Diamond
-            create_pbs_job("EC_Diamond", Input_FName, COMMANDS_EC_Diamond)        
-            if(run_jobs):
-                JobID_EC_Diamond = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_EC_Diamond.pbs", "-W", "depend=afterok:" + JobID_EC_Preprocess.strip("\n")])
-
-            # EC Annotation Compile
-            
-
-            with open(os.path.splitext(Input_FName)[0] + "_EC_Postprocess.pbs", "w") as PBS_script_out:
-                for line in PBS_Submit_LowMem.splitlines():
-                    if "NAME" in line:
-                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_EC_Postprocess")
-                    if "ERROR" in line:
-                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_EC_Postprocess_ERR")
-                    if "OUTPUT" in line:
-                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_EC_Postprocess_OUT")
-                    if "COMMANDS" in line:
-                        PBS_script_out.write("\n".join(COMMANDS_EC_Postprocess))
-                        break
-                    PBS_script_out.write(line + "\n")
-            if(run_jobs):
-                JobID_EC_Postprocess = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_EC_Postprocess.pbs", "-W", "depend=afterok:" + JobID_Combine_Detect.strip("\n") + ":" + JobID_PRIAM.strip("\n") + ":" + JobID_EC_Diamond.strip("\n")])
-
-            # Network Generation
-            
-
-            with open(os.path.splitext(Input_FName)[0] + "_Network.pbs", "w") as PBS_script_out:
-                for line in PBS_Submit_LowMem.splitlines():
-                    if "NAME" in line:
-                        line = line.replace("NAME", os.path.splitext(Input_FName)[0] + "_Network")
-                    if "ERROR" in line:
-                        line = line.replace("ERROR", os.path.splitext(Input_FName)[0] + "_Network_ERR")
-                    if "OUTPUT" in line:
-                        line = line.replace("OUTPUT", os.path.splitext(Input_FName)[0] + "_Network_OUT")
-                    if "COMMANDS" in line:
-                        PBS_script_out.write("\n".join(COMMANDS_Network))
-                        break
-                    PBS_script_out.write(line + "\n")
-            
-            if(run_jobs):
-                JobID_Network = subprocess.check_output(["qsub", os.path.splitext(Input_FName)[0] + "_Network.pbs", "-W", "depend=afterok:" + JobID_EC_Postprocess.strip("\n") + ":" + JobID_Classify.strip("\n")])
-            Network_list.append(JobID_Network.strip("\n"))
-            
-
-    if len(file_list) > 1:
-        os.chdir(output_folder)
-        Input_Filepath = os.path.join(output_folder, os.path.splitext(os.path.basename(file_list[0]))[0])[:-11]
         
-        with open(os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "w") as PBS_script_out:
-            for line in PBS_Submit_LowMem.splitlines():
-                if "NAME" in line:
-                    line = line.replace("NAME", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join")
-                if "ERROR" in line:
-                    line = line.replace("ERROR", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join_ERR")
-                if "OUTPUT" in line:
-                    line = line.replace("OUTPUT", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join_OUT")
-                if "COMMANDS" in line:
-                    PBS_script_out.write("\n".join(COMMANDS_Join))
-                    break
-                PBS_script_out.write(line + "\n")
-        
-        if(run_jobs):
-            JobID_Join = subprocess.check_output(["qsub", os.path.splitext(os.path.basename(Input_Filepath))[0] + "_Join.pbs", "-W", "depend=afterok:" + ":".join(Network_list)])
-"""
 
 if __name__ == "__main__":
     # This is where the code starts

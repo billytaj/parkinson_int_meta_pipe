@@ -1515,10 +1515,12 @@ class mt_pipe_commands:
         detect_folder = data_folder + "1_detect/"
 
         detect_protein = ">&2 echo running detect on split file " + prot_name + " | "
-        detect_protein += self.tool_path_obj.Python + " "
-        detect_protein += self.tool_path_obj.Detect_Submit + " "
-        detect_protein += proteins_folder + prot_name + " "
-        detect_protein += detect_folder + prot_name + " " + self.Threads_str
+        detect_protein += self.tool_path_obj.Python2 + " "
+        detect_protein += self.tool_path_obj.Detect + " "
+        detect_protein += proteins_folder + prot_name + ".fasta"
+        detect_protein += " --output_file " + detect_folder + prot_name + ".detect"
+        detect_protein += " --top_predictions_file " + detect_folder + prot_name + ".toppred"
+        detect_protein += " --num_threads " + self.Threads_str
 
         COMMANDS_DETECT = [
             detect_protein
@@ -1549,7 +1551,7 @@ class mt_pipe_commands:
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
         diamond_ea_command += self.tool_path_obj.DIAMOND + " blastp"
         diamond_ea_command += " -p " + self.Threads_str
-        diamond_ea_command += " -query " + diamond_folder + "proteins.faa"
+        diamond_ea_command += " --query " + diamond_folder + "proteins.faa"
         diamond_ea_command += " --db " + self.tool_path_obj.SWISS_PROT
         diamond_ea_command += " --outfmt " + "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident"
         diamond_ea_command += " --out " + diamond_ea_folder + "proteins.blastout"

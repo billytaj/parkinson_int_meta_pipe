@@ -98,6 +98,10 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v0.9.19/diamond-l
 RUN mkdir DIAMOND
 RUN tar --remove-files -xzvf DIAMOND.tar.gz -C DIAMOND && rm DIAMOND.tar.gz
 
+#-----------------------------------------------------
+# Install DETECT_V2
+RUN mkdir DETECT
+RUN wget -P DETECT_V2 https://github.com/ParkinsonLab/DETECT-v2/blob/master/DETECT%20enzyme%20annotation%20tool/detect.py
 
 #------------------------------------------------------
 # Install FLASH (Fast length adjustment of Short Reads)
@@ -198,7 +202,7 @@ RUN rm -r WEVOTE-master
 #--------------------------------------------
 # get reference files
 # 
-WORKDIR /pipeline_reference_files
+#WORKDIR /pipeline_reference_files
 #there's a bunch of DBs that need to be downloaded too.  including the wevote files, called by the download script they supply, and the priam DB files. 
 #RUN wget ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec_Core -O UniVec_Core.fasta
 #RUN mkdir Trimmomatic_adapters
@@ -209,5 +213,27 @@ WORKDIR /pipeline_reference_files
 #RUN gunzip Rfam.cm.gz
 #RUN /pipeline_tools/infernal/cmpress Rfam.cm
 
+#-------------------------------------------
+# add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
+WORKDIR /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_refactor.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_paths.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_commands.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_contig_v2.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/sam_trimmer.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/contig_duplicate_remover.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/sort_reads_refactor.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/duplicate_repopulation.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/orphaned_pair_filter.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/BLAT_Contaminant_Filter.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/seq_file_splitter.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/rRNA_filter_v2.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_gene_BWA.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_gene_BLAT.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_prot_DMND.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/RPKM.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Get_TaxID.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Constrain_Classification.py /pipeline
+ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Combine_WEVOTE.py /pipeline
 WORKDIR /
 CMD ["bash"]
