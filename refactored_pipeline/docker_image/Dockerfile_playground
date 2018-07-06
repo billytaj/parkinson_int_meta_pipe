@@ -20,7 +20,7 @@ RUN conda update -n base conda -y
 RUN conda install Biopython -y 
 RUN conda install Pandas -y
 RUN echo "hello from custom dockerfile"
-
+RUN echo "it's done"
 WORKDIR /pipeline_tools
 
 # Install DETECT_V2
