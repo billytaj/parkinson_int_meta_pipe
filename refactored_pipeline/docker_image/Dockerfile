@@ -98,6 +98,10 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v0.9.19/diamond-l
 RUN mkdir DIAMOND
 RUN tar --remove-files -xzvf DIAMOND.tar.gz -C DIAMOND && rm DIAMOND.tar.gz
 
+#-----------------------------------------------------
+# Install DETECT_V2
+RUN mkdir DETECT
+RUN wget -P DETECT_V2 https://github.com/ParkinsonLab/DETECT-v2/blob/master/DETECT%20enzyme%20annotation%20tool/detect.py
 
 #------------------------------------------------------
 # Install FLASH (Fast length adjustment of Short Reads)
@@ -198,7 +202,7 @@ RUN rm -r WEVOTE-master
 #--------------------------------------------
 # get reference files
 # 
-WORKDIR /pipeline_reference_files
+#WORKDIR /pipeline_reference_files
 #there's a bunch of DBs that need to be downloaded too.  including the wevote files, called by the download script they supply, and the priam DB files. 
 #RUN wget ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec_Core -O UniVec_Core.fasta
 #RUN mkdir Trimmomatic_adapters

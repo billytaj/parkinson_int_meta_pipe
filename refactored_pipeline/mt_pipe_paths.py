@@ -208,29 +208,29 @@ class tool_path_obj:
             self.refactor_path      = self.script_path
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"
-            project_path            = "/project/j/jparkin/Lab_Databases/"
+            database_path           = "/project/j/jparkin/Lab_Databases/"
             #----------------------------------------------------------
             # Reference files
             # this is some NCBI reference file for Vectors
-            self.UniVec_Core        = reference_file_path + "UniVec_Core.fasta"
+            self.UniVec_Core        = database_path + "univec_core/UniVec_Core.fasta"
             # this too.
-            self.Adapter            = reference_file_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
-            self.Host               = reference_file_path + "Mouse_cds.fasta"
-            self.Rfam               = reference_file_path + "Rfam.cm"
-            self.DNA_DB             = scratch_path +"Microbial_cds_db/microbial_all_cds.fasta"
+            self.Adapter            = database_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
+            self.Host               = database_path + "Mouse_cds/Mouse_cds.fasta"
+            self.Rfam               = database_path + "Rfam.cm"
+            self.DNA_DB             = database_path + "microbial_cds_db/microbial_all_cds.fasta"
             self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
             self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
-            self.Prot_DB            = project_path + "diamond_v0922/nr.dmnd"
-            self.Prot_DB_plain      = project_path + "nr/nr"
+            self.Prot_DB            = database_path + "diamond_v0922/nr.dmnd"
+            self.Prot_DB_plain      = database_path + "nr/nr"
             # currently not in singularity package
-            self.accession2taxid = "/scratch/j/jparkin/mobolaji/accession2taxid/accession2taxid"
-            self.nodes = "/home/j/jparkin/mobolaji/Databases/taxdump/nodes.dmp"
-            self.names = "/home/j/jparkin/mobolaji/Databases/taxdump/names.dmp"
-            self.Kaiju_db = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/kaiju_db_nr.fmi"
-            self.Centrifuge_db = "/scratch/j/jparkin/mobolaji/NCBI_nr_db/Index/nt"
+            self.accession2taxid    = "/scratch/j/jparkin/mobolaji/accession2taxid/accession2taxid"
+            self.nodes              = database_path + "WEVOTE_db/nodes.dmp"
+            self.names              = database_path + "WEVOTE_db/names.dmp"
+            self.Kaiju_db           = database_path + "kaiju_db/kaiju_db_nr.fmi"
+            self.Centrifuge_db      = database_path + "centrifuge_db"
             # More
-            self.SWISS_PROT = "/home/j/jparkin/mobolaji/Databases/uniprot_sprot_annotated.fasta"
-            self.SWISS_PROT_map = "/home/j/jparkin/mobolaji/Databases/SwissProt_EC_Mapping.tsv"
+            self.SWISS_PROT         = database_path + "swiss_prot_db/uniprot_sprot_annotated.fasta"
+            self.SWISS_PROT_map     = database_path + "swiss_prot_db/SwissProt_EC_Mapping.tsv"
 
             #----------------------------------------------------------
             # external tools
@@ -287,11 +287,11 @@ class tool_path_obj:
             self.RPKM = self.script_path + "RPKM.py"
 
             #Will have to modify this script to take more explicit arguments
-            self.EC_Annotation_Post         = self.refactor_path + "EC_Consolidation.py"
-            self.Detect                     = "/home/j/jparkin/mobolaji/Tools/UpdatedDETECT_V2.0/detect_leon.py"
-            self.Annotated_taxid            = self.script_path + "Read_Classification/Get_TaxID.py"
-            self.Constrain_classification    = self.script_path + "Read_Classification/Constrain_Classification.py"
-            self.Classification_combine     = self.script_path + "Read_Classification/Combine_WEVOTE.py"
+            self.EC_Annotation_Post         = self.refactor_path    + "EC_Consolidation.py"
+            self.Detect                     = self.tool_path        + "DETECT_V2/detect.py"
+            self.Annotated_taxid            = self.script_path      + "Read_Classification/Get_TaxID.py"
+            self.Constrain_classification   = self.script_path      + "Read_Classification/Constrain_Classification.py"
+            self.Classification_combine     = self.script_path      + "Read_Classification/Combine_WEVOTE.py"
 
             #self.Fastqc = "/home/j/jparkin/mobolaji/Tools/FastQC/fastqc"
 
