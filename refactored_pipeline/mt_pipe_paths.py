@@ -174,7 +174,7 @@ class tool_path_obj:
             self.Barrnap            = tool_path + "barrnap/barrnap"
             self.Priam              = tool_path + "PRIAM_search/PRIAM_search.jar"
             #Need to add
-            
+            self.Detect             = tool_path   + "detect_2_py3.py"
             self.BLAST_dir          = tool_path + "BLAST_p"
             self.WEVOTE             = tool_path + "WEVOTE/WEVOTE"
             self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTE_db" #points to the location of taxdump, needed by WEVOTE
@@ -207,6 +207,6 @@ class tool_path_obj:
             self.Constrain_classification   = script_path   + "Read_Classification/Constrain_Classification.py"
             self.Classification_combine     = script_path   + "Read_Classification/Combine_WEVOTE.py"
 
-            self.Detect                     = script_path   + "detect_2_py3.py"
+            
             #self.Fastqc = "/home/j/jparkin/mobolaji/Tools/FastQC/fastqc"
 

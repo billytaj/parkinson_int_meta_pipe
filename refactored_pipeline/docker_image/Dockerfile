@@ -102,7 +102,7 @@ RUN tar --remove-files -xzvf DIAMOND.tar.gz -C DIAMOND && rm DIAMOND.tar.gz
 # Install DETECT_V2
 RUN mkdir DETECT
 WORKDIR /pipeline_tools/DETECT
-RUN wget https://raw.githubusercontent.com/ParkinsonLab/DETECT-v2/master/DETECT%20enzyme%20annotation%20tool/detect.py
+RUN wget https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/detect_2_py3.py
 WORKDIR /pipeline_tools
 
 #------------------------------------------------------
@@ -218,24 +218,24 @@ RUN rm -r WEVOTE-master
 #-------------------------------------------
 # add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
 WORKDIR /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_refactor.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_paths.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/mt_pipe_commands.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_contig_v2.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/sam_trimmer.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/contig_duplicate_remover.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/sort_reads_refactor.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/duplicate_repopulation.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/orphaned_pair_filter.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/BLAT_Contaminant_Filter.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/seq_file_splitter.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/rRNA_filter_v2.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_gene_BWA.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_gene_BLAT.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/map_read_prot_DMND.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/RPKM.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Get_TaxID.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Constrain_Classification.py /pipeline
-ADD https://github.com/billyc59/parkinson_int_meta_pipe/blob/release/v.01/refactored_pipeline/Read_Classification/Combine_WEVOTE.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/mt_pipe_refactor.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/mt_pipe_paths.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/mt_pipe_commands.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/map_read_contig_v2.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/sam_trimmer.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/contig_duplicate_remover.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/sort_reads_refactor.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/duplicate_repopulation.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/orphaned_pair_filter.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/BLAT_Contaminant_Filter.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/seq_file_splitter.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/rRNA_filter_v2.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/map_read_gene_BWA.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/map_read_gene_BLAT.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/map_read_prot_DMND.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/RPKM.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/Read_Classification/Get_TaxID.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/Read_Classification/Constrain_Classification.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/Read_Classification/Combine_WEVOTE.py /pipeline
 WORKDIR /
 CMD ["bash"]

@@ -27,4 +27,4 @@ WORKDIR /pipeline_tools
 RUN mkdir DETECT
 WORKDIR /pipeline_tools/DETECT
 RUN wget https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/detect_2_py3.py
-WORKDIR /pipeline_tools
+#WORKDIR /pipeline_tools
