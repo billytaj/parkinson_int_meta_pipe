@@ -117,7 +117,7 @@ class tool_path_obj:
                 sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
             #
             
-            script_path             = "/pipeline/"
+            script_path             = self.script_path#"/pipeline/"
             reference_file_path     = "/pipeline_reference_files/"
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"

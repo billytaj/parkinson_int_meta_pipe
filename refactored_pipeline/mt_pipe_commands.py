@@ -233,7 +233,7 @@ class mt_pipe_commands:
         adapter_removal_line += " --qualitybase " + str(self.Qual_str) #must be either 33 or 64
         adapter_removal_line += " --threads " + self.Threads_str
         adapter_removal_line += " --minlength " + "30"
-        adapter_removal_line += " --basename " + adapter_folder + os.path.splitext(self.Input_FName)[0]
+        adapter_removal_line += " --basename " + adapter_folder #+ os.path.splitext(self.Input_FName)[0]
         adapter_removal_line += "_AdapterRemoval"
         adapter_removal_line += " --trimqualities "
         adapter_removal_line += " --output1 " + adapter_folder + "pair_1_adptr_rem.fastq"
