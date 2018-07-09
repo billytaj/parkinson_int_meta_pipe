@@ -109,12 +109,12 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            #if(self.name == "billy" or self.name == "Billy"):
-            #    self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
-            #elif(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
-            #    self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
-            #else:
-            #    sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
+            if(self.name == "billy" or self.name == "Billy"):
+                self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
+            elif(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
+                self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+            else:
+                sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
             #
             
             script_path             = "/pipeline/"
@@ -144,7 +144,7 @@ class tool_path_obj:
             self.SWISS_PROT         = database_path + "swiss_prot_db/swiss_prot_db"
             self.SWISS_PROT_map     = database_path + "swiss_prot_db/SwissProt_EC_Mapping.tsv"
             self.PriamDB            = database_path + "PRIAM_db/"
-            self.DetectDB             = database_path + "DETECTv2"
+            self.DetectDB           = database_path + "DETECTv2"
 
             #----------------------------------------------------------
             # external tools
