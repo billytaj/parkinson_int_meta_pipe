@@ -233,7 +233,7 @@ class mt_pipe_commands:
         adapter_removal_line += " --qualitybase " + str(self.Qual_str) #must be either 33 or 64
         adapter_removal_line += " --threads " + self.Threads_str
         adapter_removal_line += " --minlength " + "30"
-        adapter_removal_line += " --basename " + adapter_folder + os.path.splitext(self.Input_FName)[0]
+        adapter_removal_line += " --basename " + adapter_folder #+ os.path.splitext(self.Input_FName)[0]
         adapter_removal_line += "_AdapterRemoval"
         adapter_removal_line += " --trimqualities "
         adapter_removal_line += " --output1 " + adapter_folder + "pair_1_adptr_rem.fastq"
@@ -1520,7 +1520,7 @@ class mt_pipe_commands:
         detect_protein += proteins_folder + prot_name + ".fasta"
         detect_protein += " --output_file " + detect_folder + prot_name + ".detect"
         detect_protein += " --top_predictions_file " + detect_folder + prot_name + ".toppred"
-        detect_protein += " --db " + self.DetectDB
+        detect_protein += " --db " + self.tool_path_obj.DetectDB
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
         detect_protein += " --needle " + self.tool_path_obj.Needle
 

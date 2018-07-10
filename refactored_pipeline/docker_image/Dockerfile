@@ -17,14 +17,12 @@ RUN apt-get -y install libncurses5-dev
 RUN apt-get -y install liblzma-dev
 RUN apt-get -y install perl
 RUN apt-get -y install openjdk-8-jre
+RUN apt-get -y install openjdk-8-jdk
 RUN conda update -n base conda -y
 RUN conda install Biopython -y 
 RUN conda install Pandas -y
-RUN echo "hello from custom dockerfile"
 
 WORKDIR /pipeline_tools
-
-
 #----------------------------------------------------
 # Install AdapaterRemoval
 RUN wget https://github.com/MikkelSchubert/adapterremoval/archive/v2.1.7.tar.gz -O adapterremoval.tar.gz

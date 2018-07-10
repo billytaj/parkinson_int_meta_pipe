@@ -1,4 +1,5 @@
 import os
+import sys
 
 class tool_path_obj:
     def __init__ (self, mode = "scinet", name = "None"):
@@ -109,15 +110,15 @@ class tool_path_obj:
         
         elif(mode == "singularity" or mode == "Singularity"):
             #temp place for scripts in refactored pipeline.  we'll move it once it's finished
-            #if(self.name == "billy" or self.name == "Billy"):
-            #    self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
-            #elif(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
-            #    self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
-            #else:
-            #    sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
+            if(self.name == "billy" or self.name == "Billy"):
+                self.script_path        = "/home/j/jparkin/billyc59/parkinson_int_meta_pipe/refactored_pipeline/" 
+            elif(name == "bj" or name == "BJ" or name == "Mobolaji" or name == "mobolaji"):
+                self.script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/"
+            else:
+                sys.exit("no name given.  unsure who to direct the tools to.  EXITING")
             #
             
-            script_path             = "/pipeline/"
+            script_path             = self.script_path#"/pipeline/"
             reference_file_path     = "/pipeline_reference_files/"
             tool_path               = "/pipeline_tools/"
             scratch_path            = "/scratch/j/jparkin/billyc59/"
@@ -129,7 +130,7 @@ class tool_path_obj:
             # this too.
             self.Adapter            = database_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
             self.Host               = database_path + "Mouse_cds/Mouse_cds.fasta"
-            self.Rfam               = database_path + "Rfam.cm"
+            self.Rfam               = "/scratch/j/jparkin/billyc59/Rfam/Rfam.cm" #database_path + "Rfam.cm"
             self.DNA_DB             = database_path + "microbial_cds_db/microbial_all_cds.fasta"
             self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
             self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
@@ -140,11 +141,11 @@ class tool_path_obj:
             self.nodes              = database_path + "WEVOTE_db/nodes.dmp"
             self.names              = database_path + "WEVOTE_db/names.dmp"
             self.Kaiju_db           = database_path + "kaiju_db/kaiju_db_nr.fmi"
-            self.Centrifuge_db      = database_path + "centrifuge_db"
+            self.Centrifuge_db      = database_path + "centrifuge_db/nt"
             self.SWISS_PROT         = database_path + "swiss_prot_db/swiss_prot_db"
             self.SWISS_PROT_map     = database_path + "swiss_prot_db/SwissProt_EC_Mapping.tsv"
             self.PriamDB            = database_path + "PRIAM_db/"
-            self.DetectDB             = database_path + "DETECTv2"
+            self.DetectDB           = database_path + "DETECTv2"
 
             #----------------------------------------------------------
             # external tools

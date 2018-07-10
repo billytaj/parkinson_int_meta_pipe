@@ -19,12 +19,13 @@ RUN apt-get -y install perl
 RUN conda update -n base conda -y
 RUN conda install Biopython -y 
 RUN conda install Pandas -y
+RUN apt-get install openjdk-8-jre -y
+RUN apt-get install openjdk-8-jdk -y
 RUN echo "hello from custom dockerfile"
 RUN echo "it's done"
 WORKDIR /pipeline_tools
 
-# Install DETECT_V2
-RUN mkdir DETECT
-WORKDIR /pipeline_tools/DETECT
-RUN wget https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/detect_2_py3.py
-#WORKDIR /pipeline_tools
+# Install PRIAM
+RUN mkdir PRIAM_search
+RUN wget http://priam.prabi.fr/utilities/PRIAM_search.jar
+RUN mv PRIAM_search.jar PRIAM_search

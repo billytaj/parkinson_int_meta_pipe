@@ -18,16 +18,36 @@ def make_folder(folder_path):
 class sync_control:
     def __init__(self, system_mode):
         self.system_mode = system_mode
-        
-        
+    
+    #handles where to kill the pipeline, due to the prev step behaving badly
+    def check_where_kill(self, dep_job_label):
+        if(dep_job_label is None):
+            return True
+        dep_job_path = dep_job_label +  + "/data/final_results"
+        file_list = os.listdir(dep_job_path)
+            if(len(file_list) > 0):
+                for item in file_list:
+                    if((os.path.getsize(item)) == 0):
+                        print("empty file detected: rerunning stage")
+                        sys.exit("bad dep")
+                #run the job, silently
+                return True
+            else:
+                print("stopping the pipeline.  dependencies don't exist")
+                sys.exit("no dep")
     #handles where to auto-resume
-    def check_where_resume(self, job_label = None, full_path = None):
+    def check_where_resume(self, job_label = None, full_path = None, dep_job_label = None):
+        check_where_kill(dep_job_label)
         if(job_label):
             job_path = job_label + "/data/final_results"
             print("looking at:", job_path)
             if(os.path.exists(job_path)):
                 file_list = os.listdir(job_path)
                 if(len(file_list) > 0):
+                    for item in file_list:
+                        if((os.path.getsize(item)) == 0):
+                            print("empty file detected: rerunning stage")
+                            return False
                     print("bypassing!")
                     return True
                 else:
@@ -39,10 +59,16 @@ class sync_control:
                 return False
         else:
             job_path = full_path
+            
             print("looking at:", job_path)
             if(os.path.exists(job_path)):
                 file_list = os.listdir(job_path)
                 if(len(file_list) > 0):
+                    for item in file_list:
+                        if((os.path.getsize(item)) == 0):
+                            print("empty file detected: rerunning stage")
+                            return False
+                    
                     print("bypassing!")
                     return True
                 else:
@@ -330,7 +356,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             
             #rRNA removal stage
             rRNA_filter_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label)):
+            if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label, None, output_folder + preprocess_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
@@ -344,7 +370,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
                 orphans_mRNA_path = output_folder + rRNA_filter_label + "/data/orphans/orphans_mRNA"
-                if(not sync_obj.check_where_resume(None, orphans_mRNA_path)):
+                if(not sync_obj.check_where_resume(None, orphans_mRNA_path, output_folder +  rRNA_filter_label)):
                     for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -364,7 +390,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 mp_store[:] = [] #clear the list
 
                 pair_1_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_1/pair_1_mRNA"
-                if(not sync_obj.check_where_resume(None, pair_1_mRNA_path)):
+                if(not sync_obj.check_where_resume(None, pair_1_mRNA_path, output_folder +  rRNA_filter_label)):
                     for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -384,7 +410,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 mp_store[:] = [] #clear the list
 
                 pair_2_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_mRNA"
-                if(not sync_obj.check_where_resume(None, pair_2_mRNA_path)):
+                if(not sync_obj.check_where_resume(None, pair_2_mRNA_path, output_folder +  rRNA_filter_label)):
                     for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -421,7 +447,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #-------------------------------------------------------------
             # Duplicate repopulation
             repop_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder +  repop_job_label)):
+            if(not sync_obj.check_where_resume(output_folder +  repop_job_label, None, output_folder + rRNA_filter_label)):
 
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -437,7 +463,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #----------------------------------------
             # Assemble contigs
             assemble_contigs_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label)):
+            if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label, None, output_folder +  repop_job_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
@@ -453,7 +479,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #----------------------------------------------
             # BWA gene annotation
             GA_BWA_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label)):
+            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label, None, output_folder + assemble_contigs_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 mp_store[:] = []
@@ -493,7 +519,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #------------------------------------------------
             # BLAT gene annotation
             GA_BLAT_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label)):
+            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label, None, output_folder + gene_annotation_BWA_label)):
 
                 split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -550,7 +576,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #------------------------------------------------------
             # Diamond gene annotation
             GA_DIAMOND_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label)):
+            if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label, None, output_folder + gene_annotation_BLAT_label)):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 for item in names:
@@ -586,7 +612,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             # ------------------------------------------------------
             # Taxonomic annotation
             TA_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + taxon_annotation_label)):
+            if(not sync_obj.check_where_resume(output_folder + taxon_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
@@ -603,7 +629,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             # EC annotation
             EC_start = time.time()
             EC_DETECT_start = time.time()
-            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label)):
+            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
                 # Preparing folders for DETECT
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
@@ -641,7 +667,7 @@ def main(input_folder, output_folder, system_op, user_mode):
 
             # Running Priam and Diamond
             EC_PRIAM_DIAMOND_start = time.time()
-            if (not sync_obj.check_where_resume(output_folder + DETECT_path)):
+            if (not sync_obj.check_where_resume(output_folder + DETECT_path, None, output_folder + gene_annotation_DIAMOND_label)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
@@ -670,7 +696,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             # ------------------------------------------------------
             # RPKM Table and Cytoscape Network
             Cytoscape_start = time.time()
-            if (not sync_obj.check_where_resume(output_folder + network_label)):
+            if (not sync_obj.check_where_resume(output_folder + network_label, None, output_folder + ec_annotation_label)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
