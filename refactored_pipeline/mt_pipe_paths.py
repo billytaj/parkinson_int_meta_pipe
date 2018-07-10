@@ -1,4 +1,5 @@
 import os
+import sys
 
 class tool_path_obj:
     def __init__ (self, mode = "scinet", name = "None"):
@@ -140,7 +141,7 @@ class tool_path_obj:
             self.nodes              = database_path + "WEVOTE_db/nodes.dmp"
             self.names              = database_path + "WEVOTE_db/names.dmp"
             self.Kaiju_db           = database_path + "kaiju_db/kaiju_db_nr.fmi"
-            self.Centrifuge_db      = database_path + "centrifuge_db"
+            self.Centrifuge_db      = database_path + "centrifuge_db/nt"
             self.SWISS_PROT         = database_path + "swiss_prot_db/swiss_prot_db"
             self.SWISS_PROT_map     = database_path + "swiss_prot_db/SwissProt_EC_Mapping.tsv"
             self.PriamDB            = database_path + "PRIAM_db/"
