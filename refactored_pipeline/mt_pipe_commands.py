@@ -1624,6 +1624,28 @@ class mt_pipe_commands:
             ]
         return COMMANDS_Network
 
-    def create_visualization_command(self):
-        COMMANDS_visualization = []
+    def create_visualization_command(self, current_stage_name, network_stage):
+        subfolder = os.getcwd() + "/" + current_stage_name + "/"
+        data_folder = subfolder + "data/"
+        mpl_folder = data_folder + "/0_MPL/"
+        network_folder = os.getcwd() + "/" + network_stage + "/data/final_results/"
+        final_folder = data_folder + "final_results/"
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(mpl_folder)
+        self.make_folder(final_folder)
+
+        chart_generation = ">&2 echo generating visualizations for ECs | "
+        chart_generation += self.tool_path_obj.Python + " "
+        chart_generation += self.tool_path_obj.chart + " "
+        chart_generation += network_folder + "Cytoscape_network.tsv" + " "
+        chart_generation += mpl_folder
+
+        final_chart = "cp " + mpl_folder + "All_EC.png"  + " > " + final_folder + "All_EC.png"
+
+        COMMANDS_visualization = [
+            chart_generation
+            final_chart
+            ]
         return COMMANDS_visualization
