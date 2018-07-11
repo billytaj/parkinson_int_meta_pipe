@@ -315,6 +315,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             taxon_annotation_label = "taxonomic_annotation"
             ec_annotation_label = "enzyme_annotation"
             network_label = "RPKM_network"
+            visualization_label = "visualization"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -693,6 +694,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
             EC_PRIAM_DIAMOND_end = time.time()
             EC_end = time.time()
+
             # ------------------------------------------------------
             # RPKM Table and Cytoscape Network
             Cytoscape_start = time.time()
@@ -707,22 +709,40 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            
             Cytoscape_end = time.time()
+
+            # ------------------------------------------------------
+            # Final Pie Charts
+            Chart_start = time.time()
+            if (not sync_obj.check_where_resume(output_folder + visualization_label, None,
+                                                output_folder + network_label)):
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        visualization_label,
+                        comm.create_visualization_command(visualization_label, network_label),
+                        True
+                    )
+                )
+                process.start()
+                process.join()
+            Chart_end = time.time()
+
             end_time = time.time()
-            print("Total runtime:", end_time - start_time, "s", "start:", start_time, "end:", end_time)
-            print("preprocess:", preprocess_end - preprocess_start, "s", "start:", preprocess_start, "end:", preprocess_end)
-            print("rRNA filter:", rRNA_filter_end - rRNA_filter_start, "s", "start:", rRNA_filter_start, "end:", rRNA_filter_end)
-            print("repop:", repop_end - repop_start, "s", "start:", repop_start, "end:", repop_end)
-            print("assemble contigs:", assemble_contigs_end - assemble_contigs_start, "s", "start:", assemble_contigs_start, "end:", assemble_contigs_end)
-            print("GA BWA:", GA_BWA_end - GA_BWA_start, "s", "start:", GA_BWA_start, "end:", GA_BWA_end)
-            print("GA BLAT:", GA_BLAT_end - GA_BLAT_start, "s", "start:", GA_BLAT_start, "end:", GA_BLAT_end)
-            print("GA DIAMOND:", GA_DIAMOND_end - GA_DIAMOND_start, "s", "start:", GA_DIAMOND_start, "end:", GA_DIAMOND_end)
-            print("TA:", TA_end - TA_start, "s", "start:", TA_start, "end:", TA_end)
-            print("EC:", EC_end - EC_start, "s", "start:", EC_start, "end:", EC_end)
-            print("EC DETECT:", EC_DETECT_end - EC_DETECT_start, "s", "start:", EC_DETECT_start, "end:", EC_DETECT_end)
-            print("EC PRIAM + DIAMOND:", EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_end, "s", "start:", EC_PRIAM_DIAMOND_start, "end:", EC_PRIAM_DIAMOND_end)
-            print("Cytoscape:", Cytoscape_end - Cytoscape_start, "s", "start:", Cytoscape_start, "end:", Cytoscape_end)
+            print("Total runtime:", '%1.1f' % (end_time - start_time), "s", "start:", '%1.1f' % start_time, "end:", '%1.1f' % end_time)
+            print("preprocess:", '%1.1f' % (preprocess_end - preprocess_start), "s", "start:", '%1.1f' % preprocess_start, "end:", '%1.1f' % preprocess_end)
+            print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start), "s", "start:", '%1.1f' % rRNA_filter_start, "end:", '%1.1f' % rRNA_filter_end)
+            print("repop:", '%1.1f' % (repop_end - repop_start), "s", "start:", '%1.1f' % repop_start, "end:", '%1.1f' % repop_end)
+            print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start), "s", "start:", '%1.1f' % assemble_contigs_start, "end:", '%1.1f' % assemble_contigs_end)
+            print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start), "s", "start:", '%1.1f' % GA_BWA_start, "end:", '%1.1f' % GA_BWA_end)
+            print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start), "s", "start:", '%1.1f' % GA_BLAT_start, "end:", '%1.1f' % GA_BLAT_end)
+            print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start), "s", "start:", '%1.1f' % GA_DIAMOND_start, "end:", '%1.1f' % GA_DIAMOND_end)
+            print("TA:", '%1.1f' % (TA_end - TA_start), "s", "start:", '%1.1f' % TA_start, "end:", '%1.1f' % TA_end)
+            print("EC:", '%1.1f' % (EC_end - EC_start), "s", "start:", '%1.1f' % EC_start, "end:", '%1.1f' % EC_end)
+            print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s", "start:", '%1.1f' % EC_DETECT_start, "end:", '%1.1f' % EC_DETECT_end)
+            print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_end), "s", "start:", '%1.1f' % EC_PRIAM_DIAMOND_start, "end:", '%1.1f' % EC_PRIAM_DIAMOND_end)
+            print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s", "start:", '%1.1f' % Cytoscape_start, "end:", '%1.1f' % Cytoscape_end)
+            print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s", "start:", '%1.1f' % Chart_start, "end:", '%1.1f' % Chart_end)
 
         elif(operating_mode == single_mode):
             print("not ready")
