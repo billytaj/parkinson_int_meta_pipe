@@ -5,6 +5,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 # Turn interactive plotting off
 plt.ioff()
+#turn off max figure warning
+plt.rcParams.update({'figure.max_open_warning': 0})
 from matplotlib import cm
 import numpy as np
 import pandas as pd
@@ -35,12 +37,13 @@ for n in range(len(subset_RPKM_df)):
 #Generation of colour map
 cs=cm.nipy_spectral(np.arange(len(Taxon)) / len(Taxon))
 
-#legend variable
-legend = []
-
 #function to produce pie chart
-def pie(RPKM, Output_file):
+def pie(RPKM, Output_name):
+    # legend variable
+    legend = []
     # Generation of figure
+    fig = plt.figure()
+    # Loop for figure elements
     for x in range(len(Taxon)):
         if max(RPKM)*RPKM[x] > 0:
             radius = 1/max(RPKM)*RPKM[x]
@@ -57,7 +60,7 @@ def pie(RPKM, Output_file):
             texts[n].set_color((0, 0, 0, 0))
         for n in range(len(autotexts)):
             autotexts[n].set_color((0, 0, 0, 0))
-
+    # Loop for figure scale lines
     for x in range(5):
         fifth = max(RPKM)/5
         patches, texts = plt.pie([1], labels=[str('%1.0f' % (fifth*(5-x)))], labeldistance=1.1, startangle=270, textprops=dict(fontsize="x-small"), wedgeprops=dict(edgecolor='black', linewidth=0.5), radius=0.2*(5-x))
@@ -69,18 +72,17 @@ def pie(RPKM, Output_file):
     #Setting final properties and building image
     plt.legend(loc="right", fontsize="xx-small", bbox_to_anchor=(0, 0.5), handles=legend)
     plt.axis('scaled')
-    #plt.show()
-    plt.savefig(os.path.join(Output_folder, Output_file + ".png"), format="png")
+    #fig.show()
+    fig.savefig(os.path.join(Output_folder, Output_name + ".png"), format="png")
+    fig.clear()
 
 #Loop to build chart for each EC
-ChartProcesses = []
+ChartPool = mp.Pool(mp.cpu_count())
 for RPKM in RPKMs:
     if RPKM.name == None:
-        Output_file = "All_EC"
+        Output_name = "All_EC"
     else:
-        Output_file = RPKM.name
-    process = mp.Process(target=pie, args=(RPKM, Output_file))
-    process.start()
-    ChartProcesses.append(process)
-for item in ChartProcesses:
-    item.join()
+        Output_name = RPKM.name
+    ChartPool.apply_async(pie, args=(RPKM, Output_name))
+ChartPool.close()
+ChartPool.join()
