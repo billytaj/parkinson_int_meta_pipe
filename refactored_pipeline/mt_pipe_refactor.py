@@ -315,6 +315,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             taxon_annotation_label = "taxonomic_annotation"
             ec_annotation_label = "enzyme_annotation"
             network_label = "RPKM_network"
+            visualization_label = "visualization"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -693,6 +694,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
             EC_PRIAM_DIAMOND_end = time.time()
             EC_end = time.time()
+
             # ------------------------------------------------------
             # RPKM Table and Cytoscape Network
             Cytoscape_start = time.time()
@@ -707,7 +709,22 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
-            
+
+            # ------------------------------------------------------
+            # Final Pie Charts
+            if (not sync_obj.check_where_resume(output_folder + visualization_label, None,
+                                                output_folder + network_label)):
+                process = mp.Process(
+                    target=comm.create_pbs_and_launch,
+                    args=(
+                        visualization_label,
+                        comm.create_visualization_command(visualization_label, network_label),
+                        True
+                    )
+                )
+                process.start()
+                process.join()
+
             Cytoscape_end = time.time()
             end_time = time.time()
             print("Total runtime:", end_time - start_time, "s", "start:", start_time, "end:", end_time)
