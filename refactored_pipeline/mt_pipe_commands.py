@@ -1645,7 +1645,7 @@ class mt_pipe_commands:
         final_chart = "cp " + mpl_folder + "All_EC.png"  + " > " + final_folder + "All_EC.png"
 
         COMMANDS_visualization = [
-            chart_generation
+            chart_generation,
             final_chart
             ]
         return COMMANDS_visualization
