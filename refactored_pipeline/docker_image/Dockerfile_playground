@@ -29,3 +29,13 @@ WORKDIR /pipeline_tools
 RUN mkdir PRIAM_search
 RUN wget http://priam.prabi.fr/utilities/PRIAM_search.jar
 RUN mv PRIAM_search.jar PRIAM_search
+
+RUN ln -s /bin/sed /usr/bin/sed
+
+
+RUN mkdir EMBOSS && wget ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz && tar -xzvf EMBOSS-6.6.0.tar.gz
+WORKDIR EMBOSS-6.6.0
+RUN sh configure && make && mv emboss/needle /pipeline_tools/EMBOSS 
+WORKDIR /pipeline_tools
+RUN rm -r EMBOSS-6.6.0*
+

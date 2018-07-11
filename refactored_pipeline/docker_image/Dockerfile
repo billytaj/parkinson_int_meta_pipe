@@ -21,6 +21,8 @@ RUN apt-get -y install openjdk-8-jdk
 RUN conda update -n base conda -y
 RUN conda install Biopython -y 
 RUN conda install Pandas -y
+#needed for Needle
+RUN ln -s /bin/sed /usr/bin/sed   
 
 WORKDIR /pipeline_tools
 #----------------------------------------------------
@@ -85,9 +87,9 @@ RUN rm -r cd-hit-v4.6.8-2017-1208
 RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz
 RUN tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz && mkdir /pipeline_tools/centrifuge
 WORKDIR centrifuge-1.0.3
-RUN make && mv centrifuge ../centrifuge && mv centrifuge-class ../centrifuge && mv centrifuge-kreport ../centrifuge && mv centrifuge-build ../centrifuge
+RUN make 
 WORKDIR /pipeline_tools
-RUN rm -r centrifuge-1.0.3
+RUN mv centrifuge-1.0.3 centrfuge
 
 
 #-----------------------------------------------------
@@ -102,6 +104,14 @@ RUN mkdir DETECT
 WORKDIR /pipeline_tools/DETECT
 RUN wget https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/refactored_pipeline/detect_2_py3.py
 WORKDIR /pipeline_tools
+
+#----------------------------------------------------
+# Install EMBOSS
+RUN mkdir EMBOSS && wget ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz && tar -xzvf EMBOSS-6.6.0.tar.gz
+WORKDIR EMBOSS-6.6.0
+RUN sh configure && make && mv emboss/needle /pipeline_tools/EMBOSS 
+WORKDIR /pipeline_tools
+RUN rm -r EMBOSS-6.6.0*
 
 #------------------------------------------------------
 # Install FLASH (Fast length adjustment of Short Reads)
