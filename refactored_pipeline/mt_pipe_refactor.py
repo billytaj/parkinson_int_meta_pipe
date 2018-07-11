@@ -20,32 +20,40 @@ class sync_control:
         self.system_mode = system_mode
     
     #handles where to kill the pipeline, due to the prev step behaving badly
-    def check_where_kill(self, dep_job_label):
+    def check_where_kill(self, dep_job_label = None, dep_path = None):
+        dep_job_path = ""
         if(dep_job_label is None):
-            return True
-        dep_job_path = dep_job_label +  + "/data/final_results"
-        file_list = os.listdir(dep_job_path)
-            if(len(file_list) > 0):
-                for item in file_list:
-                    if((os.path.getsize(item)) == 0):
-                        print("empty file detected: rerunning stage")
-                        sys.exit("bad dep")
-                #run the job, silently
+            if(dep_path is None):
                 return True
             else:
-                print("stopping the pipeline.  dependencies don't exist")
-                sys.exit("no dep")
+                dep_job_path = dep_path
+        else:
+            dep_job_path = dep_job_label + "/data/final_results/"
+            
+        file_list = os.listdir(dep_job_path)
+        if(len(file_list) > 0):
+            for item in file_list:
+                file_check_path = dep_job_path + item
+                if((os.path.getsize(file_check_path)) == 0):
+                    print("empty file detected: rerunning stage")
+                    sys.exit("bad dep")
+            #run the job, silently
+            return True
+        else:
+            print("stopping the pipeline.  dependencies don't exist")
+            sys.exit("no dep")
     #handles where to auto-resume
-    def check_where_resume(self, job_label = None, full_path = None, dep_job_label = None):
-        check_where_kill(dep_job_label)
+    def check_where_resume(self, job_label = None, full_path = None, dep_job_label = None, dep_job_path = None):
+        self.check_where_kill(dep_job_label, dep_job_path)
         if(job_label):
-            job_path = job_label + "/data/final_results"
+            job_path = job_label + "/data/final_results/"
             print("looking at:", job_path)
             if(os.path.exists(job_path)):
                 file_list = os.listdir(job_path)
                 if(len(file_list) > 0):
                     for item in file_list:
-                        if((os.path.getsize(item)) == 0):
+                        file_check_path = job_path + item
+                        if((os.path.getsize(file_check_path)) == 0):
                             print("empty file detected: rerunning stage")
                             return False
                     print("bypassing!")
@@ -371,7 +379,8 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
                 orphans_mRNA_path = output_folder + rRNA_filter_label + "/data/orphans/orphans_mRNA"
-                if(not sync_obj.check_where_resume(None, orphans_mRNA_path, output_folder +  rRNA_filter_label)):
+                orphans_prep_path = output_folder + rRNA_filter_label + "/data/orphans/orphans_fastq/"
+                if(not sync_obj.check_where_resume(None, orphans_mRNA_path, None, orphans_prep_path)):
                     for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -391,7 +400,8 @@ def main(input_folder, output_folder, system_op, user_mode):
                 mp_store[:] = [] #clear the list
 
                 pair_1_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_1/pair_1_mRNA"
-                if(not sync_obj.check_where_resume(None, pair_1_mRNA_path, output_folder +  rRNA_filter_label)):
+                pair_1_prep_path = output_folder + rRNA_filter_label + "/data/pair_1/pair_1_fastq/"
+                if(not sync_obj.check_where_resume(None, pair_1_mRNA_path, None, pair_1_prep_path)):
                     for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -411,7 +421,8 @@ def main(input_folder, output_folder, system_op, user_mode):
                 mp_store[:] = [] #clear the list
 
                 pair_2_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_mRNA"
-                if(not sync_obj.check_where_resume(None, pair_2_mRNA_path, output_folder +  rRNA_filter_label)):
+                pair_2_prep_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_fastq/"
+                if(not sync_obj.check_where_resume(None, pair_2_mRNA_path, None, pair_2_prep_path)):
                     for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
