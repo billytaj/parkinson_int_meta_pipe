@@ -709,6 +709,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 )
                 process.start()
                 process.join()
+            Cytoscape_end = time.time()
 
             # ------------------------------------------------------
             # Final Pie Charts
@@ -725,7 +726,6 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
 
-            Cytoscape_end = time.time()
             end_time = time.time()
             print("Total runtime:", end_time - start_time, "s", "start:", start_time, "end:", end_time)
             print("preprocess:", preprocess_end - preprocess_start, "s", "start:", preprocess_start, "end:", preprocess_end)
