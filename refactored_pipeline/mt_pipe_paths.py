@@ -146,7 +146,7 @@ class tool_path_obj:
             self.SWISS_PROT_map     = database_path + "swiss_prot_db/SwissProt_EC_Mapping.tsv"
             self.PriamDB            = database_path + "PRIAM_db/"
             self.DetectDB           = database_path + "DETECTv2"
-
+            self.WEVOTEDB           = database_path + "WEVOTE_db/" #points to the location of taxdump, needed by WEVOTE
             #----------------------------------------------------------
             # external tools
             self.Python             =             "python3"
@@ -163,7 +163,7 @@ class tool_path_obj:
             self.BLAT               = tool_path + "PBLAT/pblat"
             self.DIAMOND            = tool_path + "DIAMOND/diamond"
             self.Blastp             = tool_path + "BLAST_p/blastp"
-            self.Needle             = "/home/j/jparkin/mobolaji/Tools/EMBOSS/EMBOSS-6.6.0/emboss/needle"
+            self.Needle             = tool_path + "EMBOSS/needle"
             self.Blastdbcmd         = tool_path + "BLAST_p/blastdbcmd"
             self.Makeblastdb        = tool_path + "BLAST_p/makeblastdb"
             self.Infernal           = tool_path + "infernal/cmscan"
@@ -180,7 +180,7 @@ class tool_path_obj:
             self.Detect             = "/home/j/jparkin/mobolaji/Tools/DETECTv2/detect_2.01.py"#tool_path   + "detect_2_py3.py"
             self.BLAST_dir          = tool_path + "BLAST_p"
             self.WEVOTE             = tool_path + "WEVOTE/WEVOTE"
-            self.WEVOTEDB           = tool_path + "WEVOTE/WEVOTE_db" #points to the location of taxdump, needed by WEVOTE
+            
             self.Spades             = tool_path + "SPAdes/bin/spades.py"
             
 

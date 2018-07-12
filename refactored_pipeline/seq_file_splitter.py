@@ -53,6 +53,8 @@ def split_fastq(file_name_in, file_name_out, split_count = 4):
 def split_fasta(file_name_in, file_name_out, split_count = 4):
     fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
     fasta_df.columns = ["row"]
+    #There's apparently a possibility for NaNs to be introduced in the raw fasta.  We have to strip it before we process (from DIAMOND proteins.faa)
+    fasta_df.dropna(inplace=True)
     new_df = pd.DataFrame(fasta_df.loc[fasta_df.row.str.contains('>')])  # grab all the IDs
     new_df.columns = ["names"]
     new_data_df = fasta_df.loc[~fasta_df.row.str.contains('>')]  # grab the data

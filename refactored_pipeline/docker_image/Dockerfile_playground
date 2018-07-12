@@ -21,6 +21,7 @@ RUN conda install Biopython -y
 RUN conda install Pandas -y
 RUN apt-get install openjdk-8-jre -y
 RUN apt-get install openjdk-8-jdk -y
+RUN apt-get install libgd-dev -y
 
 WORKDIR /pipeline_tools
 
@@ -38,10 +39,11 @@ RUN sh configure && make && mv emboss/needle /pipeline_tools/EMBOSS
 WORKDIR /pipeline_tools
 RUN rm -r EMBOSS-6.6.0*
 
+
 #----------------------------------------------------
 # Install Centrifuge
-RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz && tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz && mkdir /pipeline_tools/centrifuge
+RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz && tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz 
 WORKDIR centrifuge-1.0.3
 RUN make 
 WORKDIR /pipeline_tools
-RUN mv centrifuge-1.0.3 centrfuge
+RUN mv centrifuge-1.0.3 centrifuge
