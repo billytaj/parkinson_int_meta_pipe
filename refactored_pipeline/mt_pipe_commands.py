@@ -1547,7 +1547,7 @@ class mt_pipe_commands:
         PRIAM_command += " -i " + diamond_folder + "proteins.faa"
         PRIAM_command += " -p " + self.tool_path_obj.PriamDB
         PRIAM_command += " -o " + PRIAM_folder
-        PRIAM_command += " -pt 0.5 -mp 70 --cc -bd "
+        PRIAM_command += " --pt 0.5 --mp 70 --cc --cg --bd "
         PRIAM_command += self.tool_path_obj.BLAST_dir
 
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
