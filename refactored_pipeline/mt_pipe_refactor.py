@@ -622,7 +622,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             TA_end = time.time()
             
             # ------------------------------------------------------
-            # EC annotation
+            # Detect EC annotation
             EC_start = time.time()
             EC_DETECT_start = time.time()
             if (not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
@@ -658,15 +658,13 @@ def main(input_folder, output_folder, system_op, user_mode):
                 for item in mp_store:
                     item.join()  # wait for things to finish
                 mp_store[:] = []  # clear the list
-            sp.call(["rm", output_folder + "blast_hits*"]) #hack to do DETECT cleanup -> July 13, 2018
             EC_DETECT_end = time.time()
             
             
             #--------------------------------------------------------------
-            # Running Priam and Diamond
-            DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
+            # Priam and Diamond EC annotation
             EC_PRIAM_DIAMOND_start = time.time()
-            if (not sync_obj.check_where_resume(None, DETECT_path, output_folder + gene_annotation_DIAMOND_label)):
+            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(

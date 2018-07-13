@@ -1517,8 +1517,12 @@ class mt_pipe_commands:
         data_folder = subfolder + "data/" + "/"
         proteins_folder = data_folder + "0_proteins/"
         detect_folder = data_folder + "1_detect/"
+        prot_folder = detect_folder + prot_name + "/"
 
-        detect_protein = ">&2 echo running detect on split file " + prot_name + " | "
+        self.make_folder(prot_folder)
+
+        detect_protein = "(cd " + prot_folder + " && "
+        detect_protein += ">&2 echo running detect on split file " + prot_name + " | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
         detect_protein += proteins_folder + prot_name + ".fasta"
@@ -1526,7 +1530,7 @@ class mt_pipe_commands:
         detect_protein += " --top_predictions_file " + detect_folder + prot_name + ".toppred"
         detect_protein += " --db " + self.tool_path_obj.DetectDB
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
-        detect_protein += " --needle " + self.tool_path_obj.Needle
+        detect_protein += " --needle " + self.tool_path_obj.Needle + ")"
 
         COMMANDS_DETECT = [
             detect_protein
