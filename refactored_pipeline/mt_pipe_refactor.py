@@ -658,6 +658,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 for item in mp_store:
                     item.join()  # wait for things to finish
                 mp_store[:] = []  # clear the list
+            sp.Popen(["rm ", output_folder + "blast_hits*"])
             EC_DETECT_end = time.time()
             
             
