@@ -1003,10 +1003,13 @@ class mt_pipe_commands:
         #this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
         spades += self.tool_path_obj.Python + " "
-        spades += self.tool_path_obj.Spades + " -k 21,33,55,77 --meta" #Consider switching to --rna
-        spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
-        spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
-        spades += " -o " + spades_folder #out
+        spades += self.tool_path_obj.Spades + " --rna"
+        spades += " -1 " + dep_loc + "pair_1.fastq"  # in1 (pair 1)
+        spades += " -2 " + dep_loc + "pair_2.fastq"  # in2 (pair 2)
+        spades += " -s " + dep_loc + "orphans.fastq"  # in_single (orphans)
+        spades += " -o " + spades_folder  # out
+
+        spades_rename = "cp " + spades_folder + "transcripts.fasta" + " " + spades_folder + "contigs.fasta" # rename output
 
         bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + spades_folder + "contigs.fasta"
 
@@ -1098,6 +1101,7 @@ class mt_pipe_commands:
         COMMANDS_Assemble = [
                         #"mkdir -p " + os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0]) + "_SpadesOut",
                         spades,
+                        spades_rename,
                         bwa_index,
                         bwa_pair_1_contigs,
                         bwa_pair_2_contigs,
