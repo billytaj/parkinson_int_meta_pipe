@@ -23,6 +23,7 @@ RUN conda install Biopython -y
 RUN conda install Pandas -y
 #needed for Needle
 RUN ln -s /bin/sed /usr/bin/sed   
+RUN apt-get install libgd-dev -y
 
 WORKDIR /pipeline_tools
 #----------------------------------------------------
@@ -78,11 +79,11 @@ RUN rm -r cd-hit-v4.6.8-2017-1208
 
 #----------------------------------------------------
 # Install Centrifuge
-RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz && tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz && mkdir /pipeline_tools/centrifuge
+RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz && tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz 
 WORKDIR centrifuge-1.0.3
 RUN make 
 WORKDIR /pipeline_tools
-RUN mv centrifuge-1.0.3 centrfuge
+RUN mv centrifuge-1.0.3 centrifuge
 
 
 #-----------------------------------------------------

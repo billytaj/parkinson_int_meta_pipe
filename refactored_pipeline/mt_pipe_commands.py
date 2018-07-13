@@ -1003,10 +1003,13 @@ class mt_pipe_commands:
         #this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
         spades += self.tool_path_obj.Python + " "
-        spades += self.tool_path_obj.Spades + " -k 21,33,55,77 --meta" #Consider switching to --rna
-        spades += " -1 " + dep_loc + "pair_1.fastq" #in1 (pair 1)
-        spades += " -2 " + dep_loc + "pair_2.fastq" #in2 (pair 2)
-        spades += " -o " + spades_folder #out
+        spades += self.tool_path_obj.Spades + " --rna"
+        spades += " -1 " + dep_loc + "pair_1.fastq"  # in1 (pair 1)
+        spades += " -2 " + dep_loc + "pair_2.fastq"  # in2 (pair 2)
+        spades += " -s " + dep_loc + "orphans.fastq"  # in_single (orphans)
+        spades += " -o " + spades_folder  # out
+
+        spades_rename = "cp " + spades_folder + "transcripts.fasta" + " " + spades_folder + "contigs.fasta" # rename output
 
         bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + spades_folder + "contigs.fasta"
 
@@ -1098,6 +1101,7 @@ class mt_pipe_commands:
         COMMANDS_Assemble = [
                         #"mkdir -p " + os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0]) + "_SpadesOut",
                         spades,
+                        spades_rename,
                         bwa_index,
                         bwa_pair_1_contigs,
                         bwa_pair_2_contigs,
@@ -1402,7 +1406,7 @@ class mt_pipe_commands:
         centrifuge_on_orphans += " -U " + assemble_contigs_folder + "orphans.fastq"
         centrifuge_on_orphans += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_orphans += " --phred" + self.Qual_str
-        centrifuge_on_orphans += " -p " + self.Threads_str
+        centrifuge_on_orphans += " -p 6" #+ str(int(self.Threads_str)/2)
         centrifuge_on_orphans += " -S " + centrifuge_folder + "reads.tsv"
         centrifuge_on_orphans += " --report-file " + centrifuge_folder + "reads.txt"
 
@@ -1412,7 +1416,7 @@ class mt_pipe_commands:
         centrifuge_on_contigs += " -U " + assemble_contigs_folder + "contigs.fasta"
         centrifuge_on_contigs += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_contigs += " --phred" + self.Qual_str
-        centrifuge_on_contigs += " -p " + self.Threads_str
+        centrifuge_on_contigs += " -p 6" #+ str(int(self.Threads_str)/2)
         centrifuge_on_contigs += " -S " + centrifuge_folder + "contigs.tsv"
         centrifuge_on_contigs += " --report-file " + centrifuge_folder + "contigs.txt"
         
@@ -1546,8 +1550,8 @@ class mt_pipe_commands:
         PRIAM_command += " -n " + "proteins_priam" + " "
         PRIAM_command += " -i " + diamond_folder + "proteins.faa"
         PRIAM_command += " -p " + self.tool_path_obj.PriamDB
-        PRIAM_command += " -od " + PRIAM_folder
-        PRIAM_command += " -e T -pt 0.5 -mo -1 -mp 70 -cc T -cg T -bd "
+        PRIAM_command += " -o " + PRIAM_folder
+        PRIAM_command += " --pt 0.5 --mp 70 --cc --cg --bd "
         PRIAM_command += self.tool_path_obj.BLAST_dir
 
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
@@ -1575,6 +1579,8 @@ class mt_pipe_commands:
         diamond_ea_folder = data_folder + "3_diamond/"
         final_folder = data_folder + "final_results/"
 
+        
+        
         combine_detect = "cat " + detect_folder + "*.toppred"
         combine_detect += " > " + detect_folder + "proteins.toppred"
 
