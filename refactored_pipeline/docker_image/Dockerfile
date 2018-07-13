@@ -102,9 +102,8 @@ WORKDIR /pipeline_tools
 # Install EMBOSS
 RUN mkdir EMBOSS && wget ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz && tar -xzvf EMBOSS-6.6.0.tar.gz
 WORKDIR EMBOSS-6.6.0
-RUN sh configure && make && mv emboss/needle /pipeline_tools/EMBOSS 
+RUN sh configure && make
 WORKDIR /pipeline_tools
-RUN rm -r EMBOSS-6.6.0*
 
 #------------------------------------------------------
 # Install FLASH (Fast length adjustment of Short Reads)

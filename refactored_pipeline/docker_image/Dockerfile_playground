@@ -35,6 +35,7 @@ RUN ln -s /bin/sed /usr/bin/sed
 
 RUN mkdir EMBOSS && wget ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz && tar -xzvf EMBOSS-6.6.0.tar.gz
 WORKDIR EMBOSS-6.6.0
+<<<<<<< Updated upstream
 RUN sh configure && make && mv emboss/needle /pipeline_tools/EMBOSS 
 WORKDIR /pipeline_tools
 RUN rm -r EMBOSS-6.6.0*
@@ -47,3 +48,9 @@ WORKDIR centrifuge-1.0.3
 RUN make 
 WORKDIR /pipeline_tools
 RUN mv centrifuge-1.0.3 centrifuge
+=======
+RUN sh configure && make 
+#&& mv emboss/.libs/needle /pipeline_tools/EMBOSS 
+#WORKDIR /pipeline_tools/EMBOSS
+#RUN rm -r EMBOSS-6.6.0*
+>>>>>>> Stashed changes

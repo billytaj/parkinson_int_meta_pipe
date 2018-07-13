@@ -163,7 +163,11 @@ class tool_path_obj:
             self.BLAT               = tool_path + "PBLAT/pblat"
             self.DIAMOND            = tool_path + "DIAMOND/diamond"
             self.Blastp             = tool_path + "BLAST_p/blastp"
+<<<<<<< Updated upstream
             self.Needle             = tool_path + "EMBOSS/needle"
+=======
+            self.Needle             = tool_path + "EMBOSS-6.6.0/emboss/needle"
+>>>>>>> Stashed changes
             self.Blastdbcmd         = tool_path + "BLAST_p/blastdbcmd"
             self.Makeblastdb        = tool_path + "BLAST_p/makeblastdb"
             self.Infernal           = tool_path + "infernal/cmscan"
