@@ -45,47 +45,30 @@ class sync_control:
     #handles where to auto-resume
     def check_where_resume(self, job_label = None, full_path = None, dep_job_label = None, dep_job_path = None):
         self.check_where_kill(dep_job_label, dep_job_path)
+        job_path = ""
         if(job_label):
             job_path = job_label + "/data/final_results/"
-            print("looking at:", job_path)
-            if(os.path.exists(job_path)):
-                file_list = os.listdir(job_path)
-                if(len(file_list) > 0):
-                    for item in file_list:
-                        file_check_path = job_path + item
-                        if((os.path.getsize(file_check_path)) == 0):
-                            print("empty file detected: rerunning stage")
-                            return False
-                    print("bypassing!")
-                    return True
-                else:
-                    print("running")
-                    return False
-
-            else:
-                print("doesn't exist: running")
-                return False
         else:
             job_path = full_path
             
-            print("looking at:", job_path)
-            if(os.path.exists(job_path)):
-                file_list = os.listdir(job_path)
-                if(len(file_list) > 0):
-                    for item in file_list:
-                        if((os.path.getsize(item)) == 0):
-                            print("empty file detected: rerunning stage")
-                            return False
-                    
-                    print("bypassing!")
-                    return True
-                else:
-                    print("running")
-                    return False
-
+        print("looking at:", job_path)
+        if(os.path.exists(job_path)):
+            file_list = os.listdir(job_path)
+            if(len(file_list) > 0):
+                for item in file_list:
+                    file_check_path = job_path + item
+                    if((os.path.getsize(file_check_path)) == 0):
+                        print("empty file detected: rerunning stage")
+                        return False
+                print("bypassing!")
+                return True
             else:
-                print("doesn't exist: running")
+                print("running")
                 return False
+
+        else:
+            print("doesn't exist: running")
+            return False
     #handles job syncing
     # op mode:  which job category -> completed, running, in queue, blocked
     # check_mode: how to check our job IDs vs the job category list
@@ -311,19 +294,20 @@ def main(input_folder, output_folder, system_op, user_mode):
 
 
         if(operating_mode == double_mode):
-            preprocess_label = "preprocess"
-            rRNA_filter_label = "rRNA_filter"
-            repop_job_label = "duplicate_repopulation"
-            assemble_contigs_label = "assemble_contigs"
-            gene_annotation_BWA_label = "gene_annotation_BWA"
-            gene_annotation_BLAT_label = "gene_annotation_BLAT"
-            GL_BLAT_cat_label = "BLAT_cat_results"
-            GA_BLAT_PP_label = "BLAT_postprocess"
-            gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
-            taxon_annotation_label = "taxonomic_annotation"
-            ec_annotation_label = "enzyme_annotation"
-            network_label = "RPKM_network"
-            visualization_label = "visualization"
+            preprocess_label                = "preprocess"
+            rRNA_filter_label               = "rRNA_filter"
+            repop_job_label                 = "duplicate_repopulation"
+            assemble_contigs_label          = "assemble_contigs"
+            gene_annotation_BWA_label       = "gene_annotation_BWA"
+            gene_annotation_BLAT_label      = "gene_annotation_BLAT"
+            GL_BLAT_cat_label               = "BLAT_cat_results"
+            GA_BLAT_PP_label                = "BLAT_postprocess"
+            gene_annotation_DIAMOND_label   = "gene_annotation_DIAMOND"
+            taxon_annotation_label          = "taxonomic_annotation"
+            ec_annotation_label             = "enzyme_annotation"
+            ec_priam_diamond_label          = "ec_priam_diamond" 
+            network_label                   = "RPKM_network"
+            visualization_label             = "visualization"
 
             rRNA_filter_orphans_fastq_folder = os.getcwd() + "/rRNA_filter/data/orphans/orphans_fastq/"
             rRNA_filter_pair_1_fastq_folder = os.getcwd()  + "/rRNA_filter/data/pair_1/pair_1_fastq/"
@@ -654,7 +638,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
  
-                # Running DETECT on split protien files 
+                # Running DETECT on split protein files 
                 proteins_path = output_folder + ec_annotation_label + "/data/0_proteins/"
                 for item in os.listdir(proteins_path):
                     file_root_name = os.path.splitext(item)[0]
@@ -675,11 +659,13 @@ def main(input_folder, output_folder, system_op, user_mode):
                     item.join()  # wait for things to finish
                 mp_store[:] = []  # clear the list
             EC_DETECT_end = time.time()
-            DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
-
+            
+            
+            #--------------------------------------------------------------
             # Running Priam and Diamond
+            DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
             EC_PRIAM_DIAMOND_start = time.time()
-            if (not sync_obj.check_where_resume(output_folder + DETECT_path, None, output_folder + gene_annotation_DIAMOND_label)):
+            if (not sync_obj.check_where_resume(None, DETECT_path, output_folder + gene_annotation_DIAMOND_label)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
