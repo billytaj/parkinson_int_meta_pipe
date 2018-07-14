@@ -1653,7 +1653,7 @@ class mt_pipe_commands:
         chart_generation += network_folder + "Cytoscape_network.tsv" + " "
         chart_generation += mpl_folder
 
-        final_chart = "cp " + mpl_folder + "All_EC.png"  + " > " + final_folder + "All_EC.png"
+        final_chart = "cp " + mpl_folder + "All_EC.png"  + " " + final_folder + "All_EC.png"
 
         COMMANDS_visualization = [
             chart_generation,
