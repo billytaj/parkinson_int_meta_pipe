@@ -729,7 +729,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             print("TA:", '%1.1f' % (TA_end - TA_start), "s", "start:", '%1.1f' % TA_start, "end:", '%1.1f' % TA_end)
             print("EC:", '%1.1f' % (EC_end - EC_start), "s", "start:", '%1.1f' % EC_start, "end:", '%1.1f' % EC_end)
             print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s", "start:", '%1.1f' % EC_DETECT_start, "end:", '%1.1f' % EC_DETECT_end)
-            print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_end), "s", "start:", '%1.1f' % EC_PRIAM_DIAMOND_start, "end:", '%1.1f' % EC_PRIAM_DIAMOND_end)
+            print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start), "s", "start:", '%1.1f' % EC_PRIAM_DIAMOND_start, "end:", '%1.1f' % EC_PRIAM_DIAMOND_end)
             print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s", "start:", '%1.1f' % Cytoscape_start, "end:", '%1.1f' % Cytoscape_end)
             print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s", "start:", '%1.1f' % Chart_start, "end:", '%1.1f' % Chart_end)
 
