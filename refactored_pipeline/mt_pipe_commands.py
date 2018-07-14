@@ -1555,7 +1555,8 @@ class mt_pipe_commands:
         PRIAM_command += " -i " + diamond_folder + "proteins.faa"
         PRIAM_command += " -p " + self.tool_path_obj.PriamDB
         PRIAM_command += " -o " + PRIAM_folder
-        PRIAM_command += " --pt 0.5 --mp 70 --cc --cg --bd "
+        PRIAM_command += " --np " + self.Threads_str
+        PRIAM_command += " --bh --cc --cg --bp --bd "
         PRIAM_command += self.tool_path_obj.BLAST_dir
 
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
@@ -1585,7 +1586,7 @@ class mt_pipe_commands:
 
         
         
-        combine_detect = "cat " + detect_folder + "*.toppred"
+        combine_detect = "cat " + detect_folder + "protein_*.toppred"
         combine_detect += " > " + detect_folder + "proteins.toppred"
 
         postprocess_command = ">&2 echo combining enzyme annotation output | "
@@ -1593,7 +1594,7 @@ class mt_pipe_commands:
         postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
         postprocess_command += diamond_folder + "proteins.faa" + " "
         postprocess_command += detect_folder + "proteins.toppred" + " "
-        postprocess_command += os.path.join(PRIAM_folder, "RESULTS", "paj_proteins_priam_seqsECs.tab") + " "
+        postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
         postprocess_command += diamond_ea_folder + "proteins.blastout" + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "

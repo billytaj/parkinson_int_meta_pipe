@@ -203,7 +203,6 @@ class tool_path_obj:
             
             self.RPKM                       = script_path   + "RPKM.py"
             self.chart                      = script_path   + "pie_visualization.py"
-            #Will have to modify this script to take more explicit arguments
             self.EC_Annotation_Post         = script_path   + "EC_Consolidation.py"
             
             self.Annotated_taxid            = script_path   + "Read_Classification/Get_TaxID.py"
