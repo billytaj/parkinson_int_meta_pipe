@@ -34,14 +34,21 @@ with open(detect_file, "r") as topred:
 priam_ECs = os.path.join(priam_dir, Input_Name + ".ECs")
 with open(priam_file, "r") as ECs:
     with open(priam_ECs, "w") as processedECs:
+        ID = None
+        EC = None
         for line in ECs.readlines():
-            line_as_list = line.split("\t")
-            if len(line_as_list[1].split(";")) > 1:
-                for EC in range(len(line_as_list[1].split(";"))):
-                    processedECs.write("\t".join([line_as_list[0], line_as_list[1].split(";")[EC].strip()]))
-                    processedECs.write("\n")
-            else:
-                processedECs.write(line)
+            if line.startswith(">"):
+                ID = line.split(" ")[0][1:].strip("\n")
+                continue
+            elif line == "\n":
+                continue
+            elif ID and not line.startswith("#"):
+                EC = line.split(" ")[0]
+                processedECs.write("\t".join([ID, EC]))
+                processedECs.write("\n")
+                ID = None
+                EC = None
+                continue
 
 diamond_ECs = os.path.join(diamond_dir, Input_Name + ".ECs")
 with open(diamond_file, "r") as blastout:

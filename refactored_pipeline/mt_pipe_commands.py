@@ -1517,8 +1517,12 @@ class mt_pipe_commands:
         data_folder = subfolder + "data/" + "/"
         proteins_folder = data_folder + "0_proteins/"
         detect_folder = data_folder + "1_detect/"
+        prot_folder = detect_folder + prot_name + "/"
 
-        detect_protein = ">&2 echo running detect on split file " + prot_name + " | "
+        self.make_folder(prot_folder)
+
+        detect_protein = "(cd " + prot_folder + " && "
+        detect_protein += ">&2 echo running detect on split file " + prot_name + " | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
         detect_protein += proteins_folder + prot_name + ".fasta"
@@ -1526,7 +1530,7 @@ class mt_pipe_commands:
         detect_protein += " --top_predictions_file " + detect_folder + prot_name + ".toppred"
         detect_protein += " --db " + self.tool_path_obj.DetectDB
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
-        detect_protein += " --needle " + self.tool_path_obj.Needle
+        detect_protein += " --needle " + self.tool_path_obj.Needle + ")"
 
         COMMANDS_DETECT = [
             detect_protein
@@ -1551,7 +1555,8 @@ class mt_pipe_commands:
         PRIAM_command += " -i " + diamond_folder + "proteins.faa"
         PRIAM_command += " -p " + self.tool_path_obj.PriamDB
         PRIAM_command += " -o " + PRIAM_folder
-        PRIAM_command += " --pt 0.5 --mp 70 --cc --cg --bd "
+        PRIAM_command += " --np " + self.Threads_str
+        PRIAM_command += " --bh --cc --cg --bp --bd "
         PRIAM_command += self.tool_path_obj.BLAST_dir
 
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
@@ -1581,7 +1586,7 @@ class mt_pipe_commands:
 
         
         
-        combine_detect = "cat " + detect_folder + "*.toppred"
+        combine_detect = "cat " + detect_folder + "protein_*.toppred"
         combine_detect += " > " + detect_folder + "proteins.toppred"
 
         postprocess_command = ">&2 echo combining enzyme annotation output | "
@@ -1589,7 +1594,7 @@ class mt_pipe_commands:
         postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
         postprocess_command += diamond_folder + "proteins.faa" + " "
         postprocess_command += detect_folder + "proteins.toppred" + " "
-        postprocess_command += os.path.join(PRIAM_folder, "RESULTS", "paj_proteins_priam_seqsECs.tab") + " "
+        postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
         postprocess_command += diamond_ea_folder + "proteins.blastout" + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "

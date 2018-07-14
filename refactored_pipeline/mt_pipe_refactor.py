@@ -316,16 +316,9 @@ def main(input_folder, output_folder, system_op, user_mode):
             raw_pair_0_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[0]
             raw_pair_1_path = raw_sequence_path + sorted(os.listdir(raw_sequence_path))[1]
             quality_encoding = 33 #This should not be a constant, we need some process to determine the quality encoding ex. vsearch --fastq_chars
-            comm = mpcom.mt_pipe_commands(Quality_score = quality_encoding, Thread_count = thread_count, system_mode = system_op, user_mode = user_mode, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
 
             #Creates our command object, for creating shellscripts.
-            comm = mpcom.mt_pipe_commands(
-                                            Quality_score = quality_encoding,                     #leftover from an argument into one of the tools
-                                            Thread_count = thread_count,                      #leftover, same reason.
-                                            system_mode = system_op,                #docker, or singularity
-                                            raw_sequence_path_0 = raw_pair_0_path,  #
-                                            raw_sequence_path_1 = raw_pair_1_path
-                                        ) #start obj
+            comm = mpcom.mt_pipe_commands(Quality_score = quality_encoding, Thread_count = thread_count, system_mode = system_op, user_mode = user_mode, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
 
             #This is the format we use to launch each stage of the pipeline.
             #We start a multiprocess that starts a subprocess.
@@ -622,7 +615,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             TA_end = time.time()
             
             # ------------------------------------------------------
-            # EC annotation
+            # Detect EC annotation
             EC_start = time.time()
             EC_DETECT_start = time.time()
             if (not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
@@ -658,15 +651,13 @@ def main(input_folder, output_folder, system_op, user_mode):
                 for item in mp_store:
                     item.join()  # wait for things to finish
                 mp_store[:] = []  # clear the list
-            sp.call(["rm", output_folder + "blast_hits*"]) #hack to do DETECT cleanup -> July 13, 2018
             EC_DETECT_end = time.time()
             
             
             #--------------------------------------------------------------
-            # Running Priam and Diamond
-            DETECT_path = output_folder + ec_annotation_label + "/data/1_detect/"
+            # Priam and Diamond EC annotation
             EC_PRIAM_DIAMOND_start = time.time()
-            if (not sync_obj.check_where_resume(None, DETECT_path, output_folder + gene_annotation_DIAMOND_label)):
+            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
