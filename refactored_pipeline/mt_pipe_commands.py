@@ -1638,7 +1638,7 @@ class mt_pipe_commands:
     def create_visualization_command(self, current_stage_name, network_stage):
         subfolder = os.getcwd() + "/" + current_stage_name + "/"
         data_folder = subfolder + "data/"
-        mpl_folder = data_folder + "/0_MPL/"
+        mpl_folder = data_folder + "0_MPL/"
         network_folder = os.getcwd() + "/" + network_stage + "/data/final_results/"
         final_folder = data_folder + "final_results/"
 
