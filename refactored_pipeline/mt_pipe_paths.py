@@ -130,8 +130,9 @@ class tool_path_obj:
             # this too.
             self.Adapter            = database_path + "Trimmomatic_adapters/TruSeq3-PE-2.fa"
             self.Host               = database_path + "Mouse_cds/Mouse_cds.fasta"
-            self.Rfam               = "/scratch/j/jparkin/billyc59/Rfam/Rfam.cm" #database_path + "Rfam.cm"
-            self.DNA_DB             = database_path + "microbial_cds_db/microbial_all_cds.fasta"
+            self.Rfam               = database_path + "Rfam/Rfam.cm"
+            self.DNA_DB             = database_path + "ChocoPhlAn/ChocoPhlAn.fasta"#"microbial_cds_db/microbial_all_cds.fasta"
+            self.DNA_DB_Split       = database_path + "ChocoPhlAn/ChocoPhlAn_split/"#"microbial_cds_db/microbial_all_cds.fasta"
             self.DNA_DB_Prefix      = os.path.splitext(self.DNA_DB)[0]
             self.DNA_DB_Extension   = os.path.splitext(self.DNA_DB)[1]
             self.Prot_DB            = database_path + "diamond_v0922/nr.dmnd"
