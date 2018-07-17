@@ -62,7 +62,7 @@ class mt_pipe_commands:
     def make_folder(self, folder_path):
         if not(os.path.exists(folder_path)):
             os.makedirs(folder_path)
-    
+
     def create_pbs_and_launch(self, job_name, command_list, run_job = False, inner_name = None, mode = "low", dependency_list = None,  work_in_background = False):
         #create the pbs job, and launch items
         #job name: string tag for export file name
@@ -71,7 +71,7 @@ class mt_pipe_commands:
         #dependency_list: if not empty, will append wait args to sbatch subprocess call. it's polymorphic
         #returns back the job ID given from sbatch
 
-        if(self.system_mode == "scinet"):
+        if self.system_mode == "scinet":
             pbs_template = SLURM_Submit
 
         #    if(mode == "med"):
@@ -92,7 +92,7 @@ class mt_pipe_commands:
         #if(self.system_mode == "singularity" or self.system_mode == "docker"):
             #docker mode, depending on the machine it's applied to, it may be multi-core
             pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
-            if(not inner_name is None):
+            if not inner_name is None:
                 pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
 
             try:
@@ -111,34 +111,34 @@ class mt_pipe_commands:
                         PBS_script_out.write(line + "\n")
                     PBS_script_out.close()
                     dep_str = ""
-                    if (isinstance(dependency_list, int)):
+                    if isinstance(dependency_list, int):
                         #single dep
                         dep_str = "-W depend=afterok:" + str(dependency_list)
                         print(dep_str)
-                        if(inner_name is None):
+                        if inner_name is None:
                             print(job_name, "running with single dependency")
                         else:
                             print(inner_name, "running with single dependency")
 
-                    elif(isinstance(dependency_list, list)):
+                    elif isinstance(dependency_list, list):
                         # multiple deps
                         print("mutiple dependencies being used")
                         dep_str = "-d depend=afterok"
                         for item in dependency_list:
                             dep_str += ":"+str(item)
-                        if(inner_name is None):
+                        if inner_name is None:
                             print(job_name, "running with multiple dependencies")
                         else:
                             print(inner_name, "running with multiple dependencies")
-                    elif(dependency_list is None):
-                        if(inner_name is None):
+                    elif dependency_list is None:
+                        if inner_name is None:
                             print(job_name, "running without dependency")
                         else:
                             print(inner_name, "running without dependency")
                     else:
                         print("This isn't supposed to happen")
 
-                    if(run_job): # a lock built for testing syntax, but not run
+                    if run_job: # a lock built for testing syntax, but not run
                         try:
                             if not dep_str == "":
                                 print("dep string not empty")
@@ -164,14 +164,14 @@ class mt_pipe_commands:
             #docker mode: single cpu
             # no ID, no sbatch.  just run the command
             pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
-            if(not inner_name is None):
+            if not inner_name is None:
                 pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
             with open(pbs_script_full_path + ".sh", "w+") as PBS_script_out:
                 for item in command_list:
                     PBS_script_out.write(item + "\n")
                 PBS_script_out.close()
-            if(run_job):
-                if(not work_in_background):
+            if run_job:
+                if not work_in_background:
                     try:
                         sp.check_output(["sh", pbs_script_full_path + ".sh"])
                     except sp.CalledProcessError as e:
@@ -188,16 +188,6 @@ class mt_pipe_commands:
                             raise
             else:
                 print("not running job.  run_job set to False")
-
-    def create_pre_single_command(self, stage_name):
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-
-        print("not ready")
-        adapter_removal = self.tool_path_obj.AdapterRemoval + "--file1 " + ""
-        COMMANDS_PRE = []
 
     def create_pre_double_command(self, stage_name):
         #why do we leave all the interim files intact?
@@ -330,22 +320,22 @@ class mt_pipe_commands:
         host_removal_folder = data_folder + "6_remove_host/"
         self.make_folder(host_removal_folder)
 
-        self.Host_Contaminants = host_removal_folder + "host_contaminents_seq.fasta"
+        Host_Contaminants = host_removal_folder + "host_contaminents_seq.fasta"
         copy_host = ">&2 echo Copy the host file over | "
-        copy_host += "cp " + self.tool_path_obj.Host + " " + self.Host_Contaminants
+        copy_host += "cp " + self.tool_path_obj.Host + " " + Host_Contaminants
 
         #craft a BWA index for the host sequences
         bwa_hr_prep = ">&2 echo make host contaminants index for BWA | "
-        bwa_hr_prep += self.tool_path_obj.BWA + " index -a bwtsw " + self.Host_Contaminants
+        bwa_hr_prep += self.tool_path_obj.BWA + " index -a bwtsw " + Host_Contaminants
 
         samtools_hr_prep = ">&2 echo SAMTOOLS host contaminant prep | "
-        samtools_hr_prep += self.tool_path_obj.SAMTOOLS + " faidx " + self.Host_Contaminants
+        samtools_hr_prep += self.tool_path_obj.SAMTOOLS + " faidx " + Host_Contaminants
 
         #host removal on unique orphans
         bwa_hr_orphans = ">&2 echo BWA host remove on orphans | "
         bwa_hr_orphans += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_orphans += self.Threads_str + " "
-        bwa_hr_orphans += self.Host_Contaminants + " "
+        bwa_hr_orphans += Host_Contaminants + " "
         bwa_hr_orphans += cdhit_folder + "orphans_unique.fastq"
         bwa_hr_orphans += " > " + host_removal_folder + "orphans_no_host.sam"
 
@@ -370,7 +360,7 @@ class mt_pipe_commands:
         bwa_hr_pair = ">&2 echo bwa pair host remove | "
         bwa_hr_pair += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_pair += self.Threads_str + " "
-        bwa_hr_pair += self.Host_Contaminants + " "
+        bwa_hr_pair += Host_Contaminants + " "
         bwa_hr_pair += cdhit_folder + "pair_1_unique.fastq" + " "
         bwa_hr_pair += cdhit_folder + "pair_2_unique.fastq"
         bwa_hr_pair += " > " + host_removal_folder + "pair_no_host.sam"
@@ -379,7 +369,7 @@ class mt_pipe_commands:
         bwa_hr_pair_1 = ">&2 echo bwa pair host remove | "
         bwa_hr_pair_1 += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_pair_1 += self.Threads_str + " "
-        bwa_hr_pair_1 += self.Host_Contaminants + " "
+        bwa_hr_pair_1 += Host_Contaminants + " "
         bwa_hr_pair_1 += cdhit_folder + "pair_1_unique.fastq"
         bwa_hr_pair_1 += " > " + host_removal_folder + "pair_1_no_host.sam"
 
@@ -406,7 +396,7 @@ class mt_pipe_commands:
         bwa_hr_pair_2 = ">&2 echo bwa pair host remove | "
         bwa_hr_pair_2 += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_pair_2 += self.Threads_str + " "
-        bwa_hr_pair_2 += self.Host_Contaminants + " "
+        bwa_hr_pair_2 += Host_Contaminants + " "
         bwa_hr_pair_2 += cdhit_folder + "pair_2_unique.fastq"
         bwa_hr_pair_2 += " > " + host_removal_folder + "pair_2_no_host.sam"
 
@@ -429,7 +419,7 @@ class mt_pipe_commands:
 
         #blat prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
-        make_blast_db_host += self.tool_path_obj.Makeblastdb + " -in " + self.Host_Contaminants + " -dbtype nucl"
+        make_blast_db_host += self.tool_path_obj.Makeblastdb + " -in " + Host_Contaminants + " -dbtype nucl"
 
         vsearch_filter_3 = ">&2 echo Convert orphans for BLAT | "
         vsearch_filter_3 += self.tool_path_obj.vsearch
@@ -451,21 +441,21 @@ class mt_pipe_commands:
 
         blat_hr_orphans = ">&2 echo BLAT hr orphans | "
         blat_hr_orphans += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
-        blat_hr_orphans += self.Host_Contaminants + " "
+        blat_hr_orphans += Host_Contaminants + " "
         blat_hr_orphans += host_removal_folder + "orphans_no_host.fasta"
         blat_hr_orphans += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
         blat_hr_orphans += " " + host_removal_folder + "orphans_no_host.blatout"
 
         blat_hr_pair_1 = ">&2 echo BLAT hr pair 1 | "
         blat_hr_pair_1 += self.tool_path_obj.BLAT
-        blat_hr_pair_1 += " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " "
+        blat_hr_pair_1 += " -noHead -minIdentity=90 -minScore=65 " + Host_Contaminants + " "
         blat_hr_pair_1 += host_removal_folder + "pair_1_no_host.fasta"
         blat_hr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
         blat_hr_pair_1 += " " + host_removal_folder + "pair_1_no_host.blatout"
 
         blat_hr_pair_2 = ">&2 echo BLAT hr pair 2 | "
         blat_hr_pair_2 += self.tool_path_obj.BLAT
-        blat_hr_pair_2 += " -noHead -minIdentity=90 -minScore=65 " + self.Host_Contaminants + " "
+        blat_hr_pair_2 += " -noHead -minIdentity=90 -minScore=65 " + Host_Contaminants + " "
         blat_hr_pair_2 += host_removal_folder + "pair_2_no_host.fasta"
         blat_hr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
         blat_hr_pair_2 += " " + host_removal_folder + "pair_2_no_host.blatout"
@@ -500,20 +490,20 @@ class mt_pipe_commands:
         # vectors are artifacts that came from the read-gathering
         vector_removal_folder = data_folder + "8_vector_removal/"
         self.make_folder(vector_removal_folder)
-        self.Vector_Contaminants = vector_removal_folder + "vector_contaminants_seq.fasta"
+        Vector_Contaminants = vector_removal_folder + "vector_contaminants_seq.fasta"
 
         copy_vector = ">&2 echo copy vector prep | "
-        copy_vector += "cp " + self.tool_path_obj.UniVec_Core + " " + self.Vector_Contaminants
+        copy_vector += "cp " + self.tool_path_obj.UniVec_Core + " " + Vector_Contaminants
 
         bwa_vr_prep = ">&2 echo BWA vector prep | "
-        bwa_vr_prep += self.tool_path_obj.BWA + " index -a bwtsw " + self.Vector_Contaminants
+        bwa_vr_prep += self.tool_path_obj.BWA + " index -a bwtsw " + Vector_Contaminants
 
         samtools_vr_prep = ">&2 echo samtools vector prep | "
-        samtools_vr_prep += self.tool_path_obj.SAMTOOLS + " faidx " + self.Vector_Contaminants
+        samtools_vr_prep += self.tool_path_obj.SAMTOOLS + " faidx " + Vector_Contaminants
 
         bwa_vr_orphans = ">&2 echo BWA vr oprhans | "
         bwa_vr_orphans += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_vr_orphans += self.Vector_Contaminants + " "
+        bwa_vr_orphans += Vector_Contaminants + " "
         bwa_vr_orphans += blat_hr_folder + "orphans_no_host.fastq"
         bwa_vr_orphans += " > " + vector_removal_folder + "orphans_no_vectors.sam"
 
@@ -534,13 +524,13 @@ class mt_pipe_commands:
 
         bwa_vr_pair_1 = ">&2 echo bwa vr pair | "
         bwa_vr_pair_1 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_vr_pair_1 += self.Vector_Contaminants + " "
+        bwa_vr_pair_1 += Vector_Contaminants + " "
         bwa_vr_pair_1 += blat_hr_folder + "pair_1_no_host.fastq "
         bwa_vr_pair_1 += " > " + vector_removal_folder + "pair_1_no_vectors.sam"
 
         bwa_vr_pair_2 = ">&2 echo bwa vr pair | "
         bwa_vr_pair_2 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_vr_pair_2 += self.Vector_Contaminants + " "
+        bwa_vr_pair_2 += Vector_Contaminants + " "
         bwa_vr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq "
         bwa_vr_pair_2 += " > " + vector_removal_folder + "pair_2_no_vectors.sam"
 
@@ -578,7 +568,7 @@ class mt_pipe_commands:
 
 
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
-        make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + self.Vector_Contaminants + " -dbtype nucl"
+        make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + Vector_Contaminants + " -dbtype nucl"
 
         vsearch_filter_6 = ">&2 echo convert vr orphans for BLAT | "
         vsearch_filter_6 += self.tool_path_obj.vsearch
@@ -601,21 +591,21 @@ class mt_pipe_commands:
         blat_vr_orphans = ">&2 echo BLAT vr orphans | "
         blat_vr_orphans += self.tool_path_obj.BLAT
         blat_vr_orphans += " -noHead -minIdentity=90 -minScore=65 "
-        blat_vr_orphans += self.Vector_Contaminants + " "
+        blat_vr_orphans += Vector_Contaminants + " "
         blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.fasta"
         blat_vr_orphans += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
         blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.blatout"
 
         blat_vr_pair_1 = ">&2 echo BLAT vr pair 1 | "
         blat_vr_pair_1 += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
-        blat_vr_pair_1 += self.Vector_Contaminants + " "
+        blat_vr_pair_1 += Vector_Contaminants + " "
         blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.fasta"
         blat_vr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
         blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.blatout"
 
         blat_vr_pair_2 = ">&2 echo BLAT vr pair 2 | "
         blat_vr_pair_2 += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
-        blat_vr_pair_2 += self.Vector_Contaminants + " "
+        blat_vr_pair_2 += Vector_Contaminants + " "
         blat_vr_pair_2 += vector_removal_folder + "pair_2_no_vectors.fasta"
         blat_vr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
         blat_vr_pair_2 += vector_removal_folder + "pair_2_no_vectors.blatout"
@@ -915,7 +905,6 @@ class mt_pipe_commands:
         #-> if it's run, grab data
         #-> if not, run our own custom preprocess up to what we need
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/" + "data/final_results/"
-        COMMANDS_combine = []
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         repop_folder = data_folder + "0_repop/"
@@ -928,59 +917,54 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
 
 
-        if not(os.path.exists(preprocess_subfolder)):
-            #start our own custom preprocess steps
-            print("duplicate repopulation without preprocess not ready")
+        #we ran a previous preprocess.  grab files
+        #need 3, 5(clstr only), and mRNA from the 2nd stage.
+        #for the mRNA, we don't really care if it is.  This stage is just supposed to add in the missing duplicates from something that was stripped.
 
-        else:
-            #we ran a previous preprocess.  grab files
-            #need 3, 5(clstr only), and mRNA from the 2nd stage.
-            #for the mRNA, we don't really care if it is.  This stage is just supposed to add in the missing duplicates from something that was stripped.
+        hq_path = preprocess_subfolder + "data/4_orphan_read_filter/"
+        cluster_path = preprocess_subfolder + "data/5_remove_duplicates/"
 
-            hq_path = preprocess_subfolder + "data/4_orphan_read_filter/"
-            cluster_path = preprocess_subfolder + "data/5_remove_duplicates/"
-
-            repop_orphans = ">&2 echo Duplication repopulate Orphans | "
-            repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-            repop_orphans += hq_path + "orphans.fastq" + " "   #in -> way back when things were quality-filtered.
-                                                               #      step 2 in preprocess.  could still contain rRNA
-            repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
-            repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " " #in -> duplicates filter output
-            repop_orphans += repop_folder + "orphans.fastq"        #out
+        repop_orphans = ">&2 echo Duplication repopulate Orphans | "
+        repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_orphans += hq_path + "orphans.fastq" + " "   #in -> way back when things were quality-filtered.
+                                                           #      step 2 in preprocess.  could still contain rRNA
+        repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
+        repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " " #in -> duplicates filter output
+        repop_orphans += repop_folder + "orphans.fastq"        #out
 
 
-            repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
-            repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-            repop_pair_1 += hq_path + "pair_1_match.fastq" + " "
-            repop_pair_1 += dep_loc + "mRNA/pair_1.fastq" + " "
-            repop_pair_1 += cluster_path + "pair_1_unique.fastq.clstr" + " "
-            repop_pair_1 += repop_folder + "pair_1.fastq"
+        repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
+        repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_1 += hq_path + "pair_1_match.fastq" + " "
+        repop_pair_1 += dep_loc + "mRNA/pair_1.fastq" + " "
+        repop_pair_1 += cluster_path + "pair_1_unique.fastq.clstr" + " "
+        repop_pair_1 += repop_folder + "pair_1.fastq"
 
-            repop_pair_2 = ">&2 echo Duplication repopulate pair 2 | "
-            repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-            repop_pair_2 += hq_path + "pair_2_match.fastq" + " "
-            repop_pair_2 += dep_loc + "mRNA/pair_2.fastq" + " "
-            repop_pair_2 += cluster_path + "pair_2_unique.fastq.clstr" + " "
-            repop_pair_2 += repop_folder + "pair_2.fastq"
+        repop_pair_2 = ">&2 echo Duplication repopulate pair 2 | "
+        repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_2 += hq_path + "pair_2_match.fastq" + " "
+        repop_pair_2 += dep_loc + "mRNA/pair_2.fastq" + " "
+        repop_pair_2 += cluster_path + "pair_2_unique.fastq.clstr" + " "
+        repop_pair_2 += repop_folder + "pair_2.fastq"
 
-            orphan_repop_filter = ">&2 echo filtering mRNA for orphans | "
-            orphan_repop_filter += self.tool_path_obj.Python + " "
-            orphan_repop_filter += self.tool_path_obj.orphaned_read_filter + " "
-            orphan_repop_filter += repop_folder + "pair_1.fastq "
-            orphan_repop_filter += repop_folder + "pair_2.fastq "
-            orphan_repop_filter += repop_folder + "orphans.fastq "
-            orphan_repop_filter += final_folder + "pair_1.fastq "
-            orphan_repop_filter += final_folder + "pair_2.fastq "
-            orphan_repop_filter += final_folder + "orphans.fastq"
+        orphan_repop_filter = ">&2 echo filtering mRNA for orphans | "
+        orphan_repop_filter += self.tool_path_obj.Python + " "
+        orphan_repop_filter += self.tool_path_obj.orphaned_read_filter + " "
+        orphan_repop_filter += repop_folder + "pair_1.fastq "
+        orphan_repop_filter += repop_folder + "pair_2.fastq "
+        orphan_repop_filter += repop_folder + "orphans.fastq "
+        orphan_repop_filter += final_folder + "pair_1.fastq "
+        orphan_repop_filter += final_folder + "pair_2.fastq "
+        orphan_repop_filter += final_folder + "orphans.fastq"
 
 
-            COMMANDS_Combine = [
-            repop_orphans,
-            repop_pair_1,
-            repop_pair_2,
-            orphan_repop_filter
+        COMMANDS_Combine = [
+        repop_orphans,
+        repop_pair_1,
+        repop_pair_2,
+        orphan_repop_filter
 
-            ]
+        ]
         return COMMANDS_Combine
 
     def create_assemble_contigs_command(self, stage_name, dependency_stage_name):
@@ -1131,9 +1115,8 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(bwa_folder)
         self.make_folder(final_folder)
-        
-        section_file = ""
-        if(section == "contigs"):
+
+        if section == "contigs":
             section_file = section + ".fasta"
         else:
             section_file = section + ".fastq"
@@ -1187,8 +1170,8 @@ class mt_pipe_commands:
             move_contig_map
         ]
         return COMMANDS_Annotate_BWA
-    
-    def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, split_num):
+
+    def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, fasta):
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
@@ -1197,19 +1180,17 @@ class mt_pipe_commands:
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_folder)
-        #print(self.tool_path_obj.BWA)
-        blat_command = ">&2 echo BLAT annotation " + section + "_" + str(split_num) +" | "
-        blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 " 
-        blat_command += self.tool_path_obj.DNA_DB_Prefix + "_" + str(split_num) + self.tool_path_obj.DNA_DB_Extension + " " 
-        blat_command += dep_loc + section + ".fasta"
-        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " " 
-        blat_command += blat_folder + section + "_" + str(split_num) + ".blatout"
-        
-        #move_file = "cp " + blat_folder + section + "_" + str(split_num) + ".blatout " + final_folder 
-        
-        return [blat_command]#, move_file]
 
-    def create_BLAT_cat_command(self, stage_name, section, split_num):
+        #blat_command = ">&2 echo BLAT annotation for " + section + " " + fasta +" | "
+        blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
+        blat_command += self.tool_path_obj.DNA_DB_Split + fasta + " "
+        blat_command += dep_loc + section + ".fasta"
+        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
+        blat_command += blat_folder + section + "_" + fasta + ".blatout"
+
+        return [blat_command]
+
+    def create_BLAT_cat_command(self, stage_name, section):
         # this is meant to be called for each section: contigs, orphans, pair_1, pair_2
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
@@ -1218,10 +1199,9 @@ class mt_pipe_commands:
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(blat_folder)
         self.make_folder(blat_merge_folder)
-        
-        cat_command = "cat " + blat_folder + section + "_" +  "[1-" + str(split_num) + "]" + ".blatout" + " > " + blat_merge_folder + section + ".blatout"
+
+        cat_command = "cat " + blat_folder + section + "*.blatout" + " > " + blat_merge_folder + section + ".blatout"
         return [cat_command]
 
     def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
@@ -1235,7 +1215,6 @@ class mt_pipe_commands:
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(blat_merge_folder)
         self.make_folder(final_folder)
 
         blat_pp = ">&2 echo BLAT post-processing | "
@@ -1631,7 +1610,7 @@ class mt_pipe_commands:
         network_generation += final_folder + "Cytoscape_network.tsv" + " "
 
         COMMANDS_Network = [
-            network_generation
+            network_generation #Issues at this step
             ]
         return COMMANDS_Network
 

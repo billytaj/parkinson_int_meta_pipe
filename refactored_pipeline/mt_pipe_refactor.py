@@ -7,7 +7,7 @@ import os.path
 import subprocess as sp
 import multiprocessing as mp
 import mt_pipe_commands as mpcom
-import mt_pipe_paths as mpfp
+import mt_pipe_paths as mpp
 import time
 
 run_jobs = False
@@ -22,8 +22,8 @@ class sync_control:
     #handles where to kill the pipeline, due to the prev step behaving badly
     def check_where_kill(self, dep_job_label = None, dep_path = None):
         dep_job_path = ""
-        if(dep_job_label is None):
-            if(dep_path is None):
+        if dep_job_label is None:
+            if dep_path is None:
                 return True
             else:
                 dep_job_path = dep_path
@@ -31,10 +31,10 @@ class sync_control:
             dep_job_path = dep_job_label + "/data/final_results/"
             
         file_list = os.listdir(dep_job_path)
-        if(len(file_list) > 0):
+        if len(file_list) > 0:
             for item in file_list:
                 file_check_path = dep_job_path + item
-                if((os.path.getsize(file_check_path)) == 0):
+                if (os.path.getsize(file_check_path)) == 0:
                     print("empty file detected: rerunning stage")
                     sys.exit("bad dep")
             #run the job, silently
@@ -46,18 +46,18 @@ class sync_control:
     def check_where_resume(self, job_label = None, full_path = None, dep_job_label = None, dep_job_path = None):
         self.check_where_kill(dep_job_label, dep_job_path)
         job_path = ""
-        if(job_label):
+        if job_label:
             job_path = job_label + "/data/final_results/"
         else:
             job_path = full_path
             
         print("looking at:", job_path)
-        if(os.path.exists(job_path)):
+        if os.path.exists(job_path):
             file_list = os.listdir(job_path)
-            if(len(file_list) > 0):
+            if len(file_list) > 0:
                 for item in file_list:
                     file_check_path = job_path + item
-                    if((os.path.getsize(file_check_path)) == 0):
+                    if (os.path.getsize(file_check_path)) == 0:
                         print("empty file detected: rerunning stage")
                         return False
                 print("bypassing!")
@@ -78,13 +78,13 @@ class sync_control:
     def check_job_finished(self, job_id, op_mode, check_mode="all"):
         jobs_list = []
         try:
-            if(op_mode == "completed"):
+            if op_mode == "completed":
                 jobs_list = sp.check_output(["showq", "-u billyc59", "-c"]).decode('ascii') #completed
-            elif(op_mode == "queue"):
+            elif op_mode == "queue":
                 jobs_list = sp.check_output(["showq", "-u billyc59", "-i"]).decode('ascii') #in the queue
-            elif(op_mode == "run"):
+            elif op_mode == "run":
                 jobs_list = sp.check_output(["showq", "-u billyc59", "-r"]).decode('ascii') #running
-            elif(op_mode == "blocked"):
+            elif op_mode == "blocked":
                 jobs_list = sp.check_output(["showq", "-u billyc59", "-b"]).decode('ascii') #holding
             else:
                 print("bad op mode to check_job_finished.  killing")
@@ -92,39 +92,39 @@ class sync_control:
 
             #print(op_mode)
             #print("Jobs list from qstat:", jobs_list)
-            if (isinstance(job_id, int)):
+            if isinstance(job_id, int):
                 #single
-                if(str(job_id) in jobs_list):
+                if str(job_id) in jobs_list:
                     return 1 #match
                 else:
                     return 2 #no match
 
-            elif(isinstance(job_id, list)):
+            elif isinstance(job_id, list):
                 # multi.
-                if(check_mode == "all"):
+                if check_mode == "all":
                     #all: return true only if all are in the list
                     match_count = 0
                     for item in job_id:
-                        if(str(item) in jobs_list):
+                        if str(item) in jobs_list:
                             match_count += 1
-                    if(match_count != len(job_id)):
+                    if match_count != len(job_id):
                         return 2 #no match
                     else:
                         return 1 #match
 
-                elif(check_mode == "any"):
+                elif check_mode == "any":
                     #any: true on any hit of job id matching the list contents
                     #print("-----------------------------------")
                     for item in job_id:
                         #print("looking for:", str(item))
-                        if(str(item) in jobs_list):
+                        if str(item) in jobs_list:
                             #print("key found:", str(item))
                             return 1 #found
                         #else:
                             #print("can't find key in list")
                     return 2 #not found
 
-            elif(job_id is None):
+            elif job_id is None:
                 print("bad arg to check job finished")
                 return 0 #error
             else:
@@ -137,7 +137,7 @@ class sync_control:
 
     def wait_for_sync(self, timeout, job_id, label, message = None):
         #does the actual wait for the qsub job to finish
-        if((self.system_mode == "docker") or (self.system_mode == "singularity")):
+        if (self.system_mode == "docker") or (self.system_mode == "singularity"):
             print("running in docker.  bypassing sync")
         else:
             if(job_id is None) or (not job_id):
@@ -154,34 +154,34 @@ class sync_control:
             lockout_count = int(timeout)
 
             retry_counter = 10
-            while(b_lock):
+            while b_lock:
                 job_status = self.check_job_finished(job_id, "completed", "all")
-                if(job_status == 1):
+                if job_status == 1:
                     b_lock = False
                 else:
 
                     #only start the countdown if the job is running, not while it's waiting in the queue.
                     #job could wait a long time in the queue if someone's clobbering the cluster
                     job_status = self.check_job_finished(job_id, "run", "any")
-                    if(job_status == 1):
+                    if job_status == 1:
                         lockout_count -= 1
                         #print("job still running")
-                    elif(job_status == 0):
+                    elif job_status == 0:
                         #print("something happened.  we're dying")
                         sys.exit()
-                    elif(job_status == 2):
+                    elif job_status == 2:
                         #print("not running")
                         #none running.  maybe in queue?
                         job_status = self.check_job_finished(job_id, "queue", "any")
-                        if(job_status == 2):
+                        if job_status == 2:
                             #print("not in queue")
                             #nothing in queue.  maybe blocked?
                             job_status = self.check_job_finished(job_id, "blocked", "any")
-                            if(job_status == 2):
+                            if job_status == 2:
                                 #print("not blocked")
                                 #not in any queue
                                 #print("sync over")
-                                if(retry_counter == 0):
+                                if retry_counter == 0:
                                     b_lock = False
                                 else:
                                     retry_counter -= 1
@@ -194,7 +194,7 @@ class sync_control:
                         print("this can't happen in sync.  killing")
                         sys.exit()
 
-                if(lockout_count <= 0):
+                if lockout_count <= 0:
                     print(label, "took too long.  shutting down pipeline.  QSUB Jobs may still be running")
                     print("Use qselect -u <username> | xargs qdel  to remove jobs from qsub")
                     sys.exit()
@@ -270,12 +270,12 @@ def main(input_folder, output_folder, system_op, user_mode):
         genome_file_count = len(os.listdir(raw_sequence_path))
         print("number of files:", genome_file_count)
         operating_mode = genome_file_count
-        if(genome_file_count == 0):
+        if genome_file_count == 0:
             print("There's no genomes to analyze.  we're shutting down")
             sys.exit()
-        elif(genome_file_count == 1):
+        elif genome_file_count == 1:
             print("OPERATING IN SINGLE-ENDED MODE")
-        elif(genome_file_count == 2):
+        elif genome_file_count == 2:
             print("OPERATING IN PAIRED-MODE")
         else:
             print("Too many genome files here.  Get rid of all non-essentials")
@@ -293,7 +293,7 @@ def main(input_folder, output_folder, system_op, user_mode):
 
 
 
-        if(operating_mode == double_mode):
+        if operating_mode == double_mode:
             preprocess_label                = "preprocess"
             rRNA_filter_label               = "rRNA_filter"
             repop_job_label                 = "duplicate_repopulation"
@@ -319,6 +319,7 @@ def main(input_folder, output_folder, system_op, user_mode):
 
             #Creates our command object, for creating shellscripts.
             comm = mpcom.mt_pipe_commands(Quality_score = quality_encoding, Thread_count = thread_count, system_mode = system_op, user_mode = user_mode, raw_sequence_path_0 = raw_pair_0_path, raw_sequence_path_1 = raw_pair_1_path) #start obj
+            paths = mpp.tool_path_obj(system_op, user_mode)
 
             #This is the format we use to launch each stage of the pipeline.
             #We start a multiprocess that starts a subprocess.
@@ -326,7 +327,7 @@ def main(input_folder, output_folder, system_op, user_mode):
 
             #The preprocess stage
             preprocess_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + preprocess_label)):
+            if not sync_obj.check_where_resume(output_folder + preprocess_label):
 
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -342,7 +343,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             
             #rRNA removal stage
             rRNA_filter_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder +  rRNA_filter_label, None, output_folder + preprocess_label)):
+            if not sync_obj.check_where_resume(output_folder + rRNA_filter_label, None, output_folder + preprocess_label):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
@@ -357,7 +358,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.join()
                 orphans_mRNA_path = output_folder + rRNA_filter_label + "/data/orphans/orphans_mRNA"
                 orphans_prep_path = output_folder + rRNA_filter_label + "/data/orphans/orphans_fastq/"
-                if(not sync_obj.check_where_resume(None, orphans_mRNA_path, None, orphans_prep_path)):
+                if not sync_obj.check_where_resume(None, orphans_mRNA_path, None, orphans_prep_path):
                     for item in os.listdir(rRNA_filter_orphans_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -378,7 +379,7 @@ def main(input_folder, output_folder, system_op, user_mode):
 
                 pair_1_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_1/pair_1_mRNA"
                 pair_1_prep_path = output_folder + rRNA_filter_label + "/data/pair_1/pair_1_fastq/"
-                if(not sync_obj.check_where_resume(None, pair_1_mRNA_path, None, pair_1_prep_path)):
+                if not sync_obj.check_where_resume(None, pair_1_mRNA_path, None, pair_1_prep_path):
                     for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -399,7 +400,7 @@ def main(input_folder, output_folder, system_op, user_mode):
 
                 pair_2_mRNA_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_mRNA"
                 pair_2_prep_path = output_folder + rRNA_filter_label + "/data/pair_2/pair_2_fastq/"
-                if(not sync_obj.check_where_resume(None, pair_2_mRNA_path, None, pair_2_prep_path)):
+                if not sync_obj.check_where_resume(None, pair_2_mRNA_path, None, pair_2_prep_path):
                     for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
                         file_root_name = item.split('.')[0]
                         inner_name = file_root_name + "_infernal"
@@ -436,7 +437,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #-------------------------------------------------------------
             # Duplicate repopulation
             repop_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder +  repop_job_label, None, output_folder + rRNA_filter_label)):
+            if not sync_obj.check_where_resume(output_folder + repop_job_label, None, output_folder + rRNA_filter_label):
 
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
@@ -452,7 +453,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #----------------------------------------
             # Assemble contigs
             assemble_contigs_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + assemble_contigs_label, None, output_folder +  repop_job_label)):
+            if not sync_obj.check_where_resume(output_folder + assemble_contigs_label, None, output_folder + repop_job_label):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
@@ -468,7 +469,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #----------------------------------------------
             # BWA gene annotation
             GA_BWA_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label, None, output_folder + assemble_contigs_label)):
+            if not sync_obj.check_where_resume(output_folder + gene_annotation_BWA_label, None, output_folder + assemble_contigs_label):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 mp_store[:] = []
@@ -505,39 +506,36 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process.start()
                 process.join()
             GA_BWA_end = time.time()
+
             #------------------------------------------------
             # BLAT gene annotation
             GA_BLAT_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label, None, output_folder + gene_annotation_BWA_label)):
+            if not sync_obj.check_where_resume(output_folder + gene_annotation_BLAT_label, None, output_folder + gene_annotation_BWA_label):
 
-                split = 5#mp.cpu_count() #split based on the way microbial_cds_db was split.  this must also change
-                names = ["contigs", "orphans", "pair_1", "pair_2"]
-                for item in names:
-                    for i in range (1, split+1):
-                        inner_name = "BLAT_"+item + "_"+str(i)
-                        process = mp.Process(
-                            target = comm.create_pbs_and_launch,
-                            args = (
-                            gene_annotation_BLAT_label, 
-                            comm.create_BLAT_annotate_command(gene_annotation_BLAT_label, gene_annotation_BWA_label, item, i),
-                            #dependency_list = gene_annotation_BWA_id,
-                            True,
-                            inner_name
+                BlatPool = mp.Pool(int(thread_count/2))
+                sections = ["contigs", "orphans", "pair_1", "pair_2"]
+                for section in sections:
+                    for fasta_db in os.listdir(paths.DNA_DB_Split):
+                        if fasta_db.endswith(".ffn"):
+                            inner_name = "BLAT_" + section + "_" + fasta_db# + "_"+str(i)
+                            BlatPool.apply_async(comm.create_pbs_and_launch,
+                                args = (
+                                gene_annotation_BLAT_label,
+                                comm.create_BLAT_annotate_command(gene_annotation_BLAT_label, gene_annotation_BWA_label, section, fasta_db),
+                                True,
+                                inner_name
+                                )
                             )
-                        )
-                        process.start()
-                        mp_store.append(process)
-                for item in mp_store:        
-                    item.join()
-                mp_store[:] = [] #clear the list
+                BlatPool.close()
+                BlatPool.join()
 
-                for item in names:
-                    inner_name = item + "_cat"
+                for section in sections:
+                    inner_name = section + "_cat"
                     process = mp.Process(
                         target = comm.create_pbs_and_launch,
                         args = (
-                        gene_annotation_BLAT_label, 
-                        comm.create_BLAT_cat_command(gene_annotation_BLAT_label, item, split),
+                        gene_annotation_BLAT_label,
+                        comm.create_BLAT_cat_command(gene_annotation_BLAT_label, section),
                         True,
                         inner_name
                         )
@@ -565,7 +563,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #------------------------------------------------------
             # Diamond gene annotation
             GA_DIAMOND_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label, None, output_folder + gene_annotation_BLAT_label)):
+            if not sync_obj.check_where_resume(output_folder + gene_annotation_DIAMOND_label, None, output_folder + gene_annotation_BLAT_label):
 
                 names = ["contigs", "orphans", "pair_1", "pair_2"]
                 for item in names:
@@ -601,7 +599,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             # ------------------------------------------------------
             # Taxonomic annotation
             TA_start = time.time()
-            if(not sync_obj.check_where_resume(output_folder + taxon_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
+            if not sync_obj.check_where_resume(output_folder + taxon_annotation_label, None, output_folder + gene_annotation_DIAMOND_label):
                 process = mp.Process(
                     target = comm.create_pbs_and_launch,
                     args = (
@@ -618,7 +616,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             # Detect EC annotation
             EC_start = time.time()
             EC_DETECT_start = time.time()
-            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
+            if not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label):
                 # Preparing folders for DETECT
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
@@ -657,7 +655,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             #--------------------------------------------------------------
             # Priam and Diamond EC annotation
             EC_PRIAM_DIAMOND_start = time.time()
-            if (not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label)):
+            if not sync_obj.check_where_resume(output_folder + ec_annotation_label, None, output_folder + gene_annotation_DIAMOND_label):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
@@ -687,7 +685,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             # ------------------------------------------------------
             # RPKM Table and Cytoscape Network
             Cytoscape_start = time.time()
-            if (not sync_obj.check_where_resume(output_folder + network_label, None, output_folder + ec_annotation_label)):
+            if not sync_obj.check_where_resume(output_folder + network_label, None, output_folder + ec_annotation_label):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
@@ -733,7 +731,7 @@ def main(input_folder, output_folder, system_op, user_mode):
             print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s", "start:", '%1.1f' % Cytoscape_start, "end:", '%1.1f' % Cytoscape_end)
             print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s", "start:", '%1.1f' % Chart_start, "end:", '%1.1f' % Chart_end)
 
-        elif(operating_mode == single_mode):
+        elif operating_mode == single_mode:
             print("not ready")
 
         
@@ -742,7 +740,7 @@ if __name__ == "__main__":
     # This is where the code starts
     # There's a few operating modes, mainly "docker", and "singularity".  These modes edit the pipeline filepaths
 
-    if(len(sys.argv) < 4):
+    if len(sys.argv) < 4:
         print("no args provided.  try again:")
         print("arg(1) input folder")
         print("arg(2) output folder")
@@ -751,10 +749,10 @@ if __name__ == "__main__":
         sys.exit()
     else:    
         input_folder = sys.argv[1]
-        if(not input_folder.endswith("/")):
+        if not input_folder.endswith("/"):
             input_folder += "/"
         output_folder = sys.argv[2]
-        if(not output_folder.endswith("/")):
+        if not output_folder.endswith("/"):
             output_folder += "/"
             
         system_op = sys.argv[3] #scinet or docker
