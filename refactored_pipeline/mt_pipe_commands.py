@@ -1603,14 +1603,14 @@ class mt_pipe_commands:
         network_generation += self.tool_path_obj.Python + " "
         network_generation += self.tool_path_obj.RPKM + " "
         network_generation += self.tool_path_obj.nodes + " "
-        network_generation += ta_folder + "taxonomic_classifications.tsv" + " "
         network_generation += diamond_folder + "gene_map.tsv" + " "
+        network_generation += ta_folder + "taxonomic_classifications.tsv" + " "
         network_generation += ea_folder + "proteins.ECs_All" + " "
         network_generation += final_folder + "RPKM_table.tsv" + " "
         network_generation += final_folder + "Cytoscape_network.tsv" + " "
 
         COMMANDS_Network = [
-            network_generation #Issues at this step
+            network_generation
             ]
         return COMMANDS_Network
 

@@ -7,8 +7,8 @@ import shutil
 from time import clock as clock
 
 nodes = sys.argv[1]
-read2taxid = sys.argv[2]
-gene2read = sys.argv[3]
+gene2read = sys.argv[2]
+read2taxid = sys.argv[3]
 gene2EC = sys.argv[4]
 RPKM = sys.argv[5]
 Cytoscape = sys.argv[6]
@@ -139,6 +139,7 @@ for gene in gene2read_dict:
     else:
         RPKM_dict[gene].append("0.0.0.0")
     RPKM_dict[gene].append(len(gene2read_dict[gene][1])/RPKM_div)
+    unclassified_reads = 0
     for taxa in Rank_id:
         read_count = 0
         for read in gene2read_dict[gene][1]:
@@ -146,12 +147,14 @@ for gene in gene2read_dict:
                 if read2taxid_dict[read] == taxa:
                     read_count += 1
             except:
-                pass
+                unclassified_reads += 1
         else:
-            RPKM_dict[gene].append(read_count/RPKM_div)
+            RPKM_dict[gene].append(read_count / RPKM_div)
+    else:
+        RPKM_dict[gene].append(unclassified_reads / RPKM_div)
 
 with open(RPKM, "w") as RPKM_out:
-    RPKM_out.write("GeneID\tLenght\t#Reads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\n")
+    RPKM_out.write("GeneID\tLenght\t#Reads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
 
@@ -166,10 +169,10 @@ for EC in EC2genes_dict:
             except:
                 Cytoscape_dict[EC] = RPKM_dict[entry][3:]
     try:
-        Cytoscape_dict[EC].append("piechart: attributelist=\"" + ",".join(str(x) for x in Rank) + "\" colorlist=\"" + ",".join(str(x) for x in Rank_colour) + "\" showlabels=false\"")
+        Cytoscape_dict[EC].append("piechart: attributelist=\"" + ",".join(str(x) for x in Rank) + "\" colorlist=\"" + ",".join(str(x) for x in Rank_colour) + ",#000000" + "\" showlabels=false\"")
     except:
         pass
 with open(Cytoscape, "w") as Cytoscape_out:
-    Cytoscape_out.write("EC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tPiechart\n")
+    Cytoscape_out.write("EC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\tPiechart\n")
     for entry in Cytoscape_dict:
         Cytoscape_out.write(entry + "\t" + "\t".join(str(x) for x in Cytoscape_dict[entry]) + "\n")
