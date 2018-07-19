@@ -621,7 +621,7 @@ def main(input_folder, output_folder, system_op, user_mode):
                 process = mp.Process(
                     target=comm.create_pbs_and_launch,
                     args=(
-                        taxon_annotation_label,
+                        ec_annotation_label,
                         comm.create_EC_DETECT_prep(ec_annotation_label, gene_annotation_DIAMOND_label, int(mp.cpu_count()/2)),
                         True
                     )
