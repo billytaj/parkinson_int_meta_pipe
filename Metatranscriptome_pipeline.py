@@ -165,7 +165,7 @@ for genome in sorted(os.listdir(input_folder)):
                         if prefix.endswith("1"):
                             os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "1.fastq")
                             if renamed_full not in file_list:
-                            	file_list.append(os.path.join(input_folder,  genome_name, os.path.splitext(renamed)[0] + "_"))
+                                file_list.append(os.path.join(input_folder,  genome_name, os.path.splitext(renamed)[0] + "_"))
                         elif prefix.endswith("2"):
                             os.rename(os.path.join(input_folder, genome_name, genome_split), renamed_full + "2.fastq")
                     except:
