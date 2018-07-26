@@ -25,8 +25,6 @@ start_all = clock()
 with open(BLAT_tab_file, "r") as tabfile:
     contaminated_seqs = []
     query_seq = ""
-    
-    
     for line in tabfile:
         if len(line) < 2:
             continue
@@ -36,7 +34,6 @@ with open(BLAT_tab_file, "r") as tabfile:
         else:
             query_seq = line_parts[0]
             contaminated_seqs.append(query_seq)
-            
             
     for seq in input_seqs:
         if seq not in contaminated_seqs:
@@ -81,7 +78,7 @@ with open(BLAT_tab_file, "r") as tabfile:
                 SeqIO.write(contaminat_output_seqs, outfile, "fastq")
                 
 end_all = clock()
-print "--------------------------------------"
-print "BLAT containment filter"
-print "==============================="
-print "total run:", end_all - start_all, "s"          
+#print "--------------------------------------"
+#print "BLAT containment filter"
+#print "==============================="
+#print "total run:", end_all - start_all, "s"          

@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#WEVOTE is a taxonomic classifier
+#This file just writes the taxa name to the file, and changes the format a little
+# It's probably for a particular tool. 
+
+#Rather, this tool changes the taxanomic ID into something with english
 
 import sys
 import os
@@ -14,6 +19,8 @@ nodes_file = sys.argv[3]
 names_file = sys.argv[4]
 consensus_classification_file = sys.argv[5]
 
+#Read in library info "Nodes" and "Names"
+#These 2 files are the taxonomic keys of every microbe we're got.  
 nodes = {}
 with open(nodes_file, "r") as infile:
     for line in infile:
@@ -40,6 +47,7 @@ Ranks = ["unclassified", "superkingdom", "phylum", "subphylum", "class", "subcla
 
 read_classifications = {}
 classification_count = {}
+# Go through the file, and convert the info into english
 with open(classification_file, "r") as infile:
     for line in infile:
         if len(line) < 1:
