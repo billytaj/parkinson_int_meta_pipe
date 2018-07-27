@@ -62,6 +62,9 @@ def check_where_kill(dep_job_label=None, dep_path=None):
 
 
 # handles where to auto-resume the pipeline on a subsequent run
+# label: used as a shorthand for paths we expect
+# full path: a bypass for when we want to use it for detecting a location that doesn't fall into the normal format (final_results)
+# dep: for checking if the job's dependencies are satisfied-> meant to point to the last stage's "final_results"
 def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
     check_where_kill(dep_job_path)
     if job_label:
@@ -135,7 +138,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # The quality filter stage
         quality_start = time.time()
         quality_path = os.path.join(output_folder_path, quality_filter_label)
-        if not check_where_resume():
+        if not check_where_resume(quality_filter_label):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(

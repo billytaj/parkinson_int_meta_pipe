@@ -11,7 +11,8 @@ class mt_pipe_commands:
     # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_signle=None):
+    def __init__(self, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None,
+                 sequence_signle=None):
         # path to the genome sequence file
         if sequence_signle is not None:
             self.sequence_signle = sequence_signle
@@ -78,12 +79,12 @@ class mt_pipe_commands:
         subfolder = os.path.join(self.Input_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
         sorted_read_folder = os.path.join(data_folder, "0_sorted_raw_input")
-        adapter_folder = data_folder + "1_adapter_removal/"
-        vsearch_merge_folder = data_folder + "2_vsearch_pair_merge/"
-        vsearch_filter_folder = data_folder + "3_ar_quality_filter/"
-        orphan_read_filter_folder = data_folder + "4_orphan_read_filter/"
-        cdhit_folder = data_folder + "5_remove_duplicates/"
-        final_folder = data_folder + "final_results/"
+        adapter_folder = os.path.join(data_folder, "1_adapter_removal")
+        vsearch_merge_folder = os.path.join(data_folder, "2_vsearch_pair_merge")
+        vsearch_filter_folder = os.path.join(data_folder, "3_ar_quality_filter")
+        orphan_read_filter_folder = os.path.join(data_folder, "4_orphan_read_filter")
+        cdhit_folder = os.path.join(data_folder, "5_remove_duplicates")
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -151,53 +152,53 @@ class mt_pipe_commands:
         # then move onto the standalones in pair 1
         vsearch_filter_1 = ">&2 echo low-quality filter on pair 1 | "
         vsearch_filter_1 += self.tool_path_obj.vsearch
-        vsearch_filter_1 += " --fastq_filter " + vsearch_merge_folder + "pair_1_merge_reject.fastq"
+        vsearch_filter_1 += " --fastq_filter " + os.path.join(vsearch_merge_folder, "pair_1_merge_reject.fastq")
         vsearch_filter_1 += " --fastq_ascii " + self.Qual_str
         vsearch_filter_1 += " --fastq_maxee " + "2.0"
-        vsearch_filter_1 += " --fastqout " + vsearch_filter_folder + "pair_1_hq.fastq"
+        vsearch_filter_1 += " --fastqout " + os.path.join(vsearch_filter_folder, "pair_1_hq.fastq")
 
         vsearch_filter_2 = ">&2 echo low-quality filter on pair 2 | "
         vsearch_filter_2 += self.tool_path_obj.vsearch
-        vsearch_filter_2 += " --fastq_filter " + vsearch_merge_folder + "pair_2_merge_reject.fastq"
+        vsearch_filter_2 += " --fastq_filter " + os.path.join(vsearch_merge_folder, "pair_2_merge_reject.fastq")
         vsearch_filter_2 += " --fastq_ascii " + self.Qual_str
         vsearch_filter_2 += " --fastq_maxee " + "2.0"
-        vsearch_filter_2 += " --fastqout " + vsearch_filter_folder + "pair_2_hq.fastq"
+        vsearch_filter_2 += " --fastqout " + os.path.join(vsearch_filter_folder, "pair_2_hq.fastq")
 
         # redistribute data into orphans, or paired-reads
         orphan_read_filter = ">&2 echo moving newly orphaned hq reads | "
         orphan_read_filter += self.tool_path_obj.Python + " "
         orphan_read_filter += self.tool_path_obj.orphaned_read_filter + " "
-        orphan_read_filter += vsearch_filter_folder + "pair_1_hq.fastq "
-        orphan_read_filter += vsearch_filter_folder + "pair_2_hq.fastq "
-        orphan_read_filter += vsearch_filter_folder + "orphans_hq.fastq "
-        orphan_read_filter += orphan_read_filter_folder + "pair_1_match.fastq "
-        orphan_read_filter += orphan_read_filter_folder + "pair_2_match.fastq "
-        orphan_read_filter += orphan_read_filter_folder + "orphans.fastq"
+        orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_1_hq.fastq") + " "
+        orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_2_hq.fastq") + " "
+        orphan_read_filter += os.path.join(vsearch_filter_folder, "orphans_hq.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "orphans.fastq")
 
         # remove duplicates (to shrink the data size)
         cdhit_orphans = ">&2 echo removing orphan duplicates | "
         cdhit_orphans += self.tool_path_obj.cdhit_dup + " -i "
-        cdhit_orphans += orphan_read_filter_folder + "orphans.fastq"
-        cdhit_orphans += " -o " + cdhit_folder + "orphans_unique.fastq"
+        cdhit_orphans += os.path.join(orphan_read_filter_folder, "orphans.fastq")
+        cdhit_orphans += " -o " + os.path.join(cdhit_folder, "orphans_unique.fastq")
 
         # remove duplicates in the pairs
         cdhit_pair_1 = ">&2 echo remove duplicates from pair 1 | "
         cdhit_pair_1 += self.tool_path_obj.cdhit_dup
-        cdhit_pair_1 += " -i " + orphan_read_filter_folder + "pair_1_match.fastq"
-        cdhit_pair_1 += " -o " + cdhit_folder + "pair_1_unique.fastq"
+        cdhit_pair_1 += " -i " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq")
+        cdhit_pair_1 += " -o " + os.path.join(cdhit_folder, "pair_1_unique.fastq")
 
         cdhit_pair_2 = ">&2 echo remove duplicates from pair 2 | "
         cdhit_pair_2 += self.tool_path_obj.cdhit_dup
-        cdhit_pair_2 += " -i " + orphan_read_filter_folder + "pair_2_match.fastq"
-        cdhit_pair_2 += " -o " + cdhit_folder + "pair_2_unique.fastq"
+        cdhit_pair_2 += " -i " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq")
+        cdhit_pair_2 += " -o " + os.path.join(cdhit_folder, "pair_2_unique.fastq")
 
-        copy_orphans = "cp " + cdhit_folder + "orphans_unique.fastq" + " "
+        copy_orphans = "cp " + os.path.join(cdhit_folder, "orphans_unique.fastq") + " "
         copy_orphans += final_folder + "orphans.fastq"
 
-        copy_pair_1 = "cp " + cdhit_folder + "pair_1_unique.fastq" + " "
+        copy_pair_1 = "cp " + os.path.join(cdhit_folder, "pair_1_unique.fastq") + " "
         copy_pair_1 += final_folder + "pair_1.fastq"
 
-        copy_pair_2 = "cp " + cdhit_folder + "pair_2_unique.fastq" + " "
+        copy_pair_2 = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq") + " "
         copy_pair_2 += final_folder + "pair_2.fastq"
 
         COMMANDS_qual = [
@@ -224,9 +225,9 @@ class mt_pipe_commands:
         subfolder = os.path.join(self.Input_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
         quality_folder = os.path.join(self.Input_Path, dependency_name, "data", "final_results")
-        host_removal_folder = data_folder + "0_remove_host/"
-        blat_hr_folder = data_folder + "1_blat_hr/"
-        final_folder = data_folder + "final_results/"
+        host_removal_folder = os.path.join(data_folder, "0_remove_host")
+        blat_hr_folder = os.path.join(data_folder, "1_blat_hr")
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -250,75 +251,81 @@ class mt_pipe_commands:
         bwa_hr_orphans += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_orphans += self.Threads_str + " "
         bwa_hr_orphans += Host_Contaminants + " "
-        bwa_hr_orphans += quality_folder + "orphans.fastq"
-        bwa_hr_orphans += " > " + host_removal_folder + "orphans_no_host.sam"
+        bwa_hr_orphans += os.path.join(quality_folder, "orphans.fastq")
+        bwa_hr_orphans += " > " + os.path.join(host_removal_folder, "orphans_no_host.sam")
 
         # annoying type conversion pt 1
         samtools_hr_orphans_sam_to_bam = ">&2 echo convert orphans hr files pt1 | "
         samtools_hr_orphans_sam_to_bam += self.tool_path_obj.SAMTOOLS
-        samtools_hr_orphans_sam_to_bam += " view -bS " + host_removal_folder + "orphans_no_host.sam"
-        samtools_hr_orphans_sam_to_bam += " > " + host_removal_folder + "orphans_no_host.bam"
+        samtools_hr_orphans_sam_to_bam += " view -bS " + os.path.join(host_removal_folder, "orphans_no_host.sam")
+        samtools_hr_orphans_sam_to_bam += " > " + os.path.join(host_removal_folder, "orphans_no_host.bam")
         # annoying type conversion pt 2
         samtools_no_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt2 | "
         samtools_no_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS
-        samtools_no_host_orphans_bam_to_fastq += " fastq -n -f 4" + " -0 " + host_removal_folder + "orphans_no_host.fastq" + " "
-        samtools_no_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
+        samtools_no_host_orphans_bam_to_fastq += " fastq -n -f 4" + " -0 " + os.path.join(host_removal_folder,
+                                                                                          "orphans_no_host.fastq") + " "
+        samtools_no_host_orphans_bam_to_fastq += os.path.join(host_removal_folder, "orphans_no_host.bam")
 
         # apparently, we're to keep the host separation
         samtools_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt3 | "
         samtools_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_host_orphans_bam_to_fastq += " -0 " + host_removal_folder + "orphans_host_only.fastq" + " "
-        samtools_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
+        samtools_host_orphans_bam_to_fastq += " -0 " + os.path.join(host_removal_folder,
+                                                                    "orphans_host_only.fastq") + " "
+        samtools_host_orphans_bam_to_fastq += os.path.join(host_removal_folder, "orphans_no_host.bam")
 
         # bwa hr pair 1 only
         bwa_hr_pair_1 = ">&2 echo bwa pair host remove | "
         bwa_hr_pair_1 += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_pair_1 += self.Threads_str + " "
         bwa_hr_pair_1 += Host_Contaminants + " "
-        bwa_hr_pair_1 += quality_folder + "pair_1.fastq"
-        bwa_hr_pair_1 += " > " + host_removal_folder + "pair_1_no_host.sam"
+        bwa_hr_pair_1 += os.path.join(quality_folder, "pair_1.fastq")
+        bwa_hr_pair_1 += " > " + os.path.join(host_removal_folder, "pair_1_no_host.sam")
 
         # separating bwa results back into paired reads
         samtools_host_pair_1_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
-        samtools_host_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_1_no_host.sam"
-        samtools_host_pair_1_sam_to_bam += " > " + host_removal_folder + "pair_1_no_host.bam"
+        samtools_host_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + os.path.join(
+            host_removal_folder, "pair_1_no_host.sam")
+        samtools_host_pair_1_sam_to_bam += " > " + os.path.join(host_removal_folder, "pair_1_no_host.bam")
 
         # stuff that doesn't match with the host
         samtools_no_host_pair_1_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
         samtools_no_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_host_pair_1_bam_to_fastq += " -0 " + host_removal_folder + "pair_1_no_host.fastq"  # out
-        samtools_no_host_pair_1_bam_to_fastq += " " + host_removal_folder + "pair_1_no_host.bam"  # in
+        samtools_no_host_pair_1_bam_to_fastq += " -0 " + os.path.join(host_removal_folder,
+                                                                      "pair_1_no_host.fastq")  # out
+        samtools_no_host_pair_1_bam_to_fastq += " " + os.path.join(host_removal_folder, "pair_1_no_host.bam")  # in
 
         # stuff that matches with the host (why keep it?  request from john)
         samtools_host_pair_1_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
         samtools_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_host_pair_1_bam_to_fastq += " -0 " + host_removal_folder + "pair_1_host_only.fastq"
-        samtools_host_pair_1_bam_to_fastq += " " + host_removal_folder + "pair_1_no_host.bam"
+        samtools_host_pair_1_bam_to_fastq += " -0 " + os.path.join(host_removal_folder, "pair_1_host_only.fastq")
+        samtools_host_pair_1_bam_to_fastq += " " + os.path.join(host_removal_folder, "pair_1_no_host.bam")
 
         # bwa hr pair 1 only
         bwa_hr_pair_2 = ">&2 echo bwa pair host remove | "
         bwa_hr_pair_2 += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_pair_2 += self.Threads_str + " "
         bwa_hr_pair_2 += Host_Contaminants + " "
-        bwa_hr_pair_2 += quality_folder + "pair_2.fastq"
-        bwa_hr_pair_2 += " > " + host_removal_folder + "pair_2_no_host.sam"
+        bwa_hr_pair_2 += os.path.join(quality_folder, "pair_2.fastq")
+        bwa_hr_pair_2 += " > " + os.path.join(host_removal_folder, "pair_2_no_host.sam")
 
         # separating bwa results back into paired reads
         samtools_host_pair_2_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
-        samtools_host_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_2_no_host.sam"
-        samtools_host_pair_2_sam_to_bam += " > " + host_removal_folder + "pair_2_no_host.bam"
+        samtools_host_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + os.path.join(
+            host_removal_folder, "pair_2_no_host.sam")
+        samtools_host_pair_2_sam_to_bam += " > " + os.path.join(host_removal_folder, "pair_2_no_host.bam")
 
         # stuff that doesn't match with the host
         samtools_no_host_pair_2_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
         samtools_no_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_no_host.fastq"  # out
-        samtools_no_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam"  # in
+        samtools_no_host_pair_2_bam_to_fastq += " -0 " + os.path.join(host_removal_folder,
+                                                                      "pair_2_no_host.fastq")  # out
+        samtools_no_host_pair_2_bam_to_fastq += " " + os.path.join(host_removal_folder, "pair_2_no_host.bam")  # in
 
         # stuff that matches with the host (why keep it?  request from john)
         samtools_host_pair_2_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
         samtools_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_host_only.fastq"
-        samtools_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam"
+        samtools_host_pair_2_bam_to_fastq += " -0 " + os.path.join(host_removal_folder, "pair_2_host_only.fastq")
+        samtools_host_pair_2_bam_to_fastq += " " + os.path.join(host_removal_folder, "pair_2_no_host.bam")
 
         # blat prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
@@ -326,74 +333,74 @@ class mt_pipe_commands:
 
         vsearch_filter_3 = ">&2 echo Convert orphans for BLAT | "
         vsearch_filter_3 += self.tool_path_obj.vsearch
-        vsearch_filter_3 += " --fastq_filter " + host_removal_folder + "orphans_no_host.fastq"
+        vsearch_filter_3 += " --fastq_filter " + os.path.join(host_removal_folder, "orphans_no_host.fastq")
         vsearch_filter_3 += " --fastq_ascii " + self.Qual_str
-        vsearch_filter_3 += " --fastaout " + host_removal_folder + "orphans_no_host.fasta"
+        vsearch_filter_3 += " --fastaout " + os.path.join(host_removal_folder, "orphans_no_host.fasta")
 
         vsearch_filter_4 = ">&2 echo Convert pair 1 for BLAT | "
         vsearch_filter_4 += self.tool_path_obj.vsearch
-        vsearch_filter_4 += " --fastq_filter " + host_removal_folder + "pair_1_no_host.fastq"
+        vsearch_filter_4 += " --fastq_filter " + os.path.join(host_removal_folder, "pair_1_no_host.fastq")
         vsearch_filter_4 += " --fastq_ascii " + self.Qual_str
-        vsearch_filter_4 += " --fastaout " + host_removal_folder + "pair_1_no_host.fasta"
+        vsearch_filter_4 += " --fastaout " + os.path.join(host_removal_folder, "pair_1_no_host.fasta")
 
         vsearch_filter_5 = ">&2 echo Convert pair 2 for BLAT | "
         vsearch_filter_5 += self.tool_path_obj.vsearch
-        vsearch_filter_5 += " --fastq_filter " + host_removal_folder + "pair_2_no_host.fastq"
+        vsearch_filter_5 += " --fastq_filter " + os.path.join(host_removal_folder, "pair_2_no_host.fastq")
         vsearch_filter_5 += " --fastq_ascii " + self.Qual_str
-        vsearch_filter_5 += " --fastaout " + host_removal_folder + "pair_2_no_host.fasta"
+        vsearch_filter_5 += " --fastaout " + os.path.join(host_removal_folder, "pair_2_no_host.fasta")
 
         blat_hr_orphans = ">&2 echo BLAT hr orphans | "
         blat_hr_orphans += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
         blat_hr_orphans += Host_Contaminants + " "
-        blat_hr_orphans += host_removal_folder + "orphans_no_host.fasta"
+        blat_hr_orphans += os.path.join(host_removal_folder, "orphans_no_host.fasta")
         blat_hr_orphans += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
-        blat_hr_orphans += " " + host_removal_folder + "orphans_no_host.blatout"
+        blat_hr_orphans += " " + os.path.join(host_removal_folder, "orphans_no_host.blatout")
 
         blat_hr_pair_1 = ">&2 echo BLAT hr pair 1 | "
         blat_hr_pair_1 += self.tool_path_obj.BLAT
         blat_hr_pair_1 += " -noHead -minIdentity=90 -minScore=65 " + Host_Contaminants + " "
-        blat_hr_pair_1 += host_removal_folder + "pair_1_no_host.fasta"
+        blat_hr_pair_1 += os.path.join(host_removal_folder, "pair_1_no_host.fasta")
         blat_hr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
-        blat_hr_pair_1 += " " + host_removal_folder + "pair_1_no_host.blatout"
+        blat_hr_pair_1 += " " + os.path.join(host_removal_folder, "pair_1_no_host.blatout")
 
         blat_hr_pair_2 = ">&2 echo BLAT hr pair 2 | "
         blat_hr_pair_2 += self.tool_path_obj.BLAT
         blat_hr_pair_2 += " -noHead -minIdentity=90 -minScore=65 " + Host_Contaminants + " "
-        blat_hr_pair_2 += host_removal_folder + "pair_2_no_host.fasta"
+        blat_hr_pair_2 += os.path.join(host_removal_folder, "pair_2_no_host.fasta")
         blat_hr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str
-        blat_hr_pair_2 += " " + host_removal_folder + "pair_2_no_host.blatout"
+        blat_hr_pair_2 += " " + os.path.join(host_removal_folder, "pair_2_no_host.blatout")
 
         # HR BLAT
         hr_orphans = ">&2 echo BLAT contaminant orphans | "
         hr_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        hr_orphans += host_removal_folder + "orphans_no_host.fastq" + " "  # in
-        hr_orphans += host_removal_folder + "orphans_no_host.blatout" + " "  # in
-        hr_orphans += blat_hr_folder + "orphans_no_host.fastq" + " "  # out
-        hr_orphans += blat_hr_folder + "orphans_host_only.fastq"  # out
+        hr_orphans += os.path.join(host_removal_folder, "orphans_no_host.fastq") + " "  # in
+        hr_orphans += os.path.join(host_removal_folder, "orphans_no_host.blatout") + " "  # in
+        hr_orphans += os.path.join(blat_hr_folder, "orphans_no_host.fastq") + " "  # out
+        hr_orphans += os.path.join(blat_hr_folder, "orphans_host_only.fastq")  # out
 
         hr_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
         hr_pair_1 += self.tool_path_obj.Python + " "
         hr_pair_1 += self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        hr_pair_1 += host_removal_folder + "pair_1_no_host.fastq" + " "
-        hr_pair_1 += host_removal_folder + "pair_1_no_host.blatout" + " "
-        hr_pair_1 += blat_hr_folder + "pair_1_no_host.fastq" + " "
-        hr_pair_1 += blat_hr_folder + "pair_1_host_only.fastq"
+        hr_pair_1 += os.path.join(host_removal_folder, "pair_1_no_host.fastq") + " "
+        hr_pair_1 += os.path.join(host_removal_folder, "pair_1_no_host.blatout") + " "
+        hr_pair_1 += os.path.join(blat_hr_folder, "pair_1_no_host.fastq") + " "
+        hr_pair_1 += os.path.join(blat_hr_folder, "pair_1_host_only.fastq")
 
         hr_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
         hr_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        hr_pair_2 += host_removal_folder + "pair_2_no_host.fastq" + " "
-        hr_pair_2 += host_removal_folder + "pair_2_no_host.blatout" + " "
-        hr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq" + " "
-        hr_pair_2 += blat_hr_folder + "pair_2_host_only.fastq"
+        hr_pair_2 += os.path.join(host_removal_folder, "pair_2_no_host.fastq") + " "
+        hr_pair_2 += os.path.join(host_removal_folder, "pair_2_no_host.blatout") + " "
+        hr_pair_2 += os.path.join(blat_hr_folder, "pair_2_no_host.fastq") + " "
+        hr_pair_2 += os.path.join(blat_hr_folder, "pair_2_host_only.fastq")
 
-        copy_orphans = "cp " + blat_hr_folder + "orphans_no_host.fastq" + " "
-        copy_orphans += final_folder + "orphans.fastq"
+        copy_orphans = "cp " + os.path.join(blat_hr_folder, "orphans_no_host.fastq") + " "
+        copy_orphans += os.path.join(final_folder, "orphans.fastq")
 
-        copy_pair_1 = "cp " + blat_hr_folder + "pair_1_no_host.fastq" + " "
-        copy_pair_1 += final_folder + "pair_1.fastq"
+        copy_pair_1 = "cp " + os.path.join(blat_hr_folder, "pair_1_no_host.fastq") + " "
+        copy_pair_1 += os.path.join(final_folder, "pair_1.fastq")
 
-        copy_pair_2 = "cp " + blat_hr_folder + "pair_2_no_host.fastq" + " "
-        copy_pair_2 += final_folder + "pair_2.fastq"
+        copy_pair_2 = "cp " + os.path.join(blat_hr_folder, "pair_2_no_host.fastq") + " "
+        copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
 
         COMMANDS_host = [
             copy_host,
@@ -434,9 +441,9 @@ class mt_pipe_commands:
         subfolder = os.path.join(self.Input_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
         dependancy_folder = os.path.join(self.Input_Path, dependency_name, "data", "final_results")
-        vector_removal_folder = data_folder + "0_vector_removal/"
-        blat_containment_vector_folder = data_folder + "1_blat_containment_vr/"
-        final_folder = data_folder + "final_results/"
+        vector_removal_folder = os.path.join(data_folder, "0_vector_removal")
+        blat_containment_vector_folder = os.path.join(data_folder, "1_blat_containment_vr")
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -444,7 +451,7 @@ class mt_pipe_commands:
         self.make_folder(blat_containment_vector_folder)
         self.make_folder(final_folder)
 
-        Vector_Contaminants = vector_removal_folder + "vector_contaminants_seq.fasta"
+        Vector_Contaminants = os.path.join(vector_removal_folder, "vector_contaminants_seq.fasta")
 
         copy_vector = ">&2 echo copy vector prep | "
         copy_vector += "cp " + self.tool_path_obj.UniVec_Core + " " + Vector_Contaminants
@@ -458,138 +465,144 @@ class mt_pipe_commands:
         bwa_vr_orphans = ">&2 echo BWA vr oprhans | "
         bwa_vr_orphans += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_vr_orphans += Vector_Contaminants + " "
-        bwa_vr_orphans += dependancy_folder + "orphans.fastq"
-        bwa_vr_orphans += " > " + vector_removal_folder + "orphans_no_vectors.sam"
+        bwa_vr_orphans += os.path.join(dependancy_folder, "orphans.fastq")
+        bwa_vr_orphans += " > " + os.path.join(vector_removal_folder, "orphans_no_vectors.sam")
 
         samtools_no_vector_orphans_sam_to_bam = ">&2 echo samtools vr oprhans pt 1 | "
         samtools_no_vector_orphans_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS "
-        samtools_no_vector_orphans_sam_to_bam += vector_removal_folder + "orphans_no_vectors.sam"
-        samtools_no_vector_orphans_sam_to_bam += " > " + vector_removal_folder + "orphans_no_vectors.bam"
+        samtools_no_vector_orphans_sam_to_bam += os.path.join(vector_removal_folder, "orphans_no_vectors.sam")
+        samtools_no_vector_orphans_sam_to_bam += " > " + os.path.join(vector_removal_folder, "orphans_no_vectors.bam")
 
         samtools_no_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 2 | "
         samtools_no_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_vector_orphans_bam_to_fastq += " -0 " + vector_removal_folder + "orphans_no_vectors.fastq "
-        samtools_no_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"
+        samtools_no_vector_orphans_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
+                                                                         "orphans_no_vectors.fastq") + " "
+        samtools_no_vector_orphans_bam_to_fastq += os.path.join(vector_removal_folder, "orphans_no_vectors.bam")
 
         samtools_vector_orphans_bam_to_fastq = ">&2 echo samtools vr orphans pt 3 | "
         samtools_vector_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_vector_orphans_bam_to_fastq += " -0 " + vector_removal_folder + "orphans_vectors_only.fastq "
-        samtools_vector_orphans_bam_to_fastq += vector_removal_folder + "orphans_no_vectors.bam"
+        samtools_vector_orphans_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
+                                                                      "orphans_vectors_only.fastq") + " "
+        samtools_vector_orphans_bam_to_fastq += os.path.join(vector_removal_folder, "orphans_no_vectors.bam")
 
         bwa_vr_pair_1 = ">&2 echo bwa vr pair | "
         bwa_vr_pair_1 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_vr_pair_1 += Vector_Contaminants + " "
-        bwa_vr_pair_1 += dependancy_folder + "pair_1.fastq "
-        bwa_vr_pair_1 += " > " + vector_removal_folder + "pair_1_no_vectors.sam"
+        bwa_vr_pair_1 += os.path.join(dependancy_folder, "pair_1.fastq") + " "
+        bwa_vr_pair_1 += " > " + os.path.join(vector_removal_folder, "pair_1_no_vectors.sam")
 
         bwa_vr_pair_2 = ">&2 echo bwa vr pair | "
         bwa_vr_pair_2 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_vr_pair_2 += Vector_Contaminants + " "
-        bwa_vr_pair_2 += dependancy_folder + "pair_2.fastq "
-        bwa_vr_pair_2 += " > " + vector_removal_folder + "pair_2_no_vectors.sam"
+        bwa_vr_pair_2 += os.path.join(dependancy_folder, "pair_2.fastq") + " "
+        bwa_vr_pair_2 += " > " + os.path.join(vector_removal_folder, "pair_2_no_vectors.sam")
 
         samtools_vr_pair_1_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
         samtools_vr_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS "
-        samtools_vr_pair_1_sam_to_bam += vector_removal_folder + "pair_1_no_vectors.sam"
-        samtools_vr_pair_1_sam_to_bam += " > " + vector_removal_folder + "pair_1_no_vectors.bam"
+        samtools_vr_pair_1_sam_to_bam += os.path.join(vector_removal_folder, "pair_1_no_vectors.sam")
+        samtools_vr_pair_1_sam_to_bam += " > " + os.path.join(vector_removal_folder, "pair_1_no_vectors.bam")
 
         samtools_no_vector_pair_1_bam_to_fastq = ">&2 echo samtools vr pair pt 2 | "
         samtools_no_vector_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_vector_pair_1_bam_to_fastq += " -0 " + vector_removal_folder + "pair_1_no_vectors.fastq"
-        samtools_no_vector_pair_1_bam_to_fastq += " " + vector_removal_folder + "pair_1_no_vectors.bam"
+        samtools_no_vector_pair_1_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
+                                                                        "pair_1_no_vectors.fastq")
+        samtools_no_vector_pair_1_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_1_no_vectors.bam")
 
         samtools_vector_pair_1_bam_to_fastq = ">&2 echo samtools vr pair pt 3 | "
         samtools_vector_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_vector_pair_1_bam_to_fastq += " -0 " + vector_removal_folder + "pair_1_vectors_only.fastq"
-        samtools_vector_pair_1_bam_to_fastq += " " + vector_removal_folder + "pair_1_no_vectors.bam"
+        samtools_vector_pair_1_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq")
+        samtools_vector_pair_1_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_1_no_vectors.bam")
 
         samtools_vr_pair_2_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
         samtools_vr_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS "
-        samtools_vr_pair_2_sam_to_bam += vector_removal_folder + "pair_2_no_vectors.sam"
-        samtools_vr_pair_2_sam_to_bam += " > " + vector_removal_folder + "pair_2_no_vectors.bam"
+        samtools_vr_pair_2_sam_to_bam += os.path.join(vector_removal_folder, "pair_2_no_vectors.sam")
+        samtools_vr_pair_2_sam_to_bam += " > " + os.path.join(vector_removal_folder, "pair_2_no_vectors.bam")
 
         samtools_no_vector_pair_2_bam_to_fastq = ">&2 echo samtools vr pair pt 2 | "
         samtools_no_vector_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_vector_pair_2_bam_to_fastq += " -0 " + vector_removal_folder + "pair_2_no_vectors.fastq"
-        samtools_no_vector_pair_2_bam_to_fastq += " " + vector_removal_folder + "pair_2_no_vectors.bam"
+        samtools_no_vector_pair_2_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
+                                                                        "pair_2_no_vectors.fastq")
+        samtools_no_vector_pair_2_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_2_no_vectors.bam")
 
         samtools_vector_pair_2_bam_to_fastq = ">&2 echo samtools vr pair pt 3 | "
         samtools_vector_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_vector_pair_2_bam_to_fastq += " -0 " + vector_removal_folder + "pair_2_vectors_only.fastq"
-        samtools_vector_pair_2_bam_to_fastq += " " + vector_removal_folder + "pair_2_no_vectors.bam"
+        samtools_vector_pair_2_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder, "pair_2_vectors_only.fastq")
+        samtools_vector_pair_2_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_2_no_vectors.bam")
 
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
         make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + Vector_Contaminants + " -dbtype nucl"
 
         vsearch_filter_6 = ">&2 echo convert vr orphans for BLAT | "
         vsearch_filter_6 += self.tool_path_obj.vsearch
-        vsearch_filter_6 += " --fastq_filter " + vector_removal_folder + "orphans_no_vectors.fastq"
+        vsearch_filter_6 += " --fastq_filter " + os.path.join(vector_removal_folder, "orphans_no_vectors.fastq")
         vsearch_filter_6 += " --fastq_ascii " + self.Qual_str
-        vsearch_filter_6 += " --fastaout " + vector_removal_folder + "orphans_no_vectors.fasta"
+        vsearch_filter_6 += " --fastaout " + os.path.join(vector_removal_folder, "orphans_no_vectors.fasta")
 
         vsearch_filter_7 = ">&2 echo convert vr pair 1 for BLAT | "
         vsearch_filter_7 += self.tool_path_obj.vsearch
-        vsearch_filter_7 += " --fastq_filter " + vector_removal_folder + "pair_1_no_vectors.fastq"
+        vsearch_filter_7 += " --fastq_filter " + os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq")
         vsearch_filter_7 += " --fastq_ascii " + self.Qual_str
-        vsearch_filter_7 += " --fastaout " + vector_removal_folder + "pair_1_no_vectors.fasta"
+        vsearch_filter_7 += " --fastaout " + os.path.join(vector_removal_folder, "pair_1_no_vectors.fasta")
 
         vsearch_filter_8 = ">&2 echo convert vr pair 2 for BLAT | "
         vsearch_filter_8 += self.tool_path_obj.vsearch
-        vsearch_filter_8 += " --fastq_filter " + vector_removal_folder + "pair_2_no_vectors.fastq"
+        vsearch_filter_8 += " --fastq_filter " + os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq")
         vsearch_filter_8 += " --fastq_ascii " + self.Qual_str
-        vsearch_filter_8 += " --fastaout " + vector_removal_folder + "pair_2_no_vectors.fasta"
+        vsearch_filter_8 += " --fastaout " + os.path.join(vector_removal_folder, "pair_2_no_vectors.fasta")
 
         blat_vr_orphans = ">&2 echo BLAT vr orphans | "
         blat_vr_orphans += self.tool_path_obj.BLAT
         blat_vr_orphans += " -noHead -minIdentity=90 -minScore=65 "
         blat_vr_orphans += Vector_Contaminants + " "
-        blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.fasta"
+        blat_vr_orphans += os.path.join(vector_removal_folder, "orphans_no_vectors.fasta")
         blat_vr_orphans += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
-        blat_vr_orphans += vector_removal_folder + "orphans_no_vectors.blatout"
+        blat_vr_orphans += os.path.join(vector_removal_folder, "orphans_no_vectors.blatout")
 
         blat_vr_pair_1 = ">&2 echo BLAT vr pair 1 | "
         blat_vr_pair_1 += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
         blat_vr_pair_1 += Vector_Contaminants + " "
-        blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.fasta"
+        blat_vr_pair_1 += os.path.join(vector_removal_folder, "pair_1_no_vectors.fasta")
         blat_vr_pair_1 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
-        blat_vr_pair_1 += vector_removal_folder + "pair_1_no_vectors.blatout"
+        blat_vr_pair_1 += os.path.join(vector_removal_folder, "pair_1_no_vectors.blatout")
 
         blat_vr_pair_2 = ">&2 echo BLAT vr pair 2 | "
         blat_vr_pair_2 += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
         blat_vr_pair_2 += Vector_Contaminants + " "
-        blat_vr_pair_2 += vector_removal_folder + "pair_2_no_vectors.fasta"
+        blat_vr_pair_2 += os.path.join(vector_removal_folder, "pair_2_no_vectors.fasta")
         blat_vr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
-        blat_vr_pair_2 += vector_removal_folder + "pair_2_no_vectors.blatout"
+        blat_vr_pair_2 += os.path.join(vector_removal_folder, "pair_2_no_vectors.blatout")
 
         blat_containment_vector_orphans = ">&2 echo BLAT contaminant orphans | "
         blat_containment_vector_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.fastq" + " "  # in
-        blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.blatout" + " "  # in
-        blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_no_vectors.fastq" + " "  # out
-        blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_vectors_only.fastq"  # out
+        blat_containment_vector_orphans += os.path.join(vector_removal_folder, "orphans_no_vectors.fastq") + " "  # in
+        blat_containment_vector_orphans += os.path.join(vector_removal_folder, "orphans_no_vectors.blatout") + " "  # in
+        blat_containment_vector_orphans += os.path.join(blat_containment_vector_folder,
+                                                        "orphans_no_vectors.fastq") + " "  # out
+        blat_containment_vector_orphans += os.path.join(blat_containment_vector_folder,
+                                                        "orphans_vectors_only.fastq")  # out
 
         blat_containment_vector_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
         blat_containment_vector_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        blat_containment_vector_pair_1 += vector_removal_folder + "pair_1_no_vectors.fastq" + " "
-        blat_containment_vector_pair_1 += vector_removal_folder + "pair_1_no_vectors.blatout" + " "
-        blat_containment_vector_pair_1 += blat_containment_vector_folder + "pair_1_no_vectors.fastq" + " "
-        blat_containment_vector_pair_1 += blat_containment_vector_folder + "pair_1_vectors_only.fastq"
+        blat_containment_vector_pair_1 += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
+        blat_containment_vector_pair_1 += os.path.join(vector_removal_folder, "pair_1_no_vectors.blatout") + " "
+        blat_containment_vector_pair_1 += os.path.join(blat_containment_vector_folder, "pair_1_no_vectors.fastq") + " "
+        blat_containment_vector_pair_1 += os.path.join(blat_containment_vector_folder, "pair_1_vectors_only.fastq")
 
         blat_containment_vector_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
         blat_containment_vector_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        blat_containment_vector_pair_2 += vector_removal_folder + "pair_2_no_vectors.fastq" + " "
-        blat_containment_vector_pair_2 += vector_removal_folder + "pair_2_no_vectors.blatout" + " "
-        blat_containment_vector_pair_2 += blat_containment_vector_folder + "pair_2_no_vectors.fastq" + " "
-        blat_containment_vector_pair_2 += blat_containment_vector_folder + "pair_2_vectors_only.fastq"
+        blat_containment_vector_pair_2 += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
+        blat_containment_vector_pair_2 += os.path.join(vector_removal_folder, "pair_2_no_vectors.blatout") + " "
+        blat_containment_vector_pair_2 += os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
+        blat_containment_vector_pair_2 += os.path.join(blat_containment_vector_folder, "pair_2_vectors_only.fastq")
 
-        copy_orphans = "cp " + blat_containment_vector_folder + "orphans_no_vectors.fastq "
-        copy_orphans += final_folder + "orphans.fastq"
+        copy_orphans = "cp " + os.path.join(blat_containment_vector_folder, "orphans_no_vectors.fastq") + " "
+        copy_orphans += os.path.join(final_folder, "orphans.fastq")
 
-        copy_pair_1 = "cp " + blat_containment_vector_folder + "pair_1_no_vectors.fastq "
-        copy_pair_1 += final_folder + "pair_1.fastq"
+        copy_pair_1 = "cp " + os.path.join(blat_containment_vector_folder, "pair_1_no_vectors.fastq") + " "
+        copy_pair_1 += os.path.join(final_folder, "pair_1.fastq")
 
-        copy_pair_2 = "cp " + blat_containment_vector_folder + "pair_2_no_vectors.fastq "
-        copy_pair_2 += final_folder + "pair_2.fastq"
+        copy_pair_2 = "cp " + os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
+        copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
 
         COMMANDS_vector = [
             copy_vector,
@@ -740,8 +753,10 @@ class mt_pipe_commands:
         self.make_folder(final_mRNA_folder)
         self.make_folder(final_rRNA_folder)
 
-        cat_orphans_mRNA = "cat " + orphans_mRNA_folder + "* 1>>" + os.path.join(pre_filter_mRNA_folder, "orphans.fastq")
-        cat_orphans_rRNA = "cat " + orphans_rRNA_folder + "* 1>>" + os.path.join(pre_filter_rRNA_folder, "orphans.fastq")
+        cat_orphans_mRNA = "cat " + orphans_mRNA_folder + "* 1>>" + os.path.join(pre_filter_mRNA_folder,
+                                                                                 "orphans.fastq")
+        cat_orphans_rRNA = "cat " + orphans_rRNA_folder + "* 1>>" + os.path.join(pre_filter_rRNA_folder,
+                                                                                 "orphans.fastq")
 
         cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
         cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
@@ -814,9 +829,11 @@ class mt_pipe_commands:
 
         repop_orphans = ">&2 echo Duplication repopulate Orphans | "
         repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_orphans += os.path.join(hq_path, "orphans.fastq") + " "  # in -> way back when things were quality-filtered.
+        repop_orphans += os.path.join(hq_path,
+                                      "orphans.fastq") + " "  # in -> way back when things were quality-filtered.
         repop_orphans += os.path.join(dep_loc, "mRNA/orphans.fastq") + " "  # in -> rRNA filtration output
-        repop_orphans += os.path.join(cluster_path, "orphans_unique.fastq.clstr") + " "  # in -> duplicates filter output
+        repop_orphans += os.path.join(cluster_path,
+                                      "orphans_unique.fastq.clstr") + " "  # in -> duplicates filter output
         repop_orphans += os.path.join(repop_folder, "orphans.fastq")  # out
 
         repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
@@ -879,7 +896,8 @@ class mt_pipe_commands:
         spades += " -s " + os.path.join(dep_loc, "orphans.fastq")  # in_single (orphans)
         spades += " -o " + spades_folder  # out
 
-        spades_rename = "cp " + os.path.join(spades_folder, "transcripts.fasta") + " " + os.path.join(spades_folder, "contigs.fasta")  # rename output
+        spades_rename = "cp " + os.path.join(spades_folder, "transcripts.fasta") + " " + os.path.join(spades_folder,
+                                                                                                      "contigs.fasta")  # rename output
 
         bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + os.path.join(spades_folder, "contigs.fasta")
 
@@ -1041,7 +1059,8 @@ class mt_pipe_commands:
         map_read_bwa += os.path.join(final_folder, "pair_2.fasta")  # OUT
 
         move_contig_map = ">&2 echo copy contig map | "
-        move_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+        move_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder,
+                                                                                                "contig_map.tsv")
 
         COMMANDS_Annotate_BWA = [
             map_read_bwa,
@@ -1080,7 +1099,8 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(blat_merge_folder)
 
-        cat_command = "cat " + os.path.join(blat_folder, section + "*.blatout") + " > " + os.path.join(blat_merge_folder, section + ".blatout")
+        cat_command = "cat " + os.path.join(blat_folder, section + "*.blatout") + " > " + os.path.join(
+            blat_merge_folder, section + ".blatout")
         return [cat_command]
 
     def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
@@ -1118,7 +1138,8 @@ class mt_pipe_commands:
         blat_pp += os.path.join(final_folder, "pair_2.fasta")
 
         move_contig_map = ">&2 echo copy contig map | "
-        move_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+        move_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder,
+                                                                                                "contig_map.tsv")
 
         COMMANDS_Annotate_BLAT_Post = [
             blat_pp,
@@ -1156,7 +1177,8 @@ class mt_pipe_commands:
         # the command just calls the merger program
         subfolder = os.path.join(self.Input_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
-        dep_loc_0 = os.path.join(self.Input_Path, dependency_0_stage_name, "data", "final_results")  # implied to be blat pp
+        dep_loc_0 = os.path.join(self.Input_Path, dependency_0_stage_name, "data",
+                                 "final_results")  # implied to be blat pp
         diamond_folder = os.path.join(data_folder, "0_diamond/")
         final_folder = os.path.join(data_folder, "final_results")
 
@@ -1437,7 +1459,8 @@ class mt_pipe_commands:
 
         return COMMANDS_EC_Postprocess
 
-    def create_Network_generation_command(self, current_stage_name, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_Network_generation_command(self, current_stage_name, diamond_stage, taxonomic_annotation_stage,
+                                          enzyme_annotation_stage):
         subfolder = os.path.join(self.Input_Path, current_stage_name)
         data_folder = os.path.join(subfolder, "data")
         diamond_folder = os.path.join(self.Input_Path, diamond_stage, "data", "final_results")
