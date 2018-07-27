@@ -89,7 +89,7 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
         return False
 
 
-def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads):
+def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, no_host):
     if not single_path == "":
         operating_mode = "single"
         quality_encoding = determine_encoding(single_path)
@@ -110,7 +110,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     start_time = time.time()
 
     if operating_mode == "paired":
-        preprocess_label = "preprocess"
+        quality_filter_label = "quality_filter"
+        host_filter_label = "host_read_filter"
+        vector_filter_label = "vector_read_filter"
         rRNA_filter_label = "rRNA_filter"
         repop_job_label = "duplicate_repopulation"
         assemble_contigs_label = "assemble_contigs"
@@ -130,21 +132,65 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # We start a multiprocess that starts a subprocess.
         # The subprocess is created from the comm object
 
-        # The preprocess stage
-        preprocess_start = time.time()
-        preprocess_path = os.path.join(output_folder_path, preprocess_label)
+        # The quality filter stage
+        quality_start = time.time()
+        quality_path = os.path.join(output_folder_path, quality_filter_label)
         if not check_where_resume():
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
-                    preprocess_label,
-                    comm.create_pre_double_command(preprocess_label),
+                    quality_filter_label,
+                    comm.create_quality_control_command(quality_filter_label),
                     True
                 )
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
-        preprocess_end = time.time()
+        quality_end = time.time()
+
+        # The host read filter stage
+        if not no_host:
+            host_start = time.time()
+            host_path = os.path.join(output_folder_path, host_filter_label)
+            if not check_where_resume(None, quality_path):
+                process = mp.Process(
+                    target=comm.create_and_launch,
+                    args=(
+                        host_filter_label,
+                        comm.create_host_filter_command(host_filter_label, quality_filter_label),
+                        True
+                    )
+                )
+                process.start()  # start the multiprocess
+                process.join()  # wait for it to end
+            host_end = time.time()
+
+        # The vector contaminant filter stage
+        vector_start = time.time()
+        vector_path = os.path.join(output_folder_path, vector_filter_label)
+        if no_host:
+            if not check_where_resume(None, quality_path):
+                process = mp.Process(
+                    target=comm.create_and_launch,
+                    args=(
+                        vector_filter_label,
+                        comm.create_vector_filter_command(vector_filter_label, quality_filter_label),
+                        True
+                    )
+                )
+        else:
+            if not check_where_resume(None, host_path):
+                process = mp.Process(
+                    target=comm.create_and_launch,
+                    args=(
+                        vector_filter_label,
+                        comm.create_vector_filter_command(vector_filter_label, host_filter_label),
+                        True
+                    )
+                )
+        process.start()  # start the multiprocess
+        process.join()  # wait for it to end
+        vector_end = time.time()
 
         # rRNA removal stage
         rRNA_filter_start = time.time()
@@ -155,13 +201,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         rRNA_filter_pair_1_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_1", "pair_1_fastq")
         rRNA_filter_pair_2_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_2", "pair_2_fastq")
 
-        if not check_where_resume(None, preprocess_path):
+        if not check_where_resume(None, vector_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
                     rRNA_filter_label,
                     comm.create_rRNA_filter_prep_command(
-                        rRNA_filter_label, int(mp.cpu_count() / 2), preprocess_label),
+                        rRNA_filter_label, int(mp.cpu_count() / 2), vector_filter_label),
                     True
                 )
             )
@@ -252,7 +298,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 target=comm.create_and_launch,
                 args=(
                     repop_job_label,
-                    comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label),
+                    comm.create_repop_command(repop_job_label, quality_filter_label, rRNA_filter_label),
                     True
                 )
             )
@@ -533,32 +579,22 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         Chart_end = time.time()
 
         end_time = time.time()
-        print("Total runtime:", '%1.1f' % (end_time - start_time), "s", "start:", '%1.1f' % start_time, "end:",
-              '%1.1f' % end_time)
-        print("preprocess:", '%1.1f' % (preprocess_end - preprocess_start), "s", "start:", '%1.1f' % preprocess_start,
-              "end:", '%1.1f' % preprocess_end)
-        print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start), "s", "start:",
-              '%1.1f' % rRNA_filter_start, "end:", '%1.1f' % rRNA_filter_end)
-        print("repop:", '%1.1f' % (repop_end - repop_start), "s", "start:", '%1.1f' % repop_start, "end:",
-              '%1.1f' % repop_end)
-        print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start), "s", "start:",
-              '%1.1f' % assemble_contigs_start, "end:", '%1.1f' % assemble_contigs_end)
-        print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start), "s", "start:", '%1.1f' % GA_BWA_start, "end:",
-              '%1.1f' % GA_BWA_end)
-        print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start), "s", "start:", '%1.1f' % GA_BLAT_start, "end:",
-              '%1.1f' % GA_BLAT_end)
-        print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start), "s", "start:", '%1.1f' % GA_DIAMOND_start,
-              "end:", '%1.1f' % GA_DIAMOND_end)
-        print("TA:", '%1.1f' % (TA_end - TA_start), "s", "start:", '%1.1f' % TA_start, "end:", '%1.1f' % TA_end)
-        print("EC:", '%1.1f' % (EC_end - EC_start), "s", "start:", '%1.1f' % EC_start, "end:", '%1.1f' % EC_end)
-        print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s", "start:", '%1.1f' % EC_DETECT_start,
-              "end:", '%1.1f' % EC_DETECT_end)
-        print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start), "s", "start:",
-              '%1.1f' % EC_PRIAM_DIAMOND_start, "end:", '%1.1f' % EC_PRIAM_DIAMOND_end)
-        print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s", "start:", '%1.1f' % Cytoscape_start,
-              "end:", '%1.1f' % Cytoscape_end)
-        print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s", "start:", '%1.1f' % Chart_start, "end:",
-              '%1.1f' % Chart_end)
+        print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
+        print("quality filter:", '%1.1f' % (quality_end - quality_start), "s")
+        if not no_host:
+            print("host filter:", '%1.1f' % (host_end - host_start), "s")
+        print("vector filter:", '%1.1f' % (vector_end - vector_start), "s")
+        print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start), "s")
+        print("repop:", '%1.1f' % (repop_end - repop_start), "s")
+        print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start), "s")
+        print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start), "s")
+        print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start), "s")
+        print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start), "s")
+        print("TA:", '%1.1f' % (TA_end - TA_start), "s")
+        print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+        print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start), "s")
+        print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s")
+        print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s")
 
     elif operating_mode == "single":
         print("not ready")
@@ -583,6 +619,8 @@ if __name__ == "__main__":
                         help="Path of the folder for the output of the pipeline")
     parser.add_argument("-t", "--num_threads", type=int,
                         help="Maximum number of threads used by the pipeline")
+    parser.add_argument("--nhost", action='store_true',
+                        help="Skip the host read removal step of the pipeline")
 
     args = parser.parse_args()
 
@@ -599,6 +637,7 @@ if __name__ == "__main__":
     single = args.single if args.single else ""
     output_folder = args.output_folder
     num_threads = args.num_threads if args.num_threads else 0
+    no_host = args.nhost if args.nhost else False
 
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
@@ -617,4 +656,4 @@ if __name__ == "__main__":
         print("You must specify paired-end or single-end reads as input for the pipeline.")
         sys.exit()
 
-    main(config_file, pair_1, pair_2, single, output_folder, num_threads)
+    main(config_file, pair_1, pair_2, single, output_folder, num_threads, no_host)
