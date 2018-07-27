@@ -138,7 +138,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # The quality filter stage
         quality_start = time.time()
         quality_path = os.path.join(output_folder_path, quality_filter_label)
-        if not check_where_resume(quality_filter_label):
+        if not check_where_resume(quality_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -155,7 +155,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if not no_host:
             host_start = time.time()
             host_path = os.path.join(output_folder_path, host_filter_label)
-            if not check_where_resume(None, quality_path):
+            if not check_where_resume(host_path, None, quality_path):
                 process = mp.Process(
                     target=comm.create_and_launch,
                     args=(
@@ -172,7 +172,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         vector_start = time.time()
         vector_path = os.path.join(output_folder_path, vector_filter_label)
         if no_host:
-            if not check_where_resume(None, quality_path):
+            if not check_where_resume(vector_path, None, quality_path):
                 process = mp.Process(
                     target=comm.create_and_launch,
                     args=(
@@ -181,8 +181,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         True
                     )
                 )
+                process.start()  # start the multiprocess
+                process.join()  # wait for it to end
         else:
-            if not check_where_resume(None, host_path):
+            if not check_where_resume(vector_path, None, host_path):
                 process = mp.Process(
                     target=comm.create_and_launch,
                     args=(
@@ -191,8 +193,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         True
                     )
                 )
-        process.start()  # start the multiprocess
-        process.join()  # wait for it to end
+                process.start()  # start the multiprocess
+                process.join()  # wait for it to end
         vector_end = time.time()
 
         # rRNA removal stage
@@ -204,7 +206,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         rRNA_filter_pair_1_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_1", "pair_1_fastq")
         rRNA_filter_pair_2_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_2", "pair_2_fastq")
 
-        if not check_where_resume(None, vector_path):
+        if not check_where_resume(rRNA_filter_path, None, vector_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -296,7 +298,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # Duplicate repopulation
         repop_start = time.time()
         repop_job_path = os.path.join(output_folder_path, repop_job_label)
-        if not check_where_resume(None, rRNA_filter_path):
+        if not check_where_resume(repop_job_path, None, rRNA_filter_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -312,7 +314,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # Assemble contigs
         assemble_contigs_start = time.time()
         assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
-        if not check_where_resume(None, repop_job_path):
+        if not check_where_resume(assemble_contigs_path, None, repop_job_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -329,7 +331,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # BWA gene annotation
         GA_BWA_start = time.time()
         gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
-        if not check_where_resume(None, assemble_contigs_path):
+        if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
 
             names = ["contigs", "orphans", "pair_1", "pair_2"]
             mp_store[:] = []
@@ -369,7 +371,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # BLAT gene annotation
         GA_BLAT_start = time.time()
         gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
-        if not check_where_resume(None, gene_annotation_BWA_path):
+        if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
 
             BlatPool = mp.Pool(int(thread_count / 2))
             sections = ["contigs", "orphans", "pair_1", "pair_2"]
@@ -425,7 +427,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # Diamond gene annotation
         GA_DIAMOND_start = time.time()
         gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
-        if not check_where_resume(None, gene_annotation_BLAT_path):
+        if not check_where_resume(gene_annotation_DIAMOND_path, None, gene_annotation_BLAT_path):
 
             names = ["contigs", "orphans", "pair_1", "pair_2"]
             for item in names:
@@ -462,7 +464,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # ------------------------------------------------------
         # Taxonomic annotation
         TA_start = time.time()
-        if not check_where_resume(None, gene_annotation_DIAMOND_path):
+        taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
+        if not check_where_resume(taxon_annotation_path, None, gene_annotation_DIAMOND_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -481,7 +484,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         EC_start = time.time()
         EC_DETECT_start = time.time()
         ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
-        if not check_where_resume(None, gene_annotation_DIAMOND_path):
+        if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
             # Preparing folders for DETECT
             process = mp.Process(
                 target=comm.create_and_launch,
@@ -520,7 +523,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # --------------------------------------------------------------
         # Priam and Diamond EC annotation
         EC_PRIAM_DIAMOND_start = time.time()
-        if not check_where_resume(None, gene_annotation_DIAMOND_path):
+        if not check_where_resume(None, None, gene_annotation_DIAMOND_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -551,7 +554,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # RPKM Table and Cytoscape Network
         Cytoscape_start = time.time()
         network_path = os.path.join(output_folder_path, network_label)
-        if not check_where_resume(None, ec_annotation_path):
+        if not check_where_resume(network_path, None, ec_annotation_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -568,7 +571,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # ------------------------------------------------------
         # Final Pie Charts
         Chart_start = time.time()
-        if not check_where_resume(None, network_path):
+        if not check_where_resume(Chart_start, None, network_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(

@@ -31,7 +31,7 @@ class mt_pipe_commands:
         self.Input_Path = os.getcwd()
         self.Threads_str = str(Thread_count)
 
-        print("input filepath:", self.Input_Path)
+        print("Output filepath:", self.Input_Path)
 
     # -----------------------------------------------------------
     # support functions
@@ -165,7 +165,7 @@ class mt_pipe_commands:
         vsearch_filter_2 += " --fastqout " + os.path.join(vsearch_filter_folder, "pair_2_hq.fastq")
 
         # redistribute data into orphans, or paired-reads
-        orphan_read_filter = ">&2 echo moving newly orphaned hq reads | "
+        orphan_read_filter = ">&2 echo moving newly orphaned reads | "
         orphan_read_filter += self.tool_path_obj.Python + " "
         orphan_read_filter += self.tool_path_obj.orphaned_read_filter + " "
         orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_1_hq.fastq") + " "
@@ -193,13 +193,13 @@ class mt_pipe_commands:
         cdhit_pair_2 += " -o " + os.path.join(cdhit_folder, "pair_2_unique.fastq")
 
         copy_orphans = "cp " + os.path.join(cdhit_folder, "orphans_unique.fastq") + " "
-        copy_orphans += final_folder + "orphans.fastq"
+        copy_orphans += os.path.join(final_folder, "orphans.fastq")
 
         copy_pair_1 = "cp " + os.path.join(cdhit_folder, "pair_1_unique.fastq") + " "
-        copy_pair_1 += final_folder + "pair_1.fastq"
+        copy_pair_1 += os.path.join(final_folder, "pair_1.fastq")
 
         copy_pair_2 = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq") + " "
-        copy_pair_2 += final_folder + "pair_2.fastq"
+        copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
 
         COMMANDS_qual = [
             sort_pair_1,
@@ -255,22 +255,18 @@ class mt_pipe_commands:
         bwa_hr_orphans += " > " + os.path.join(host_removal_folder, "orphans_no_host.sam")
 
         # annoying type conversion pt 1
-        samtools_hr_orphans_sam_to_bam = ">&2 echo convert orphans hr files pt1 | "
+        samtools_hr_orphans_sam_to_bam = ">&2 echo convert orphans host reads | "
         samtools_hr_orphans_sam_to_bam += self.tool_path_obj.SAMTOOLS
         samtools_hr_orphans_sam_to_bam += " view -bS " + os.path.join(host_removal_folder, "orphans_no_host.sam")
         samtools_hr_orphans_sam_to_bam += " > " + os.path.join(host_removal_folder, "orphans_no_host.bam")
         # annoying type conversion pt 2
-        samtools_no_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt2 | "
-        samtools_no_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS
-        samtools_no_host_orphans_bam_to_fastq += " fastq -n -f 4" + " -0 " + os.path.join(host_removal_folder,
-                                                                                          "orphans_no_host.fastq") + " "
+        samtools_no_host_orphans_bam_to_fastq = self.tool_path_obj.SAMTOOLS
+        samtools_no_host_orphans_bam_to_fastq += " fastq -n -f 4" + " -0 " + os.path.join(host_removal_folder, "orphans_no_host.fastq") + " "
         samtools_no_host_orphans_bam_to_fastq += os.path.join(host_removal_folder, "orphans_no_host.bam")
 
         # apparently, we're to keep the host separation
-        samtools_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt3 | "
-        samtools_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_host_orphans_bam_to_fastq += " -0 " + os.path.join(host_removal_folder,
-                                                                    "orphans_host_only.fastq") + " "
+        samtools_host_orphans_bam_to_fastq = self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
+        samtools_host_orphans_bam_to_fastq += " -0 " + os.path.join(host_removal_folder, "orphans_host_only.fastq") + " "
         samtools_host_orphans_bam_to_fastq += os.path.join(host_removal_folder, "orphans_no_host.bam")
 
         # bwa hr pair 1 only
@@ -654,17 +650,17 @@ class mt_pipe_commands:
         self.make_folder(pair_2_split_folder)
 
         file_splitter_orphans = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_orphans += os.path.join(dep_loc, "orphans_no_vectors.fastq") + " "
+        file_splitter_orphans += os.path.join(dep_loc, "orphans.fastq") + " "
         file_splitter_orphans += os.path.join(orphan_split_folder, "orphans") + " "
         file_splitter_orphans += str(file_split_count)
 
         file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_pair_1 += os.path.join(dep_loc, "pair_1_no_vectors.fastq") + " "
+        file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
         file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
         file_splitter_pair_1 += str(file_split_count)
 
         file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_pair_2 += os.path.join(dep_loc, "pair_2_no_vectors.fastq") + " "
+        file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
         file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
         file_splitter_pair_2 += str(file_split_count)
 
@@ -808,7 +804,7 @@ class mt_pipe_commands:
         # -> detect if we've run the preprocess stage.
         # -> if it's run, grab data
         # -> if not, run our own custom preprocess up to what we need
-        dep_loc = os.path.join(self.Input_Path, dependency_stage_name, "data", "final_resultsos.path.join(")
+        dep_loc = os.path.join(self.Input_Path, dependency_stage_name, "data", "final_results")
         subfolder = os.path.join(self.Input_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
         repop_folder = os.path.join(data_folder, "0_repop")
@@ -829,11 +825,9 @@ class mt_pipe_commands:
 
         repop_orphans = ">&2 echo Duplication repopulate Orphans | "
         repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_orphans += os.path.join(hq_path,
-                                      "orphans.fastq") + " "  # in -> way back when things were quality-filtered.
-        repop_orphans += os.path.join(dep_loc, "mRNA/orphans.fastq") + " "  # in -> rRNA filtration output
-        repop_orphans += os.path.join(cluster_path,
-                                      "orphans_unique.fastq.clstr") + " "  # in -> duplicates filter output
+        repop_orphans += os.path.join(hq_path, "orphans.fastq") + " "  # in -> way back when things were quality-filtered.
+        repop_orphans += os.path.join(dep_loc, "mRNA", "orphans.fastq") + " "  # in -> rRNA filtration output
+        repop_orphans += os.path.join(cluster_path, "orphans_unique.fastq.clstr") + " "  # in -> duplicates filter output
         repop_orphans += os.path.join(repop_folder, "orphans.fastq")  # out
 
         repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
