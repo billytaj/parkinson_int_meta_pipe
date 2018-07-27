@@ -94,7 +94,7 @@ verbose=False
 zero_density = 1e-10
 """Small number that is used as zero"""
 
-def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff, ids_to_recs):
+def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff, ids_to_recs, blastp, needle):
     """Core alignment routine.
     1) Takes a single sequence, acquires multiple BLASTp alignemnts to the swissprot enzyme database.
     2) Canonical sequences of the results from (1) are retrieved from dictionary of ids to swissprot records derived
@@ -104,7 +104,13 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
     
     #First pass cutoff with BLAST alignments
     if verbose: print( "[DETECT]: Running BLASTp for {} ...".format(seq.name()))
-    p = subprocess.Popen(("blastp", "-query", "-", 
+
+    invalid_chars = ["?","<",">","\\",":","*","|"]
+    valid_seq_name = seq.name()
+    for char in invalid_chars:
+        valid_seq_name = valid_seq_name.replace(char, "_")
+
+    p = subprocess.Popen((blastp, "-query", "-", 
                     "-out", "-",
                     "-db", blast_db,
                     "-outfmt", "6 sseqid bitscore",
@@ -112,10 +118,11 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
                     "-num_threads",str(num_threads),
                     "-evalue", str(e_value_min)),
                 stdin=subprocess.PIPE,  
-                stdout=subprocess.PIPE)
+                stdout=subprocess.PIPE,
+                encoding='utf8')
     stdout,stderr = p.communicate(seq.data)
     
-    with open("blast_hits","w") as blast_hits:
+    with open("blast_hits_" + valid_seq_name,"w") as blast_hits:
         blast_hit_list = list() 
         for line in stdout.split("\n"):
             if not line in whitespace:
@@ -135,17 +142,17 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
     if verbose: print( "[DETECT]: Running Needleman-Wunch alignments for {} ...".format(seq.name()))
 
     #Run Needleman-Wunsch alignment on the results of the BLAST search
-    p = subprocess.Popen(("needle", "-filter",
-                    "-bsequence", "blast_hits",
+    p = subprocess.Popen((needle, "-filter",
+                    "-bsequence", "blast_hits_" + valid_seq_name,
                     "-gapopen", "10",
                     "-gapextend", "0.5",
                     "-sprotein", "Y",
                     "-aformat_outfile", "score"),
                 stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE)
-        
+                stdout=subprocess.PIPE,
+                encoding='utf8')
     stdout,stderr = p.communicate(seq.fasta())
-
+    
     return parse_needle_results(stdout)
 
 """Split a fasta file into separate sequences, 
@@ -309,14 +316,22 @@ if __name__=="__main__":
     parser.add_argument("--beta",type=float,choices=[1.0, 0.5, 2.0], default=1.0,
                         help="Value of beta in Fbeta: 1 (default), 0.5 or 2. Fbeta is maximized along EC-specific "
                              "precision-recall curves to derive EC-specific score cutoffs")
+    parser.add_argument("--db",type=str,
+                        help="Location of the Detect databases")
+    parser.add_argument("--blastp",type=str,
+                        help="Path for the blastp binary")
+    parser.add_argument("--needle",type=str,
+                        help="Path for the Needleman-Wunsch search binary")
     
     args = parser.parse_args()
-    script_path = os.path.dirname(os.path.realpath(__file__))
+    script_path = args.db if args.db else os.path.dirname(os.path.realpath(__file__))
 
     verbose = args.verbose
     num_threads = args.num_threads if args.num_threads else 1
     bit_score = args.bit_score if args.bit_score else 50
     e_value = args.e_value if args.e_value else 1
+    blastp = args.blastp if args.blastp else "blastp"
+    needle = args.needle if args.needle else "needle"
     
     sequences = split_fasta(args.target_file)
     if verbose: print( "Found {} sequences in file.".format(len(sequences)))
@@ -351,7 +366,7 @@ if __name__=="__main__":
             print( "[DETECT]: Analyzing {} ({}/{}) ...".format(seq.name(), i + 1, len(sequences)))
 
         identification = Identification(seq.name())
-        identification.hypotheses = run_pair_alignment(seq, blast_db,num_threads, e_value, bit_score, ids_to_recs)
+        identification.hypotheses = run_pair_alignment(seq, blast_db,num_threads, e_value, bit_score, ids_to_recs, blastp, needle)
         
         if not identification.hypotheses:
             if verbose: 
@@ -362,22 +377,24 @@ if __name__=="__main__":
         if verbose: 
             print( "[DETECT]: Running density estimations for {} ...".format(seq.name()))
         for hypothesis in identification.hypotheses:
-
             probability = calculate_probability(hypothesis, connection)
             if not (hypothesis.ec == "unknown" or hypothesis.ec == "2.7.11.1" or hypothesis.ec == "2.7.7.6" or hypothesis.ec == "2.7.13.3"):
                 identification.predictions[hypothesis.ec] *= (1.0-probability)  
                 identification.prediction_count[hypothesis.ec] += 1
         
+        low_density = []
         for ec,probability in identification.predictions.items():
             cumulative = 1.0 - probability
             if (cumulative > zero_density):
                 identification.predictions[ec] = cumulative
             else:
-                del identification.predictions[ec]
+                low_density.append(ec)
+        for ec in low_density:
+            del identification.predictions[ec]
         
         if (args.top_predictions_file or args.fbeta_file):
             #sort
-            identification.predictions = OrderedDict(sorted(identification.predictions.iteritems(), key=itemgetter(1), reverse=True))
+            identification.predictions = OrderedDict(sorted(identification.predictions.items(), key=itemgetter(1), reverse=True))
         
         if (args.top_predictions_file):
             top_predictions = list()

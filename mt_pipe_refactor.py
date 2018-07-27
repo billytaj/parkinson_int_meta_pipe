@@ -4,7 +4,7 @@ import sys
 import os
 import os.path
 from argparse import ArgumentParser
-import configparser
+from configparser import ConfigParser
 import multiprocessing as mp
 import mt_pipe_commands as mpcom
 import mt_pipe_paths as mpp
@@ -89,8 +89,8 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
         return False
 
 
-def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, threads):
-    if single_path:
+def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads):
+    if not single_path == "":
         operating_mode = "single"
         quality_encoding = determine_encoding(single_path)
         print("OPERATING IN SINGLE-ENDED MODE")
@@ -123,10 +123,8 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         visualization_label = "visualization"
 
         # Creates our command object, for creating shellscripts.
-        comm = mpcom.mt_pipe_commands(Quality_score=quality_encoding, Thread_count=thread_count,
-                                      sequence_path_1=pair_1_path, sequence_path_2=pair_2_path,
-                                      sequence_signle=single_path)  # start obj
-        paths = mpp.tool_path_obj(config)
+        comm = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_signle=None)  # start obj
+        paths = mpp.tool_path_obj(config_path)
 
         # This is the format we use to launch each stage of the pipeline.
         # We start a multiprocess that starts a subprocess.
@@ -137,7 +135,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         preprocess_path = os.path.join(output_folder_path, preprocess_label)
         if not check_where_resume():
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     preprocess_label,
                     comm.create_pre_double_command(preprocess_label),
@@ -159,7 +157,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
 
         if not check_where_resume(None, preprocess_path):
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     rRNA_filter_label,
                     comm.create_rRNA_filter_prep_command(
@@ -176,7 +174,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
                     file_root_name = os.path.splitext(item)[0]
                     inner_name = file_root_name + "_infernal"
                     process = mp.Process(
-                        target=comm.create_pbs_and_launch,
+                        target=comm.create_and_launch,
                         args=(
                             "rRNA_filter",
                             comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name),
@@ -196,7 +194,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
                     file_root_name = os.path.splitext(item)[0]
                     inner_name = file_root_name + "_infernal"
                     process = mp.Process(
-                        target=comm.create_pbs_and_launch,
+                        target=comm.create_and_launch,
                         args=(
                             "rRNA_filter",
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name),
@@ -216,7 +214,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
                     file_root_name = os.path.splitext(item)[0]
                     inner_name = file_root_name + "_infernal"
                     process = mp.Process(
-                        target=comm.create_pbs_and_launch,
+                        target=comm.create_and_launch,
                         args=(
                             "rRNA_filter",
                             comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name),
@@ -233,7 +231,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
 
             inner_name = "rRNA_filter_post"
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     rRNA_filter_label,
                     comm.create_rRNA_filter_post_command(rRNA_filter_label),
@@ -251,7 +249,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         repop_job_path = os.path.join(output_folder_path, repop_job_label)
         if not check_where_resume(None, rRNA_filter_path):
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     repop_job_label,
                     comm.create_repop_command(repop_job_label, preprocess_label, rRNA_filter_label),
@@ -267,7 +265,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
         if not check_where_resume(None, repop_job_path):
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     assemble_contigs_label,
                     comm.create_assemble_contigs_command(assemble_contigs_label, repop_job_label),
@@ -289,7 +287,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
             for item in names:
                 inner_name = "BWA_" + item
                 process = mp.Process(
-                    target=comm.create_pbs_and_launch,
+                    target=comm.create_and_launch,
                     args=(
                         gene_annotation_BWA_label,
                         comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label, item),
@@ -306,7 +304,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
 
             inner_name = "BWA_pp"
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     gene_annotation_BWA_label,
                     comm.create_BWA_pp_command(gene_annotation_BWA_label, assemble_contigs_label),
@@ -330,7 +328,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
                 for fasta_db in os.listdir(paths.DNA_DB_Split):
                     if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna") or fasta_db.endswith(".ffn"):
                         inner_name = "BLAT_" + section + "_" + fasta_db
-                        BlatPool.apply_async(comm.create_pbs_and_launch,
+                        BlatPool.apply_async(comm.create_and_launch,
                                              args=(
                                                  gene_annotation_BLAT_label,
                                                  comm.create_BLAT_annotate_command(gene_annotation_BLAT_label,
@@ -346,7 +344,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
             for section in sections:
                 inner_name = section + "_cat"
                 process = mp.Process(
-                    target=comm.create_pbs_and_launch,
+                    target=comm.create_and_launch,
                     args=(
                         gene_annotation_BLAT_label,
                         comm.create_BLAT_cat_command(gene_annotation_BLAT_label, section),
@@ -362,7 +360,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
 
             inner_name = "BLAT_pp"
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     gene_annotation_BLAT_label,
                     comm.create_BLAT_pp_command(gene_annotation_BLAT_label, gene_annotation_BWA_label),
@@ -384,7 +382,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
             for item in names:
                 inner_name = item + "_run_diamond"
                 process = mp.Process(
-                    target=comm.create_pbs_and_launch,
+                    target=comm.create_and_launch,
                     args=(
                         gene_annotation_DIAMOND_label,
                         comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label,
@@ -401,7 +399,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
 
             inner_name = "diamond_pp"
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     gene_annotation_DIAMOND_label,
                     comm.create_DIAMOND_pp_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label),
@@ -417,7 +415,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         TA_start = time.time()
         if not check_where_resume(None, gene_annotation_DIAMOND_path):
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     taxon_annotation_label,
                     comm.create_taxonomic_annotation_command(taxon_annotation_label, assemble_contigs_label,
@@ -437,7 +435,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         if not check_where_resume(None, gene_annotation_DIAMOND_path):
             # Preparing folders for DETECT
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     ec_annotation_label,
                     comm.create_EC_DETECT_prep(ec_annotation_label, gene_annotation_DIAMOND_label,
@@ -454,7 +452,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
                 file_root_name = os.path.splitext(item)[0]
                 inner_name = file_root_name + "_detect"
                 process = mp.Process(
-                    target=comm.create_pbs_and_launch,
+                    target=comm.create_and_launch,
                     args=(
                         ec_annotation_label,
                         comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
@@ -475,7 +473,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         EC_PRIAM_DIAMOND_start = time.time()
         if not check_where_resume(None, gene_annotation_DIAMOND_path):
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     ec_annotation_label,
                     comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
@@ -487,7 +485,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
 
             inner_name = "ea_post"
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     ec_annotation_label,
                     comm.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
@@ -506,7 +504,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         network_path = os.path.join(output_folder_path, network_label)
         if not check_where_resume(None, ec_annotation_path):
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     network_label,
                     comm.create_Network_generation_command(network_label, gene_annotation_DIAMOND_label,
@@ -523,7 +521,7 @@ def main(config, pair_1_path, pair_2_path, single_path, output_folder_path, thre
         Chart_start = time.time()
         if not check_where_resume(None, network_path):
             process = mp.Process(
-                target=comm.create_pbs_and_launch,
+                target=comm.create_and_launch,
                 args=(
                     visualization_label,
                     comm.create_visualization_command(visualization_label, network_label),
@@ -606,4 +604,17 @@ if __name__ == "__main__":
         print("output folder does not exist.  Now building directory.")
         os.makedirs(output_folder)
     os.chdir(output_folder)
+
+    config = ConfigParser()
+    if args.config:
+        config.read(config_file)
+        if not args.pair1 and not args.pair2 and not args.single:
+            pair_1 = config["Sequences"]["pair1"] if config["Sequences"]["pair1"] else ""
+            pair_2 = config["Sequences"]["pair2"] if config["Sequences"]["pair2"] else ""
+            single = config["Sequences"]["single"] if config["Sequences"]["single"] else ""
+
+    if pair_1 == "" and pair_2 == "" and single == "":
+        print("You must specify paired-end or single-end reads as input for the pipeline.")
+        sys.exit()
+
     main(config_file, pair_1, pair_2, single, output_folder, num_threads)

@@ -1,53 +1,31 @@
 #The functions here generate the pipeline commands.
-#Each command module is made up of (often) many sub stages that are used to get the final result.
-#If you want to move around the ordering, you'd do that here.
+#Each command module is made up of sub stages that are used to get the final result.
 
 import os
 import sys
 import mt_pipe_paths as mpp
 import subprocess as sp
-#------------------------------------------------------
-# pragmas needed for command construction
-
-SLURM_Submit = """#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=40
-#SBATCH --time=4:00:00
-#SBATCH --job-name=NAME
-#SBATCH --error=ERROR
-#SBATCH --output=OUTPUT
- 
-cd $SLURM_SUBMIT_DIR
- 
-module load gcc/5.2.0 boost/1.60.0-gcc5.2.0 intel/15.0.2 openmpi java blast extras anaconda3/4.0.0
- 
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-
-OLDPATH=$PATH:/home/j/jparkin/ctorma/emboss/bin/:/home/j/jparkin/mobolaji/Tools/Barrnap/bin/:/home/j/jparkin/mobolaji/Tools/HMMer/hmmer-3.1b2-linux-intel-x86_64/binaries/:/home/j/jparkin/mobolaji/Tools/Bowtie2/bowtie2-2.3.0/:/home/j/jparkin/mobolaji/Tools/SAMTOOLS/samtools-1.3.1/
-NEWPATH=/home/j/jparkin/mobolaji/:$OLDPATH
-export PATH=$NEWPATH
-
-COMMANDS"""
-
-#--------------------------------------------------------------------------
-# class definition
 
 class mt_pipe_commands:
     #--------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Quality_score = 33, Thread_count = 80, system_mode = "scinet", user_mode = "billy",  raw_sequence_path_0 = None, raw_sequence_path_1 = None):
-        # path to the raw genome sequence file
+    def __init__(self, Config_path, Quality_score = 33, Thread_count = 8, sequence_path_1 = None, sequence_path_2 = None, sequence_signle = None):
+        # path to the genome sequence file
         Input_File = os.getcwd()
-        if not(raw_sequence_path_0 is None):
-            self.raw_sequence_path_0 = raw_sequence_path_0
-            print("raw sequence 0:", self.raw_sequence_path_0)
 
-        if not(raw_sequence_path_1 is None):
-            self.raw_sequence_path_1 = raw_sequence_path_1
-            print("raw seqeunce 1:", self.raw_sequence_path_1)
-        self.system_mode = system_mode
-        self.tool_path_obj = mpp.tool_path_obj(system_mode, user_mode)
+        if not(sequence_signle is None):
+            self.sequence_signle = sequence_signle
+            print("Reads:", self.sequence_signle)
+
+        if not(sequence_path_1 is None):
+            self.sequence_path_1 = sequence_path_1
+            print("Forward Reads:", self.sequence_path_1)
+
+        if not(sequence_path_2 is None):
+            self.sequence_path_2 = sequence_path_2
+            print("Reverse Reads:", self.sequence_path_2)
+        self.tool_path_obj = mpp.tool_path_obj(Config_path)
         
         self.Qual_str = str(Quality_score)
         self.Input_Path = os.path.dirname(Input_File)
@@ -63,7 +41,7 @@ class mt_pipe_commands:
         if not(os.path.exists(folder_path)):
             os.makedirs(folder_path)
 
-    def create_pbs_and_launch(self, job_name, command_list, run_job = False, inner_name = None, mode = "low", dependency_list = None,  work_in_background = False):
+    def create_and_launch(self, job_name, command_list, run_job = False, inner_name = None, mode ="low", dependency_list = None, work_in_background = False):
         #create the pbs job, and launch items
         #job name: string tag for export file name
         #command list:  list of command statements for writing
@@ -71,123 +49,33 @@ class mt_pipe_commands:
         #dependency_list: if not empty, will append wait args to sbatch subprocess call. it's polymorphic
         #returns back the job ID given from sbatch
 
-        if self.system_mode == "scinet":
-            pbs_template = SLURM_Submit
-
-        #    if(mode == "med"):
-        #        pbs_template = PBS_Submit_HighMem
-        #    elif(mode == "high"):
-        #        pbs_template = PBS_Submit_vHighMem
-        #    else:
-        #        pbs_template = PBS_Submit_LowMem
-
-        #job name:              string tag for export file name
-        #command list:          list of command statements for writing
-        #run_job:               the ability to just generate the shell, and not run it
-        #inner_name:            to make it so that a new shellscript is generated for each split job -> name override
-        #work_in_background:    the ability to run the job in background.  was used in single-cpu mode, but no longer needed
-        
-        #returns nothing
-
-        #if(self.system_mode == "singularity" or self.system_mode == "docker"):
-            #docker mode, depending on the machine it's applied to, it may be multi-core
-            pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
-            if not inner_name is None:
-                pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
-
-            try:
-                with open(pbs_script_full_path + ".sh", "w+") as PBS_script_out:
-                    for line in pbs_template.splitlines():
-                        if "NAME" in line:
-                            line = line.replace("NAME", pbs_script_full_path)
-                        if "ERROR" in line:
-                            line = line.replace("ERROR", pbs_script_full_path + "_ERR")
-                        if "OUTPUT" in line:
-                            line = line.replace("OUTPUT", pbs_script_full_path + "_OUT")
-                        if "COMMANDS" in line:
-                            PBS_script_out.write("\n".join(command_list))
-                            break
-
-                        PBS_script_out.write(line + "\n")
-                    PBS_script_out.close()
-                    dep_str = ""
-                    if isinstance(dependency_list, int):
-                        #single dep
-                        dep_str = "-W depend=afterok:" + str(dependency_list)
-                        print(dep_str)
-                        if inner_name is None:
-                            print(job_name, "running with single dependency")
-                        else:
-                            print(inner_name, "running with single dependency")
-
-                    elif isinstance(dependency_list, list):
-                        # multiple deps
-                        print("mutiple dependencies being used")
-                        dep_str = "-d depend=afterok"
-                        for item in dependency_list:
-                            dep_str += ":"+str(item)
-                        if inner_name is None:
-                            print(job_name, "running with multiple dependencies")
-                        else:
-                            print(inner_name, "running with multiple dependencies")
-                    elif dependency_list is None:
-                        if inner_name is None:
-                            print(job_name, "running without dependency")
-                        else:
-                            print(inner_name, "running without dependency")
-                    else:
-                        print("This isn't supposed to happen")
-
-                    if run_job: # a lock built for testing syntax, but not run
-                        try:
-                            if not dep_str == "":
-                                print("dep string not empty")
-                                job_id = sp.check_output(["sbatch", pbs_script_full_path+".sh", dep_str])
-                            else:
-                                job_id = sp.check_output(["sbatch", pbs_script_full_path+".sh"])
-                            #return val is a binary string, so we convert, and extract only the numeric part
-                            job_id = job_id.decode('ascii')
-                            job_id = int(job_id.split(' ')[-1])
-
-                            return job_id
-                        except Exception as e:
-                            print("subprocess call error:", e)
-                    else:
-                        return 0
-
-
-            except Exception as e:
-                # error catchall
-                print("Failure at pbs creation:", e)
-                sys.exit()
-        else:
-            #docker mode: single cpu
-            # no ID, no sbatch.  just run the command
-            pbs_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
-            if not inner_name is None:
-                pbs_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
-            with open(pbs_script_full_path + ".sh", "w+") as PBS_script_out:
-                for item in command_list:
-                    PBS_script_out.write(item + "\n")
-                PBS_script_out.close()
-            if run_job:
-                if not work_in_background:
-                    try:
-                        sp.check_output(["sh", pbs_script_full_path + ".sh"])
-                    except sp.CalledProcessError as e:
-                        return_code = e.returncode
-                        if return_code != 1:
-                            raise
-                else:
-                    try:
-                        process_id = sp.Popen(["sh", pbs_script_full_path + ".sh"])
-                        return process_id
-                    except sp.CalledProcessError as e:
-                        return_code = e.returncode
-                        if return_code != 1:
-                            raise
+        #docker mode: single cpu
+        # no ID, no sbatch.  just run the command
+        shell_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
+        if not inner_name is None:
+            shell_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
+        with open(shell_script_full_path + ".sh", "w+") as PBS_script_out:
+            for item in command_list:
+                PBS_script_out.write(item + "\n")
+            PBS_script_out.close()
+        if run_job:
+            if not work_in_background:
+                try:
+                    sp.check_output(["sh", shell_script_full_path + ".sh"])
+                except sp.CalledProcessError as e:
+                    return_code = e.returncode
+                    if return_code != 1:
+                        raise
             else:
-                print("not running job.  run_job set to False")
+                try:
+                    process_id = sp.Popen(["sh", shell_script_full_path + ".sh"])
+                    return process_id
+                except sp.CalledProcessError as e:
+                    return_code = e.returncode
+                    if return_code != 1:
+                        raise
+        else:
+            print("not running job.  run_job set to False")
 
     def create_pre_double_command(self, stage_name):
         #why do we leave all the interim files intact?
@@ -204,26 +92,24 @@ class mt_pipe_commands:
 
         sort_pair_1 = ">&2 echo Sorting pair 1 | "
         sort_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        sort_pair_1 += self.raw_sequence_path_0
+        sort_pair_1 += self.sequence_path_1
         sort_pair_1 += " " + sorted_raw_folder + "pair_1_sorted.fastq"
 
         sort_pair_2 = ">&2 echo Sorting pair 2 | "
         sort_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        sort_pair_2 += self.raw_sequence_path_1
+        sort_pair_2 += self.sequence_path_2
         sort_pair_2 += " " + sorted_raw_folder + "pair_2_sorted.fastq"
 
         adapter_folder = data_folder + "1_adapter_removal/"
         self.make_folder(adapter_folder)
         adapter_removal_line = ">&2 echo Removing adapters | "
         adapter_removal_line += self.tool_path_obj.AdapterRemoval
-        #adapter_removal_line += " --file1 " + self.raw_sequence_path_0
-        #adapter_removal_line += " --file2 " + self.raw_sequence_path_1
         adapter_removal_line += " --file1 " + sorted_raw_folder + "pair_1_sorted.fastq"
         adapter_removal_line += " --file2 " + sorted_raw_folder + "pair_2_sorted.fastq"
-        adapter_removal_line += " --qualitybase " + str(self.Qual_str) #must be either 33 or 64
+        adapter_removal_line += " --qualitybase " + str(self.Qual_str)
         adapter_removal_line += " --threads " + self.Threads_str
         adapter_removal_line += " --minlength " + "30"
-        adapter_removal_line += " --basename " + adapter_folder #+ os.path.splitext(self.Input_FName)[0]
+        adapter_removal_line += " --basename " + adapter_folder
         adapter_removal_line += "_AdapterRemoval"
         adapter_removal_line += " --trimqualities "
         adapter_removal_line += " --output1 " + adapter_folder + "pair_1_adptr_rem.fastq"
@@ -297,11 +183,6 @@ class mt_pipe_commands:
         cdhit_orphans += self.tool_path_obj.cdhit_dup + " -i "
         cdhit_orphans += orphan_read_filter_folder + "orphans.fastq"
         cdhit_orphans += " -o " + cdhit_folder + "orphans_unique.fastq"
-
-
-        #move_unpaired_cluster = "mv "
-        #move_unpaired_cluster += self.Input_Filepath + "_unpaired_unique.fastq.clstr "
-        #move_unpaired_cluster += self.Input_Filepath + "_unpaired.clstr"
 
         #remove duplicates in the pairs
         cdhit_pair_1 = ">&2 echo remove duplicates from pair 1 | "
@@ -654,25 +535,20 @@ class mt_pipe_commands:
             #make the pairs align, by sorting
             sort_pair_1,
             sort_pair_2,
-            # # remove adapters
+            #remove adapters
             adapter_removal_line,
-            # #trim things
             vsearch_merge,
             cat_glue,
             vsearch_filter_0,
             vsearch_filter_1,
             vsearch_filter_2,
             orphan_read_filter,
-
             cdhit_orphans,
-            # # # move_unpaired_cluster,
             cdhit_pair_1,
             cdhit_pair_2,
-            # # # move_paired_cluster,
-            # # #----host removal
             copy_host,
             bwa_hr_prep,
-            # # #----SAMTOOLS makes bam files
+            #SAMTOOLS makes bam files
             samtools_hr_prep,
             bwa_hr_orphans,
             samtools_hr_orphans_sam_to_bam,
@@ -696,7 +572,6 @@ class mt_pipe_commands:
             hr_orphans,
             hr_pair_1,
             hr_pair_2,
-            # # # #-----vector removal
             copy_vector,
             bwa_vr_prep,
             samtools_vr_prep,
@@ -712,7 +587,6 @@ class mt_pipe_commands:
             samtools_vr_pair_2_sam_to_bam,
             samtools_no_vector_pair_2_bam_to_fastq,
             samtools_vector_pair_2_bam_to_fastq,
-
             make_blast_db_vector,
             vsearch_filter_6,
             vsearch_filter_7,
@@ -726,8 +600,7 @@ class mt_pipe_commands:
             move_orphans,
             move_pair_1,
             move_pair_2
-
-        ]
+            ]
 
         return COMMANDS_Pre
 
@@ -767,7 +640,7 @@ class mt_pipe_commands:
             file_splitter_orphans,
             file_splitter_pair_1,
             file_splitter_pair_2
-        ]
+            ]
 
         return COMMANDS_rRNA_prep
 
@@ -800,8 +673,6 @@ class mt_pipe_commands:
         convert_fastq_to_fasta += " --fastq_filter " + fastq_in
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str
         convert_fastq_to_fasta += " --fastaout " + fasta_io
-        #print("converting", fastq_in )
-        #print("placing in", fasta_io )
 
         infernal_command = ">&2 echo running infernal on " + category + " split file | "
         infernal_command += self.tool_path_obj.Infernal
@@ -822,7 +693,7 @@ class mt_pipe_commands:
             convert_fastq_to_fasta,
             infernal_command,
             rRNA_filtration
-        ]
+            ]
         return COMMANDS_infernal
 
     def create_rRNA_filter_post_command(self, stage_name):
@@ -889,7 +760,7 @@ class mt_pipe_commands:
             cat_pair_2_rRNA,
             orphan_mRNA_filter,
             orphan_rRNA_filter
-        ]
+            ]
 
         return COMMANDS_rRNA_post
 
@@ -959,12 +830,12 @@ class mt_pipe_commands:
 
 
         COMMANDS_Combine = [
-        repop_orphans,
-        repop_pair_1,
-        repop_pair_2,
-        orphan_repop_filter
+            repop_orphans,
+            repop_pair_1,
+            repop_pair_2,
+            orphan_repop_filter
+            ]
 
-        ]
         return COMMANDS_Combine
 
     def create_assemble_contigs_command(self, stage_name, dependency_stage_name):
@@ -1072,35 +943,23 @@ class mt_pipe_commands:
         sort_paired += final_folder + "pair_2.fastq" + " "
         sort_paired += final_folder + "pair_2_sorted.fastq"
 
-        """
-        contig_merge = ">&2 echo Contig merge | "
-        contig_merge += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_contigs + " " 
-        contig_merge += self.Input_File1 + "_all_mRNA.fastq" + " " 
-        contig_merge += self.Input_File2 + "_all_mRNA.fastq" + " " 
-        contig_merge += self.Input_Filepath + "_all_mRNA_unpaired.fastq" + " " 
-        contig_merge += self.Input_Filepath + "_contig_paired.sam" + " " 
-        contig_merge += self.Input_Filepath + "_contig_unpaired.sam" + " " 
-        contig_merge += self.Input_Filepath + "_contig_map.tsv"
-        """
         COMMANDS_Assemble = [
-                        #"mkdir -p " + os.path.join(self.Input_Path, os.path.splitext(self.Input_FName)[0]) + "_SpadesOut",
-                        spades,
-                        spades_rename,
-                        bwa_index,
-                        bwa_pair_1_contigs,
-                        bwa_pair_2_contigs,
-                        bwa_orphans_contigs,
-                        sam_trimmer_orphans,
-                        sam_trimmer_pair_1,
-                        sam_trimmer_pair_2,
-                        contig_duplicate_remover,
-                        map_read_contig_v2,
-                        move_contigs,
-                        #bwa_unpaired_contigs#,
-                        #contig_merge
-                        orphan_assembly_filter,
-                        sort_paired
-                        ]
+            spades,
+            spades_rename,
+            bwa_index,
+            bwa_pair_1_contigs,
+            bwa_pair_2_contigs,
+            bwa_orphans_contigs,
+            sam_trimmer_orphans,
+            sam_trimmer_pair_1,
+            sam_trimmer_pair_2,
+            contig_duplicate_remover,
+            map_read_contig_v2,
+            move_contigs,
+            orphan_assembly_filter,
+            sort_paired
+            ]
+
         return COMMANDS_Assemble
         
     def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
@@ -1168,7 +1027,8 @@ class mt_pipe_commands:
         COMMANDS_Annotate_BWA = [
             map_read_bwa,
             move_contig_map
-        ]
+            ]
+
         return COMMANDS_Annotate_BWA
 
     def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, fasta):
@@ -1243,9 +1103,10 @@ class mt_pipe_commands:
 
 
         COMMANDS_Annotate_BLAT_Post = [
-                        blat_pp,
-                        move_contig_map
-                        ]
+            blat_pp,
+            move_contig_map
+            ]
+
         return COMMANDS_Annotate_BLAT_Post
 
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
@@ -1260,14 +1121,7 @@ class mt_pipe_commands:
         self.make_folder(diamond_folder)
         self.make_folder(section_folder)
         self.make_folder(section_temp_folder)
-        
-        #COMMANDS_Annotate_Diamond = []
-        #for j in range(0, 4):
-        #    for i in range(1, count+1):
-        #tag = "_dmnd_tmp_" + str(count)
-        
-        #Diamond_command_list = []
-        #"mkdir -p " + os.path.splitext(self.Input_FName)[0] + tag,
+
         diamond_annotate = ">&2 echo gene annotate DIAMOND " + section +  " | "
         diamond_annotate += self.tool_path_obj.DIAMOND 
         diamond_annotate += " blastx -p " + self.Threads_str 
@@ -1275,14 +1129,12 @@ class mt_pipe_commands:
         diamond_annotate += " -q " + dep_loc + section + ".fasta" 
         diamond_annotate += " -o " +  diamond_folder + section + ".dmdout" 
         diamond_annotate += " -f 6 -t " + section_temp_folder
-        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"            
-                
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"
          
         return [diamond_annotate]
         
     def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name):    
         # the command just calls the merger program
-
         subfolder = os.getcwd() + "/" + stage_name + "/"
         data_folder = subfolder + "data/"
         dep_loc_0 = os.getcwd() + "/" + dependency_0_stage_name + "/data/final_results/" #implied to be blat pp
@@ -1294,30 +1146,31 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
 
         diamond_pp = ">&2 echo DIAMOND post process | "
-        diamond_pp += self.tool_path_obj.Python         + " " + self.tool_path_obj.Map_reads_prot_DMND + " "
-        diamond_pp += self.tool_path_obj.Prot_DB_plain  + " "                                                   #IN
-        diamond_pp += dep_loc_0                         + "contig_map.tsv" + " "                                #IN
-        diamond_pp += dep_loc_0                         + "gene_map.tsv" + " "                                  #IN
-        diamond_pp += final_folder                      + "gene_map.tsv" + " "                                  #OUT
-        diamond_pp += dep_loc_0                         + "genes.fna" + " "                                     #IN
-        diamond_pp += final_folder                      + "proteins.faa" + " "                                  #OUT
-        diamond_pp += dep_loc_0                         + "contigs.fasta" + " "                                 #IN
-        diamond_pp += diamond_folder                    + "contigs.dmdout" + " "                                #IN
-        diamond_pp += final_folder                      + "contigs.fasta" + " "                                 #OUT
-        diamond_pp += dep_loc_0                         + "orphans.fasta" + " "                                 #IN
-        diamond_pp += diamond_folder                    + "orphans.dmdout" + " "                                #IN
-        diamond_pp += final_folder                      + "orphans.fasta" + " "                                 #OUT
-        diamond_pp += dep_loc_0                         + "pair_1.fasta" + " "                                  #IN
-        diamond_pp += diamond_folder                    + "pair_1.dmdout" + " "                                 #IN
-        diamond_pp += final_folder                      + "pair_1.fasta" + " "                                  #OUT
-        diamond_pp += dep_loc_0                         + "pair_2.fasta" + " "                                  #IN
-        diamond_pp += diamond_folder                    + "pair_2.dmdout" + " "                                 #IN
-        diamond_pp += final_folder                      + "pair_2.fasta"                                        #OUT
+        diamond_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_prot_DMND + " "
+        diamond_pp += self.tool_path_obj.Prot_DB + " " #IN
+        diamond_pp += dep_loc_0 + "contig_map.tsv" + " " #IN
+        diamond_pp += dep_loc_0 + "gene_map.tsv" + " " #IN
+        diamond_pp += final_folder + "gene_map.tsv" + " " #OUT
+        diamond_pp += dep_loc_0 + "genes.fna" + " " #IN
+        diamond_pp += final_folder + "proteins.faa" + " " #OUT
+        diamond_pp += dep_loc_0 + "contigs.fasta" + " " #IN
+        diamond_pp += diamond_folder + "contigs.dmdout" + " " #IN
+        diamond_pp += final_folder + "contigs.fasta" + " " #OUT
+        diamond_pp += dep_loc_0 + "orphans.fasta" + " " #IN
+        diamond_pp += diamond_folder + "orphans.dmdout" + " " #IN
+        diamond_pp += final_folder + "orphans.fasta" + " " #OUT
+        diamond_pp += dep_loc_0 + "pair_1.fasta" + " " #IN
+        diamond_pp += diamond_folder + "pair_1.dmdout" + " " #IN
+        diamond_pp += final_folder + "pair_1.fasta" + " " #OUT
+        diamond_pp += dep_loc_0 + "pair_2.fasta" + " " #IN
+        diamond_pp += diamond_folder + "pair_2.dmdout" + " " #IN
+        diamond_pp += final_folder + "pair_2.fasta" #OUT
 
 
         COMMANDS_Annotate_Diamond_Post = [
-        diamond_pp
-        ]
+            diamond_pp
+            ]
+
         return COMMANDS_Annotate_Diamond_Post
 
     def create_taxonomic_annotation_command(self, current_stage_name, assemble_contigs_stage, diamond_stage):
@@ -1428,25 +1281,6 @@ class mt_pipe_commands:
         awk_cleanup += wevote_folder + "wevote_WEVOTE_Details.txt"
         awk_cleanup += " > " + final_folder + "taxonomic_classifications.tsv"
 
-        #taxid_to_english = ">&2 echo Constrain classification | "
-        #taxid_to_english += self.tool_path_obj.Python + " " + self.tool_path_obj.Constrain_classification + " "
-        #taxid_to_english += "family" + " "
-        #taxid_to_english += self.Input_Filepath + "_WEVOTEOut.tsv" + " "
-        #taxid_to_english += self.tool_path_obj.Nodes + " "
-        #taxid_to_english += self.tool_path_obj.Names + " "
-        #taxid_to_english += self.Input_Filepath + "_WEVOTEOut_family.tsv"
-
-        #kaiju_to_krona = ">&2 echo kaiju to krona | "
-        #kaiju_to_krona += self.tool_path_obj.Kaiju2krona
-        #kaiju_to_krona += " -t " + self.tool_path_obj.nodes
-        #kaiju_to_krona += " -n " + self.tool_path_obj.names
-        #kaiju_to_krona += " -i " + self.Input_Filepath + "_WEVOTEOut_family.tsv"
-        #kaiju_to_krona += " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt"
-        
-        #awk_cleanup_krona = "awk -F \'\\t\' \'{OFS=\"\\t\";$2=\"\";$3=\"\";print}\' " + self.Input_Filepath + "_WEVOTEOut_family_Krona.txt" + " > " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
-        
-        #kt_import_text_cleanup = self.tool_path_obj.ktImportText + " -o " + self.Input_Filepath + "_WEVOTEOut_family_Krona.html" + " " + self.Input_Filepath + "_WEVOTEOut_family_Krona.tsv"
-
         COMMANDS_Classify = [
             get_taxa_from_gene,
             kaiju_on_contigs,
@@ -1459,11 +1293,8 @@ class mt_pipe_commands:
             wevote_combine,
             wevote_call,
             awk_cleanup
-            #taxid_to_english,
-            #kaiju_to_krona,
-            #awk_cleanup_krona,
-            #kt_import_text_cleanup
             ]
+
         return COMMANDS_Classify 
 
     def create_EC_DETECT_prep(self, current_stage_name, diamond_stage, file_split_count):
@@ -1489,6 +1320,7 @@ class mt_pipe_commands:
         COMMANDS_DETECT_prep = [
             file_splitter
             ]
+
         return COMMANDS_DETECT_prep
 
     def create_EC_DETECT_command(self, current_stage_name, prot_name):
@@ -1612,6 +1444,7 @@ class mt_pipe_commands:
         COMMANDS_Network = [
             network_generation
             ]
+
         return COMMANDS_Network
 
     def create_visualization_command(self, current_stage_name, network_stage):
@@ -1638,4 +1471,5 @@ class mt_pipe_commands:
             chart_generation,
             final_chart
             ]
+
         return COMMANDS_visualization
