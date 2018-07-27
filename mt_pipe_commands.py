@@ -1,74 +1,71 @@
-#The functions here generate the pipeline commands.
-#Each command module is made up of sub stages that are used to get the final result.
+# The functions here generate the pipeline commands.
+# Each command module is made up of sub stages that are used to get the final result.
 
 import os
-import sys
+import os.path
 import mt_pipe_paths as mpp
 import subprocess as sp
 
+
 class mt_pipe_commands:
-    #--------------------------------------------------------------------
+    # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Config_path, Quality_score = 33, Thread_count = 8, sequence_path_1 = None, sequence_path_2 = None, sequence_signle = None):
+    def __init__(self, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_signle=None):
         # path to the genome sequence file
-        Input_File = os.getcwd()
-
-        if not(sequence_signle is None):
+        if sequence_signle is not None:
             self.sequence_signle = sequence_signle
             print("Reads:", self.sequence_signle)
 
-        if not(sequence_path_1 is None):
+        if sequence_path_1 is not None:
             self.sequence_path_1 = sequence_path_1
             print("Forward Reads:", self.sequence_path_1)
 
-        if not(sequence_path_2 is None):
+        if sequence_path_2 is not None:
             self.sequence_path_2 = sequence_path_2
             print("Reverse Reads:", self.sequence_path_2)
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
-        
+
         self.Qual_str = str(Quality_score)
-        self.Input_Path = os.path.dirname(Input_File)
-        self.Threads_str= str(Thread_count)
-        
-        print("input filepath:", Input_File)
-    
-    #-----------------------------------------------------------
+        self.Input_Path = os.getcwd()
+        self.Threads_str = str(Thread_count)
+
+        print("input filepath:", self.Input_Path)
+
+    # -----------------------------------------------------------
     # support functions
-    #def make_stage_dir(self, stage_name):
-    #    if not(os.path.exists(self.)):
     def make_folder(self, folder_path):
-        if not(os.path.exists(folder_path)):
+        if not (os.path.exists(folder_path)):
             os.makedirs(folder_path)
 
-    def create_and_launch(self, job_name, command_list, run_job = False, inner_name = None, mode ="low", dependency_list = None, work_in_background = False):
-        #create the pbs job, and launch items
-        #job name: string tag for export file name
-        #command list:  list of command statements for writing
-        #mode: selection of which pbs template to use: default -> low memory
-        #dependency_list: if not empty, will append wait args to sbatch subprocess call. it's polymorphic
-        #returns back the job ID given from sbatch
+    def create_and_launch(self, job_name, command_list, run_job=False, inner_name=None, work_in_background=False):
+        # create the pbs job, and launch items
+        # job name: string tag for export file name
+        # command list:  list of command statements for writing
+        # mode: selection of which pbs template to use: default -> low memory
+        # dependency_list: if not empty, will append wait args to sbatch subprocess call. it's polymorphic
+        # returns back the job ID given from sbatch
 
-        #docker mode: single cpu
+        # docker mode: single cpu
         # no ID, no sbatch.  just run the command
-        shell_script_full_path = os.getcwd() + "/" + job_name +"/" + job_name
-        if not inner_name is None:
-            shell_script_full_path = os.getcwd() + "/" + job_name + "/" + inner_name
-        with open(shell_script_full_path + ".sh", "w+") as PBS_script_out:
+        shell_script_full_path = os.path.join(self.Input_Path, job_name, job_name + ".sh")
+        if inner_name is not None:
+            shell_script_full_path = os.path.join(self.Input_Path, job_name, inner_name + ".sh")
+        with open(shell_script_full_path, "w+") as PBS_script_out:
             for item in command_list:
                 PBS_script_out.write(item + "\n")
             PBS_script_out.close()
         if run_job:
             if not work_in_background:
                 try:
-                    sp.check_output(["sh", shell_script_full_path + ".sh"])
+                    sp.check_output(["sh", shell_script_full_path])
                 except sp.CalledProcessError as e:
                     return_code = e.returncode
                     if return_code != 1:
                         raise
             else:
                 try:
-                    process_id = sp.Popen(["sh", shell_script_full_path + ".sh"])
+                    process_id = sp.Popen(["sh", shell_script_full_path])
                     return process_id
                 except sp.CalledProcessError as e:
                     return_code = e.returncode
@@ -78,43 +75,45 @@ class mt_pipe_commands:
             print("not running job.  run_job set to False")
 
     def create_pre_double_command(self, stage_name):
-        #why do we leave all the interim files intact?
-        #because science needs repeatable data, and the process needs to be able to start at any point
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
+        # why do we leave all the interim files intact?
+        # because science needs repeatable data, and the process needs to be able to start at any point
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
         if not (os.path.exists(subfolder)):
             os.makedirs(subfolder)
-        if not(os.path.exists(data_folder)):
+        if not (os.path.exists(data_folder)):
             os.makedirs(data_folder)
 
-        sorted_raw_folder = data_folder + "0_sorted_raw_input/"
+        sorted_raw_folder = os.path.join(data_folder, "0_sorted_raw_input")
         self.make_folder(sorted_raw_folder)
 
         sort_pair_1 = ">&2 echo Sorting pair 1 | "
-        sort_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        sort_pair_1 += self.sequence_path_1
-        sort_pair_1 += " " + sorted_raw_folder + "pair_1_sorted.fastq"
+        sort_pair_1 += self.tool_path_obj.Python + " "
+        sort_pair_1 += self.tool_path_obj.sort_reads + " "
+        sort_pair_1 += self.sequence_path_1 + " "
+        sort_pair_1 += os.path.join(sorted_raw_folder, "pair_1_sorted.fastq")
 
         sort_pair_2 = ">&2 echo Sorting pair 2 | "
-        sort_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        sort_pair_2 += self.sequence_path_2
-        sort_pair_2 += " " + sorted_raw_folder + "pair_2_sorted.fastq"
+        sort_pair_2 += self.tool_path_obj.Python + " "
+        sort_pair_2 += self.tool_path_obj.sort_reads + " "
+        sort_pair_2 += self.sequence_path_2 + " "
+        sort_pair_2 += os.path.join(sorted_raw_folder, "pair_2_sorted.fastq")
 
         adapter_folder = data_folder + "1_adapter_removal/"
         self.make_folder(adapter_folder)
         adapter_removal_line = ">&2 echo Removing adapters | "
         adapter_removal_line += self.tool_path_obj.AdapterRemoval
-        adapter_removal_line += " --file1 " + sorted_raw_folder + "pair_1_sorted.fastq"
-        adapter_removal_line += " --file2 " + sorted_raw_folder + "pair_2_sorted.fastq"
+        adapter_removal_line += " --file1 " + os.path.join(sorted_raw_folder, "pair_1_sorted.fastq")
+        adapter_removal_line += " --file2 " + os.path.join(sorted_raw_folder, "pair_2_sorted.fastq")
         adapter_removal_line += " --qualitybase " + str(self.Qual_str)
         adapter_removal_line += " --threads " + self.Threads_str
         adapter_removal_line += " --minlength " + "30"
         adapter_removal_line += " --basename " + adapter_folder
         adapter_removal_line += "_AdapterRemoval"
         adapter_removal_line += " --trimqualities "
-        adapter_removal_line += " --output1 " + adapter_folder + "pair_1_adptr_rem.fastq"
-        adapter_removal_line += " --output2 " + adapter_folder + "pair_2_adptr_rem.fastq"
-        adapter_removal_line += " --singleton " + adapter_folder + "singletons_adptr_rem.fastq"
+        adapter_removal_line += " --output1 " + os.path.join(adapter_folder, "pair_1_adptr_rem.fastq")
+        adapter_removal_line += " --output2 " + os.path.join(adapter_folder, "pair_2_adptr_rem.fastq")
+        adapter_removal_line += " --singleton " + os.path.join(adapter_folder, "singletons_adptr_rem.fastq")
 
         # tries to merge the cleaned pairs
         # rejects get sent out
@@ -122,33 +121,32 @@ class mt_pipe_commands:
         self.make_folder(vsearch_merge_folder)
         vsearch_merge = ">&2 echo " + "Vsearch Merge pairs | "
         vsearch_merge += self.tool_path_obj.vsearch
-        vsearch_merge += " --fastq_mergepairs " + adapter_folder + "pair_1_adptr_rem.fastq"
-        vsearch_merge += " --reverse " + adapter_folder + "pair_2_adptr_rem.fastq"
+        vsearch_merge += " --fastq_mergepairs " + os.path.join(adapter_folder, "pair_1_adptr_rem.fastq")
+        vsearch_merge += " --reverse " + os.path.join(adapter_folder, "pair_2_adptr_rem.fastq")
         vsearch_merge += " --fastq_ascii " + str(self.Qual_str)
-        vsearch_merge += " --fastqout " + vsearch_merge_folder + "merge_success.fastq"
-        vsearch_merge += " --fastqout_notmerged_fwd " + vsearch_merge_folder + "pair_1_merge_reject.fastq"
-        vsearch_merge += " --fastqout_notmerged_rev " + vsearch_merge_folder + "pair_2_merge_reject.fastq"
+        vsearch_merge += " --fastqout " + os.path.join(vsearch_merge_folder, "merge_success.fastq")
+        vsearch_merge += " --fastqout_notmerged_fwd " + os.path.join(vsearch_merge_folder, "pair_1_merge_reject.fastq")
+        vsearch_merge += " --fastqout_notmerged_rev " + os.path.join(vsearch_merge_folder, "pair_2_merge_reject.fastq")
 
         # concatenate the merge overlaps with the singletons
         cat_glue = ">&2 echo concatenating orphans | "
         cat_glue += "cat "
-        cat_glue += vsearch_merge_folder + "merge_success.fastq "
-        cat_glue += adapter_folder + "singletons_adptr_rem.fastq"
-        cat_glue += " > " + vsearch_merge_folder + "orphans.fastq"
+        cat_glue += os.path.join(vsearch_merge_folder, "merge_success.fastq") + " "
+        cat_glue += os.path.join(adapter_folder, "singletons_adptr_rem.fastq")
+        cat_glue += " > " + os.path.join(vsearch_merge_folder, "orphans.fastq")
 
-
-        #Filter out low-quality reads
-        #start with the singles / merged sections
+        # Filter out low-quality reads
+        # start with the singles / merged sections
         vsearch_filter_folder = data_folder + "3_ar_quality_filter/"
         self.make_folder(vsearch_filter_folder)
         vsearch_filter_0 = ">&2 echo low-quality filter on orphans | "
         vsearch_filter_0 += self.tool_path_obj.vsearch
-        vsearch_filter_0 += " --fastq_filter " + vsearch_merge_folder + "orphans.fastq"
+        vsearch_filter_0 += " --fastq_filter " + os.path.join(vsearch_merge_folder, "orphans.fastq")
         vsearch_filter_0 += " --fastq_ascii " + self.Qual_str
         vsearch_filter_0 += " --fastq_maxee " + "2.0"
-        vsearch_filter_0 += " --fastqout " + vsearch_filter_folder + "orphans_hq.fastq"
+        vsearch_filter_0 += " --fastqout " + os.path.join(vsearch_filter_folder, "orphans_hq.fastq")
 
-        #then move onto the standalones in pair 1
+        # then move onto the standalones in pair 1
         vsearch_filter_1 = ">&2 echo low-quality filter on pair 1 | "
         vsearch_filter_1 += self.tool_path_obj.vsearch
         vsearch_filter_1 += " --fastq_filter " + vsearch_merge_folder + "pair_1_merge_reject.fastq"
@@ -163,7 +161,7 @@ class mt_pipe_commands:
         vsearch_filter_2 += " --fastq_maxee " + "2.0"
         vsearch_filter_2 += " --fastqout " + vsearch_filter_folder + "pair_2_hq.fastq"
 
-        #redistribute data into orphans, or paired-reads
+        # redistribute data into orphans, or paired-reads
         orphan_read_filter_folder = data_folder + "4_orphan_read_filter/"
         self.make_folder(orphan_read_filter_folder)
         orphan_read_filter = ">&2 echo moving newly orphaned hq reads | "
@@ -176,7 +174,7 @@ class mt_pipe_commands:
         orphan_read_filter += orphan_read_filter_folder + "pair_2_match.fastq "
         orphan_read_filter += orphan_read_filter_folder + "orphans.fastq"
 
-        #remove duplicates (to shrink the data size)
+        # remove duplicates (to shrink the data size)
         cdhit_folder = data_folder + "5_remove_duplicates/"
         self.make_folder(cdhit_folder)
         cdhit_orphans = ">&2 echo removing orphan duplicates | "
@@ -184,7 +182,7 @@ class mt_pipe_commands:
         cdhit_orphans += orphan_read_filter_folder + "orphans.fastq"
         cdhit_orphans += " -o " + cdhit_folder + "orphans_unique.fastq"
 
-        #remove duplicates in the pairs
+        # remove duplicates in the pairs
         cdhit_pair_1 = ">&2 echo remove duplicates from pair 1 | "
         cdhit_pair_1 += self.tool_path_obj.cdhit_dup
         cdhit_pair_1 += " -i " + orphan_read_filter_folder + "pair_1_match.fastq"
@@ -195,9 +193,9 @@ class mt_pipe_commands:
         cdhit_pair_2 += " -i " + orphan_read_filter_folder + "pair_2_match.fastq"
         cdhit_pair_2 += " -o " + cdhit_folder + "pair_2_unique.fastq"
 
-        #move_paired_cluster = "mv " + self.Input_File1 + "_paired_unique.fastq.clstr" + " " + self.Input_Filepath + "_paired.clstr"
-        #NOTE: we overwrite host contaminants here. why? because the preprocess folder is created
-        #in this function only
+        # move_paired_cluster = "mv " + self.Input_File1 + "_paired_unique.fastq.clstr" + " " + self.Input_Filepath + "_paired.clstr"
+        # NOTE: we overwrite host contaminants here. why? because the preprocess folder is created
+        # in this function only
         host_removal_folder = data_folder + "6_remove_host/"
         self.make_folder(host_removal_folder)
 
@@ -205,14 +203,14 @@ class mt_pipe_commands:
         copy_host = ">&2 echo Copy the host file over | "
         copy_host += "cp " + self.tool_path_obj.Host + " " + Host_Contaminants
 
-        #craft a BWA index for the host sequences
+        # craft a BWA index for the host sequences
         bwa_hr_prep = ">&2 echo make host contaminants index for BWA | "
         bwa_hr_prep += self.tool_path_obj.BWA + " index -a bwtsw " + Host_Contaminants
 
         samtools_hr_prep = ">&2 echo SAMTOOLS host contaminant prep | "
         samtools_hr_prep += self.tool_path_obj.SAMTOOLS + " faidx " + Host_Contaminants
 
-        #host removal on unique orphans
+        # host removal on unique orphans
         bwa_hr_orphans = ">&2 echo BWA host remove on orphans | "
         bwa_hr_orphans += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_orphans += self.Threads_str + " "
@@ -220,24 +218,24 @@ class mt_pipe_commands:
         bwa_hr_orphans += cdhit_folder + "orphans_unique.fastq"
         bwa_hr_orphans += " > " + host_removal_folder + "orphans_no_host.sam"
 
-        #annoying type conversion pt 1
+        # annoying type conversion pt 1
         samtools_hr_orphans_sam_to_bam = ">&2 echo convert orphans hr files pt1 | "
         samtools_hr_orphans_sam_to_bam += self.tool_path_obj.SAMTOOLS
         samtools_hr_orphans_sam_to_bam += " view -bS " + host_removal_folder + "orphans_no_host.sam"
         samtools_hr_orphans_sam_to_bam += " > " + host_removal_folder + "orphans_no_host.bam"
-        #annoying type conversion pt 2
+        # annoying type conversion pt 2
         samtools_no_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt2 | "
         samtools_no_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS
         samtools_no_host_orphans_bam_to_fastq += " fastq -n -f 4" + " -0 " + host_removal_folder + "orphans_no_host.fastq" + " "
         samtools_no_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
 
-        #apparently, we're to keep the host separation
+        # apparently, we're to keep the host separation
         samtools_host_orphans_bam_to_fastq = ">&2 echo convert orphans hr files pt3 | "
         samtools_host_orphans_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
         samtools_host_orphans_bam_to_fastq += " -0 " + host_removal_folder + "orphans_host_only.fastq" + " "
         samtools_host_orphans_bam_to_fastq += host_removal_folder + "orphans_no_host.bam"
 
-        #host-remove the rest
+        # host-remove the rest
         bwa_hr_pair = ">&2 echo bwa pair host remove | "
         bwa_hr_pair += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_pair += self.Threads_str + " "
@@ -254,24 +252,22 @@ class mt_pipe_commands:
         bwa_hr_pair_1 += cdhit_folder + "pair_1_unique.fastq"
         bwa_hr_pair_1 += " > " + host_removal_folder + "pair_1_no_host.sam"
 
-
-        #separating bwa results back into paired reads
+        # separating bwa results back into paired reads
         samtools_host_pair_1_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
         samtools_host_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_1_no_host.sam"
         samtools_host_pair_1_sam_to_bam += " > " + host_removal_folder + "pair_1_no_host.bam"
 
-        #stuff that doesn't match with the host
+        # stuff that doesn't match with the host
         samtools_no_host_pair_1_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
         samtools_no_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_host_pair_1_bam_to_fastq += " -0 " + host_removal_folder + "pair_1_no_host.fastq" # out
-        samtools_no_host_pair_1_bam_to_fastq += " " + host_removal_folder + "pair_1_no_host.bam" #in
+        samtools_no_host_pair_1_bam_to_fastq += " -0 " + host_removal_folder + "pair_1_no_host.fastq"  # out
+        samtools_no_host_pair_1_bam_to_fastq += " " + host_removal_folder + "pair_1_no_host.bam"  # in
 
-        #stuff that matches with the host (why keep it?  request from john)
+        # stuff that matches with the host (why keep it?  request from john)
         samtools_host_pair_1_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
         samtools_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
         samtools_host_pair_1_bam_to_fastq += " -0 " + host_removal_folder + "pair_1_host_only.fastq"
         samtools_host_pair_1_bam_to_fastq += " " + host_removal_folder + "pair_1_no_host.bam"
-
 
         # bwa hr pair 1 only
         bwa_hr_pair_2 = ">&2 echo bwa pair host remove | "
@@ -281,24 +277,24 @@ class mt_pipe_commands:
         bwa_hr_pair_2 += cdhit_folder + "pair_2_unique.fastq"
         bwa_hr_pair_2 += " > " + host_removal_folder + "pair_2_no_host.sam"
 
-        #separating bwa results back into paired reads
+        # separating bwa results back into paired reads
         samtools_host_pair_2_sam_to_bam = ">&2 echo convert pair hr files pt1 | "
         samtools_host_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + host_removal_folder + "pair_2_no_host.sam"
         samtools_host_pair_2_sam_to_bam += " > " + host_removal_folder + "pair_2_no_host.bam"
 
-        #stuff that doesn't match with the host
+        # stuff that doesn't match with the host
         samtools_no_host_pair_2_bam_to_fastq = ">&2 echo convert pair hr files pt2 | "
         samtools_no_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_no_host.fastq" # out
-        samtools_no_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam" #in
+        samtools_no_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_no_host.fastq"  # out
+        samtools_no_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam"  # in
 
-        #stuff that matches with the host (why keep it?  request from john)
+        # stuff that matches with the host (why keep it?  request from john)
         samtools_host_pair_2_bam_to_fastq = ">&2 echo convert pair hr files pt3 | "
         samtools_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
         samtools_host_pair_2_bam_to_fastq += " -0 " + host_removal_folder + "pair_2_host_only.fastq"
         samtools_host_pair_2_bam_to_fastq += " " + host_removal_folder + "pair_2_no_host.bam"
 
-        #blat prep
+        # blat prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
         make_blast_db_host += self.tool_path_obj.Makeblastdb + " -in " + Host_Contaminants + " -dbtype nucl"
 
@@ -346,10 +342,10 @@ class mt_pipe_commands:
         self.make_folder(blat_hr_folder)
         hr_orphans = ">&2 echo BLAT contaminant orphans | "
         hr_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        hr_orphans += host_removal_folder + "orphans_no_host.fastq" + " " # in
-        hr_orphans += host_removal_folder + "orphans_no_host.blatout" + " " #in
-        hr_orphans += blat_hr_folder + "orphans_no_host.fastq" + " " #out
-        hr_orphans += blat_hr_folder + "orphans_host_only.fastq" #out
+        hr_orphans += host_removal_folder + "orphans_no_host.fastq" + " "  # in
+        hr_orphans += host_removal_folder + "orphans_no_host.blatout" + " "  # in
+        hr_orphans += blat_hr_folder + "orphans_no_host.fastq" + " "  # out
+        hr_orphans += blat_hr_folder + "orphans_host_only.fastq"  # out
 
         hr_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
         hr_pair_1 += self.tool_path_obj.Python + " "
@@ -366,7 +362,7 @@ class mt_pipe_commands:
         hr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq" + " "
         hr_pair_2 += blat_hr_folder + "pair_2_host_only.fastq"
 
-        #-----------------------------
+        # -----------------------------
         # Vector removal
         # vectors are artifacts that came from the read-gathering
         vector_removal_folder = data_folder + "8_vector_removal/"
@@ -415,7 +411,6 @@ class mt_pipe_commands:
         bwa_vr_pair_2 += blat_hr_folder + "pair_2_no_host.fastq "
         bwa_vr_pair_2 += " > " + vector_removal_folder + "pair_2_no_vectors.sam"
 
-
         samtools_vr_pair_1_sam_to_bam = ">&2 echo samtools vr pair pt 1 | "
         samtools_vr_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS "
         samtools_vr_pair_1_sam_to_bam += vector_removal_folder + "pair_1_no_vectors.sam"
@@ -445,8 +440,6 @@ class mt_pipe_commands:
         samtools_vector_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
         samtools_vector_pair_2_bam_to_fastq += " -0 " + vector_removal_folder + "pair_2_vectors_only.fastq"
         samtools_vector_pair_2_bam_to_fastq += " " + vector_removal_folder + "pair_2_no_vectors.bam"
-
-
 
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
         make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + Vector_Contaminants + " -dbtype nucl"
@@ -495,10 +488,10 @@ class mt_pipe_commands:
         self.make_folder(blat_containment_vector_folder)
         blat_containment_vector_orphans = ">&2 echo BLAT contaminant orphans | "
         blat_containment_vector_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.fastq" + " " #in
-        blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.blatout" + " " #in
-        blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_no_vectors.fastq" + " " #out
-        blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_vectors_only.fastq" #out
+        blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.fastq" + " "  # in
+        blat_containment_vector_orphans += vector_removal_folder + "orphans_no_vectors.blatout" + " "  # in
+        blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_no_vectors.fastq" + " "  # out
+        blat_containment_vector_orphans += blat_containment_vector_folder + "orphans_vectors_only.fastq"  # out
 
         blat_containment_vector_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
         blat_containment_vector_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
@@ -514,9 +507,9 @@ class mt_pipe_commands:
         blat_containment_vector_pair_2 += blat_containment_vector_folder + "pair_2_no_vectors.fastq" + " "
         blat_containment_vector_pair_2 += blat_containment_vector_folder + "pair_2_vectors_only.fastq"
 
-        #----final split
-        #----------------------------------
-        #our convention dictates that all final results must be placed inside this folder.
+        # ----final split
+        # ----------------------------------
+        # our convention dictates that all final results must be placed inside this folder.
         final_folder = data_folder + "final_results/"
         self.make_folder(final_folder)
 
@@ -529,13 +522,11 @@ class mt_pipe_commands:
         move_pair_2 = "mv " + blat_containment_vector_folder + "pair_2_no_vectors.fastq "
         move_pair_2 += final_folder
 
-
-
         COMMANDS_Pre = [
-            #make the pairs align, by sorting
+            # make the pairs align, by sorting
             sort_pair_1,
             sort_pair_2,
-            #remove adapters
+            # remove adapters
             adapter_removal_line,
             vsearch_merge,
             cat_glue,
@@ -548,7 +539,7 @@ class mt_pipe_commands:
             cdhit_pair_2,
             copy_host,
             bwa_hr_prep,
-            #SAMTOOLS makes bam files
+            # SAMTOOLS makes bam files
             samtools_hr_prep,
             bwa_hr_orphans,
             samtools_hr_orphans_sam_to_bam,
@@ -600,15 +591,15 @@ class mt_pipe_commands:
             move_orphans,
             move_pair_1,
             move_pair_2
-            ]
+        ]
 
         return COMMANDS_Pre
 
     def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name):
-        #split data into mRNA and rRNA so we can focus on the mRNA for the remainder of the analysis steps
-        dep_loc = os.getcwd() + "/" + dependency_name + "/" + "data/final_results/"
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
+        # split data into mRNA and rRNA so we can focus on the mRNA for the remainder of the analysis steps
+        dep_loc = self.Input_Path + "/" + dependency_name + "/" + "data/final_results/"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
 
         orphan_split_folder = data_folder + "orphans/orphans_fastq/"
         pair_1_split_folder = data_folder + "pair_1/pair_1_fastq/"
@@ -635,23 +626,23 @@ class mt_pipe_commands:
         file_splitter_pair_2 += pair_2_split_folder + "pair_2 "
         file_splitter_pair_2 += str(file_split_count)
 
-
         COMMANDS_rRNA_prep = [
             file_splitter_orphans,
             file_splitter_pair_1,
             file_splitter_pair_2
-            ]
+        ]
 
         return COMMANDS_rRNA_prep
 
     def create_rRNA_filter_command(self, stage_name, category, segment_root_name):
-        #converts the fastq segments to fasta for infernal,
-        #then takes the fasta segments, filters out the rRNA
-        #then merges the split fastqs back together
-        #called by each split file
-        #category -> orphans, pair 1, pair 2
-        #stage_name -> "rRNA_Filter"
-        subfolder = os.getcwd() + "/" + stage_name + "/"
+        # converts the fastq segments to fasta for infernal,
+        # then takes the fasta segments, filters out the rRNA
+        # then merges the split fastqs back together
+        # called by each split file
+        # category -> orphans, pair 1, pair 2
+        # stage_name -> "rRNA_Filter"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
         data_folder = subfolder + "data/" + category + "/"
         infernal_out_folder = data_folder + category + "_infernal/"
         mRNA_folder = data_folder + category + "_mRNA/"
@@ -693,14 +684,14 @@ class mt_pipe_commands:
             convert_fastq_to_fasta,
             infernal_command,
             rRNA_filtration
-            ]
+        ]
         return COMMANDS_infernal
 
     def create_rRNA_filter_post_command(self, stage_name):
-        #rRNA filtration orphaned some reads in the pairs.  We need to refilter the orphans.
-        #Cat then refilter
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
+        # rRNA filtration orphaned some reads in the pairs.  We need to refilter the orphans.
+        # Cat then refilter
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
         pre_filter_folder = data_folder + "0_pre_orphans/"
         pre_filter_mRNA_folder = pre_filter_folder + "mRNA/"
         pre_filter_rRNA_folder = pre_filter_folder + "rRNA/"
@@ -750,7 +741,6 @@ class mt_pipe_commands:
         orphan_rRNA_filter += final_rRNA_folder + "pair_2.fastq "
         orphan_rRNA_filter += final_rRNA_folder + "orphans.fastq"
 
-
         COMMANDS_rRNA_post = [
             cat_orphans_mRNA,
             cat_orphans_rRNA,
@@ -760,49 +750,47 @@ class mt_pipe_commands:
             cat_pair_2_rRNA,
             orphan_mRNA_filter,
             orphan_rRNA_filter
-            ]
+        ]
 
         return COMMANDS_rRNA_post
 
     def create_repop_command(self, stage_name, preprocess_stage_name, dependency_stage_name):
-        #This stage reintroduces the duplicate reads into the data.  We need it to count towards things.
-        #Due to time, and hierarchical importance, we're leaving this stage alone.
-        #Leaving it alone in a tangled state
-        #But the issue is that by leaving it alone, we violate the design plan
-        #The fix? We have to detect if preprocess has been run.  If so, pull the missing data there
-        #if not,
-        #What has to happen here:
-        #-> detect if we've run the preprocess stage.
-        #-> if it's run, grab data
-        #-> if not, run our own custom preprocess up to what we need
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/" + "data/final_results/"
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
+        # This stage reintroduces the duplicate reads into the data.  We need it to count towards things.
+        # Due to time, and hierarchical importance, we're leaving this stage alone.
+        # Leaving it alone in a tangled state
+        # But the issue is that by leaving it alone, we violate the design plan
+        # The fix? We have to detect if preprocess has been run.  If so, pull the missing data there
+        # if not,
+        # What has to happen here:
+        # -> detect if we've run the preprocess stage.
+        # -> if it's run, grab data
+        # -> if not, run our own custom preprocess up to what we need
+        dep_loc = self.Input_Path + "/" + dependency_stage_name + "/" + "data/final_results/"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
         repop_folder = data_folder + "0_repop/"
-        final_folder = data_folder + "final_results/"
-        preprocess_subfolder = os.getcwd() + "/" + preprocess_stage_name + "/"
+        final_folder = os.path.join(data_folder, "final_results")
+        preprocess_subfolder = self.Input_Path + "/" + preprocess_stage_name + "/"
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(repop_folder)
         self.make_folder(final_folder)
 
-
-        #we ran a previous preprocess.  grab files
-        #need 3, 5(clstr only), and mRNA from the 2nd stage.
-        #for the mRNA, we don't really care if it is.  This stage is just supposed to add in the missing duplicates from something that was stripped.
+        # we ran a previous preprocess.  grab files
+        # need 3, 5(clstr only), and mRNA from the 2nd stage.
+        # for the mRNA, we don't really care if it is.  This stage is just supposed to add in the missing duplicates from something that was stripped.
 
         hq_path = preprocess_subfolder + "data/4_orphan_read_filter/"
         cluster_path = preprocess_subfolder + "data/5_remove_duplicates/"
 
         repop_orphans = ">&2 echo Duplication repopulate Orphans | "
         repop_orphans += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_orphans += hq_path + "orphans.fastq" + " "   #in -> way back when things were quality-filtered.
-                                                           #      step 2 in preprocess.  could still contain rRNA
-        repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "      #in -> rRNA filtration output
-        repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " " #in -> duplicates filter output
-        repop_orphans += repop_folder + "orphans.fastq"        #out
-
+        repop_orphans += hq_path + "orphans.fastq" + " "  # in -> way back when things were quality-filtered.
+        #      step 2 in preprocess.  could still contain rRNA
+        repop_orphans += dep_loc + "mRNA/orphans.fastq" + " "  # in -> rRNA filtration output
+        repop_orphans += cluster_path + "orphans_unique.fastq.clstr" + " "  # in -> duplicates filter output
+        repop_orphans += repop_folder + "orphans.fastq"  # out
 
         repop_pair_1 = ">&2 echo Duplication repopulate pair 1 | "
         repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
@@ -828,25 +816,25 @@ class mt_pipe_commands:
         orphan_repop_filter += final_folder + "pair_2.fastq "
         orphan_repop_filter += final_folder + "orphans.fastq"
 
-
         COMMANDS_Combine = [
             repop_orphans,
             repop_pair_1,
             repop_pair_2,
             orphan_repop_filter
-            ]
+        ]
 
         return COMMANDS_Combine
 
     def create_assemble_contigs_command(self, stage_name, dependency_stage_name):
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        dep_loc = self.Input_Path + "/" + dependency_stage_name + "/data/final_results/"
         spades_folder = data_folder + "0_spades/"
         bwa_folder = data_folder + "1_bwa_align/"
         sam_trimmer_folder = data_folder + "2_clean_sam/"
         mapped_reads_folder = data_folder + "3_mapped_reads/"
-        final_folder = data_folder + "final_results/"
+        final_folder = os.path.join(data_folder, "final_results")
+
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(spades_folder)
@@ -855,7 +843,7 @@ class mt_pipe_commands:
         self.make_folder(mapped_reads_folder)
         self.make_folder(final_folder)
 
-        #this assembles contigs
+        # this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
         spades += self.tool_path_obj.Python + " "
         spades += self.tool_path_obj.Spades + " --rna"
@@ -864,11 +852,11 @@ class mt_pipe_commands:
         spades += " -s " + dep_loc + "orphans.fastq"  # in_single (orphans)
         spades += " -o " + spades_folder  # out
 
-        spades_rename = "cp " + spades_folder + "transcripts.fasta" + " " + spades_folder + "contigs.fasta" # rename output
+        spades_rename = "cp " + spades_folder + "transcripts.fasta" + " " + spades_folder + "contigs.fasta"  # rename output
 
         bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + spades_folder + "contigs.fasta"
 
-        #calls BWA, then uses SAMTools to get a report
+        # calls BWA, then uses SAMTools to get a report
         bwa_pair_1_contigs = ">&2 echo BWA pair contigs | "
         bwa_pair_1_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
         bwa_pair_1_contigs += spades_folder + "contigs.fasta" + " "
@@ -958,17 +946,17 @@ class mt_pipe_commands:
             move_contigs,
             orphan_assembly_filter,
             sort_paired
-            ]
+        ]
 
         return COMMANDS_Assemble
-        
+
     def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
         # meant to be called multiple times: section -> contigs, orphans, pair_1, pair_2
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        dep_loc = self.Input_Path + "/" + dependency_stage_name + "/data/final_results/"
         bwa_folder = data_folder + "0_bwa/"
-        final_folder = data_folder + "final_results/"
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -980,68 +968,64 @@ class mt_pipe_commands:
         else:
             section_file = section + ".fastq"
         bwa_job = ">&2 echo BWA on " + section + " | "
-        bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " " 
-        bwa_job += self.tool_path_obj.DNA_DB + " " 
-        bwa_job += dep_loc + section_file + " | " 
+        bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
+        bwa_job += self.tool_path_obj.DNA_DB + " "
+        bwa_job += dep_loc + section_file + " | "
         bwa_job += self.tool_path_obj.SAMTOOLS + " view > " + bwa_folder + section + ".sam"
-        
-        
-        
+
         return [bwa_job]
-        
-    def create_BWA_pp_command(self, stage_name, dependency_stage_name):    
-        
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+
+    def create_BWA_pp_command(self, stage_name, dependency_stage_name):
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        dep_loc = self.Input_Path + "/" + dependency_stage_name + "/data/final_results/"
         bwa_folder = data_folder + "0_bwa/"
-        final_folder = data_folder + "final_results/"
-        
+        final_folder = os.path.join(data_folder, "final_results")
+
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(bwa_folder)
         self.make_folder(final_folder)
-        
+
         map_read_bwa = ">&2 echo map read bwa v2 | "
         map_read_bwa += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_gene_BWA + " "
-        map_read_bwa += self.tool_path_obj.DNA_DB + " "         #IN
-        map_read_bwa += dep_loc + "contig_map.tsv "             #IN
-        map_read_bwa += final_folder + "gene_map.tsv "          #OUT
-        map_read_bwa += dep_loc + "contigs.fasta "              #IN
-        map_read_bwa += bwa_folder + "contigs.sam "             #IN
-        map_read_bwa += final_folder + "contigs.fasta" + " "    #OUT
-        map_read_bwa += dep_loc + "orphans.fastq" + " "         #IN
-        map_read_bwa += bwa_folder + "orphans.sam" + " "        #IN
-        map_read_bwa += final_folder + "orphans.fasta" + " "    #OUT
-        map_read_bwa += dep_loc + "pair_1.fastq" + " "          #IN
-        map_read_bwa += bwa_folder + "pair_1.sam" + " "         #IN
-        map_read_bwa += final_folder + "pair_1.fasta" + " "     #OUT
-        map_read_bwa += dep_loc + "pair_2.fastq" + " "          #IN
-        map_read_bwa += bwa_folder + "pair_2.sam" + " "         #IN
-        map_read_bwa += final_folder + "pair_2.fasta"           #OUT
-        
+        map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
+        map_read_bwa += dep_loc + "contig_map.tsv "  # IN
+        map_read_bwa += final_folder + "gene_map.tsv "  # OUT
+        map_read_bwa += dep_loc + "contigs.fasta "  # IN
+        map_read_bwa += bwa_folder + "contigs.sam "  # IN
+        map_read_bwa += final_folder + "contigs.fasta" + " "  # OUT
+        map_read_bwa += dep_loc + "orphans.fastq" + " "  # IN
+        map_read_bwa += bwa_folder + "orphans.sam" + " "  # IN
+        map_read_bwa += final_folder + "orphans.fasta" + " "  # OUT
+        map_read_bwa += dep_loc + "pair_1.fastq" + " "  # IN
+        map_read_bwa += bwa_folder + "pair_1.sam" + " "  # IN
+        map_read_bwa += final_folder + "pair_1.fasta" + " "  # OUT
+        map_read_bwa += dep_loc + "pair_2.fastq" + " "  # IN
+        map_read_bwa += bwa_folder + "pair_2.sam" + " "  # IN
+        map_read_bwa += final_folder + "pair_2.fasta"  # OUT
+
         move_contig_map = ">&2 echo copy contig map | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
-
 
         COMMANDS_Annotate_BWA = [
             map_read_bwa,
             move_contig_map
-            ]
+        ]
 
         return COMMANDS_Annotate_BWA
 
     def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, fasta):
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        dep_loc = self.Input_Path + "/" + dependency_stage_name + "/data/final_results/"
         blat_folder = data_folder + "0_blat/"
-        
+
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_folder)
 
-        #blat_command = ">&2 echo BLAT annotation for " + section + " " + fasta +" | "
+        # blat_command = ">&2 echo BLAT annotation for " + section + " " + fasta +" | "
         blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
         blat_command += self.tool_path_obj.DNA_DB_Split + fasta + " "
         blat_command += dep_loc + section + ".fasta"
@@ -1052,11 +1036,11 @@ class mt_pipe_commands:
 
     def create_BLAT_cat_command(self, stage_name, section):
         # this is meant to be called for each section: contigs, orphans, pair_1, pair_2
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
         blat_folder = data_folder + "0_blat/"
         blat_merge_folder = data_folder + "1_blat_merge/"
-        
+
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_merge_folder)
@@ -1066,12 +1050,11 @@ class mt_pipe_commands:
 
     def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
         # this call is meant to be run after the BLAT calls have been completed.
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/" # implied to be BWA
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        dep_loc = self.Input_Path + "/" + dependency_stage_name + "/data/final_results/"  # implied to be BWA
         blat_merge_folder = data_folder + "1_blat_merge/"
-        
-        final_folder = data_folder + "final_results/"
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1097,49 +1080,49 @@ class mt_pipe_commands:
         blat_pp += dep_loc + "pair_2.fasta" + " "
         blat_pp += blat_merge_folder + "pair_2.blatout" + " "
         blat_pp += final_folder + "pair_2.fasta"
-        
+
         move_contig_map = ">&2 echo copy contig map | "
         move_contig_map += "cp " + dep_loc + "contig_map.tsv " + final_folder + "contig_map.tsv"
-
 
         COMMANDS_Annotate_BLAT_Post = [
             blat_pp,
             move_contig_map
-            ]
+        ]
 
         return COMMANDS_Annotate_BLAT_Post
 
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        dep_loc = os.getcwd() + "/" + dependency_stage_name + "/data/final_results/"
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        dep_loc = self.Input_Path + "/" + dependency_stage_name + "/data/final_results/"
         diamond_folder = data_folder + "0_diamond/"
         section_folder = data_folder + section + "/"
         section_temp_folder = section_folder + "temp" + "/"
+
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(diamond_folder)
         self.make_folder(section_folder)
         self.make_folder(section_temp_folder)
 
-        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section +  " | "
-        diamond_annotate += self.tool_path_obj.DIAMOND 
-        diamond_annotate += " blastx -p " + self.Threads_str 
-        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB 
-        diamond_annotate += " -q " + dep_loc + section + ".fasta" 
-        diamond_annotate += " -o " +  diamond_folder + section + ".dmdout" 
+        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section + " | "
+        diamond_annotate += self.tool_path_obj.DIAMOND
+        diamond_annotate += " blastx -p " + self.Threads_str
+        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
+        diamond_annotate += " -q " + dep_loc + section + ".fasta"
+        diamond_annotate += " -o " + diamond_folder + section + ".dmdout"
         diamond_annotate += " -f 6 -t " + section_temp_folder
         diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"
-         
+
         return [diamond_annotate]
-        
-    def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name):    
+
+    def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name):
         # the command just calls the merger program
-        subfolder = os.getcwd() + "/" + stage_name + "/"
-        data_folder = subfolder + "data/"
-        dep_loc_0 = os.getcwd() + "/" + dependency_0_stage_name + "/data/final_results/" #implied to be blat pp
+        subfolder = os.path.join(self.Input_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        dep_loc_0 = self.Input_Path + "/" + dependency_0_stage_name + "/data/final_results/"  # implied to be blat pp
         diamond_folder = data_folder + "0_diamond/"
-        final_folder = data_folder + "final_results/"
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1147,42 +1130,41 @@ class mt_pipe_commands:
 
         diamond_pp = ">&2 echo DIAMOND post process | "
         diamond_pp += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_reads_prot_DMND + " "
-        diamond_pp += self.tool_path_obj.Prot_DB + " " #IN
-        diamond_pp += dep_loc_0 + "contig_map.tsv" + " " #IN
-        diamond_pp += dep_loc_0 + "gene_map.tsv" + " " #IN
-        diamond_pp += final_folder + "gene_map.tsv" + " " #OUT
-        diamond_pp += dep_loc_0 + "genes.fna" + " " #IN
-        diamond_pp += final_folder + "proteins.faa" + " " #OUT
-        diamond_pp += dep_loc_0 + "contigs.fasta" + " " #IN
-        diamond_pp += diamond_folder + "contigs.dmdout" + " " #IN
-        diamond_pp += final_folder + "contigs.fasta" + " " #OUT
-        diamond_pp += dep_loc_0 + "orphans.fasta" + " " #IN
-        diamond_pp += diamond_folder + "orphans.dmdout" + " " #IN
-        diamond_pp += final_folder + "orphans.fasta" + " " #OUT
-        diamond_pp += dep_loc_0 + "pair_1.fasta" + " " #IN
-        diamond_pp += diamond_folder + "pair_1.dmdout" + " " #IN
-        diamond_pp += final_folder + "pair_1.fasta" + " " #OUT
-        diamond_pp += dep_loc_0 + "pair_2.fasta" + " " #IN
-        diamond_pp += diamond_folder + "pair_2.dmdout" + " " #IN
-        diamond_pp += final_folder + "pair_2.fasta" #OUT
-
+        diamond_pp += self.tool_path_obj.Prot_DB + " "  # IN
+        diamond_pp += dep_loc_0 + "contig_map.tsv" + " "  # IN
+        diamond_pp += dep_loc_0 + "gene_map.tsv" + " "  # IN
+        diamond_pp += final_folder + "gene_map.tsv" + " "  # OUT
+        diamond_pp += dep_loc_0 + "genes.fna" + " "  # IN
+        diamond_pp += final_folder + "proteins.faa" + " "  # OUT
+        diamond_pp += dep_loc_0 + "contigs.fasta" + " "  # IN
+        diamond_pp += diamond_folder + "contigs.dmdout" + " "  # IN
+        diamond_pp += final_folder + "contigs.fasta" + " "  # OUT
+        diamond_pp += dep_loc_0 + "orphans.fasta" + " "  # IN
+        diamond_pp += diamond_folder + "orphans.dmdout" + " "  # IN
+        diamond_pp += final_folder + "orphans.fasta" + " "  # OUT
+        diamond_pp += dep_loc_0 + "pair_1.fasta" + " "  # IN
+        diamond_pp += diamond_folder + "pair_1.dmdout" + " "  # IN
+        diamond_pp += final_folder + "pair_1.fasta" + " "  # OUT
+        diamond_pp += dep_loc_0 + "pair_2.fasta" + " "  # IN
+        diamond_pp += diamond_folder + "pair_2.dmdout" + " "  # IN
+        diamond_pp += final_folder + "pair_2.fasta"  # OUT
 
         COMMANDS_Annotate_Diamond_Post = [
             diamond_pp
-            ]
+        ]
 
         return COMMANDS_Annotate_Diamond_Post
 
     def create_taxonomic_annotation_command(self, current_stage_name, assemble_contigs_stage, diamond_stage):
-        subfolder = os.getcwd() + "/" + current_stage_name + "/"
-        data_folder = subfolder + "data/"
-        assemble_contigs_folder = os.getcwd() + "/" + assemble_contigs_stage + "/data/final_results/"
-        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
-        ga_taxa_folder = data_folder + "0_gene_taxa/"
-        kaiju_folder = data_folder + "1_kaiju/"
-        centrifuge_folder = data_folder + "2_centrifuge/"
-        wevote_folder = data_folder + "3_wevote/"
-        final_folder = data_folder + "final_results/"
+        subfolder = os.path.join(self.Input_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        assemble_contigs_folder = os.path.join(self.Input_Path, assemble_contigs_stage, "data", "final_results")
+        diamond_folder = os.path.join(self.Input_Path, diamond_stage, "data", "final_results")
+        ga_taxa_folder = os.path.join(data_folder, "0_gene_taxa")
+        kaiju_folder = os.path.join(data_folder, "1_kaiju")
+        centrifuge_folder = os.path.join(data_folder, "2_centrifuge")
+        wevote_folder = os.path.join(data_folder, "3_wevote")
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1193,84 +1175,86 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
 
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
-        get_taxa_from_gene += self.tool_path_obj.Python + " " + self.tool_path_obj.Annotated_taxid + " " # SLOW STEP
-        get_taxa_from_gene += diamond_folder + "gene_map.tsv" + " "
+        get_taxa_from_gene += self.tool_path_obj.Python + " "
+        get_taxa_from_gene += self.tool_path_obj.Annotated_taxid + " "  # SLOW STEP
+        get_taxa_from_gene += os.path.join(diamond_folder, "gene_map.tsv") + " "
         get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
-        get_taxa_from_gene += ga_taxa_folder + "ga_taxon.tsv"
+        get_taxa_from_gene += os.path.join(ga_taxa_folder, "ga_taxon.tsv")
 
         kaiju_on_contigs = ">&2 echo kaiju on contigs | "
         kaiju_on_contigs += self.tool_path_obj.Kaiju
         kaiju_on_contigs += " -t " + self.tool_path_obj.nodes
         kaiju_on_contigs += " -f " + self.tool_path_obj.Kaiju_db
-        kaiju_on_contigs += " -i " + assemble_contigs_folder + "contigs.fasta"
+        kaiju_on_contigs += " -i " + os.path.join(assemble_contigs_folder, "contigs.fasta")
         kaiju_on_contigs += " -z " + self.Threads_str
-        kaiju_on_contigs += " -o " + kaiju_folder + "contigs.tsv"
+        kaiju_on_contigs += " -o " + os.path.join(kaiju_folder, "contigs.tsv")
 
         kaiju_on_orphans = ">&2 echo kaiju on orphans | "
         kaiju_on_orphans += self.tool_path_obj.Kaiju
         kaiju_on_orphans += " -t " + self.tool_path_obj.nodes
         kaiju_on_orphans += " -f " + self.tool_path_obj.Kaiju_db
-        kaiju_on_orphans += " -i " + assemble_contigs_folder + "orphans.fastq"
+        kaiju_on_orphans += " -i " + os.path.join(assemble_contigs_folder, "orphans.fastq")
         kaiju_on_orphans += " -z " + self.Threads_str
-        kaiju_on_orphans += " -o " + kaiju_folder + "orphans.tsv"
+        kaiju_on_orphans += " -o " + os.path.join(kaiju_folder, "orphans.tsv")
 
         kaiju_on_paired = ">&2 echo kaiju on pairs | "
         kaiju_on_paired += self.tool_path_obj.Kaiju
         kaiju_on_paired += " -t " + self.tool_path_obj.nodes
         kaiju_on_paired += " -f " + self.tool_path_obj.Kaiju_db
-        kaiju_on_paired += " -i " + assemble_contigs_folder + "pair_1.fastq"
-        kaiju_on_paired += " -j " + assemble_contigs_folder + "pair_2.fastq"
+        kaiju_on_paired += " -i " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+        kaiju_on_paired += " -j " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
         kaiju_on_paired += " -z " + self.Threads_str
-        kaiju_on_paired += " -o " + kaiju_folder + "pairs.tsv"
+        kaiju_on_paired += " -o " + os.path.join(kaiju_folder, "pairs.tsv")
 
         cat_kaiju = ">&2 echo merging all kaiju results | "
         cat_kaiju += "cat "
-        cat_kaiju += kaiju_folder + "contigs.tsv" + " "
-        cat_kaiju += kaiju_folder + "orphans.tsv" + " "
-        cat_kaiju += kaiju_folder + "pairs.tsv"
-        cat_kaiju += " > " + kaiju_folder + "merged_kaiju.tsv"
+        cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
+        cat_kaiju += os.path.join(kaiju_folder, "orphans.tsv") + " "
+        cat_kaiju += os.path.join(kaiju_folder, "pairs.tsv")
+        cat_kaiju += " > " + os.path.join(kaiju_folder, "merged_kaiju.tsv")
 
         centrifuge_on_orphans = ">&2 echo centrifuge on orphans | "
         centrifuge_on_orphans += self.tool_path_obj.Centrifuge
         centrifuge_on_orphans += " -x " + self.tool_path_obj.Centrifuge_db
-        centrifuge_on_orphans += " -1 " + assemble_contigs_folder + "pair_1.fastq"
-        centrifuge_on_orphans += " -2 " + assemble_contigs_folder + "pair_2.fastq"
-        centrifuge_on_orphans += " -U " + assemble_contigs_folder + "orphans.fastq"
+        centrifuge_on_orphans += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+        centrifuge_on_orphans += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+        centrifuge_on_orphans += " -U " + os.path.join(assemble_contigs_folder, "orphans.fastq")
         centrifuge_on_orphans += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_orphans += " --phred" + self.Qual_str
-        centrifuge_on_orphans += " -p 6" #+ str(int(self.Threads_str)/2)
-        centrifuge_on_orphans += " -S " + centrifuge_folder + "reads.tsv"
-        centrifuge_on_orphans += " --report-file " + centrifuge_folder + "reads.txt"
+        centrifuge_on_orphans += " -p 6"
+        centrifuge_on_orphans += " -S " + os.path.join(centrifuge_folder, "reads.tsv")
+        centrifuge_on_orphans += " --report-file " + os.path.join(centrifuge_folder, "reads.txt")
 
         centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
         centrifuge_on_contigs += self.tool_path_obj.Centrifuge
         centrifuge_on_contigs += " -f -x " + self.tool_path_obj.Centrifuge_db
-        centrifuge_on_contigs += " -U " + assemble_contigs_folder + "contigs.fasta"
+        centrifuge_on_contigs += " -U " + os.path.join(assemble_contigs_folder, "contigs.fasta")
         centrifuge_on_contigs += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_contigs += " --phred" + self.Qual_str
-        centrifuge_on_contigs += " -p 6" #+ str(int(self.Threads_str)/2)
-        centrifuge_on_contigs += " -S " + centrifuge_folder + "contigs.tsv"
-        centrifuge_on_contigs += " --report-file " + centrifuge_folder + "contigs.txt"
-        
+        centrifuge_on_contigs += " -p 6"
+        centrifuge_on_contigs += " -S " + os.path.join(centrifuge_folder, "contigs.tsv")
+        centrifuge_on_contigs += " --report-file " + os.path.join(centrifuge_folder, "contigs.txt")
+
         cat_centrifuge = ">&2 echo combining all centrifuge results | "
         cat_centrifuge += "cat "
-        cat_centrifuge += centrifuge_folder + "reads.tsv" + " "
-        cat_centrifuge += centrifuge_folder + "contigs.tsv"
-        cat_centrifuge += " > " + centrifuge_folder + "merged_centrifuge.tsv"
+        cat_centrifuge += os.path.join(centrifuge_folder, "reads.tsv") + " "
+        cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
+        cat_centrifuge += " > " + os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
 
         wevote_combine = ">&2 echo combining classification outputs for wevote | "
-        wevote_combine += self.tool_path_obj.Python + " " + self.tool_path_obj.Classification_combine + " "
-        wevote_combine += assemble_contigs_folder + "contig_map.tsv"
-        wevote_combine += " " + wevote_folder + "wevote_ensemble.csv" + " "
-        wevote_combine += ga_taxa_folder + "ga_taxon.tsv" + " "
-        wevote_combine += kaiju_folder + "merged_kaiju.tsv" + " "
-        wevote_combine += centrifuge_folder + "merged_centrifuge.tsv"
+        wevote_combine += self.tool_path_obj.Python + " "
+        wevote_combine += self.tool_path_obj.Classification_combine + " "
+        wevote_combine += os.path.join(assemble_contigs_folder, "contig_map.tsv")
+        wevote_combine += " " + os.path.join(wevote_folder, "wevote_ensemble.csv") + " "
+        wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
+        wevote_combine += os.path.join(kaiju_folder, "merged_kaiju.tsv") + " "
+        wevote_combine += os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
 
         wevote_call = ">&2 echo Running WEVOTE | "
         wevote_call += self.tool_path_obj.WEVOTE
-        wevote_call += " -i " + wevote_folder + "wevote_ensemble.csv"
+        wevote_call += " -i " + os.path.join(wevote_folder, "wevote_ensemble.csv")
         wevote_call += " -d " + self.tool_path_obj.WEVOTEDB
-        wevote_call += " -p " + wevote_folder + "wevote"
+        wevote_call += " -p " + os.path.join(wevote_folder, "wevote")
         wevote_call += " -n " + self.Threads_str
         wevote_call += " -k " + "2"
         wevote_call += " -a " + "0"
@@ -1278,8 +1262,8 @@ class mt_pipe_commands:
 
         awk_cleanup = ">&2 echo AWK cleanup of WEVOTE results | "
         awk_cleanup += "awk -F \'\\t\' \'{print \"C\\t\"$1\"\\t\"$9}\' "
-        awk_cleanup += wevote_folder + "wevote_WEVOTE_Details.txt"
-        awk_cleanup += " > " + final_folder + "taxonomic_classifications.tsv"
+        awk_cleanup += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt")
+        awk_cleanup += " > " + os.path.join(final_folder, "taxonomic_classifications.tsv")
 
         COMMANDS_Classify = [
             get_taxa_from_gene,
@@ -1293,17 +1277,17 @@ class mt_pipe_commands:
             wevote_combine,
             wevote_call,
             awk_cleanup
-            ]
+        ]
 
-        return COMMANDS_Classify 
+        return COMMANDS_Classify
 
     def create_EC_DETECT_prep(self, current_stage_name, diamond_stage, file_split_count):
-        subfolder = os.getcwd() + "/" + current_stage_name + "/"
-        data_folder = subfolder + "data/"
-        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
-        proteins_folder = data_folder + "0_proteins/"
-        detect_folder = data_folder + "1_detect/"
-        final_folder = data_folder + "final_results/"
+        subfolder = os.path.join(self.Input_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        diamond_folder = os.path.join(self.Input_Path, diamond_stage, "data", "final_results")
+        proteins_folder = os.path.join(data_folder, "0_proteins")
+        detect_folder = os.path.join(data_folder, "1_detect")
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1313,22 +1297,22 @@ class mt_pipe_commands:
 
         file_splitter = ">&2 echo splitting protein files for Detect | "
         file_splitter += self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter += diamond_folder + "proteins.faa" + " "
-        file_splitter += proteins_folder + "protein" + " "
+        file_splitter += os.path.join(diamond_folder, "proteins.faa") + " "
+        file_splitter += os.path.join(proteins_folder, "protein") + " "
         file_splitter += str(file_split_count)
 
         COMMANDS_DETECT_prep = [
             file_splitter
-            ]
+        ]
 
         return COMMANDS_DETECT_prep
 
     def create_EC_DETECT_command(self, current_stage_name, prot_name):
-        subfolder = os.getcwd() + "/" + current_stage_name + "/"
-        data_folder = subfolder + "data/" + "/"
-        proteins_folder = data_folder + "0_proteins/"
-        detect_folder = data_folder + "1_detect/"
-        prot_folder = detect_folder + prot_name + "/"
+        subfolder = os.path.join(self.Input_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        proteins_folder = os.path.join(data_folder, "0_proteins")
+        detect_folder = os.path.join(data_folder, "1_detect")
+        prot_folder = os.path.join(detect_folder, prot_name)
 
         self.make_folder(prot_folder)
 
@@ -1336,25 +1320,25 @@ class mt_pipe_commands:
         detect_protein += ">&2 echo running detect on split file " + prot_name + " | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
-        detect_protein += proteins_folder + prot_name + ".fasta"
-        detect_protein += " --output_file " + detect_folder + prot_name + ".detect"
-        detect_protein += " --top_predictions_file " + detect_folder + prot_name + ".toppred"
+        detect_protein += os.path.join(proteins_folder, prot_name + ".fasta")
+        detect_protein += " --output_file " + os.path.join(detect_folder, prot_name + ".detect")
+        detect_protein += " --top_predictions_file " + os.path.join(detect_folder, prot_name + ".toppred")
         detect_protein += " --db " + self.tool_path_obj.DetectDB
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
         detect_protein += " --needle " + self.tool_path_obj.Needle + ")"
 
         COMMANDS_DETECT = [
             detect_protein
-            ]
+        ]
 
         return COMMANDS_DETECT
-        
+
     def create_EC_PRIAM_DIAMOND_command(self, current_stage_name, diamond_stage):
-        subfolder = os.getcwd() + "/" + current_stage_name + "/"
-        data_folder = subfolder + "data/"
-        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
-        PRIAM_folder = data_folder + "2_priam/"
-        diamond_ea_folder = data_folder + "3_diamond/"
+        subfolder = os.path.join(self.Input_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        diamond_folder = os.path.join(self.Input_Path, diamond_stage, "data", "final_results")
+        PRIAM_folder = os.path.join(data_folder, "2_priam")
+        diamond_ea_folder = os.path.join(data_folder, "3_diamond")
 
         self.make_folder(PRIAM_folder)
         self.make_folder(diamond_ea_folder)
@@ -1363,7 +1347,7 @@ class mt_pipe_commands:
         PRIAM_command += self.tool_path_obj.Java + " "
         PRIAM_command += self.tool_path_obj.Priam
         PRIAM_command += " -n " + "proteins_priam" + " "
-        PRIAM_command += " -i " + diamond_folder + "proteins.faa"
+        PRIAM_command += " -i " + os.path.join(diamond_folder, "proteins.faa")
         PRIAM_command += " -p " + self.tool_path_obj.PriamDB
         PRIAM_command += " -o " + PRIAM_folder
         PRIAM_command += " --np " + self.Threads_str
@@ -1373,59 +1357,56 @@ class mt_pipe_commands:
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
         diamond_ea_command += self.tool_path_obj.DIAMOND + " blastp"
         diamond_ea_command += " -p " + self.Threads_str
-        diamond_ea_command += " --query " + diamond_folder + "proteins.faa"
+        diamond_ea_command += " --query " + os.path.join(diamond_folder, "proteins.faa")
         diamond_ea_command += " --db " + self.tool_path_obj.SWISS_PROT
         diamond_ea_command += " --outfmt " + "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident"
-        diamond_ea_command += " --out " + diamond_ea_folder + "proteins.blastout"
+        diamond_ea_command += " --out " + os.path.join(diamond_ea_folder, "proteins.blastout")
         diamond_ea_command += " --evalue 0.0000000001 --max-target-seqs 1"
 
         COMMANDS_PRIAM_DIAMOND = [
             PRIAM_command,
             diamond_ea_command
-            ]
+        ]
 
         return COMMANDS_PRIAM_DIAMOND
 
     def create_EC_postprocess_command(self, current_stage_name, diamond_stage):
-        subfolder = os.getcwd() + "/" + current_stage_name + "/"
-        data_folder = subfolder + "data/"
-        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
-        detect_folder = data_folder + "1_detect/"
-        PRIAM_folder = data_folder + "2_priam/"
-        diamond_ea_folder = data_folder + "3_diamond/"
-        final_folder = data_folder + "final_results/"
+        subfolder = os.path.join(self.Input_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        diamond_folder = os.path.join(self.Input_Path, diamond_stage, "data", "final_results")
+        detect_folder = os.path.join(data_folder, "1_detect")
+        PRIAM_folder = os.path.join(data_folder, "2_priam")
+        diamond_ea_folder = os.path.join(data_folder, "3_diamond")
+        final_folder = os.path.join(data_folder, "final_results")
 
-        
-        
-        combine_detect = "cat " + detect_folder + "protein_*.toppred"
-        combine_detect += " > " + detect_folder + "proteins.toppred"
+        combine_detect = "cat " + os.path.join(detect_folder, "protein_*.toppred")
+        combine_detect += " > " + os.path.join(detect_folder, "proteins.toppred")
 
         postprocess_command = ">&2 echo combining enzyme annotation output | "
         postprocess_command += self.tool_path_obj.Python + " "
         postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
-        postprocess_command += diamond_folder + "proteins.faa" + " "
-        postprocess_command += detect_folder + "proteins.toppred" + " "
+        postprocess_command += os.path.join(diamond_folder, "proteins.faa") + " "
+        postprocess_command += os.path.join(detect_folder, "proteins.toppred") + " "
         postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
-        postprocess_command += diamond_ea_folder + "proteins.blastout" + " "
+        postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
         postprocess_command += final_folder
 
-
         COMMANDS_EC_Postprocess = [
             combine_detect,
             postprocess_command
-            ]
-                
+        ]
+
         return COMMANDS_EC_Postprocess
 
     def create_Network_generation_command(self, current_stage_name, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
-        subfolder = os.getcwd() + "/" + current_stage_name + "/"
-        data_folder = subfolder + "data/"
-        diamond_folder = os.getcwd() + "/" + diamond_stage + "/data/final_results/"
-        ta_folder = os.getcwd() + "/" + taxonomic_annotation_stage + "/data/final_results/"
-        ea_folder = os.getcwd() + "/" + enzyme_annotation_stage + "/data/final_results/"
-        final_folder = data_folder + "final_results/"
+        subfolder = os.path.join(self.Input_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        diamond_folder = os.path.join(self.Input_Path, diamond_stage, "data", "final_results")
+        ta_folder = os.path.join(self.Input_Path, taxonomic_annotation_stage, "data", "final_results")
+        ea_folder = os.path.join(self.Input_Path, enzyme_annotation_stage, "data", "final_results")
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1435,24 +1416,24 @@ class mt_pipe_commands:
         network_generation += self.tool_path_obj.Python + " "
         network_generation += self.tool_path_obj.RPKM + " "
         network_generation += self.tool_path_obj.nodes + " "
-        network_generation += diamond_folder + "gene_map.tsv" + " "
-        network_generation += ta_folder + "taxonomic_classifications.tsv" + " "
-        network_generation += ea_folder + "proteins.ECs_All" + " "
-        network_generation += final_folder + "RPKM_table.tsv" + " "
-        network_generation += final_folder + "Cytoscape_network.tsv" + " "
+        network_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        network_generation += os.path.join(ta_folder, "taxonomic_classifications.tsv") + " "
+        network_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
+        network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
+        network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
 
         COMMANDS_Network = [
             network_generation
-            ]
+        ]
 
         return COMMANDS_Network
 
     def create_visualization_command(self, current_stage_name, network_stage):
-        subfolder = os.getcwd() + "/" + current_stage_name + "/"
-        data_folder = subfolder + "data/"
-        mpl_folder = data_folder + "0_MPL/"
-        network_folder = os.getcwd() + "/" + network_stage + "/data/final_results/"
-        final_folder = data_folder + "final_results/"
+        subfolder = os.path.join(self.Input_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        mpl_folder = os.path.join(data_folder, "0_MPL")
+        network_folder = os.path.join(self.Input_Path, network_stage, "data", "final_results")
+        final_folder = os.path.join(data_folder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1462,14 +1443,14 @@ class mt_pipe_commands:
         chart_generation = ">&2 echo generating visualizations for ECs | "
         chart_generation += self.tool_path_obj.Python + " "
         chart_generation += self.tool_path_obj.chart + " "
-        chart_generation += network_folder + "Cytoscape_network.tsv" + " "
+        chart_generation += os.path.join(network_folder, "Cytoscape_network.tsv") + " "
         chart_generation += mpl_folder
 
-        final_chart = "cp " + mpl_folder + "All_EC.png"  + " " + final_folder + "All_EC.png"
+        final_chart = "cp " + os.path.join(mpl_folder, "All_EC.png") + " " + os.path.join(final_folder, "All_EC.png")
 
         COMMANDS_visualization = [
             chart_generation,
             final_chart
-            ]
+        ]
 
         return COMMANDS_visualization
