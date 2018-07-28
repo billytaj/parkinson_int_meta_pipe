@@ -740,7 +740,7 @@ class mt_pipe_commands:
         pair_1_mRNA_folder = os.path.join(data_folder, "pair_1", "pair_1_mRNA")
         pair_1_rRNA_folder = os.path.join(data_folder, "pair_1", "pair_1_rRNA")
         pair_2_mRNA_folder = os.path.join(data_folder, "pair_2", "pair_2_mRNA")
-        pair_2_rRNA_folder = os.path.join(data_folder, "pair_2", "pair_2_rRNA,")
+        pair_2_rRNA_folder = os.path.join(data_folder, "pair_2", "pair_2_rRNA")
 
         self.make_folder(pre_filter_folder)
         self.make_folder(pre_filter_mRNA_folder)
@@ -749,16 +749,14 @@ class mt_pipe_commands:
         self.make_folder(final_mRNA_folder)
         self.make_folder(final_rRNA_folder)
 
-        cat_orphans_mRNA = "cat " + orphans_mRNA_folder + "* 1>>" + os.path.join(pre_filter_mRNA_folder,
-                                                                                 "orphans.fastq")
-        cat_orphans_rRNA = "cat " + orphans_rRNA_folder + "* 1>>" + os.path.join(pre_filter_rRNA_folder,
-                                                                                 "orphans.fastq")
+        cat_orphans_mRNA = "cat " + orphans_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "orphans.fastq")
+        cat_orphans_rRNA = "cat " + orphans_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "orphans.fastq")
 
-        cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
-        cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
+        cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
+        cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
 
-        cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
-        cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
+        cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
+        cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
 
         orphan_mRNA_filter = ">&2 echo filtering mRNA for orphans | "
         orphan_mRNA_filter += self.tool_path_obj.Python + " "
@@ -1006,17 +1004,16 @@ class mt_pipe_commands:
             section_file = section + ".fasta"
         else:
             section_file = section + ".fastq"
+
         bwa_job = ">&2 echo BWA on " + section + " | "
         bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_job += self.tool_path_obj.DNA_DB + " "
-        bwa_job += os.path.join(dep_loc, section_file)
-
-        samtools_convert = self.tool_path_obj.SAMTOOLS + " view "
-        samtools_convert += "> " + os.path.join(bwa_folder, section + ".sam")
+        bwa_job += os.path.join(dep_loc, section_file) + " | "
+        bwa_job += self.tool_path_obj.SAMTOOLS + " view "
+        bwa_job += "> " + os.path.join(bwa_folder, section + ".sam")
 
         COMMANDS_BWA = [
-            bwa_job,
-            samtools_convert
+            bwa_job
         ]
 
         return COMMANDS_BWA
@@ -1073,7 +1070,7 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(blat_folder)
 
-        # blat_command = ">&2 echo BLAT annotation for " + section + " " + fasta +" | "
+        blat_command = ">&2 echo BLAT annotation for " + section + " " + fasta +" | "
         blat_command = self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
         blat_command += self.tool_path_obj.DNA_DB_Split + fasta + " "
         blat_command += os.path.join(dep_loc, section + ".fasta")

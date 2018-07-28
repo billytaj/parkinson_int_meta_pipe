@@ -1,7 +1,7 @@
 import os
+import os.path
 import pandas as pd
 import sys
-import subprocess as sp
 
 #This module takes in the Output report of the infernal tool, and the fastq it scanned.
 #The goal is to bisect the fastq into 2 piles:  entries with IDs that were located by Infernal (rRNA)
@@ -39,8 +39,8 @@ def filter_rRNA(rRNA_ID_list, fastq_sequence, mRNA_loc, rRNA_loc, file_name):
     
     #doing it inline so we don't create another DF
     #mRNA segment
-    mRNA_export = mRNA_loc + file_name + "_mRNA.fastq"
-    rRNA_export = rRNA_loc + file_name + "_rRNA.fastq"
+    mRNA_export = os.path.join(mRNA_loc, file_name + "_mRNA.fastq")
+    rRNA_export = os.path.join(rRNA_loc, file_name + "_rRNA.fastq")
     fastq_df[~fastq_df["ID"].isin(rRNA_ID_list)].to_csv(mRNA_export, sep = "\n", mode = "w+", header=False, index=False)
     fastq_df[fastq_df["ID"].isin(rRNA_ID_list)].to_csv(rRNA_export, sep="\n", mode = "w+", header=False, index=False)
     
