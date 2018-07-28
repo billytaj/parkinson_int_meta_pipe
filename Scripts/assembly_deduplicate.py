@@ -93,12 +93,16 @@ if __name__ == "__main__":
     
     #------------------------------
     #write it
-    pair_1_df[pair_1_df.ID.isin(unmapped_pair_1_sam_df)].to_csv(os.path.join(output_path, "pair_1.fastq"), sep='\n', mode = "w+", header=False, index=False)       # then export only the rows that are unmapped
-    pair_2_df[pair_2_df.ID.isin(unmapped_pair_2_sam_df)].to_csv(os.path.join(output_path, "pair_2.fastq"), sep='\n', mode = "w+", header=False, index=False)
-    orphans_df[orphans_df.ID.isin(unmapped_orphans_sam_df)].to_csv(os.path.join(output_path, "orphans.fastq"), sep='\n', mode = "w+", header=False, index=False)
+    pair_1_name = os.path.basename(pair_1_path)
+    pair_2_name = os.path.basename(pair_2_path)
+    orphans_name = os.path.basename(orphans_path)
+
+    pair_1_df[pair_1_df.ID.isin(unmapped_pair_1_sam_df)].to_csv(os.path.join(output_path, pair_1_name), sep='\n', mode = "w+", header=False, index=False)       # then export only the rows that are unmapped
+    pair_2_df[pair_2_df.ID.isin(unmapped_pair_2_sam_df)].to_csv(os.path.join(output_path, pair_2_name), sep='\n', mode = "w+", header=False, index=False)
+    orphans_df[orphans_df.ID.isin(unmapped_orphans_sam_df)].to_csv(os.path.join(output_path, orphans_name), sep='\n', mode = "w+", header=False, index=False)
     
-    pair_1_df[pair_1_df.ID.isin(mapped_pair_1_sam_df)].to_csv(os.path.join(output_path, "pair_1_mapped.fastq"), sep='\n', mode = "w+", header=False, index=False)       # then export only the rows that are unmapped
-    pair_2_df[pair_2_df.ID.isin(mapped_pair_2_sam_df)].to_csv(os.path.join(output_path, "pair_2_mapped.fastq"), sep='\n', mode = "w+", header=False, index=False)
-    orphans_df[orphans_df.ID.isin(mapped_orphans_sam_df)].to_csv(os.path.join(output_path, "orphans_mapped.fastq"), sep='\n', mode = "w+", header=False, index=False)
+    pair_1_df[pair_1_df.ID.isin(mapped_pair_1_sam_df)].to_csv(os.path.join(output_path, os.path.splitext(pair_1_name)[0] + "_mapped" + os.path.splitext(pair_1_name)[1]), sep='\n', mode = "w+", header=False, index=False)       # then export only the rows that are unmapped
+    pair_2_df[pair_2_df.ID.isin(mapped_pair_2_sam_df)].to_csv(os.path.join(output_path, os.path.splitext(pair_2_name)[0] + "_mapped" + os.path.splitext(pair_2_name)[1]), sep='\n', mode = "w+", header=False, index=False)
+    orphans_df[orphans_df.ID.isin(mapped_orphans_sam_df)].to_csv(os.path.join(output_path, os.path.splitext(orphans_name)[0] + "_mapped" + os.path.splitext(orphans_name)[1]), sep='\n', mode = "w+", header=False, index=False)
     
     

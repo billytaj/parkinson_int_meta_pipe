@@ -255,7 +255,8 @@ for x in range(0,2):
                                     #  (second argument specifies filetype, e.g., "fasta")
     DMD_tab_file= sys.argv[3*x+8]  # INPUT: DMD-aligned contig/readIDs (.dmdout)
     if(os.path.getsize(DMD_tab_file) == 0):
-        sys.exit(DMD_tab_file, "is empty.  aborting")
+        sys.exit(DMD_tab_file + " is empty.")
+
     output_file= sys.argv[3*x+9]    # OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs and seqs (.fasta)
 
     # read DMD output & get read/contig lengths:
