@@ -201,8 +201,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         rRNA_filter_start = time.time()
 
         rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
-        rRNA_filter_orphans_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "orphans",
-                                                        "orphans_fastq")
+        rRNA_filter_singletons_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "singletons",
+                                                        "singletons_fastq")
         rRNA_filter_pair_1_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_1", "pair_1_fastq")
         rRNA_filter_pair_2_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_2", "pair_2_fastq")
 
@@ -219,16 +219,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.start()
             process.join()
 
-            orphans_mRNA_path = os.path.join(rRNA_filter_path, "data", "orphans", "orphans_mRNA")
-            if not check_where_resume(orphans_mRNA_path, None):
-                for item in os.listdir(rRNA_filter_orphans_fastq_folder):
+            singletons_mRNA_path = os.path.join(rRNA_filter_path, "data", "singletons", "singletons_mRNA")
+            if not check_where_resume(singletons_mRNA_path, None):
+                for item in os.listdir(rRNA_filter_singletons_fastq_folder):
                     file_root_name = os.path.splitext(item)[0]
                     inner_name = file_root_name + "_infernal"
                     process = mp.Process(
                         target=comm.create_and_launch,
                         args=(
                             "rRNA_filter",
-                            comm.create_rRNA_filter_command("rRNA_filter", "orphans", file_root_name),
+                            comm.create_rRNA_filter_command("rRNA_filter", "singletons", file_root_name),
                             True,
                             inner_name
                         )
@@ -333,7 +333,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
         if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
 
-            names = ["contigs", "orphans", "pair_1", "pair_2"]
+            names = ["contigs", "singletons", "pair_1", "pair_2"]
             mp_store[:] = []
             for item in names:
                 inner_name = "BWA_" + item
@@ -374,7 +374,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
 
             BlatPool = mp.Pool(int(thread_count / 2))
-            sections = ["contigs", "orphans", "pair_1", "pair_2"]
+            sections = ["contigs", "singletons", "pair_1", "pair_2"]
             for section in sections:
                 for fasta_db in os.listdir(paths.DNA_DB_Split):
                     if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna") or fasta_db.endswith(".ffn"):
@@ -429,7 +429,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
         if not check_where_resume(gene_annotation_DIAMOND_path, None, gene_annotation_BLAT_path):
 
-            names = ["contigs", "orphans", "pair_1", "pair_2"]
+            names = ["contigs", "singletons", "pair_1", "pair_2"]
             for item in names:
                 inner_name = item + "_run_diamond"
                 process = mp.Process(
