@@ -815,18 +815,15 @@ class mt_pipe_commands:
         repop_folder = os.path.join(data_folder, "0_repop")
         final_folder = os.path.join(data_folder, "final_results")
         preprocess_subfolder = os.path.join(self.Input_Path, preprocess_stage_name)
+        # we ran a previous preprocess.  grab files
+        # need 3, 5(clstr only), and mRNA from the 2nd stage.
+        hq_path = os.path.join(preprocess_subfolder, "data", "4_orphan_read_filter")
+        cluster_path = os.path.join(preprocess_subfolder, "data", "5_remove_duplicates")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(repop_folder)
         self.make_folder(final_folder)
-
-        # we ran a previous preprocess.  grab files
-        # need 3, 5(clstr only), and mRNA from the 2nd stage.
-        # for the mRNA, we don't really care if it is.  This stage is just supposed to add in the missing duplicates from something that was stripped.
-
-        hq_path = os.path.join(preprocess_subfolder, "data", "4_singleton_read_filter")
-        cluster_path = os.path.join(preprocess_subfolder, "data", "5_remove_duplicates")
 
         repop_singletons = ">&2 echo Duplication repopulate singletons | "
         repop_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
