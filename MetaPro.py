@@ -6,8 +6,8 @@ import os.path
 from argparse import ArgumentParser
 from configparser import ConfigParser
 import multiprocessing as mp
-import mt_pipe_commands as mpcom
-import mt_pipe_paths as mpp
+import MetaPro_commands as mpcom
+import MetaPro_paths as mpp
 import time
 
 

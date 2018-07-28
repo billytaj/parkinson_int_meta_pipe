@@ -10,7 +10,7 @@ class tool_path_obj:
         else:
             config = None
 
-        script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline"#"/pipeline/"
+        script_path = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/Scripts"#"/pipeline/"
         tool_path = "/pipeline_tools/"
         database_path = "/project/j/jparkin/Lab_Databases/"
 
@@ -74,7 +74,7 @@ class tool_path_obj:
             self.Kaiju = config["Tools"]["Kaiju"] if config["Tools"]["Kaiju"] or config["Tools"]["Kaiju"] == "" else os.path.join(tool_path, "kaiju/kaiju")
             self.Centrifuge = config["Tools"]["Centrifuge"] if config["Tools"]["Centrifuge"] or config["Tools"]["Centrifuge"] == "" else os.path.join(tool_path, "centrifuge/centrifuge")
             self.Priam = config["Tools"]["Priam"] if config["Tools"]["Priam"] or config["Tools"]["Priam"] == "" else os.path.join(tool_path, "PRIAM_search/PRIAM_search.jar")
-            self.Detect = config["Tools"]["Detect"] if config["Tools"]["Detect"] or config["Tools"]["Detect"] == "" else os.path.join(script_path, "detect_2.01.py")
+            self.Detect = config["Tools"]["Detect"] if config["Tools"]["Detect"] or config["Tools"]["Detect"] == "" else os.path.join(script_path, "Detect_2.1.py")
             self.BLAST_dir = config["Tools"]["BLAST_dir"] if config["Tools"]["BLAST_dir"] or config["Tools"]["BLAST_dir"] == "" else os.path.join(tool_path, "BLAST_p")
             self.WEVOTE = config["Tools"]["WEVOTE"] if config["Tools"]["WEVOTE"] or config["Tools"]["WEVOTE"] == "" else os.path.join(tool_path, "WEVOTE/WEVOTE")
             self.Spades = config["Tools"]["Spades"] if config["Tools"]["Spades"] or config["Tools"]["Spades"] == "" else os.path.join(tool_path, "SPAdes/bin/spades.py")
@@ -98,27 +98,26 @@ class tool_path_obj:
             self.Kaiju = os.path.join(tool_path, "kaiju/kaiju")
             self.Centrifuge = os.path.join(tool_path, "centrifuge/centrifuge")
             self.Priam = os.path.join(tool_path, "PRIAM_search/PRIAM_search.jar")
-            self.Detect = os.path.join(script_path, "detect_2.01.py")
+            self.Detect = os.path.join(script_path, "Detect_2.1.py")
             self.BLAST_dir = os.path.join(tool_path, "BLAST_p")
             self.WEVOTE = os.path.join(tool_path, "WEVOTE/WEVOTE")
             self.Spades = os.path.join(tool_path, "SPAdes/bin/spades.py")
         #--------------------------------------------
         # Pyhton scripts
-        self.map_read_contig_v2 = os.path.join(script_path, "map_read_contig_v2.py")
-        self.sam_trimmer = os.path.join(script_path, "sam_trimmer.py")
-        self.contig_duplicate_remover = os.path.join(script_path, "contig_duplicate_remover.py")
-        self.sort_reads = os.path.join(script_path, "sort_reads_refactor.py")
-        self.duplicate_repopulate = os.path.join(script_path, "duplicate_repopulation.py")
-        self.orphaned_read_filter = os.path.join(script_path, "orphaned_pair_filter.py")
-        self.BLAT_Contaminant_Filter = os.path.join(script_path, "BLAT_Contaminant_Filter.py")
-        self.File_splitter = os.path.join(script_path, "seq_file_splitter.py")
-        self.rRNA_filter = os.path.join(script_path, "rRNA_filter_v2.py")
-        self.Map_reads_gene_BWA = os.path.join(script_path, "map_read_gene_BWA.py")
-        self.Map_reads_gene_BLAT = os.path.join(script_path, "map_read_gene_BLAT.py")
-        self.Map_reads_prot_DMND = os.path.join(script_path, "map_read_prot_DMND.py")
-        self.RPKM = os.path.join(script_path, "RPKM.py")
-        self.chart = os.path.join(script_path, "pie_visualization.py")
-        self.EC_Annotation_Post = os.path.join(script_path, "EC_Consolidation.py")
-        self.Annotated_taxid = os.path.join(script_path, "Read_Classification/Get_TaxID.py")
-        self.Constrain_classification = os.path.join(script_path, "Read_Classification/Constrain_Classification.py")
-        self.Classification_combine = os.path.join(script_path, "Read_Classification/Combine_WEVOTE.py")
+        self.map_contig = os.path.join(script_path, "assembly_map.py")
+        self.sam_trimmer = os.path.join(script_path, "read_sam.py")
+        self.contig_duplicate_remover = os.path.join(script_path, "assembly_deduplicate.py")
+        self.sort_reads = os.path.join(script_path, "read_sort.py")
+        self.duplicate_repopulate = os.path.join(script_path, "read_repopulation.py")
+        self.orphaned_read_filter = os.path.join(script_path, "read_orphan.py")
+        self.BLAT_Contaminant_Filter = os.path.join(script_path, "read_BLAT_filter.py")
+        self.File_splitter = os.path.join(script_path, "read_split.py")
+        self.rRNA_filter = os.path.join(script_path, "read_rRNA_filter.py")
+        self.Map_reads_gene_BWA = os.path.join(script_path, "ga_BWA.py")
+        self.Map_reads_gene_BLAT = os.path.join(script_path, "ga_BLAT.py")
+        self.Map_reads_prot_DMND = os.path.join(script_path, "ga_Diamond.py")
+        self.RPKM = os.path.join(script_path, "output_table.py")
+        self.chart = os.path.join(script_path, "output_visualization.py")
+        self.EC_Annotation_Post = os.path.join(script_path, "ea_combine.py")
+        self.Annotated_taxid = os.path.join(script_path, "ta_taxid.py")
+        self.Constrain_classification = os.path.join(script_path, "ta_constrain.py")

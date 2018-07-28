@@ -3,7 +3,7 @@
 
 import os
 import os.path
-import mt_pipe_paths as mpp
+import MetaPro_paths as mpp
 import subprocess as sp
 
 
@@ -938,7 +938,7 @@ class mt_pipe_commands:
         contig_duplicate_remover += mapped_reads_folder
 
         map_read_contig_v2 = ">&2 echo map read contig v2 | "
-        map_read_contig_v2 += self.tool_path_obj.Python + " " + self.tool_path_obj.map_read_contig_v2 + " "
+        map_read_contig_v2 += self.tool_path_obj.Python + " " + self.tool_path_obj.map_contig + " "
         map_read_contig_v2 += os.path.join(dep_loc, "pair_1.fastq") + " "
         map_read_contig_v2 += os.path.join(dep_loc, "pair_2.fastq") + " "
         map_read_contig_v2 += os.path.join(dep_loc, "orphans.fastq") + " "
