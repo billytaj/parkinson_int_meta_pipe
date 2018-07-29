@@ -523,7 +523,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # --------------------------------------------------------------
         # Priam and Diamond EC annotation
         EC_PRIAM_DIAMOND_start = time.time()
-        if not check_where_resume(None, None, gene_annotation_DIAMOND_path):
+        if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
@@ -571,7 +571,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         # ------------------------------------------------------
         # Final Pie Charts
         Chart_start = time.time()
-        if not check_where_resume(Chart_start, None, network_path):
+        visualization_path = os.path.join(output_folder_path, visualization_label)
+        if not check_where_resume(visualization_path, None, network_path):
             process = mp.Process(
                 target=comm.create_and_launch,
                 args=(
