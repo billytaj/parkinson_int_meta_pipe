@@ -10,12 +10,14 @@ class tool_path_obj:
         else:
             config = None
 
-        script_path     = "/home/j/jparkin/mobolaji/Metatranscriptome_Scripts/refactored_pipeline/Scripts"#"/pipeline/"
+        script_path     = "/pipeline/Scripts"
         tool_path       = "/pipeline_tools/"
         database_path   = "/project/j/jparkin/Lab_Databases/"
 
         #----------------------------------------------------------
         # Reference Databases
+        # Note: default host is Mouse CDS
+        
         if config:
             self.UniVec_Core        = config["Databases"]["UniVec_Core"]        if config["Databases"]["UniVec_Core"]       or config["Databases"]["UniVec_Core"]       == "" else os.path.join(database_path, "univec_core/UniVec_Core.fasta")
             self.Adapter            = config["Databases"]["Adapter"]            if config["Databases"]["Adapter"]           or config["Databases"]["Adapter"]           == "" else os.path.join(database_path, "Trimmomatic_adapters/TruSeq3-PE-2.fa")
@@ -52,8 +54,10 @@ class tool_path_obj:
             self.PriamDB            = os.path.join(database_path, "PRIAM_db/")
             self.DetectDB           = os.path.join(database_path, "DETECTv2")
             self.WEVOTEDB           = os.path.join(database_path, "WEVOTE_db/")
+            
         #----------------------------------------------------------
         # external tools
+        
         if config:
             self.Python         = config["Tools"]["Python"]         if config["Tools"]["Python"]            or config["Tools"]["Python"]            == "" else "python3"
             self.Java           = config["Tools"]["Java"]           if config["Tools"]["Java"]              or config["Tools"]["Java"]              == "" else "java -jar"
@@ -102,8 +106,10 @@ class tool_path_obj:
             self.BLAST_dir      = os.path.join(tool_path, "BLAST_p")
             self.WEVOTE         = os.path.join(tool_path, "WEVOTE/WEVOTE")
             self.Spades         = os.path.join(tool_path, "SPAdes/bin/spades.py")
+            
         #--------------------------------------------
-        # Pyhton scripts
+        # Python scripts
+
         self.map_contig                 = os.path.join(script_path, "assembly_map.py")
         self.sam_trimmer                = os.path.join(script_path, "read_sam.py")
         self.contig_duplicate_remover   = os.path.join(script_path, "assembly_deduplicate.py")
