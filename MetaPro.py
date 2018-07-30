@@ -28,7 +28,7 @@ def determine_encoding(fastq):
             if line_count % 4 == 0:
                 encoding_count += 1
                 for char in line:
-                    if ord(char) < 64:
+                    if ord(char) < 64: #logic is: if the ascii code falls under 64 for the entire time, then it's phread-33
                         encoding = 33
                         break
                 if encoding_count == 10000 or encoding == 33:
@@ -38,6 +38,8 @@ def determine_encoding(fastq):
 
 
 # handles where to kill the pipeline, due to the prev step behaving badly
+#logic is:  if the files inside the dep_path (or dep job label shortcut to the final_results)
+#           are empty, then there's an error.  kill the pipeline 
 def check_where_kill(dep_job_label=None, dep_path=None):
     if dep_job_label is None:
         if dep_path is None:
@@ -65,6 +67,8 @@ def check_where_kill(dep_job_label=None, dep_path=None):
 # label: used as a shorthand for paths we expect
 # full path: a bypass for when we want to use it for detecting a location that doesn't fall into the normal format (final_results)
 # dep: for checking if the job's dependencies are satisfied-> meant to point to the last stage's "final_results"
+# logic is: if the full_path has no files (or the job label shortcut to final_results)
+#           and the dependencies are ok, start the stage
 def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
     check_where_kill(dep_job_path)
     if job_label:
@@ -113,6 +117,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     start_time = time.time()
 
     if operating_mode == "paired":
+        # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
+        # and to perform the auto-resume/kill features
+        
         quality_filter_label = "quality_filter"
         host_filter_label = "host_read_filter"
         vector_filter_label = "vector_read_filter"
@@ -201,8 +208,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         rRNA_filter_start = time.time()
 
         rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
-        rRNA_filter_singletons_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "singletons",
-                                                        "singletons_fastq")
+        rRNA_filter_singletons_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "singletons", "singletons_fastq")
         rRNA_filter_pair_1_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_1", "pair_1_fastq")
         rRNA_filter_pair_2_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_2", "pair_2_fastq")
 
@@ -212,7 +218,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 args=(
                     rRNA_filter_label,
                     comm.create_rRNA_filter_prep_command(
-                        rRNA_filter_label, int(mp.cpu_count() / 2), vector_filter_label),
+                        rRNA_filter_label, int(mp.cpu_count() / 2), vector_filter_label), #infernal can't take more than 20 extra threads for some reason.
                     True
                 )
             )
