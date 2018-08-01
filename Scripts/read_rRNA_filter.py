@@ -1,7 +1,8 @@
 import os
 import os.path
-import pandas as pd
 import sys
+import pandas as pd
+
 
 #This module takes in the Output report of the infernal tool, and the fastq it scanned.
 #The goal is to bisect the fastq into 2 piles:  entries with IDs that were located by Infernal (rRNA)
@@ -54,7 +55,5 @@ if __name__ == "__main__":
     segment_root_name = (inf_file.split('.')[0]).split("/")[-1]
     #segment root name expects the full path.  We're just reusing the name of the file, and changing the suffixes to our needs
     ID_list = extract_rRNA_ID(inf_file)
-    #print(ID_list)
     filter_rRNA(ID_list, fastq_sequence, mRNA_location, rRNA_location, segment_root_name)
-    
     

@@ -23,16 +23,12 @@
 # - Sometimes a read is aligned via multiple contigs and annoteted only according
 #   to the best matched contig only. Theoretically, this breaks up the other contigs.
 
-import sys
 import os
 import os.path
-import shutil
-import subprocess
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-import re
+import sys
 from collections import Counter
 from collections import defaultdict
+from Bio import SeqIO
 
 DNA_DB= sys.argv[1]                 # INPUT: DNA db used for BLAT alignement
 contig2read_file= sys.argv[2]       # INPUT: [contigID, #reads, readIDs ...]

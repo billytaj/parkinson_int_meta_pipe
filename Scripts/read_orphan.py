@@ -1,7 +1,7 @@
-import pandas as pd
-import numpy as np
-import sys
 import os
+import sys
+import pandas as pd
+
 # what this code does:
 # takes in 2 pair fastq files, splits them up into 3: matching IDs (in both), and what doesn't match
 # to scale this, break up the inputs, and build a reduction. 

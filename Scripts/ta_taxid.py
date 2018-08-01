@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 #This program extracts TaxID from a gene map file, and the accension file, and dumps it to one.
 import sys
-import os
-import os.path
-import shutil
-import subprocess
-import multiprocessing
-from Bio import SeqIO
 
 gene2read_map_in = sys.argv[1]
 accession2taxid_map_in = sys.argv[2]

@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
-import os
-import os.path
 import sys
-import shutil
-from time import clock as clock
 
 nodes = sys.argv[1]
 gene2read = sys.argv[2]

@@ -28,7 +28,7 @@ def determine_encoding(fastq):
             if line_count % 4 == 0:
                 encoding_count += 1
                 for char in line:
-                    if ord(char) < 64: #logic is: if the ascii code falls under 64 for the entire time, then it's phread-33
+                    if ord(char) < 64: #logic is: if the ascii code falls under 64, then it's Phred+33
                         encoding = 33
                         break
                 if encoding_count == 10000 or encoding == 33:
@@ -98,11 +98,11 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
 
 def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, no_host):
     if not single_path == "":
-        operating_mode = "single"
+        read_mode = "single"
         quality_encoding = determine_encoding(single_path)
         print("OPERATING IN SINGLE-ENDED MODE")
     else:
-        operating_mode = "paired"
+        read_mode = "paired"
         quality_encoding = determine_encoding(pair_1_path)
         print("OPERATING IN PAIRED-MODE")
     if threads == 0:
@@ -115,146 +115,148 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # profiling vars
 
     start_time = time.time()
+    # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
+    # and to perform the auto-resume/kill features
 
-    if operating_mode == "paired":
-        # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
-        # and to perform the auto-resume/kill features
-        
-        quality_filter_label = "quality_filter"
-        host_filter_label = "host_read_filter"
-        vector_filter_label = "vector_read_filter"
-        rRNA_filter_label = "rRNA_filter"
-        repop_job_label = "duplicate_repopulation"
-        assemble_contigs_label = "assemble_contigs"
-        gene_annotation_BWA_label = "gene_annotation_BWA"
-        gene_annotation_BLAT_label = "gene_annotation_BLAT"
-        gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
-        taxon_annotation_label = "taxonomic_annotation"
-        ec_annotation_label = "enzyme_annotation"
-        network_label = "RPKM_network"
-        visualization_label = "visualization"
+    quality_filter_label = "quality_filter"
+    host_filter_label = "host_read_filter"
+    vector_filter_label = "vector_read_filter"
+    rRNA_filter_label = "rRNA_filter"
+    repop_job_label = "duplicate_repopulation"
+    assemble_contigs_label = "assemble_contigs"
+    gene_annotation_BWA_label = "gene_annotation_BWA"
+    gene_annotation_BLAT_label = "gene_annotation_BLAT"
+    gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
+    taxon_annotation_label = "taxonomic_annotation"
+    ec_annotation_label = "enzyme_annotation"
+    network_label = "RPKM_network"
+    visualization_label = "visualization"
 
-        # Creates our command object, for creating shellscripts.
-        comm = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_signle=None)  # start obj
-        paths = mpp.tool_path_obj(config_path)
+    # Creates our command object, for creating shellscripts.
+    if read_mode == "single":
+        commands = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=None, sequence_path_2=None, sequence_signle=single_path)
+    elif read_mode == "paired":
+        commands = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_signle=None)
+    paths = mpp.tool_path_obj(config_path)
 
-        # This is the format we use to launch each stage of the pipeline.
-        # We start a multiprocess that starts a subprocess.
-        # The subprocess is created from the comm object
+    # This is the format we use to launch each stage of the pipeline.
+    # We start a multiprocess that starts a subprocess.
+    # The subprocess is created from the commands object
 
-        # The quality filter stage
-        quality_start = time.time()
-        quality_path = os.path.join(output_folder_path, quality_filter_label)
-        if not check_where_resume(quality_path):
+    # The quality filter stage
+    quality_start = time.time()
+    quality_path = os.path.join(output_folder_path, quality_filter_label)
+    if not check_where_resume(quality_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                quality_filter_label,
+                commands.create_quality_control_command(quality_filter_label),
+                True
+            )
+        )
+        process.start()  # start the multiprocess
+        process.join()  # wait for it to end
+    quality_end = time.time()
+
+    # The host read filter stage
+    if not no_host:
+        host_start = time.time()
+        host_path = os.path.join(output_folder_path, host_filter_label)
+        if not check_where_resume(host_path, None, quality_path):
             process = mp.Process(
-                target=comm.create_and_launch,
+                target=commands.create_and_launch,
                 args=(
-                    quality_filter_label,
-                    comm.create_quality_control_command(quality_filter_label),
+                    host_filter_label,
+                    commands.create_host_filter_command(host_filter_label, quality_filter_label),
                     True
                 )
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
-        quality_end = time.time()
+        host_end = time.time()
 
-        # The host read filter stage
-        if not no_host:
-            host_start = time.time()
-            host_path = os.path.join(output_folder_path, host_filter_label)
-            if not check_where_resume(host_path, None, quality_path):
-                process = mp.Process(
-                    target=comm.create_and_launch,
-                    args=(
-                        host_filter_label,
-                        comm.create_host_filter_command(host_filter_label, quality_filter_label),
-                        True
-                    )
-                )
-                process.start()  # start the multiprocess
-                process.join()  # wait for it to end
-            host_end = time.time()
-
-        # The vector contaminant filter stage
-        vector_start = time.time()
-        vector_path = os.path.join(output_folder_path, vector_filter_label)
-        if no_host:
-            if not check_where_resume(vector_path, None, quality_path):
-                process = mp.Process(
-                    target=comm.create_and_launch,
-                    args=(
-                        vector_filter_label,
-                        comm.create_vector_filter_command(vector_filter_label, quality_filter_label),
-                        True
-                    )
-                )
-                process.start()  # start the multiprocess
-                process.join()  # wait for it to end
-        else:
-            if not check_where_resume(vector_path, None, host_path):
-                process = mp.Process(
-                    target=comm.create_and_launch,
-                    args=(
-                        vector_filter_label,
-                        comm.create_vector_filter_command(vector_filter_label, host_filter_label),
-                        True
-                    )
-                )
-                process.start()  # start the multiprocess
-                process.join()  # wait for it to end
-        vector_end = time.time()
-
-        # rRNA removal stage
-        rRNA_filter_start = time.time()
-
-        rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
-        rRNA_filter_singletons_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "singletons", "singletons_fastq")
-        rRNA_filter_pair_1_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_1", "pair_1_fastq")
-        rRNA_filter_pair_2_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_2", "pair_2_fastq")
-
-        if not check_where_resume(rRNA_filter_path, None, vector_path):
+    # The vector contaminant filter stage
+    vector_start = time.time()
+    vector_path = os.path.join(output_folder_path, vector_filter_label)
+    if no_host:
+        if not check_where_resume(vector_path, None, quality_path):
             process = mp.Process(
-                target=comm.create_and_launch,
+                target=commands.create_and_launch,
                 args=(
-                    rRNA_filter_label,
-                    comm.create_rRNA_filter_prep_command(
-                        rRNA_filter_label, int(mp.cpu_count() / 2), vector_filter_label), #infernal can't take more than 20 extra threads for some reason.
+                    vector_filter_label,
+                    commands.create_vector_filter_command(vector_filter_label, quality_filter_label),
                     True
                 )
             )
-            process.start()
-            process.join()
+            process.start()  # start the multiprocess
+            process.join()  # wait for it to end
+    else:
+        if not check_where_resume(vector_path, None, host_path):
+            process = mp.Process(
+                target=commands.create_and_launch,
+                args=(
+                    vector_filter_label,
+                    commands.create_vector_filter_command(vector_filter_label, host_filter_label),
+                    True
+                )
+            )
+            process.start()  # start the multiprocess
+            process.join()  # wait for it to end
+    vector_end = time.time()
 
-            singletons_mRNA_path = os.path.join(rRNA_filter_path, "data", "singletons", "singletons_mRNA")
-            if not check_where_resume(singletons_mRNA_path, None):
-                for item in os.listdir(rRNA_filter_singletons_fastq_folder):
-                    file_root_name = os.path.splitext(item)[0]
-                    inner_name = file_root_name + "_infernal"
-                    process = mp.Process(
-                        target=comm.create_and_launch,
-                        args=(
-                            "rRNA_filter",
-                            comm.create_rRNA_filter_command("rRNA_filter", "singletons", file_root_name),
-                            True,
-                            inner_name
-                        )
+    # rRNA removal stage
+    rRNA_filter_start = time.time()
+
+    rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
+    rRNA_filter_singletons_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "singletons", "singletons_fastq")
+    rRNA_filter_pair_1_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_1", "pair_1_fastq")
+    rRNA_filter_pair_2_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_2", "pair_2_fastq")
+
+    if not check_where_resume(rRNA_filter_path, None, vector_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                rRNA_filter_label,
+                commands.create_rRNA_filter_prep_command(
+                    rRNA_filter_label, int(mp.cpu_count() / 2), vector_filter_label), #infernal can't take more than 20 extra threads for some reason.
+                True
+            )
+        )
+        process.start()
+        process.join()
+
+        singletons_mRNA_path = os.path.join(rRNA_filter_path, "data", "singletons", "singletons_mRNA")
+        if not check_where_resume(singletons_mRNA_path, None):
+            for item in os.listdir(rRNA_filter_singletons_fastq_folder):
+                file_root_name = os.path.splitext(item)[0]
+                inner_name = file_root_name + "_infernal"
+                process = mp.Process(
+                    target=commands.create_and_launch,
+                    args=(
+                        "rRNA_filter",
+                        commands.create_rRNA_filter_command("rRNA_filter", "singletons", file_root_name),
+                        True,
+                        inner_name
                     )
-                    process.start()
-                    mp_store.append(process)  # pack all the processes into a list
-            for item in mp_store:
-                item.join()  # wait for things to finish
-            mp_store[:] = []  # clear the list
+                )
+                process.start()
+                mp_store.append(process)  # pack all the processes into a list
+        for item in mp_store:
+            item.join()  # wait for things to finish
+        mp_store[:] = []  # clear the list
 
+        if read_mode == "paired":
             pair_1_mRNA_path = os.path.join(rRNA_filter_path, "data", "pair_1", "pair_1_mRNA")
             if not check_where_resume(pair_1_mRNA_path, None):
                 for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
                     file_root_name = os.path.splitext(item)[0]
                     inner_name = file_root_name + "_infernal"
                     process = mp.Process(
-                        target=comm.create_and_launch,
+                        target=commands.create_and_launch,
                         args=(
                             "rRNA_filter",
-                            comm.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name),
+                            commands.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name),
                             True,
                             inner_name
                         )
@@ -271,346 +273,346 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     file_root_name = os.path.splitext(item)[0]
                     inner_name = file_root_name + "_infernal"
                     process = mp.Process(
-                        target=comm.create_and_launch,
+                        target=commands.create_and_launch,
                         args=(
                             "rRNA_filter",
-                            comm.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name),
+                            commands.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name),
                             True,
                             inner_name
                         )
                     )
                     process.start()
                     mp_store.append(process)
-
             for item in mp_store:
                 item.join()  # wait for things to finish
             mp_store[:] = []  # clear the list
 
-            inner_name = "rRNA_filter_post"
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    rRNA_filter_label,
-                    comm.create_rRNA_filter_post_command(rRNA_filter_label),
-                    True,
-                    inner_name
-                )
+        inner_name = "rRNA_filter_post"
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                rRNA_filter_label,
+                commands.create_rRNA_filter_post_command(rRNA_filter_label),
+                True,
+                inner_name
             )
-            process.start()
-            process.join()
+        )
+        process.start()
+        process.join()
 
-        rRNA_filter_end = time.time()
-        # -------------------------------------------------------------
-        # Duplicate repopulation
-        repop_start = time.time()
-        repop_job_path = os.path.join(output_folder_path, repop_job_label)
-        if not check_where_resume(repop_job_path, None, rRNA_filter_path):
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    repop_job_label,
-                    comm.create_repop_command(repop_job_label, quality_filter_label, rRNA_filter_label),
-                    True
-                )
+    rRNA_filter_end = time.time()
+    # -------------------------------------------------------------
+    # Duplicate repopulation
+    repop_start = time.time()
+    repop_job_path = os.path.join(output_folder_path, repop_job_label)
+    if not check_where_resume(repop_job_path, None, rRNA_filter_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                repop_job_label,
+                commands.create_repop_command(repop_job_label, quality_filter_label, rRNA_filter_label),
+                True
             )
-            process.start()
-            process.join()
-        repop_end = time.time()
-        # ----------------------------------------
-        # Assemble contigs
-        assemble_contigs_start = time.time()
-        assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
-        if not check_where_resume(assemble_contigs_path, None, repop_job_path):
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    assemble_contigs_label,
-                    comm.create_assemble_contigs_command(assemble_contigs_label, repop_job_label),
-                    True
-                )
+        )
+        process.start()
+        process.join()
+    repop_end = time.time()
+    # ----------------------------------------
+    # Assemble contigs
+    assemble_contigs_start = time.time()
+    assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
+    if not check_where_resume(assemble_contigs_path, None, repop_job_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                assemble_contigs_label,
+                commands.create_assemble_contigs_command(assemble_contigs_label, repop_job_label),
+                True
             )
-            process.start()
-            process.join()
-        assemble_contigs_end = time.time()
+        )
+        process.start()
+        process.join()
+    assemble_contigs_end = time.time()
 
-        # ----------------------------------------------
-        # BWA gene annotation
-        GA_BWA_start = time.time()
-        gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
-        if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
+    # ----------------------------------------------
+    # BWA gene annotation
+    GA_BWA_start = time.time()
+    gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
+    if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
 
-            names = ["contigs", "singletons", "pair_1", "pair_2"]
-            mp_store[:] = []
-            for item in names:
-                inner_name = "BWA_" + item
-                process = mp.Process(
-                    target=comm.create_and_launch,
-                    args=(
-                        gene_annotation_BWA_label,
-                        comm.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label, item),
-                        True,
-                        inner_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)
-
-            for item in mp_store:
-                item.join()
-            mp_store[:] = []  # clear the list
-
-            inner_name = "BWA_pp"
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        for section in sections:
+            inner_name = "BWA_" + section
             process = mp.Process(
-                target=comm.create_and_launch,
+                target=commands.create_and_launch,
                 args=(
                     gene_annotation_BWA_label,
-                    comm.create_BWA_pp_command(gene_annotation_BWA_label, assemble_contigs_label),
+                    commands.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label, section),
                     True,
                     inner_name
                 )
             )
             process.start()
-            process.join()
-        GA_BWA_end = time.time()
+            mp_store.append(process)
 
-        # ------------------------------------------------
-        # BLAT gene annotation
-        GA_BLAT_start = time.time()
-        gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
-        if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []  # clear the list
 
-            BlatPool = mp.Pool(int(thread_count / 2))
-            sections = ["contigs", "singletons", "pair_1", "pair_2"]
-            for section in sections:
-                for fasta_db in os.listdir(paths.DNA_DB_Split):
-                    if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna") or fasta_db.endswith(".ffn"):
-                        inner_name = "BLAT_" + section + "_" + fasta_db
-                        BlatPool.apply_async(comm.create_and_launch,
-                                             args=(
-                                                 gene_annotation_BLAT_label,
-                                                 comm.create_BLAT_annotate_command(gene_annotation_BLAT_label,
-                                                                                   gene_annotation_BWA_label, section,
-                                                                                   fasta_db),
-                                                 True,
-                                                 inner_name
-                                             )
-                                             )
-            BlatPool.close()
-            BlatPool.join()
+        inner_name = "BWA_pp"
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                gene_annotation_BWA_label,
+                commands.create_BWA_pp_command(gene_annotation_BWA_label, assemble_contigs_label),
+                True,
+                inner_name
+            )
+        )
+        process.start()
+        process.join()
+    GA_BWA_end = time.time()
 
-            for section in sections:
-                inner_name = section + "_cat"
-                process = mp.Process(
-                    target=comm.create_and_launch,
-                    args=(
-                        gene_annotation_BLAT_label,
-                        comm.create_BLAT_cat_command(gene_annotation_BLAT_label, section),
-                        True,
-                        inner_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)
-            for item in mp_store:
-                item.join()
-            mp_store[:] = []
+    # ------------------------------------------------
+    # BLAT gene annotation
+    GA_BLAT_start = time.time()
+    gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
+    if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
 
-            inner_name = "BLAT_pp"
+        BlatPool = mp.Pool(int(thread_count / 2))
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        for section in sections:
+            for fasta_db in os.listdir(paths.DNA_DB_Split):
+                if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna") or fasta_db.endswith(".ffn"):
+                    inner_name = "BLAT_" + section + "_" + fasta_db
+                    BlatPool.apply_async(commands.create_and_launch,
+                                         args=(
+                                             gene_annotation_BLAT_label,
+                                             commands.create_BLAT_annotate_command(gene_annotation_BLAT_label,
+                                                                               gene_annotation_BWA_label, section,
+                                                                               fasta_db),
+                                             True,
+                                             inner_name
+                                         )
+                                         )
+        BlatPool.close()
+        BlatPool.join()
+
+        for section in sections:
+            inner_name = section + "_cat"
             process = mp.Process(
-                target=comm.create_and_launch,
+                target=commands.create_and_launch,
                 args=(
                     gene_annotation_BLAT_label,
-                    comm.create_BLAT_pp_command(gene_annotation_BLAT_label, gene_annotation_BWA_label),
+                    commands.create_BLAT_cat_command(gene_annotation_BLAT_label, section),
                     True,
                     inner_name
                 )
             )
             process.start()
-            process.join()
-        GA_BLAT_end = time.time()
+            mp_store.append(process)
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
 
-        # ------------------------------------------------------
-        # Diamond gene annotation
-        GA_DIAMOND_start = time.time()
-        gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
-        if not check_where_resume(gene_annotation_DIAMOND_path, None, gene_annotation_BLAT_path):
+        inner_name = "BLAT_pp"
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                gene_annotation_BLAT_label,
+                commands.create_BLAT_pp_command(gene_annotation_BLAT_label, gene_annotation_BWA_label),
+                True,
+                inner_name
+            )
+        )
+        process.start()
+        process.join()
+    GA_BLAT_end = time.time()
 
-            names = ["contigs", "singletons", "pair_1", "pair_2"]
-            for item in names:
-                inner_name = item + "_run_diamond"
-                process = mp.Process(
-                    target=comm.create_and_launch,
-                    args=(
-                        gene_annotation_DIAMOND_label,
-                        comm.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label,
-                                                             item),
-                        True,
-                        inner_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)
-            for item in mp_store:
-                item.join()
-            mp_store[:] = []
+    # ------------------------------------------------------
+    # Diamond gene annotation
+    GA_DIAMOND_start = time.time()
+    gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
+    if not check_where_resume(gene_annotation_DIAMOND_path, None, gene_annotation_BLAT_path):
 
-            inner_name = "diamond_pp"
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        for section in sections:
+            inner_name = section + "_run_diamond"
             process = mp.Process(
-                target=comm.create_and_launch,
+                target=commands.create_and_launch,
                 args=(
                     gene_annotation_DIAMOND_label,
-                    comm.create_DIAMOND_pp_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label),
+                    commands.create_DIAMOND_annotate_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, section),
                     True,
                     inner_name
                 )
             )
             process.start()
-            process.join()
-        GA_DIAMOND_end = time.time()
-        # ------------------------------------------------------
-        # Taxonomic annotation
-        TA_start = time.time()
-        taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
-        if not check_where_resume(taxon_annotation_path, None, gene_annotation_DIAMOND_path):
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    taxon_annotation_label,
-                    comm.create_taxonomic_annotation_command(taxon_annotation_label, assemble_contigs_label,
-                                                             gene_annotation_DIAMOND_label),
-                    True
-                )
-            )
-            process.start()
-            process.join()
-        TA_end = time.time()
+            mp_store.append(process)
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
 
-        # ------------------------------------------------------
-        # Detect EC annotation
-        EC_start = time.time()
-        EC_DETECT_start = time.time()
-        ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
-        if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-            # Preparing folders for DETECT
+        inner_name = "diamond_pp"
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                gene_annotation_DIAMOND_label,
+                commands.create_DIAMOND_pp_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label),
+                True,
+                inner_name
+            )
+        )
+        process.start()
+        process.join()
+    GA_DIAMOND_end = time.time()
+    # ------------------------------------------------------
+    # Taxonomic annotation
+    TA_start = time.time()
+    taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
+    if not check_where_resume(taxon_annotation_path, None, gene_annotation_DIAMOND_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                taxon_annotation_label,
+                commands.create_taxonomic_annotation_command(taxon_annotation_label, assemble_contigs_label,
+                                                         gene_annotation_DIAMOND_label),
+                True
+            )
+        )
+        process.start()
+        process.join()
+    TA_end = time.time()
+
+    # ------------------------------------------------------
+    # Detect EC annotation
+    EC_start = time.time()
+    EC_DETECT_start = time.time()
+    ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
+    if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
+        # Preparing folders for DETECT
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                ec_annotation_label,
+                commands.create_EC_DETECT_prep(ec_annotation_label, gene_annotation_DIAMOND_label,
+                                           int(mp.cpu_count() / 2)),
+                True
+            )
+        )
+        process.start()
+        process.join()
+
+        # Running DETECT on split protein files
+        proteins_path = os.path.join(output_folder_path, ec_annotation_label, "data", "0_proteins")
+        for item in os.listdir(proteins_path):
+            file_root_name = os.path.splitext(item)[0]
+            inner_name = file_root_name + "_detect"
             process = mp.Process(
-                target=comm.create_and_launch,
+                target=commands.create_and_launch,
                 args=(
                     ec_annotation_label,
-                    comm.create_EC_DETECT_prep(ec_annotation_label, gene_annotation_DIAMOND_label,
-                                               int(mp.cpu_count() / 2)),
-                    True
-                )
-            )
-            process.start()
-            process.join()
-
-            # Running DETECT on split protein files
-            proteins_path = os.path.join(output_folder_path, ec_annotation_label, "data", "0_proteins")
-            for item in os.listdir(proteins_path):
-                file_root_name = os.path.splitext(item)[0]
-                inner_name = file_root_name + "_detect"
-                process = mp.Process(
-                    target=comm.create_and_launch,
-                    args=(
-                        ec_annotation_label,
-                        comm.create_EC_DETECT_command(ec_annotation_label, file_root_name),
-                        True,
-                        inner_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)  # pack all the processes into a list
-
-            for item in mp_store:
-                item.join()  # wait for things to finish
-            mp_store[:] = []  # clear the list
-        EC_DETECT_end = time.time()
-
-        # --------------------------------------------------------------
-        # Priam and Diamond EC annotation
-        EC_PRIAM_DIAMOND_start = time.time()
-        if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    ec_annotation_label,
-                    comm.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                    True
-                )
-            )
-            process.start()
-            process.join()
-
-            inner_name = "ea_post"
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    ec_annotation_label,
-                    comm.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                    commands.create_EC_DETECT_command(ec_annotation_label, file_root_name),
                     True,
                     inner_name
                 )
             )
             process.start()
-            process.join()
-        EC_PRIAM_DIAMOND_end = time.time()
-        EC_end = time.time()
+            mp_store.append(process)  # pack all the processes into a list
 
-        # ------------------------------------------------------
-        # RPKM Table and Cytoscape Network
-        Cytoscape_start = time.time()
-        network_path = os.path.join(output_folder_path, network_label)
-        if not check_where_resume(network_path, None, ec_annotation_path):
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    network_label,
-                    comm.create_Network_generation_command(network_label, gene_annotation_DIAMOND_label,
-                                                           taxon_annotation_label, ec_annotation_label),
-                    True
-                )
+        for item in mp_store:
+            item.join()  # wait for things to finish
+        mp_store[:] = []  # clear the list
+    EC_DETECT_end = time.time()
+
+    # --------------------------------------------------------------
+    # Priam and Diamond EC annotation
+    EC_PRIAM_DIAMOND_start = time.time()
+    if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                ec_annotation_label,
+                commands.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                True
             )
-            process.start()
-            process.join()
-        Cytoscape_end = time.time()
+        )
+        process.start()
+        process.join()
 
-        # ------------------------------------------------------
-        # Final Pie Charts
-        Chart_start = time.time()
-        visualization_path = os.path.join(output_folder_path, visualization_label)
-        if not check_where_resume(visualization_path, None, network_path):
-            process = mp.Process(
-                target=comm.create_and_launch,
-                args=(
-                    visualization_label,
-                    comm.create_visualization_command(visualization_label, network_label),
-                    True
-                )
+        inner_name = "ea_post"
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                ec_annotation_label,
+                commands.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                True,
+                inner_name
             )
-            process.start()
-            process.join()
-        Chart_end = time.time()
+        )
+        process.start()
+        process.join()
+    EC_PRIAM_DIAMOND_end = time.time()
+    EC_end = time.time()
 
-        end_time = time.time()
-        print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
-        print("quality filter:", '%1.1f' % (quality_end - quality_start), "s")
-        if not no_host:
-            print("host filter:", '%1.1f' % (host_end - host_start), "s")
-        print("vector filter:", '%1.1f' % (vector_end - vector_start), "s")
-        print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start), "s")
-        print("repop:", '%1.1f' % (repop_end - repop_start), "s")
-        print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start), "s")
-        print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start), "s")
-        print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start), "s")
-        print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start), "s")
-        print("TA:", '%1.1f' % (TA_end - TA_start), "s")
-        print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
-        print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start), "s")
-        print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s")
-        print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s")
+    # ------------------------------------------------------
+    # RPKM Table and Cytoscape Network
+    Cytoscape_start = time.time()
+    network_path = os.path.join(output_folder_path, network_label)
+    if not check_where_resume(network_path, None, ec_annotation_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                network_label,
+                commands.create_Network_generation_command(network_label, gene_annotation_DIAMOND_label,
+                                                       taxon_annotation_label, ec_annotation_label),
+                True
+            )
+        )
+        process.start()
+        process.join()
+    Cytoscape_end = time.time()
 
-    elif operating_mode == "single":
-        print("not ready")
+    # ------------------------------------------------------
+    # Final Pie Charts
+    Chart_start = time.time()
+    visualization_path = os.path.join(output_folder_path, visualization_label)
+    if not check_where_resume(visualization_path, None, network_path):
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                visualization_label,
+                commands.create_visualization_command(visualization_label, network_label),
+                True
+            )
+        )
+        process.start()
+        process.join()
+    Chart_end = time.time()
+
+    end_time = time.time()
+    print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
+    print("quality filter:", '%1.1f' % (quality_end - quality_start), "s")
+    if not no_host:
+        print("host filter:", '%1.1f' % (host_end - host_start), "s")
+    print("vector filter:", '%1.1f' % (vector_end - vector_start), "s")
+    print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start), "s")
+    print("repop:", '%1.1f' % (repop_end - repop_start), "s")
+    print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start), "s")
+    print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start), "s")
+    print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start), "s")
+    print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start), "s")
+    print("TA:", '%1.1f' % (TA_end - TA_start), "s")
+    print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+    print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start), "s")
+    print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s")
+    print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s")
 
 
 if __name__ == "__main__":

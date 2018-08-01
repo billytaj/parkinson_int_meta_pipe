@@ -6,12 +6,6 @@
 #Rather, this tool changes the taxanomic ID into something with english
 
 import sys
-import os
-import os.path
-import shutil
-import subprocess
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
 
 target_rank = sys.argv[1]
 classification_file = sys.argv[2]

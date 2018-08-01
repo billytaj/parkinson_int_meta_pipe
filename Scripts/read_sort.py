@@ -1,7 +1,6 @@
-import pandas as pd
 import sys
 import time
-import numpy as np
+import pandas as pd
 
 # This code started off as a testbed to develop a method to import FASTQs effectively into pandas.
 # It simply imports the FASTQ file, sorts by the ID, and exports it back. 

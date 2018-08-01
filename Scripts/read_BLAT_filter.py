@@ -1,15 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import os
-import os.path
-import shutil
-import subprocess
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-import re
-from time import clock as clock
-
 
 input_file = sys.argv[1]
 input_seqs = SeqIO.to_dict(SeqIO.parse(input_file, "fastq"))
@@ -21,7 +13,6 @@ contaminat_output_file = sys.argv[4]
 contaminat_output_seqs = []
 contaminat_output_file_made = False
 
-start_all = clock()
 with open(BLAT_tab_file, "r") as tabfile:
     contaminated_seqs = []
     query_seq = ""
@@ -76,9 +67,3 @@ with open(BLAT_tab_file, "r") as tabfile:
         else:
             with open(contaminat_output_file, "a") as outfile:
                 SeqIO.write(contaminat_output_seqs, outfile, "fastq")
-                
-end_all = clock()
-#print "--------------------------------------"
-#print "BLAT containment filter"
-#print "==============================="
-#print "total run:", end_all - start_all, "s"          

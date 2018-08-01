@@ -4,12 +4,6 @@
 # set intersection, and symmetric_difference are the exact opposites, which only serve to cover the entire region
 # What we really want is a union, with no duplicates.
 import sys
-import os
-import os.path
-import shutil
-import subprocess
-import multiprocessing
-from Bio import SeqIO
 
 contig2read_file = sys.argv[1]
 output_file = sys.argv[2]
