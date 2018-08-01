@@ -1,5 +1,6 @@
 import sys
 import matplotlib
+
 # Switching to backend that doesn't display to the user
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt

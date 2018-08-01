@@ -1,6 +1,5 @@
-import os
 import sys
-# this module strips away the pesky optional segments of the SAM file format.
+# this module strips away the optional segments of the SAM file format.
 # this is used so that pandas' read_csv importing is clean
 
 if __name__ == "__main__":
@@ -13,10 +12,6 @@ if __name__ == "__main__":
     for line in sam_file:
         cur_line = line.split('\t')
         line_length = len(cur_line)
-        if(line_length > 12):
-            print("line[", count, "]: length:", line_length)
-            print(cur_line)
-            print("--------------------------------------------------")
         count += 1
         if(line.startswith("@") or len(line) <= 1 or line_length < 13):
             continue

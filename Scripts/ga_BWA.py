@@ -17,16 +17,13 @@
 # (4) BWA-aligned reads that are part of a contig (THIS SHOULDT'T HAPPEN), but not the contig
 # (5) BWA-aligned contigs/reads that align to multiple genes (PAIRED READS CONSIDERED TOGETHER)
 
-import sys
 import os
 import os.path
-import shutil
-import subprocess
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
 import re
+import sys
 from collections import Counter
 from collections import defaultdict
+from Bio import SeqIO
 
 DNA_DB= sys.argv[1]             # INPUT: DNA db used for BWA alignement
 contig2read_file= sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]

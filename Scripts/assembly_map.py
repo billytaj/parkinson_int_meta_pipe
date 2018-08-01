@@ -16,30 +16,12 @@
 #   will be discarded, and the read considered to be part of the contig.
 # - It is possible for a read to align to multiple contigs.
 
-import sys
 import os
 import os.path
-import shutil
-import subprocess
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
+import sys
 from collections import defaultdict
 
-# files + extraction:
-paired_file1= sys.argv[1]                           # INPUT: unmerged1 readIDs and seqs (.fastq)
-paired1_seqs= SeqIO.index(paired_file1, "fastq")    # dict of unmerged1 read SeqRecords: key=readID
-
-paired_file2= sys.argv[2]                           # INPUT: unmerged2 readIDs and seqs (.fastq)
-paired2_seqs= SeqIO.index(paired_file2, "fastq")    # dict of unmerged2 read SeqRecords: key=readID
-
-unpaired_file= sys.argv[3]                          # INPUT: merged readIDs and seqs (.fastq)
-unpaired_seqs= SeqIO.index(unpaired_file, "fastq")  # dict of merged read SeqRecords: key=readID
-
-pair_1_sam_file = sys.argv[4]        # INPUT: unmerged reads that are BWA-aligned&unaligned to contigs (.sam)
-pair_2_sam_file = sys.argv[5]
-unpaired_sam_file= sys.argv[6]      # INPUT: merged reads that are BWA-aligned&unaligned to contigs (.sam)
-
-contig_map_file = sys.argv[7]            # OUTPUT: contig<->read map: [contigID, #reads, readIDs ...]
+contig_map_file = sys.argv[1]            # OUTPUT: contig<->read map: [contigID, #reads, readIDs ...]
 
 # tracking BWA-aligned:
 contig2read_map= defaultdict(set)   # dict of BWA-aligned contigID<->readID(s)
@@ -92,30 +74,9 @@ def make_contig_map(sam, unmapped, mapped_reads, contig2read_map):
 # extraction of contig-aligned reads and unaligned reads:
 unmapped_paired_reads= set()
 unmapped_unpaired_reads= set()
-make_contig_map(pair_1_sam_file, unmapped_paired_reads, mapped_reads, contig2read_map)      # unmerged reads
-make_contig_map(pair_2_sam_file, unmapped_paired_reads, mapped_reads, contig2read_map)
-make_contig_map(unpaired_sam_file, unmapped_unpaired_reads, mapped_reads, contig2read_map)  # merged reads
 
-"""
-# WRITE OUTPUT: non-contig unmerged: (pair 1, pair 2)
-unmapped_paired1_seqs= []
-unmapped_paired2_seqs= []
-for read in unmapped_paired_reads:                      # For the non-contig unmerged reads,
-    unmapped_paired1_seqs.append(paired1_seqs[read])    #  isolate the corresponding SeqRecord for fwd read,
-    unmapped_paired2_seqs.append(paired2_seqs[read])    #  and for the rev read.
-with open(os.path.splitext(paired_file1)[0] + "_unmapped.fastq","w") as out:
-    SeqIO.write(unmapped_paired1_seqs, out, "fastq")    # Write the sequence for fwd read to file
-with open(os.path.splitext(paired_file2)[0] + "_unmapped.fastq","w") as out:
-    SeqIO.write(unmapped_paired2_seqs, out, "fastq")    #  and for the rev read.
-
-# WRITE OUTPUT: non-contig merged (orphans)
-unmapped_unpaired_seqs= []
-for read in unmapped_unpaired_reads:                    # For the non-contig merged reads,
-    unmapped_unpaired_seqs.append(unpaired_seqs[read])  #  isolate the corresponding SeqRecord,
-with open(os.path.splitext(unpaired_file)[0] + "_unmapped.fastq","w") as out:
-    SeqIO.write(unmapped_unpaired_seqs, out, "fastq")   #  and write the sequence to file.
-
-"""
+for sam_file in sys.argv[2:]:
+    make_contig_map(sam_file, unmapped_paired_reads, mapped_reads, contig2read_map)
 
 # WRITE OUTPUT: contig<->read map
 # [contigID, #reads in contig, read IDs...]

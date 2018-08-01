@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-import subprocess
 import os
-import sqlite3  
+import sqlite3
+import subprocess
+from argparse import ArgumentParser
+from collections import defaultdict, OrderedDict
+from operator import itemgetter
 from string import whitespace
 from sys import stdout
-from argparse import ArgumentParser
-from operator import itemgetter
-from collections import defaultdict, OrderedDict
 from Bio import SeqIO
+
 
 def get_ec_to_cutoff(mapping_file, beta):
     """Return the mapping of EC to cutoff from the file with the mapping."""

@@ -9,15 +9,12 @@
 # According to BJ:  splitting fasta isn't necessary anymore.  It was a leftover piece of code.  
 # This thing will only split Fastq until we see a need for something else
 
-import sys
+import math as m
 import os
 import os.path
-import shutil
-import subprocess
-import multiprocessing
-#from Bio import SeqIO
+import sys
 import pandas as pd
-import math as m
+
 
 def split_fastq(file_name_in, file_name_out, split_count = 4):
     #FASTQ has 4 lines per entry.
