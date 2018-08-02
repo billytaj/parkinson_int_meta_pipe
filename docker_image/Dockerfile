@@ -192,6 +192,7 @@ RUN rm -r WEVOTE-master
 #-------------------------------------------
 # add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
 WORKDIR /pipeline
+RUN mkdir /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro_paths.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro_commands.py /pipeline
@@ -215,6 +216,8 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_combine.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_constrain.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_taxid.py /pipeline/Scripts
+
+RUN chmod -R 555 /pipeline
 
 WORKDIR /
 CMD ["bash"]
