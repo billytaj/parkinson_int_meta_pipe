@@ -1305,9 +1305,10 @@ class mt_pipe_commands:
 
         return COMMANDS_Annotate_Diamond_Post
 
-    def create_taxonomic_annotation_command(self, current_stage_name, assemble_contigs_stage, diamond_stage):
+    def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, diamond_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "data", "final_results", "rRNA")
         assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "data", "final_results")
         diamond_folder          = os.path.join(self.Output_Path, diamond_stage, "data", "final_results")
         ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
@@ -1322,6 +1323,7 @@ class mt_pipe_commands:
         self.make_folder(kaiju_folder)
         self.make_folder(centrifuge_folder)
         self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
         self.make_folder(final_folder)
 
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
@@ -1364,14 +1366,14 @@ class mt_pipe_commands:
             cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
         cat_kaiju += " > " + os.path.join(kaiju_folder, "merged_kaiju.tsv")
 
-        centrifuge_on_reads = ">&2 echo centrifuge on singletons | "
+        centrifuge_on_reads = ">&2 echo centrifuge on reads | "
         centrifuge_on_reads += self.tool_path_obj.Centrifuge
         centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
         centrifuge_on_reads += " -U " + os.path.join(assemble_contigs_folder, "singletons.fastq")
         if self.read_mode == "paired":
             centrifuge_on_reads += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
             centrifuge_on_reads += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
-        centrifuge_on_reads += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_reads += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_reads += " --phred" + self.Qual_str
         centrifuge_on_reads += " -p 6"
         centrifuge_on_reads += " -S " + os.path.join(centrifuge_folder, "reads.tsv")
@@ -1381,7 +1383,7 @@ class mt_pipe_commands:
         centrifuge_on_contigs += self.tool_path_obj.Centrifuge
         centrifuge_on_contigs += " -f -x " + self.tool_path_obj.Centrifuge_db
         centrifuge_on_contigs += " -U " + os.path.join(assemble_contigs_folder, "contigs.fasta")
-        centrifuge_on_contigs += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_contigs += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_contigs += " --phred" + self.Qual_str
         centrifuge_on_contigs += " -p 6"
         centrifuge_on_contigs += " -S " + os.path.join(centrifuge_folder, "contigs.tsv")
@@ -1417,6 +1419,19 @@ class mt_pipe_commands:
         awk_cleanup += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt")
         awk_cleanup += " > " + os.path.join(final_folder, "taxonomic_classifications.tsv")
 
+        centrifuge_on_rRNA = ">&2 echo centrifuge on rRNA | "
+        centrifuge_on_rRNA += self.tool_path_obj.Centrifuge
+        centrifuge_on_rRNA += " -x " + self.tool_path_obj.Centrifuge_db
+        centrifuge_on_rRNA += " -U " + os.path.join(rRNA_folder, "singletons.fastq")
+        if self.read_mode == "paired":
+            centrifuge_on_rRNA += " -1 " + os.path.join(rRNA_folder, "pair_1.fastq")
+            centrifuge_on_rRNA += " -2 " + os.path.join(rRNA_folder, "pair_2.fastq")
+        centrifuge_on_rRNA += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_rRNA += " --phred" + self.Qual_str
+        centrifuge_on_rRNA += " -p 6"
+        centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "rRNA.tsv")
+        centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "rRNA.txt")
+
         if self.read_mode == "single":
             COMMANDS_Classify = [
                 get_taxa_from_gene,
@@ -1442,7 +1457,8 @@ class mt_pipe_commands:
                 cat_centrifuge,
                 wevote_combine,
                 wevote_call,
-                awk_cleanup
+                awk_cleanup,
+                centrifuge_on_rRNA
             ]
 
         return COMMANDS_Classify
