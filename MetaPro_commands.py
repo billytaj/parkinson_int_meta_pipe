@@ -732,52 +732,102 @@ class mt_pipe_commands:
 
         return COMMANDS_rRNA_prep
 
-    def create_rRNA_filter_command(self, stage_name, category, segment_root_name):
+    def create_rRNA_filter_command(self, stage_name, category, dependency_name):
         # converts the fastq segments to fasta for infernal,
         # then takes the fasta segments, filters out the rRNA
         # then merges the split fastqs back together
         # called by each split file
         # category -> singletons, pair 1, pair 2
         # stage_name -> "rRNA_Filter"
+        dep_loc = os.path.join(self.Output_Path, dependency_name, "data", "final_results")
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data", category)
+        fasta_folder        = os.path.join(data_folder, category + "_fasta")
+        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
         mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
         rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
-        fasta_folder        = os.path.join(data_folder, category + "_fasta")
-        fastq_folder        = os.path.join(data_folder, category + "_fastq")
-        infernal_out        = os.path.join(infernal_out_folder, segment_root_name + ".infernal_out")
-        fastq_in            = os.path.join(fastq_folder, segment_root_name + ".fastq")
-        fasta_io            = os.path.join(fasta_folder, segment_root_name + ".fasta")
+
+        Barrnap_out         = os.path.join(Barrnap_out_folder, category + ".barrnap_out")
+        infernal_out        = os.path.join(infernal_out_folder, category + ".infernal_out")
+        fastq_seqs          = os.path.join(dep_loc, category + ".fastq")
+        fasta_seqs          = os.path.join(fasta_folder, category + ".fasta")
 
         self.make_folder(fasta_folder)
+        self.make_folder(Barrnap_out_folder)
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
 
-        convert_fastq_to_fasta = ">&2 echo converting " + category + " split file to fasta | "
+        convert_fastq_to_fasta = ">&2 echo converting " + category + " file to fasta | "
         convert_fastq_to_fasta += self.tool_path_obj.vsearch
-        convert_fastq_to_fasta += " --fastq_filter " + fastq_in
+        convert_fastq_to_fasta += " --fastq_filter " + fastq_seqs
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str
-        convert_fastq_to_fasta += " --fastaout " + fasta_io
+        convert_fastq_to_fasta += " --fastaout " + fasta_seqs
 
-        infernal_command = ">&2 echo running infernal on " + category + " split file | "
+        Barrnap_archaea = ">&2 echo running Barrnap on " + category + " file | "
+        Barrnap_archaea += self.tool_path_obj.Barrnap
+        Barrnap_archaea += " --quiet --reject 0.01 --kingdom " + "arc"
+        Barrnap_archaea += " --threads " + self.Threads_str
+        Barrnap_archaea += " " + fasta_seqs
+        Barrnap_archaea += " >> " + Barrnap_out
+
+        Barrnap_bacteria = self.tool_path_obj.Barrnap
+        Barrnap_bacteria += " --quiet --reject 0.01 --kingdom " + "bac"
+        Barrnap_bacteria += " --threads " + self.Threads_str
+        Barrnap_bacteria += " " + fasta_seqs
+        Barrnap_bacteria += " >> " + Barrnap_out
+
+        Barrnap_eukaryote = self.tool_path_obj.Barrnap
+        Barrnap_eukaryote += " --quiet --reject 0.01 --kingdom " + "euk"
+        Barrnap_eukaryote += " --threads " + self.Threads_str
+        Barrnap_eukaryote += " " + fasta_seqs
+        Barrnap_eukaryote += " >> " + Barrnap_out
+
+        Barrnap_mitochondria = self.tool_path_obj.Barrnap
+        Barrnap_mitochondria += " --quiet --reject 0.01 --kingdom " + "mito"
+        Barrnap_mitochondria += " --threads " + self.Threads_str
+        Barrnap_mitochondria += " " + fasta_seqs
+        Barrnap_mitochondria += " >> " + Barrnap_out
+
+        Barrnap_pp = self.tool_path_obj.Python + " "
+        Barrnap_pp += self.tool_path_obj.barrnap_post + " "
+        Barrnap_pp += Barrnap_out + " "
+        Barrnap_pp += fastq_seqs + " "
+        Barrnap_pp += Barrnap_out_folder + " "
+        Barrnap_pp += rRNA_folder + " "
+        Barrnap_pp += category + "_barrnap"
+
+        convert_fastq_to_fasta_barrnap = self.tool_path_obj.vsearch
+        convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(Barrnap_out_folder, category + "_barrnap_mRNA.fastq")
+        convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
+        convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, category + "_barrnap.fasta")
+
+        infernal_command = ">&2 echo running infernal on " + category + " file | "
         infernal_command += self.tool_path_obj.Infernal
         infernal_command += " -o /dev/null --tblout "
         infernal_command += infernal_out
+        infernal_command += " --cpu " + self.Threads_str
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
-        infernal_command += fasta_io
+        infernal_command += os.path.join(Barrnap_out_folder, category + "_barrnap.fasta")
 
         rRNA_filtration = self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
-        rRNA_filtration += fastq_in + " "
+        rRNA_filtration += os.path.join(Barrnap_out_folder, category + "_barrnap_mRNA.fastq") + " "
         rRNA_filtration += mRNA_folder + " "
-        rRNA_filtration += rRNA_folder
+        rRNA_filtration += rRNA_folder + " "
+        rRNA_filtration += category + "_infernal"
 
         COMMANDS_infernal = [
             convert_fastq_to_fasta,
+            Barrnap_archaea,
+            Barrnap_bacteria,
+            Barrnap_eukaryote,
+            Barrnap_mitochondria,
+            Barrnap_pp,
+            convert_fastq_to_fasta_barrnap,
             infernal_command,
             rRNA_filtration
         ]

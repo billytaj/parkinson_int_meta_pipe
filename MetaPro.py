@@ -205,84 +205,26 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.join()  # wait for it to end
     vector_end = time.time()
 
+    # ----------------------------------------------
     # rRNA removal stage
     rRNA_filter_start = time.time()
 
     rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
-    rRNA_filter_singletons_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "singletons", "singletons_fastq")
-    rRNA_filter_pair_1_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_1", "pair_1_fastq")
-    rRNA_filter_pair_2_fastq_folder = os.path.join(output_folder_path, "rRNA_filter", "data", "pair_2", "pair_2_fastq")
-
     if not check_where_resume(rRNA_filter_path, None, vector_path):
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                rRNA_filter_label,
-                commands.create_rRNA_filter_prep_command(
-                    rRNA_filter_label, int(mp.cpu_count() / 2), vector_filter_label), #infernal can't take more than 20 extra threads for some reason.
-                True
-            )
-        )
-        process.start()
-        process.join()
-
-        singletons_mRNA_path = os.path.join(rRNA_filter_path, "data", "singletons", "singletons_mRNA")
-        if not check_where_resume(singletons_mRNA_path, None):
-            for item in os.listdir(rRNA_filter_singletons_fastq_folder):
-                file_root_name = os.path.splitext(item)[0]
-                inner_name = file_root_name + "_infernal"
-                process = mp.Process(
-                    target=commands.create_and_launch,
-                    args=(
-                        "rRNA_filter",
-                        commands.create_rRNA_filter_command("rRNA_filter", "singletons", file_root_name),
-                        True,
-                        inner_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)  # pack all the processes into a list
-        for item in mp_store:
-            item.join()  # wait for things to finish
-        mp_store[:] = []  # clear the list
-
+        sections = ["singletons"]
         if read_mode == "paired":
-            pair_1_mRNA_path = os.path.join(rRNA_filter_path, "data", "pair_1", "pair_1_mRNA")
-            if not check_where_resume(pair_1_mRNA_path, None):
-                for item in os.listdir(rRNA_filter_pair_1_fastq_folder):
-                    file_root_name = os.path.splitext(item)[0]
-                    inner_name = file_root_name + "_infernal"
-                    process = mp.Process(
-                        target=commands.create_and_launch,
-                        args=(
-                            "rRNA_filter",
-                            commands.create_rRNA_filter_command("rRNA_filter", "pair_1", file_root_name),
-                            True,
-                            inner_name
-                        )
-                    )
-                    process.start()
-                    mp_store.append(process)
-            for item in mp_store:
-                item.join()  # wait for things to finish
-            mp_store[:] = []  # clear the list
-
-            pair_2_mRNA_path = os.path.join(rRNA_filter_path, "data", "pair_2", "pair_2_mRNA")
-            if not check_where_resume(pair_2_mRNA_path, None):
-                for item in os.listdir(rRNA_filter_pair_2_fastq_folder):
-                    file_root_name = os.path.splitext(item)[0]
-                    inner_name = file_root_name + "_infernal"
-                    process = mp.Process(
-                        target=commands.create_and_launch,
-                        args=(
-                            "rRNA_filter",
-                            commands.create_rRNA_filter_command("rRNA_filter", "pair_2", file_root_name),
-                            True,
-                            inner_name
-                        )
-                    )
-                    process.start()
-                    mp_store.append(process)
+            sections.extend(["pair_1", "pair_2"])
+        for section in sections:
+            process = mp.Process(
+                target=commands.create_and_launch,
+                args=(
+                    "rRNA_filter",
+                    commands.create_rRNA_filter_command("rRNA_filter", section, vector_filter_label),
+                    True
+                )
+            )
+            process.start()
+            mp_store.append(process)  # pack all the processes into a list
             for item in mp_store:
                 item.join()  # wait for things to finish
             mp_store[:] = []  # clear the list
