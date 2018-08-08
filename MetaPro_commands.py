@@ -732,52 +732,102 @@ class mt_pipe_commands:
 
         return COMMANDS_rRNA_prep
 
-    def create_rRNA_filter_command(self, stage_name, category, segment_root_name):
+    def create_rRNA_filter_command(self, stage_name, category, dependency_name):
         # converts the fastq segments to fasta for infernal,
         # then takes the fasta segments, filters out the rRNA
         # then merges the split fastqs back together
         # called by each split file
         # category -> singletons, pair 1, pair 2
         # stage_name -> "rRNA_Filter"
+        dep_loc = os.path.join(self.Output_Path, dependency_name, "data", "final_results")
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data", category)
+        fasta_folder        = os.path.join(data_folder, category + "_fasta")
+        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
         mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
         rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
-        fasta_folder        = os.path.join(data_folder, category + "_fasta")
-        fastq_folder        = os.path.join(data_folder, category + "_fastq")
-        infernal_out        = os.path.join(infernal_out_folder, segment_root_name + ".infernal_out")
-        fastq_in            = os.path.join(fastq_folder, segment_root_name + ".fastq")
-        fasta_io            = os.path.join(fasta_folder, segment_root_name + ".fasta")
+
+        Barrnap_out         = os.path.join(Barrnap_out_folder, category + ".barrnap_out")
+        infernal_out        = os.path.join(infernal_out_folder, category + ".infernal_out")
+        fastq_seqs          = os.path.join(dep_loc, category + ".fastq")
+        fasta_seqs          = os.path.join(fasta_folder, category + ".fasta")
 
         self.make_folder(fasta_folder)
+        self.make_folder(Barrnap_out_folder)
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
 
-        convert_fastq_to_fasta = ">&2 echo converting " + category + " split file to fasta | "
+        convert_fastq_to_fasta = ">&2 echo converting " + category + " file to fasta | "
         convert_fastq_to_fasta += self.tool_path_obj.vsearch
-        convert_fastq_to_fasta += " --fastq_filter " + fastq_in
+        convert_fastq_to_fasta += " --fastq_filter " + fastq_seqs
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str
-        convert_fastq_to_fasta += " --fastaout " + fasta_io
+        convert_fastq_to_fasta += " --fastaout " + fasta_seqs
 
-        infernal_command = ">&2 echo running infernal on " + category + " split file | "
+        Barrnap_archaea = ">&2 echo running Barrnap on " + category + " file | "
+        Barrnap_archaea += self.tool_path_obj.Barrnap
+        Barrnap_archaea += " --quiet --reject 0.01 --kingdom " + "arc"
+        Barrnap_archaea += " --threads " + self.Threads_str
+        Barrnap_archaea += " " + fasta_seqs
+        Barrnap_archaea += " >> " + Barrnap_out
+
+        Barrnap_bacteria = self.tool_path_obj.Barrnap
+        Barrnap_bacteria += " --quiet --reject 0.01 --kingdom " + "bac"
+        Barrnap_bacteria += " --threads " + self.Threads_str
+        Barrnap_bacteria += " " + fasta_seqs
+        Barrnap_bacteria += " >> " + Barrnap_out
+
+        Barrnap_eukaryote = self.tool_path_obj.Barrnap
+        Barrnap_eukaryote += " --quiet --reject 0.01 --kingdom " + "euk"
+        Barrnap_eukaryote += " --threads " + self.Threads_str
+        Barrnap_eukaryote += " " + fasta_seqs
+        Barrnap_eukaryote += " >> " + Barrnap_out
+
+        Barrnap_mitochondria = self.tool_path_obj.Barrnap
+        Barrnap_mitochondria += " --quiet --reject 0.01 --kingdom " + "mito"
+        Barrnap_mitochondria += " --threads " + self.Threads_str
+        Barrnap_mitochondria += " " + fasta_seqs
+        Barrnap_mitochondria += " >> " + Barrnap_out
+
+        Barrnap_pp = self.tool_path_obj.Python + " "
+        Barrnap_pp += self.tool_path_obj.barrnap_post + " "
+        Barrnap_pp += Barrnap_out + " "
+        Barrnap_pp += fastq_seqs + " "
+        Barrnap_pp += Barrnap_out_folder + " "
+        Barrnap_pp += rRNA_folder + " "
+        Barrnap_pp += category + "_barrnap"
+
+        convert_fastq_to_fasta_barrnap = self.tool_path_obj.vsearch
+        convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(Barrnap_out_folder, category + "_barrnap_mRNA.fastq")
+        convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
+        convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, category + "_barrnap.fasta")
+
+        infernal_command = ">&2 echo running infernal on " + category + " file | "
         infernal_command += self.tool_path_obj.Infernal
         infernal_command += " -o /dev/null --tblout "
         infernal_command += infernal_out
+        infernal_command += " --cpu " + self.Threads_str
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
-        infernal_command += fasta_io
+        infernal_command += os.path.join(Barrnap_out_folder, category + "_barrnap.fasta")
 
         rRNA_filtration = self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
-        rRNA_filtration += fastq_in + " "
+        rRNA_filtration += os.path.join(Barrnap_out_folder, category + "_barrnap_mRNA.fastq") + " "
         rRNA_filtration += mRNA_folder + " "
-        rRNA_filtration += rRNA_folder
+        rRNA_filtration += rRNA_folder + " "
+        rRNA_filtration += category + "_infernal"
 
         COMMANDS_infernal = [
             convert_fastq_to_fasta,
+            Barrnap_archaea,
+            Barrnap_bacteria,
+            Barrnap_eukaryote,
+            Barrnap_mitochondria,
+            Barrnap_pp,
+            convert_fastq_to_fasta_barrnap,
             infernal_command,
             rRNA_filtration
         ]
@@ -1305,9 +1355,10 @@ class mt_pipe_commands:
 
         return COMMANDS_Annotate_Diamond_Post
 
-    def create_taxonomic_annotation_command(self, current_stage_name, assemble_contigs_stage, diamond_stage):
+    def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, diamond_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "data", "final_results", "rRNA")
         assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "data", "final_results")
         diamond_folder          = os.path.join(self.Output_Path, diamond_stage, "data", "final_results")
         ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
@@ -1322,6 +1373,7 @@ class mt_pipe_commands:
         self.make_folder(kaiju_folder)
         self.make_folder(centrifuge_folder)
         self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
         self.make_folder(final_folder)
 
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
@@ -1364,14 +1416,14 @@ class mt_pipe_commands:
             cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
         cat_kaiju += " > " + os.path.join(kaiju_folder, "merged_kaiju.tsv")
 
-        centrifuge_on_reads = ">&2 echo centrifuge on singletons | "
+        centrifuge_on_reads = ">&2 echo centrifuge on reads | "
         centrifuge_on_reads += self.tool_path_obj.Centrifuge
         centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
         centrifuge_on_reads += " -U " + os.path.join(assemble_contigs_folder, "singletons.fastq")
         if self.read_mode == "paired":
             centrifuge_on_reads += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
             centrifuge_on_reads += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
-        centrifuge_on_reads += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_reads += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_reads += " --phred" + self.Qual_str
         centrifuge_on_reads += " -p 6"
         centrifuge_on_reads += " -S " + os.path.join(centrifuge_folder, "reads.tsv")
@@ -1381,7 +1433,7 @@ class mt_pipe_commands:
         centrifuge_on_contigs += self.tool_path_obj.Centrifuge
         centrifuge_on_contigs += " -f -x " + self.tool_path_obj.Centrifuge_db
         centrifuge_on_contigs += " -U " + os.path.join(assemble_contigs_folder, "contigs.fasta")
-        centrifuge_on_contigs += " --exclude-taxids 2759 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_contigs += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_contigs += " --phred" + self.Qual_str
         centrifuge_on_contigs += " -p 6"
         centrifuge_on_contigs += " -S " + os.path.join(centrifuge_folder, "contigs.tsv")
@@ -1417,6 +1469,19 @@ class mt_pipe_commands:
         awk_cleanup += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt")
         awk_cleanup += " > " + os.path.join(final_folder, "taxonomic_classifications.tsv")
 
+        centrifuge_on_rRNA = ">&2 echo centrifuge on rRNA | "
+        centrifuge_on_rRNA += self.tool_path_obj.Centrifuge
+        centrifuge_on_rRNA += " -x " + self.tool_path_obj.Centrifuge_db
+        centrifuge_on_rRNA += " -U " + os.path.join(rRNA_folder, "singletons.fastq")
+        if self.read_mode == "paired":
+            centrifuge_on_rRNA += " -1 " + os.path.join(rRNA_folder, "pair_1.fastq")
+            centrifuge_on_rRNA += " -2 " + os.path.join(rRNA_folder, "pair_2.fastq")
+        centrifuge_on_rRNA += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_rRNA += " --phred" + self.Qual_str
+        centrifuge_on_rRNA += " -p 6"
+        centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "rRNA.tsv")
+        centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "rRNA.txt")
+
         if self.read_mode == "single":
             COMMANDS_Classify = [
                 get_taxa_from_gene,
@@ -1442,7 +1507,8 @@ class mt_pipe_commands:
                 cat_centrifuge,
                 wevote_combine,
                 wevote_call,
-                awk_cleanup
+                awk_cleanup,
+                centrifuge_on_rRNA
             ]
 
         return COMMANDS_Classify
