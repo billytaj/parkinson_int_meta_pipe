@@ -24,7 +24,15 @@ if __name__ == "__main__":
     
     stats_df = pd.DataFrame(df_0.loc["avg"]).transpose()
     stats_df.loc["SD"] = df_0.select_dtypes(pd.np.number).std()
-    print(stats_df)
+    stats_df.loc["Median"] = df_0.select_dtypes(pd.np.number).median()
+    stats_df.loc["Max"] = df_0.select_dtypes(pd.np.number).max()
+    stats_df.loc["Min"] = df_0.select_dtypes(pd.np.number).min()
+    stats_df.loc["Q1"] = df_0.select_dtypes(pd.np.number).quantile(0.25)
+    stats_df.loc["Q3"] = df_0.select_dtypes(pd.np.number).quantile(0.75)
+    new_name = os.path.split(sys.argv[1])[1].split(".")[0] + "_base_pair_quality_report.csv"
+    stats_df.to_csv(new_name, mode="w+")
+    #df_0.boxplot(figsize = [80,20])
+    #print(stats_df)
     #print(df_0)
     
     
