@@ -15,8 +15,8 @@ def filter_for_orphans(pair_0_path_i, pair_1_path_i, orphans_path_i, pair_0_path
     
     df_0.columns = ["ID", "seq", "junk", "quality"]
     df_1.columns = ["ID", "seq", "junk", "quality"]
-    df_0["ID"] = df_0["ID"].apply(lambda x: x.split(" ")[0]) #There may be a space in the ID, left in some types of FASTQs.  
-    df_1["ID"] = df_1["ID"].apply(lambda x: x.split(" ")[0]) #we remove them to that the ID-matching will work
+    #df_0["ID"] = df_0["ID"].apply(lambda x: x.split(" ")[0]) #There may be a space in the ID, left in some types of FASTQs.  
+    #df_1["ID"] = df_1["ID"].apply(lambda x: x.split(" ")[0]) #we remove them to that the ID-matching will work
     common = df_0.merge(df_1, on=["ID"])
     
     #stuff that belongs go here
