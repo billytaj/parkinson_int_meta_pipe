@@ -11,19 +11,19 @@ class mt_pipe_commands:
     # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_signle=None):
+    def __init__(self, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_signal=None):
 
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
 
         # path to the genome sequence file
-        if sequence_signle is not None:
-            self.sequence_signle = sequence_signle
+        if sequence_signal is not None:
+            self.sequence_signal = sequence_signal
             self.sequence_path_1 = ""
             self.sequence_path_2 = ""
-            print("Reads:", self.sequence_signle)
+            print("Reads:", self.sequence_signal)
             self.read_mode = "single"
         else:
-            self.sequence_signle = ""
+            self.sequence_signal = ""
             self.sequence_path_1 = sequence_path_1
             self.sequence_path_2 = sequence_path_2
             print("Forward Reads:", self.sequence_path_1)
@@ -114,7 +114,7 @@ class mt_pipe_commands:
         adapter_removal_line = ">&2 echo Removing adapters | "
         adapter_removal_line += self.tool_path_obj.AdapterRemoval
         if self.read_mode == "single":
-            adapter_removal_line += " --file1 " + self.sequence_signle
+            adapter_removal_line += " --file1 " + self.sequence_signal
         elif self.read_mode == "paired":
             adapter_removal_line += " --file1 " + os.path.join(sorted_read_folder, "pair_1_sorted.fastq")
             adapter_removal_line += " --file2 " + os.path.join(sorted_read_folder, "pair_2_sorted.fastq")
@@ -185,7 +185,7 @@ class mt_pipe_commands:
         orphan_read_filter += os.path.join(vsearch_filter_folder, "singletons_hq.fastq") + " "
         orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
         orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons.fastq")
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
 
         # remove duplicates (to shrink the data size)
         cdhit_singletons = ">&2 echo removing singleton duplicates | "
@@ -193,7 +193,7 @@ class mt_pipe_commands:
         if self.read_mode == "single":
             cdhit_singletons += os.path.join(vsearch_filter_folder, "singletons_hq.fastq")
         elif self.read_mode == "paired":
-            cdhit_singletons += os.path.join(orphan_read_filter_folder, "singletons.fastq")
+            cdhit_singletons += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
         cdhit_singletons += " -o " + os.path.join(cdhit_folder, "singletons_unique.fastq")
 
         # remove duplicates in the pairs
@@ -215,6 +215,9 @@ class mt_pipe_commands:
 
         copy_pair_2 = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
+        
+        copy_duplicate_singletons = "cp " + os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
+        copy_duplicate_singletons += os.path.join(final_folder, "singletons_with_duplicates.fastq")
 
         if self.read_mode == "single":
             COMMANDS_qual = [
@@ -473,7 +476,7 @@ class mt_pipe_commands:
         # because science needs repeatable data, and the process needs to be able to start at any point
         subfolder                       = os.path.join(self.Output_Path, stage_name)
         data_folder                     = os.path.join(subfolder, "data")
-        dependancy_folder               = os.path.join(self.Output_Path, dependency_name, "data", "final_results")
+        dependency_folder               = os.path.join(self.Output_Path, dependency_name, "data", "final_results")
         vector_removal_folder           = os.path.join(data_folder, "0_vector_removal")
         blat_containment_vector_folder  = os.path.join(data_folder, "1_blat_containment_vr")
         final_folder                    = os.path.join(data_folder, "final_results")
@@ -498,7 +501,7 @@ class mt_pipe_commands:
         bwa_vr_singletons = ">&2 echo BWA vector oprhans | "
         bwa_vr_singletons += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_vr_singletons += Vector_Contaminants + " "
-        bwa_vr_singletons += os.path.join(dependancy_folder, "singletons.fastq")
+        bwa_vr_singletons += os.path.join(dependency_folder, "singletons.fastq")
         bwa_vr_singletons += " > " + os.path.join(vector_removal_folder, "singletons_no_vectors.sam")
 
         samtools_no_vector_singletons_sam_to_bam = ">&2 echo samtools vector oprhans pt 1 | "
@@ -522,13 +525,13 @@ class mt_pipe_commands:
         bwa_vr_pair_1 = ">&2 echo bwa vector pair | "
         bwa_vr_pair_1 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_vr_pair_1 += Vector_Contaminants + " "
-        bwa_vr_pair_1 += os.path.join(dependancy_folder, "pair_1.fastq") + " "
+        bwa_vr_pair_1 += os.path.join(dependency_folder, "pair_1.fastq") + " "
         bwa_vr_pair_1 += " > " + os.path.join(vector_removal_folder, "pair_1_no_vectors.sam")
 
         bwa_vr_pair_2 = ">&2 echo bwa vector pair | "
         bwa_vr_pair_2 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_vr_pair_2 += Vector_Contaminants + " "
-        bwa_vr_pair_2 += os.path.join(dependancy_folder, "pair_2.fastq") + " "
+        bwa_vr_pair_2 += os.path.join(dependency_folder, "pair_2.fastq") + " "
         bwa_vr_pair_2 += " > " + os.path.join(vector_removal_folder, "pair_2_no_vectors.sam")
 
         samtools_vr_pair_1_sam_to_bam = ">&2 echo samtools vector pair pt 1 | "

@@ -38,8 +38,8 @@ def determine_encoding(fastq):
 
 
 # handles where to kill the pipeline, due to the prev step behaving badly
-#logic is:  if the files inside the dep_path (or dep job label shortcut to the final_results)
-#           are empty, then there's an error.  kill the pipeline 
+# logic is:  if the files inside the dep_path (or dep job label shortcut to the final_results)
+#            are empty, then there's an error.  kill the pipeline 
 def check_where_kill(dep_job_label=None, dep_path=None):
     if dep_job_label is None:
         if dep_path is None:
