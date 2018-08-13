@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 import os
 import numpy as np
+from matplotlib import pyplot as plt
 
 class read_quality_metrics:
     def __init__(self, fastq_file):
@@ -46,8 +47,11 @@ class read_quality_metrics:
         df_0 = pd.DataFrame(self.df_orig["quality"])
         df_0["len"] = df_0["quality"].apply(lambda x: len(x))
         df_0["quality"] = df_0["quality"].apply(lambda x: self.avg_ascii(x))
-        df_0.hist(column="quality")#, by = "len")
+        #this isn't going to be able to feed into the 
+        hist = df_0.hist(column="quality")#, by = "len")
+        
         new_name = os.path.split(self.filename)[1].split(".")[0] + "_per_seq_quality_report.csv"
+        plt.savefig(os.path.split(self.filename)[1].split(".")[0] + "_hist.jpg"
         df_0.to_csv(new_name, mode = "w+", header=False, index=False)
         
         
