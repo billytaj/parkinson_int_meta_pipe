@@ -15,7 +15,24 @@ def make_folder(folder_path):
     if not (os.path.exists(folder_path)):
         os.makedirs(folder_path)
 
-
+def delete_folder(folder_path):
+    if (os.path.exists(os.path.join(folder_path, "data"))):
+        print("deleting", os.path.join(folder_path, "data"))
+        shutil.rmtree(os.path.join(folder_path, "data"))
+        
+def compress_folder(folder_path):
+    zip_loc = os.path.join(folder_path, "data")
+    z = zipfile.ZipFile(folder_path+"data.zip", "a", zipfile.ZIP_DEFLATED)
+    print("compressing interim files:", folder_path)
+    for root, dirs, files in os.walk(zip_loc):
+        #print("root:", root)
+        #print("dirs:", dirs)
+        #print("files:", files)
+        #print("===============================")
+        for file in files:
+            z.write(os.path.join(root, file))
+    z.close()
+        
 # Used to determine quality encoding of fastq sequences.
 # Assumes Phred+64 unless there is a character within the first 10000 reads with encoding in the Phred+33 range.
 def determine_encoding(fastq):
@@ -47,7 +64,7 @@ def check_where_kill(dep_job_label=None, dep_path=None):
         else:
             dep_job_path = dep_path
     else:
-        dep_job_path = os.path.join(dep_job_label, "data", "final_results")
+        dep_job_path = os.path.join(dep_job_label, "final_results")
 
     file_list = os.listdir(dep_job_path)
     if len(file_list) > 0:
@@ -72,7 +89,7 @@ def check_where_kill(dep_job_label=None, dep_path=None):
 def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
     check_where_kill(dep_job_path)
     if job_label:
-        job_path = os.path.join(job_label, "data", "final_results")
+        job_path = os.path.join(job_label, "final_results")
     else:
         job_path = full_path
 
@@ -96,7 +113,7 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
         return False
 
 
-def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, no_host):
+def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, no_host, verbose_mode):
     if not single_path == "":
         read_mode = "single"
         quality_encoding = determine_encoding(single_path)
@@ -113,8 +130,23 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
 
     # --------------------------------------------------
     # profiling vars
-
+    # profiling vars are init here, in case a stage is skipped
     start_time = time.time()
+    
+    quality_start           = quality_end           = cleanup_quality_start             = cleanup_quality_end                                       = 0
+    host_start              = host_end              = cleanup_host_start                = cleanup_host_end                                          = 0
+    vector_start            = vector_end            = cleanup_vector_start              = cleanup_vector_end                                        = 0
+    rRNA_filter_start       = rRNA_filter_end       = cleanup_rRNA_filter_start         = cleanup_rRNA_filter_end                                   = 0
+    repop_start             = repop_end             = cleanup_repop_start               = cleanup_repop_end                                         = 0
+    assemble_contigs_start  = assemble_contigs_end  = cleanup_assemble_contigs_start    = cleanup_assemble_contigs_end                              = 0
+    GA_BWA_start            = GA_BWA_end            = cleanup_GA_BWA_start              = cleanup_GA_BWA_end                                        = 0
+    GA_BLAT_start           = GA_BLAT_end           = cleanup_GA_BLAT_start             = cleanup_GA_BLAT_end                                       = 0
+    GA_DIAMOND_start        = GA_DIAMOND_end        = cleanup_GA_DIAMOND_start          = cleanup_GA_DIAMOND_end                                    = 0
+    TA_start                = TA_end                = cleanup_TA_start                  = cleanup_TA_end                                            = 0
+    EC_DETECT_start         = EC_DETECT_end         = EC_PRIAM_DIAMOND_start            = EC_PRIAM_DIAMOND_end = cleanup_EC_start = cleanup_EC_end  = 0
+    Cytoscape_start         = Cytoscape_end         = cleanup_cytoscape_start           = cleanup_cytoscape_end                                     = 0
+    Chart_start             = Chart_end             = cleanup_chart_start               = cleanup_chart_end                                         = 0
+    
     # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
     # and to perform the auto-resume/kill features
 
@@ -132,6 +164,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     network_label = "RPKM_network"
     visualization_label = "visualization"
 
+    
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
         commands = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=None, sequence_path_2=None, sequence_signle=single_path)
@@ -157,6 +190,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()  # start the multiprocess
         process.join()  # wait for it to end
+        cleanup_quality_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(quality_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(quality_path)
+            delete_folder(quality_path)
+        cleanup_quality_end = time.time()
     quality_end = time.time()
 
     # The host read filter stage
@@ -174,6 +214,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
+            cleanup_host_start = time.time()
+            if(verbose_mode == "quiet"):
+                delete_folder(host_path)
+            elif(verbose_mode == "compress"):
+                compress_folder(host_path)
+                delete_folder(host_path)
+            cleanup_host_end = time.time()
+                
         host_end = time.time()
 
     # The vector contaminant filter stage
@@ -191,6 +239,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
+            cleanup_vector_start = time.time()
+            if(verbose_mode == "quiet"):
+                delete_folder(vector_path)
+            elif(verbose_mode == "compress"):
+                compress_folder(vector_path)
+                delete_folder(vector_path)
+            cleanup_vector_end = time.time()
     else:
         if not check_where_resume(vector_path, None, host_path):
             process = mp.Process(
@@ -203,6 +258,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
+            cleanup_vector_start = time.time()
+            if(verbose_mode == "quiet"):
+                delete_folder(vector_path)
+            elif(verbose_mode == "compress"):
+                compress_folder(vector_path)
+                delete_folder(vector_path)
+            cleanup_vector_end = time.time()
     vector_end = time.time()
 
     # ----------------------------------------------
@@ -241,6 +303,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        
+        cleanup_rRNA_filter_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(rRNA_filter_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(rRNA_filter_path)
+            delete_folder(rRNA_filter_path)
+        cleanup_rRNA_filter_end = time.time()
 
     rRNA_filter_end = time.time()
     # -------------------------------------------------------------
@@ -258,6 +328,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        cleanup_repop_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(repop_job_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(repop_job_path)
+            delete_folder(repop_job_path)
+        cleanup_repop_end = time.time()
     repop_end = time.time()
     # ----------------------------------------
     # Assemble contigs
@@ -274,6 +351,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        cleanup_assemble_contigs_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(assemble_contigs_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(assemble_contigs_path)
+            delete_folder(assemble_contigs_path)
+        cleanup_assemble_contigs_end = time.time()
     assemble_contigs_end = time.time()
 
     # ----------------------------------------------
@@ -315,6 +399,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        
+        cleanup_GA_BWA_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(gene_annotation_BWA_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(gene_annotation_BWA_path)
+            delete_folder(gene_annotation_BWA_path)
+        cleanup_GA_BWA_end = time.time()
     GA_BWA_end = time.time()
 
     # ------------------------------------------------
@@ -371,6 +463,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        
+        cleanup_GA_BLAT_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(gene_annotation_BLAT_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(gene_annotation_BLAT_path)
+            delete_folder(gene_annotation_BLAT_path)
+        cleanup_GA_BLAT_end = time.time()
     GA_BLAT_end = time.time()
 
     # ------------------------------------------------------
@@ -411,6 +511,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        cleanup_GA_DIAMOND_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(gene_annotation_DIAMOND_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(gene_annotation_DIAMOND_path)
+            delete_folder(gene_annotation_DIAMOND_path)
+        cleanup_GA_DIAMOND_end = time.time()
     GA_DIAMOND_end = time.time()
     # ------------------------------------------------------
     # Taxonomic annotation
@@ -427,6 +534,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        cleanup_TA_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(taxon_annotation_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(taxon_annotation_path)
+            delete_folder(taxon_annotation_path)
+        cleanup_TA_end = time.time()
     TA_end = time.time()
 
     # ------------------------------------------------------
@@ -467,6 +581,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()  # wait for things to finish
         mp_store[:] = []  # clear the list
+        
     EC_DETECT_end = time.time()
 
     # --------------------------------------------------------------
@@ -496,6 +611,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        
+        cleanup_EC_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(ec_annotation_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(ec_annotation_path)
+            delete_folder(ec_annotation_path)
+        cleanup_EC_end = time.time()
+        
     EC_PRIAM_DIAMOND_end = time.time()
     EC_end = time.time()
 
@@ -514,6 +638,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        
+        cleanup_cytoscape_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(network_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(network_path)
+            delete_folder(network_path)
+        cleanup_cytoscape_end = time.time()
+        
     Cytoscape_end = time.time()
 
     # ------------------------------------------------------
@@ -531,26 +664,47 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        cleanup_chart_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(visualization_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(visualization_path)
+            delete_folder(visualization_path)
+        cleanup_chart_end = time.time()
     Chart_end = time.time()
 
     end_time = time.time()
+    
     print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
-    print("quality filter:", '%1.1f' % (quality_end - quality_start), "s")
+    print("quality filter:", '%1.1f' % (quality_end - quality_start - (cleanup_quality_end - cleanup_quality_start)), "s")
+    print("quality filter cleanup:", '%1.1f' %(cleanup_quality_end - cleanup_quality_start), "s")
     if not no_host:
-        print("host filter:", '%1.1f' % (host_end - host_start), "s")
-    print("vector filter:", '%1.1f' % (vector_end - vector_start), "s")
-    print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start), "s")
-    print("repop:", '%1.1f' % (repop_end - repop_start), "s")
-    print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start), "s")
-    print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start), "s")
-    print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start), "s")
-    print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start), "s")
+        print("host filter:", '%1.1f' % (host_end - host_start - (cleanup_host_end - cleanup_host_start)), "s")
+        print("host filter cleanup:", '%1.1f' %(cleanup_host_end - cleanup_host_start). "s")
+    print("vector filter:", '%1.1f' % (vector_end - vector_start - (cleanup_vector_end - cleanup_vector_start)), "s")
+    print("vector filter cleanup:", '%1.1f' % (cleanup_vector_end - cleanup_vector_start), "s")
+    print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start - (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start)), "s")
+    print("rRNA filter cleanup:", '%1.1f' % (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start), "s")
+    print("repop:", '%1.1f' % (repop_end - repop_start - (cleanup_repop_end - cleanup_repop_start)), "s")
+    print("repop cleanup:", '%1.1f' % (cleanup_repop_end - cleanup_repop_start), "s")
+    print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
+    print("assemble contigs cleanup:", '%1.1f' % (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start), "s")
+    print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
+    print("GA BWA cleanup:", '%1.1f' % (cleanup_GA_BWA_end - cleanup_GA_BWA_start), "s")
+    print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start - (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start)), "s")
+    print("GA BLAT cleanup:", '%1.1f' % (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start), "s")
+    print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
+    print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
     print("TA:", '%1.1f' % (TA_end - TA_start), "s")
+    print("TA cleanup:", '%1.1f' % (TA_end - TA_start), "s")
     print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
-    print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start), "s")
-    print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s")
-    print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s")
-
+    print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
+    print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
+    print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start - (cleanup_cytoscape_end - cleanup_cytoscape_start)), "s")
+    print("Cytoscape cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
+    print("Charts: ", '%1.1f' % (Chart_end - Chart_start - (cleanup_chart_end - cleanup_chart_start), "s")
+    print("Charts: ", '%1.1f' % (cleanup_chart_end - cleanup_chart_start), "s")
+    
 
 if __name__ == "__main__":
     # This is where the code starts
@@ -559,21 +713,15 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="MetaPro - Meta-omic sequence processing and analysis pipeline"
                                         "Version 1.0 © 2018")
 
-    parser.add_argument("-c", "--config", type=str,
-                        help="Path to the configureation file")
-    parser.add_argument("-1", "--pair1", type=str,
-                        help="Path to the file containing the forward paired-end reads in fastq format")
-    parser.add_argument("-2", "--pair2", type=str,
-                        help="Path to the file containing the reverse paired-end reads in fastq format")
-    parser.add_argument("-s", "--single", type=str,
-                        help="Path to the file containing the single-end reads in fastq format")
-    parser.add_argument("-o", "--output_folder", type=str, required=True,
-                        help="Path of the folder for the output of the pipeline")
-    parser.add_argument("-t", "--num_threads", type=int,
-                        help="Maximum number of threads used by the pipeline")
-    parser.add_argument("--nhost", action='store_true',
-                        help="Skip the host read removal step of the pipeline")
-
+    parser.add_argument("-c", "--config",   type=str,   help="Path to the configureation file")
+    parser.add_argument("-1", "--pair1",    type=str,   help="Path to the file containing the forward paired-end reads in fastq format")
+    parser.add_argument("-2", "--pair2",    type=str,   help="Path to the file containing the reverse paired-end reads in fastq format")
+    parser.add_argument("-s", "--single",   type=str,   help="Path to the file containing the single-end reads in fastq format")
+    parser.add_argument("-o", "--output_folder", type=str, required=True, help="Path of the folder for the output of the pipeline")
+    parser.add_argument("-t", "--num_threads", type=int, help="Maximum number of threads used by the pipeline")
+    parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
+    parser.add_argument("--verbose_mode", type=str, help = "Decide how to handle the interim files, Compress them, or leave them alone.  Values are: keep, compress, quiet")
+    
     args = parser.parse_args()
 
     if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
@@ -584,13 +732,13 @@ if __name__ == "__main__":
         sys.exit()
 
     config_file = args.config if args.pair1 else ""
-    pair_1 = args.pair1 if args.pair1 else ""
-    pair_2 = args.pair2 if args.pair2 else ""
-    single = args.single if args.single else ""
+    pair_1 =        args.pair1 if args.pair1 else ""
+    pair_2 =        args.pair2 if args.pair2 else ""
+    single =        args.single if args.single else ""
     output_folder = args.output_folder
-    num_threads = args.num_threads if args.num_threads else 0
-    no_host = args.nhost if args.nhost else False
-
+    num_threads =   args.num_threads if args.num_threads else 0
+    no_host =       args.nhost if args.nhost else False
+    verbose_mode =  args.verbose_mode if args.verbose_mode else "quiet"
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
         os.makedirs(output_folder)
@@ -608,4 +756,4 @@ if __name__ == "__main__":
         print("You must specify paired-end or single-end reads as input for the pipeline.")
         sys.exit()
 
-    main(config_file, pair_1, pair_2, single, output_folder, num_threads, no_host)
+    main(config_file, pair_1, pair_2, single, output_folder, num_threads, no_host, verbose_mode)

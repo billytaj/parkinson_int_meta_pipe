@@ -52,6 +52,7 @@ class mt_pipe_commands:
 
         # docker mode: single cpu
         # no ID, no sbatch.  just run the command
+        
         shell_script_full_path = os.path.join(self.Output_Path, job_name, job_name + ".sh")
         if inner_name is not None:
             shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
