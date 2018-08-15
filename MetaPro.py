@@ -129,14 +129,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
     taxon_annotation_label = "taxonomic_annotation"
     ec_annotation_label = "enzyme_annotation"
-    network_label = "RPKM_network"
-    visualization_label = "visualization"
+    output_label = "outputs"
 
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
-        commands = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=None, sequence_path_2=None, sequence_signle=single_path)
+        commands = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
     elif read_mode == "paired":
-        commands = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_signle=None)
+        commands = mpcom.mt_pipe_commands(Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
     paths = mpp.tool_path_obj(config_path)
 
     # This is the format we use to launch each stage of the pipeline.
@@ -431,7 +430,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
 
     # ------------------------------------------------------
     # Detect EC annotation
-    EC_start = time.time()
     EC_DETECT_start = time.time()
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
@@ -497,41 +495,23 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         process.start()
         process.join()
     EC_PRIAM_DIAMOND_end = time.time()
-    EC_end = time.time()
 
     # ------------------------------------------------------
     # RPKM Table and Cytoscape Network
     Cytoscape_start = time.time()
-    network_path = os.path.join(output_folder_path, network_label)
+    network_path = os.path.join(output_folder_path, output_label)
     if not check_where_resume(network_path, None, ec_annotation_path):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
-                network_label,
-                commands.create_Network_generation_command(network_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label),
+                output_label,
+                commands.create_output_generation_command(output_label, quality_filter_label, repop_job_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label),
                 True
             )
         )
         process.start()
         process.join()
     Cytoscape_end = time.time()
-
-    # ------------------------------------------------------
-    # Final Pie Charts
-    Chart_start = time.time()
-    visualization_path = os.path.join(output_folder_path, visualization_label)
-    if not check_where_resume(visualization_path, None, network_path):
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                visualization_label,
-                commands.create_visualization_command(visualization_label, network_label),
-                True
-            )
-        )
-        process.start()
-        process.join()
-    Chart_end = time.time()
 
     end_time = time.time()
     print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
@@ -548,9 +528,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("TA:", '%1.1f' % (TA_end - TA_start), "s")
     print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
     print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start), "s")
-    print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s")
-    print("Charts: ", '%1.1f' % (Chart_end - Chart_start), "s")
-
+    print("Outputs:", '%1.1f' % (Cytoscape_end - Cytoscape_start), "s")
 
 if __name__ == "__main__":
     # This is where the code starts
