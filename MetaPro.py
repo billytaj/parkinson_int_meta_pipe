@@ -680,7 +680,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("quality filter cleanup:", '%1.1f' %(cleanup_quality_end - cleanup_quality_start), "s")
     if not no_host:
         print("host filter:", '%1.1f' % (host_end - host_start - (cleanup_host_end - cleanup_host_start)), "s")
-        print("host filter cleanup:", '%1.1f' %(cleanup_host_end - cleanup_host_start). "s")
+        print("host filter cleanup:", '%1.1f' %(cleanup_host_end - cleanup_host_start),"s")
     print("vector filter:", '%1.1f' % (vector_end - vector_start - (cleanup_vector_end - cleanup_vector_start)), "s")
     print("vector filter cleanup:", '%1.1f' % (cleanup_vector_end - cleanup_vector_start), "s")
     print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start - (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start)), "s")
