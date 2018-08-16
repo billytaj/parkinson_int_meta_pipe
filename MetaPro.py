@@ -703,7 +703,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start - (cleanup_cytoscape_end - cleanup_cytoscape_start)), "s")
     print("Cytoscape cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
     print("Charts: ", '%1.1f' % (Chart_end - Chart_start - (cleanup_chart_end - cleanup_chart_start)), "s")
-    print("Charts cleanup: ", '%1.1f' % (cleanup_chart_end - cleanup_chart_start)), "s")
+    print("Charts cleanup: ", '%1.1f' % (cleanup_chart_end - cleanup_chart_start), "s")
     
 
 if __name__ == "__main__":
