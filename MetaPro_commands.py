@@ -269,7 +269,7 @@ class mt_pipe_commands:
                 copy_pair_2,
                 copy_duplicate_singletons,
                 copy_singletons_cluster,
-                copy_pair_match,
+                copy_pair_1_match,
                 copy_pair_1_cluster,
                 copy_pair_2_match,
                 copy_pair_2_cluster
