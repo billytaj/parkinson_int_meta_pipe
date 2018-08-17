@@ -147,7 +147,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     TA_start                = TA_end                = cleanup_TA_start                  = cleanup_TA_end                                            = 0
     EC_DETECT_start         = EC_DETECT_end         = EC_PRIAM_DIAMOND_start            = EC_PRIAM_DIAMOND_end = cleanup_EC_start = cleanup_EC_end  = 0
     Cytoscape_start         = Cytoscape_end         = cleanup_cytoscape_start           = cleanup_cytoscape_end                                     = 0
-    Chart_start             = Chart_end             = cleanup_chart_start               = cleanup_chart_end                                         = 0
     
     # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
     # and to perform the auto-resume/kill features
@@ -647,14 +646,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         cleanup_cytoscape_end = time.time()
         
     Cytoscape_end = time.time()
-
-        cleanup_chart_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(visualization_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(visualization_path)
-            delete_folder(visualization_path)
-        cleanup_chart_end = time.time()
     end_time = time.time()
     
     print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
@@ -684,8 +675,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
     print("Outputs:", '%1.1f' % (Cytoscape_end - Cytoscape_start - (cleanup_cytoscape_end - cleanup_cytoscape_start)), "s")
     print("Outputs cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
-    print("Charts: ", '%1.1f' % (Chart_end - Chart_start - (cleanup_chart_end - cleanup_chart_start)), "s")
-    print("Charts cleanup: ", '%1.1f' % (cleanup_chart_end - cleanup_chart_start), "s")
     
 
 if __name__ == "__main__":
