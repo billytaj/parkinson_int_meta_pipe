@@ -163,8 +163,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
     taxon_annotation_label = "taxonomic_annotation"
     ec_annotation_label = "enzyme_annotation"
-    network_label = "RPKM_network"
-    visualization_label = "visualization"
+    output_label = "outputs"
 
     
     # Creates our command object, for creating shellscripts.
@@ -547,7 +546,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
 
     # ------------------------------------------------------
     # Detect EC annotation
-    EC_start = time.time()
     EC_DETECT_start = time.time()
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
@@ -623,18 +621,17 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         cleanup_EC_end = time.time()
         
     EC_PRIAM_DIAMOND_end = time.time()
-    EC_end = time.time()
 
     # ------------------------------------------------------
     # RPKM Table and Cytoscape Network
     Cytoscape_start = time.time()
-    network_path = os.path.join(output_folder_path, network_label)
+    network_path = os.path.join(output_folder_path, output_label)
     if not check_where_resume(network_path, None, ec_annotation_path):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
-                network_label,
-                commands.create_Network_generation_command(network_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label),
+                output_label,
+                commands.create_output_generation_command(output_label, quality_filter_label, repop_job_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label),
                 True
             )
         )
@@ -651,21 +648,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
     Cytoscape_end = time.time()
 
-    # ------------------------------------------------------
-    # Final Pie Charts
-    Chart_start = time.time()
-    visualization_path = os.path.join(output_folder_path, visualization_label)
-    if not check_where_resume(visualization_path, None, network_path):
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                visualization_label,
-                commands.create_visualization_command(visualization_label, network_label),
-                True
-            )
-        )
-        process.start()
-        process.join()
         cleanup_chart_start = time.time()
         if(verbose_mode == "quiet"):
             delete_folder(visualization_path)
@@ -673,8 +655,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             compress_folder(visualization_path)
             delete_folder(visualization_path)
         cleanup_chart_end = time.time()
-    Chart_end = time.time()
-
     end_time = time.time()
     
     print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
@@ -702,8 +682,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
     print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
     print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
-    print("Cytoscape:", '%1.1f' % (Cytoscape_end - Cytoscape_start - (cleanup_cytoscape_end - cleanup_cytoscape_start)), "s")
-    print("Cytoscape cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
+    print("Outputs:", '%1.1f' % (Cytoscape_end - Cytoscape_start - (cleanup_cytoscape_end - cleanup_cytoscape_start)), "s")
+    print("Outputs cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
     print("Charts: ", '%1.1f' % (Chart_end - Chart_start - (cleanup_chart_end - cleanup_chart_start)), "s")
     print("Charts cleanup: ", '%1.1f' % (cleanup_chart_end - cleanup_chart_start), "s")
     

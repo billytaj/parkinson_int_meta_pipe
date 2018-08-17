@@ -39,7 +39,7 @@ class tool_path_obj:
         else:
             self.UniVec_Core        = os.path.join(database_path, "univec_core/UniVec_Core.fasta")
             self.Adapter            = os.path.join(database_path, "Trimmomatic_adapters/TruSeq3-PE-2.fa")
-            self.Host               = os.path.join(database_path, "Mouse_cds/Mouse_cds.fasta")
+            self.Host               = os.path.join(database_path, "Human_cds/Human_cds.fasta")
             self.Rfam               = os.path.join(database_path, "Rfam/Rfam.cm")
             self.DNA_DB             = os.path.join(database_path, "ChocoPhlAn/ChocoPhlAn.fasta")
             self.DNA_DB_Split       = os.path.join(database_path, "ChocoPhlAn/ChocoPhlAn_split/")
@@ -111,9 +111,7 @@ class tool_path_obj:
         #--------------------------------------------
         # Python scripts
 
-        self.map_contig                 = os.path.join(script_path, "assembly_map.py")
         self.sam_trimmer                = os.path.join(script_path, "read_sam.py")
-        self.contig_duplicate_remover   = os.path.join(script_path, "assembly_deduplicate.py")
         self.sort_reads                 = os.path.join(script_path, "read_sort.py")
         self.duplicate_repopulate       = os.path.join(script_path, "read_repopulation.py")
         self.orphaned_read_filter       = os.path.join(script_path, "read_orphan.py")
@@ -121,12 +119,15 @@ class tool_path_obj:
         self.File_splitter              = os.path.join(script_path, "read_split.py")
         self.barrnap_post               = os.path.join(script_path, "read_rRNA_barrnap.py")
         self.rRNA_filter                = os.path.join(script_path, "read_rRNA_infernal.py")
+        self.map_contig                 = os.path.join(script_path, "assembly_map.py")
+        self.contig_duplicate_remover   = os.path.join(script_path, "assembly_deduplicate.py")
         self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA.py")
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT.py")
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond.py")
-        self.RPKM                       = os.path.join(script_path, "output_table.py")
-        self.chart                      = os.path.join(script_path, "output_visualization.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine.py")
+        self.RPKM                       = os.path.join(script_path, "output_table.py")
+        self.read_count                 = os.path.join(script_path, "output_read_counts.py")
+        self.chart                      = os.path.join(script_path, "output_visualization.py")
