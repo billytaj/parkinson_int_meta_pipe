@@ -963,9 +963,9 @@ class mt_pipe_commands:
         
         # we ran a previous preprocess.  grab files
         # need 3, 5(clstr only), and mRNA from the 2nd stage.
-        hq_path                 = os.path.join(preprocess_subfolder, "final_folder")
-        cluster_path            = os.path.join(preprocess_subfolder, "final_folder")
-        singleton_path          = os.path.join(preprocess_subfolder, "final_folder")
+        hq_path                 = os.path.join(preprocess_subfolder, "final_results")
+        cluster_path            = os.path.join(preprocess_subfolder, "final_results")
+        singleton_path          = os.path.join(preprocess_subfolder, "final_results")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1249,7 +1249,7 @@ class mt_pipe_commands:
     def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, fasta):
         subfolder   = os.path.join(self.Output_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
-        dep_loc     = os.path.join(self.Output_Path, dependency_stage_name, "data", "final_results")
+        dep_loc     = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         blat_folder = os.path.join(data_folder, "0_blat")
 
         self.make_folder(subfolder)
@@ -1283,7 +1283,7 @@ class mt_pipe_commands:
         # this call is meant to be run after the BLAT calls have been completed.
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "data", "final_results")  # implied to be BWA
+        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
         blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
         final_folder        = os.path.join(subfolder, "final_results")
 
@@ -1327,7 +1327,7 @@ class mt_pipe_commands:
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "data", "final_results")
+        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         diamond_folder      = os.path.join(data_folder, "0_diamond")
         section_folder      = os.path.join(data_folder, section)
         section_temp_folder = os.path.join(section_folder, "temp")
@@ -1353,7 +1353,7 @@ class mt_pipe_commands:
         # the command just calls the merger program
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
-        dep_loc_0       = os.path.join(self.Output_Path, dependency_0_stage_name, "data", "final_results")  # implied to be blat pp
+        dep_loc_0       = os.path.join(self.Output_Path, dependency_0_stage_name, "final_results")  # implied to be blat pp
         diamond_folder  = os.path.join(data_folder, "0_diamond/")
         final_folder    = os.path.join(subfolder, "final_results")
 
@@ -1393,9 +1393,9 @@ class mt_pipe_commands:
     def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, diamond_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
-        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "data", "final_results", "rRNA")
-        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "data", "final_results")
-        diamond_folder          = os.path.join(self.Output_Path, diamond_stage, "data", "final_results")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        diamond_folder          = os.path.join(self.Output_Path, diamond_stage, "final_results")
         ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
         kaiju_folder            = os.path.join(data_folder, "1_kaiju")
         centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
@@ -1551,7 +1551,7 @@ class mt_pipe_commands:
     def create_EC_DETECT_prep(self, current_stage_name, diamond_stage, file_split_count):
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
-        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "data", "final_results")
+        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
         proteins_folder = os.path.join(data_folder, "0_proteins")
         detect_folder   = os.path.join(data_folder, "1_detect")
         final_folder    = os.path.join(subfolder, "final_results")
@@ -1603,7 +1603,7 @@ class mt_pipe_commands:
     def create_EC_PRIAM_DIAMOND_command(self, current_stage_name, diamond_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "data", "final_results")
+        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
         PRIAM_folder        = os.path.join(data_folder, "2_priam")
         diamond_ea_folder   = os.path.join(data_folder, "3_diamond")
 
@@ -1640,7 +1640,7 @@ class mt_pipe_commands:
     def create_EC_postprocess_command(self, current_stage_name, diamond_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "data", "final_results")
+        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
         detect_folder       = os.path.join(data_folder, "1_detect")
         PRIAM_folder        = os.path.join(data_folder, "2_priam")
         diamond_ea_folder   = os.path.join(data_folder, "3_diamond")
@@ -1670,9 +1670,9 @@ class mt_pipe_commands:
     def create_Network_generation_command(self, current_stage_name, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
-        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "data", "final_results")
-        ta_folder       = os.path.join(self.Output_Path, taxonomic_annotation_stage, "data", "final_results")
-        ea_folder       = os.path.join(self.Output_Path, enzyme_annotation_stage, "data", "final_results")
+        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        ta_folder       = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
+        ea_folder       = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         final_folder    = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
@@ -1699,7 +1699,7 @@ class mt_pipe_commands:
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
         mpl_folder      = os.path.join(data_folder, "0_MPL")
-        network_folder  = os.path.join(self.Output_Path, network_stage, "data", "final_results")
+        network_folder  = os.path.join(self.Output_Path, network_stage, "final_results")
         final_folder    = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)

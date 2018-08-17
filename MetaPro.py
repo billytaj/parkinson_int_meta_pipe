@@ -9,6 +9,8 @@ import multiprocessing as mp
 import MetaPro_commands as mpcom
 import MetaPro_paths as mpp
 import time
+import zipfile
+import shutil
 
 
 def make_folder(folder_path):
@@ -22,7 +24,7 @@ def delete_folder(folder_path):
         
 def compress_folder(folder_path):
     zip_loc = os.path.join(folder_path, "data")
-    z = zipfile.ZipFile(folder_path+"data.zip", "a", zipfile.ZIP_DEFLATED)
+    z = zipfile.ZipFile(folder_path + "_data.zip", "a", zipfile.ZIP_DEFLATED)
     print("compressing interim files:", folder_path)
     for root, dirs, files in os.walk(zip_loc):
         #print("root:", root)
