@@ -2,11 +2,11 @@ import sys
 
 raw_sequence = sys.argv[1]
 quality_sequence = sys.argv[2]
-rRNA_sequence = sys.argv[4]
-mRNA_sequence = sys.argv[5]
-gene_to_read_map = sys.argv[6]
-ec_map = sys.argv[7]
-output_file = sys.argv[8]
+rRNA_sequence = sys.argv[3]
+mRNA_sequence = sys.argv[4]
+gene_to_read_map = sys.argv[5]
+ec_map = sys.argv[6]
+output_file = sys.argv[7]
 
 def fastq_count(fastq):
     lines = 0
