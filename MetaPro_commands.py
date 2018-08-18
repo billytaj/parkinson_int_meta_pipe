@@ -1714,7 +1714,7 @@ class mt_pipe_commands:
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        final_folder        = os.path.join(data_folder, "final_results")
+        final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
