@@ -183,9 +183,9 @@ class mt_pipe_commands:
         orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_1_hq.fastq") + " "
         orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_2_hq.fastq") + " "
         orphan_read_filter += os.path.join(vsearch_filter_folder, "singletons_hq.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons.fastq")
 
         # remove duplicates (to shrink the data size)
         cdhit_singletons = ">&2 echo removing singleton duplicates | "
@@ -193,18 +193,18 @@ class mt_pipe_commands:
         if self.read_mode == "single":
             cdhit_singletons += os.path.join(vsearch_filter_folder, "singletons_hq.fastq")
         elif self.read_mode == "paired":
-            cdhit_singletons += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
+            cdhit_singletons += os.path.join(orphan_read_filter_folder, "singletons.fastq")
         cdhit_singletons += " -o " + os.path.join(cdhit_folder, "singletons_unique.fastq")
 
         # remove duplicates in the pairs
         cdhit_pair_1 = ">&2 echo remove duplicates from pair 1 | "
         cdhit_pair_1 += self.tool_path_obj.cdhit_dup
-        cdhit_pair_1 += " -i " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq")
+        cdhit_pair_1 += " -i " + os.path.join(orphan_read_filter_folder, "pair_1.fastq")
         cdhit_pair_1 += " -o " + os.path.join(cdhit_folder, "pair_1_unique.fastq")
 
         cdhit_pair_2 = ">&2 echo remove duplicates from pair 2 | "
         cdhit_pair_2 += self.tool_path_obj.cdhit_dup
-        cdhit_pair_2 += " -i " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq")
+        cdhit_pair_2 += " -i " + os.path.join(orphan_read_filter_folder, "pair_2.fastq")
         cdhit_pair_2 += " -o " + os.path.join(cdhit_folder, "pair_2_unique.fastq")
 
         copy_singletons = "cp " + os.path.join(cdhit_folder, "singletons_unique.fastq") + " "
@@ -216,8 +216,8 @@ class mt_pipe_commands:
         copy_pair_2 = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
         
-        copy_duplicate_singletons = "cp " + os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
-        copy_duplicate_singletons += os.path.join(final_folder, "singletons_with_duplicates.fastq")
+        copy_duplicate_singletons = "cp " + os.path.join(orphan_read_filter_folder, "singletons.fastq")
+        copy_duplicate_singletons += os.path.join(final_folder, "singletons.fastq")
 
         if self.read_mode == "single":
             COMMANDS_qual = [
@@ -967,26 +967,26 @@ class mt_pipe_commands:
 
         repop_pair_1 = ">&2 echo Duplication repopulation pair 1 | "
         repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_1 += os.path.join(hq_path, "pair_1_match.fastq") + " "
+        repop_pair_1 += os.path.join(hq_path, "pair_1.fastq") + " "
         repop_pair_1 += os.path.join(dep_loc, "mRNA", "pair_1.fastq") + " "
         repop_pair_1 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1 += os.path.join(repop_folder, "pair_1.fastq")
 
         repop_pair_1_rRNA = self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_1_rRNA += os.path.join(hq_path, "pair_1_match.fastq") + " "
+        repop_pair_1_rRNA += os.path.join(hq_path, "pair_1.fastq") + " "
         repop_pair_1_rRNA += os.path.join(dep_loc, "rRNA", "pair_1.fastq") + " "
         repop_pair_1_rRNA += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq")
 
         repop_pair_2 = ">&2 echo Duplication repopulation pair 2 | "
         repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_2 += os.path.join(hq_path, "pair_2_match.fastq") + " "
+        repop_pair_2 += os.path.join(hq_path, "pair_2.fastq") + " "
         repop_pair_2 += os.path.join(dep_loc, "mRNA", "pair_2.fastq") + " "
         repop_pair_2 += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
         repop_pair_2 += os.path.join(repop_folder, "pair_2.fastq")
 
         repop_pair_2_rRNA = self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_2_rRNA += os.path.join(hq_path, "pair_2_match.fastq") + " "
+        repop_pair_2_rRNA += os.path.join(hq_path, "pair_2.fastq") + " "
         repop_pair_2_rRNA += os.path.join(dep_loc, "rRNA", "pair_2.fastq") + " "
         repop_pair_2_rRNA += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
         repop_pair_2_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq")
@@ -1004,7 +1004,7 @@ class mt_pipe_commands:
         singleton_repop_filter_rRNA = self.tool_path_obj.Python + " "
         singleton_repop_filter_rRNA += self.tool_path_obj.orphaned_read_filter + " "
         singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq") + " "
-        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_2_rNRA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(repop_folder, "singletons_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
@@ -1686,6 +1686,7 @@ class mt_pipe_commands:
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
+        self.make_folder(mpl_folder)
         self.make_folder(final_folder)
 
         network_generation = ">&2 echo generating RPKM table and Cytoscape network | "
@@ -1715,8 +1716,8 @@ class mt_pipe_commands:
             read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons.fastq") + " "
         elif self.read_mode == "paired":
-            read_counts += self.sequence_path_1
-            read_counts += os.path.join(quality_folder, "data", "4_orphan_read_filter", "singletons.fastq") + "," + os.path.join(quality_folder, "data", "4_orphan_read_filter", "pair_1_match") + " "
+            read_counts += self.sequence_path_1 + " "
+            read_counts += os.path.join(quality_folder, "data", "4_orphan_read_filter", "singletons.fastq") + "," + os.path.join(quality_folder, "data", "4_orphan_read_filter", "pair_1.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + "," + os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons.fastq") + "," + os.path.join(repopulation_folder, "pair_1.fastq") + " "
         read_counts += os.path.join(diamond_folder, "gene_map.tsv") + " "
@@ -1726,7 +1727,8 @@ class mt_pipe_commands:
         COMMANDS_Outputs = [
             network_generation,
             chart_generation,
-            final_chart
+            final_chart,
+            read_counts
         ]
 
         return COMMANDS_Outputs
