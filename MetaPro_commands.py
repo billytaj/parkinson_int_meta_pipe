@@ -224,7 +224,7 @@ class mt_pipe_commands:
             copy_duplicate_singletons += os.path.join(final_folder, "singletons_hq.fastq")
         else:
             copy_duplicate_singletons += os.path.join(orphan_read_filter_folder, "singletons.fastq") + " "
-            copy_duplicate_singletons += os.path.join(final_folder, "singletons.fastq")
+            copy_duplicate_singletons += os.path.join(final_folder, "singletons_with_duplicates.fastq")
 
         copy_pair_1_match = "cp " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
         copy_pair_1_match += os.path.join(final_folder, "pair_1_match.fastq")
