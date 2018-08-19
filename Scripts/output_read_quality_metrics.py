@@ -5,11 +5,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 class read_quality_metrics:
-    def __init__(self, fastq_file):
+    def __init__(self, fastq_file, output_prefix):
         self.filename = fastq_file
         self.df_file = pd.read_csv(fastq_file, header = None, names=None, sep='\n', skip_blank_lines=False)
         self.df_orig = pd.DataFrame(self.df_file.values.reshape(int(len(self.df_file)/4), 4))
         self.df_orig.columns = ["ID", "seq", "junk", "quality"]
+        self.output_prefix = output_prefix
         
     def string_to_ascii_array(self, line):
         new_line = ""
@@ -39,7 +40,7 @@ class read_quality_metrics:
         stats_df.loc["Min"] = df_0.select_dtypes(pd.np.number).min()
         stats_df.loc["Q1"] = df_0.select_dtypes(pd.np.number).quantile(0.25)
         stats_df.loc["Q3"] = df_0.select_dtypes(pd.np.number).quantile(0.75)
-        new_name = os.path.split(self.filename)[1].split(".")[0] + "_per_base_quality_report.csv"
+        new_name = self.output_prefix + "_per_base_quality_report.csv"
         stats_df.to_csv(new_name, mode="w+", header=False, index=False)
         
     def per_sequence_quality(self):
@@ -50,13 +51,14 @@ class read_quality_metrics:
         #this isn't going to be able to feed into the 
         hist = df_0.hist(column="quality")#, by = "len")
         
-        new_name = os.path.split(self.filename)[1].split(".")[0] + "_per_seq_quality_report.csv"
-        plt.savefig(os.path.split(self.filename)[1].split(".")[0] + "_hist.jpg"
+        new_name =  self.output_prefix + "_per_seq_quality_report.csv"
+        plt.savefig(self.output_prefix + "_hist.jpg"
         df_0.to_csv(new_name, mode = "w+", header=False, index=False)
         
         
 if __name__ == "__main__":
     fastq_file = sys.argv[1]
+    output_prefix = sys.argv[2]
     
     read_stats_obj = read_quality_metrics(fastq_file)
     

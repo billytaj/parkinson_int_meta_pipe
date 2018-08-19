@@ -1758,7 +1758,15 @@ class mt_pipe_commands:
         read_counts += os.path.join(diamond_folder, "gene_map.tsv") + " "
         read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
         read_counts += os.path.join(final_folder, "read_count.tsv")
-
+        
+        if(self.read_mode == "single"):
+            per_read_start = ">&2 echo collecting per-read quality data | "
+            per_read_start += self.tool_path_obj.Python + " "
+            per_read_start += self.tool_path_obj.read_quality_metrics + " "
+            per_read_start += self.sequence_single + " "
+            per_read_start += os.path.join(final_folder, "input")
+            
+    
         COMMANDS_Outputs = [
             network_generation,
             chart_generation,
