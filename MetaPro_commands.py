@@ -999,26 +999,26 @@ class mt_pipe_commands:
 
         repop_pair_1 = ">&2 echo Duplication repopulation pair 1 | "
         repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_1 += os.path.join(hq_path, "pair_1.fastq") + " "
+        repop_pair_1 += os.path.join(hq_path, "pair_1_match.fastq") + " "
         repop_pair_1 += os.path.join(dep_loc, "mRNA", "pair_1.fastq") + " "
         repop_pair_1 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1 += os.path.join(repop_folder, "pair_1.fastq")
 
         repop_pair_1_rRNA = self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_1_rRNA += os.path.join(hq_path, "pair_1.fastq") + " "
+        repop_pair_1_rRNA += os.path.join(hq_path, "pair_1_match.fastq") + " "
         repop_pair_1_rRNA += os.path.join(dep_loc, "rRNA", "pair_1.fastq") + " "
         repop_pair_1_rRNA += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq")
 
         repop_pair_2 = ">&2 echo Duplication repopulation pair 2 | "
         repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_2 += os.path.join(hq_path, "pair_2.fastq") + " "
+        repop_pair_2 += os.path.join(hq_path, "pair_2_match.fastq") + " "
         repop_pair_2 += os.path.join(dep_loc, "mRNA", "pair_2.fastq") + " "
         repop_pair_2 += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
         repop_pair_2 += os.path.join(repop_folder, "pair_2.fastq")
 
         repop_pair_2_rRNA = self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_2_rRNA += os.path.join(hq_path, "pair_2.fastq") + " "
+        repop_pair_2_rRNA += os.path.join(hq_path, "pair_2_match.fastq") + " "
         repop_pair_2_rRNA += os.path.join(dep_loc, "rRNA", "pair_2.fastq") + " "
         repop_pair_2_rRNA += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
         repop_pair_2_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq")
