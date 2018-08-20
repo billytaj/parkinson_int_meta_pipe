@@ -1760,11 +1760,42 @@ class mt_pipe_commands:
         read_counts += os.path.join(final_folder, "read_count.tsv")
         
         if(self.read_mode == "single"):
-            per_read_start = ">&2 echo collecting per-read quality data | "
-            per_read_start += self.tool_path_obj.Python + " "
-            per_read_start += self.tool_path_obj.read_quality_metrics + " "
-            per_read_start += self.sequence_single + " "
-            per_read_start += os.path.join(final_folder, "input")
+            per_read_start_single = ">&2 echo collecting per-read quality: input | "
+            per_read_start_single += self.tool_path_obj.Python + " "
+            per_read_start_single += self.tool_path_obj.read_quality_metrics + " "
+            per_read_start_single += self.sequence_single + " "
+            per_read_start_single += os.path.join(final_folder, "input")
+            
+            per_read_quality_single = ">&2 echo collecting per-read quality: after quality filter | "
+            per_read_quality_single += self.tool_path_obj.Python + " "
+            per_read_quality_single += self.tool_path_obj.read_quality_metrics + " "
+            per_read_quality_single += os.path.join(quality_folder, "singletons.fastq")+ " "
+            per_read_quality_single += os.path.join(final_folder, "quality_filter")
+            
+        elif(self.read_mode == "paired"):
+            per_read_start_pair_1 = ">&2 echo collecting per-read quality: input pair 1| " 
+            per_read_start_pair_1 += self.tool_path_obj.Python + " " 
+            per_read_start_pair_1 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_start_pair_1 += self.sequence_path_1 + " "
+            per_read_start_pair_1 += os.path.join(final_folder, "input_pair_1")
+            
+            per_read_start_pair_2 = ">&2 echo collecting per-read quality data: input pair 2| " 
+            per_read_start_pair_2 += self.tool_path_obj.Python + " " 
+            per_read_start_pair_2 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_start_pair_2 += self.sequence_path_2 + " "
+            per_read_start_pair_2 += os.path.join(final_folder, "input_pair_2")
+            
+            per_read_quality_pair_1 = ">&2 echo collecting per-read quality: after quality filter pair 1 | "
+            per_read_quality_pair_1 += self.tool_path_obj.Python + " "
+            per_read_quality_pair_1 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_quality_pair_1 += os.path.join(quality_filter, "pair_1.fastq")
+            per_read_quality_pair_1 += os.path.join(final_folder, "qc_pair_1")
+            
+            per_read_quality_pair_2 = ">&2 echo collecting per-read quality: after quality filter pair 2 | "
+            per_read_quality_pair_2 += self.tool_path_obj.Python + " "
+            per_read_quality_pair_2 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_quality_pair_2 += os.path.join(quality_filter, "pair_2.fastq")
+            per_read_quality_pair_2 += os.path.join(final_folder, "qc_pair_2")
             
     
         COMMANDS_Outputs = [
@@ -1773,5 +1804,19 @@ class mt_pipe_commands:
             final_chart,
             read_counts
         ]
-
+        read_quality_extra = []
+        if(self.read_mode == "single"):
+            read_quality_extra = [
+                per_read_start_single,
+                per_read_quality_single
+            ]
+        
+        elif(self.read_mode == "paired"):
+            read_quality_extra = [
+                per_read_start_pair_1,
+                per_read_start_pair_2,
+                per_read_quality_pair_1,
+                per_read_quality_pair_2
+            ]
+        COMMANDS_Outputs += read_quality_extra
         return COMMANDS_Outputs
