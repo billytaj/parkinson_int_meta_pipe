@@ -3,6 +3,8 @@ import sys
 import os
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib
+
 
 class read_quality_metrics:
     def __init__(self, fastq_file, output_prefix):
@@ -49,18 +51,24 @@ class read_quality_metrics:
         df_0["len"] = df_0["quality"].apply(lambda x: len(x))
         df_0["quality"] = df_0["quality"].apply(lambda x: self.avg_ascii(x))
         #this isn't going to be able to feed into the 
-        hist = df_0.hist(column="quality")#, by = "len")
-        
+        hist = df_0.hist(column="quality")#, by = "len") This is actually calling matplotlib
+        for line in hist.flatten():
+            line.set_title("Number of reads vs Average read quality")
+            line.set_xlabel("Average Read Quality")
+            line.set_ylabel("Number of reads in file")
         new_name =  self.output_prefix + "_per_seq_quality_report.csv"
+        print("report location:", new_name)
+        print("hist location:", self.output_prefix + "_hist.jpg")
         plt.savefig(self.output_prefix + "_hist.jpg")
         df_0.to_csv(new_name, mode = "w+", header=False, index=False)
         
         
 if __name__ == "__main__":
+    plt.ioff()
     fastq_file = sys.argv[1]
     output_prefix = sys.argv[2]
     
-    read_stats_obj = read_quality_metrics(fastq_file)
+    read_stats_obj = read_quality_metrics(fastq_file, output_prefix)
     
     read_stats_obj.per_sequence_quality()
     

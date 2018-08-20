@@ -1032,8 +1032,9 @@ class mt_pipe_commands:
         singleton_repop_filter += os.path.join(final_folder, "pair_1.fastq") + " "
         singleton_repop_filter += os.path.join(final_folder, "pair_2.fastq") + " "
         singleton_repop_filter += os.path.join(final_folder, "singletons.fastq")
-
-        singleton_repop_filter_rRNA = self.tool_path_obj.Python + " "
+    
+        singleton_repop_filter_rRNA = ">&2 echo filtering rRNA for new singletons | "  
+        singleton_repop_filter_rRNA += self.tool_path_obj.Python + " "
         singleton_repop_filter_rRNA += self.tool_path_obj.orphaned_read_filter + " "
         singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq") + " "
@@ -1773,13 +1774,13 @@ class mt_pipe_commands:
             per_read_quality_single += os.path.join(final_folder, "quality_filter")
             
         elif(self.read_mode == "paired"):
-            per_read_start_pair_1 = ">&2 echo collecting per-read quality: input pair 1| " 
+            per_read_start_pair_1 = ">&2 echo collecting per-read quality: input pair 1 | " 
             per_read_start_pair_1 += self.tool_path_obj.Python + " " 
             per_read_start_pair_1 += self.tool_path_obj.read_quality_metrics + " "
             per_read_start_pair_1 += self.sequence_path_1 + " "
             per_read_start_pair_1 += os.path.join(final_folder, "input_pair_1")
             
-            per_read_start_pair_2 = ">&2 echo collecting per-read quality data: input pair 2| " 
+            per_read_start_pair_2 = ">&2 echo collecting per-read quality: input pair 2 | " 
             per_read_start_pair_2 += self.tool_path_obj.Python + " " 
             per_read_start_pair_2 += self.tool_path_obj.read_quality_metrics + " "
             per_read_start_pair_2 += self.sequence_path_2 + " "
@@ -1788,13 +1789,13 @@ class mt_pipe_commands:
             per_read_quality_pair_1 = ">&2 echo collecting per-read quality: after quality filter pair 1 | "
             per_read_quality_pair_1 += self.tool_path_obj.Python + " "
             per_read_quality_pair_1 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_quality_pair_1 += os.path.join(quality_folder, "pair_1.fastq")
+            per_read_quality_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " " 
             per_read_quality_pair_1 += os.path.join(final_folder, "qc_pair_1")
             
             per_read_quality_pair_2 = ">&2 echo collecting per-read quality: after quality filter pair 2 | "
             per_read_quality_pair_2 += self.tool_path_obj.Python + " "
             per_read_quality_pair_2 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_quality_pair_2 += os.path.join(quality_folder, "pair_2.fastq")
+            per_read_quality_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " " 
             per_read_quality_pair_2 += os.path.join(final_folder, "qc_pair_2")
             
     
