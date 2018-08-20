@@ -1750,7 +1750,7 @@ class mt_pipe_commands:
             read_counts += os.path.join(repopulation_folder, "singletons.fastq") + " "
         elif self.read_mode == "paired":
             read_counts += self.sequence_path_1 + " "
-            read_counts += os.path.join(quality_folder, "singletons.fastq") + ","
+            read_counts += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + ","
             read_counts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + ","
             read_counts += os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
