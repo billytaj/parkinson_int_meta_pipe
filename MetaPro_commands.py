@@ -1750,7 +1750,7 @@ class mt_pipe_commands:
         elif self.read_mode == "paired":
             read_counts += self.sequence_path_1 + " "
             read_counts += os.path.join(quality_folder, "singletons.fastq") + ","
-            read_counts += os.path.join(quality_folder, "pair_1_match") + " "
+            read_counts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + ","
             read_counts += os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons.fastq") + ","
@@ -1788,13 +1788,13 @@ class mt_pipe_commands:
             per_read_quality_pair_1 = ">&2 echo collecting per-read quality: after quality filter pair 1 | "
             per_read_quality_pair_1 += self.tool_path_obj.Python + " "
             per_read_quality_pair_1 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_quality_pair_1 += os.path.join(quality_filter, "pair_1.fastq")
+            per_read_quality_pair_1 += os.path.join(quality_folder, "pair_1.fastq")
             per_read_quality_pair_1 += os.path.join(final_folder, "qc_pair_1")
             
             per_read_quality_pair_2 = ">&2 echo collecting per-read quality: after quality filter pair 2 | "
             per_read_quality_pair_2 += self.tool_path_obj.Python + " "
             per_read_quality_pair_2 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_quality_pair_2 += os.path.join(quality_filter, "pair_2.fastq")
+            per_read_quality_pair_2 += os.path.join(quality_folder, "pair_2.fastq")
             per_read_quality_pair_2 += os.path.join(final_folder, "qc_pair_2")
             
     

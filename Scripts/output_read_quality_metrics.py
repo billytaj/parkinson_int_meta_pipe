@@ -52,7 +52,7 @@ class read_quality_metrics:
         hist = df_0.hist(column="quality")#, by = "len")
         
         new_name =  self.output_prefix + "_per_seq_quality_report.csv"
-        plt.savefig(self.output_prefix + "_hist.jpg"
+        plt.savefig(self.output_prefix + "_hist.jpg")
         df_0.to_csv(new_name, mode = "w+", header=False, index=False)
         
         
