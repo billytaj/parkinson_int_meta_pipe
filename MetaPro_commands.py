@@ -52,7 +52,7 @@ class mt_pipe_commands:
 
         # docker mode: single cpu
         # no ID, no sbatch.  just run the command
-        
+
         shell_script_full_path = os.path.join(self.Output_Path, job_name, job_name + ".sh")
         if inner_name is not None:
             shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
@@ -184,9 +184,9 @@ class mt_pipe_commands:
         orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_1_hq.fastq") + " "
         orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_2_hq.fastq") + " "
         orphan_read_filter += os.path.join(vsearch_filter_folder, "singletons_hq.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons.fastq")
 
         # remove duplicates (to shrink the data size)
         cdhit_singletons = ">&2 echo removing singleton duplicates | "
@@ -225,22 +225,22 @@ class mt_pipe_commands:
         else:
             copy_duplicate_singletons += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq") + " "
             copy_duplicate_singletons += os.path.join(final_folder, "singletons_with_duplicates.fastq")
-        
+
         copy_pair_1_match = "cp " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
         copy_pair_1_match += os.path.join(final_folder, "pair_1_match.fastq")
-        
+
         copy_pair_2_match = "cp " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
         copy_pair_2_match += os.path.join(final_folder, "pair_2_match.fastq")
-        
+
         copy_singletons_cluster = "cp " + os.path.join(cdhit_folder, "singletons_unique.fastq.clstr") + " "
         copy_singletons_cluster += os.path.join(final_folder, "singletons_unique.fastq.clstr")
-        
+
         copy_pair_1_cluster = "cp " + os.path.join(cdhit_folder, "pair_1_unique.fastq.clstr") + " "
         copy_pair_1_cluster += os.path.join(final_folder, "pair_1_unique.fastq.clstr")
-        
+
         copy_pair_2_cluster = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq.clstr") + " "
         copy_pair_2_cluster += os.path.join(final_folder, "pair_2_unique.fastq.clstr")
-        
+
         if self.read_mode == "single":
             COMMANDS_qual = [
                 adapter_removal_line,
@@ -960,13 +960,13 @@ class mt_pipe_commands:
         repop_folder            = os.path.join(data_folder, "0_repop")
         final_folder            = os.path.join(subfolder, "final_results")
         preprocess_subfolder    = os.path.join(self.Output_Path, preprocess_stage_name)
-        
+
         # we ran a previous preprocess.  grab files
         # need 3, 5(clstr only), and mRNA from the 2nd stage.
         hq_path                 = os.path.join(preprocess_subfolder, "final_results")
         cluster_path            = os.path.join(preprocess_subfolder, "final_results")
         singleton_path          = os.path.join(preprocess_subfolder, "final_results")
-        
+
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(repop_folder)
@@ -1032,11 +1032,12 @@ class mt_pipe_commands:
         singleton_repop_filter += os.path.join(final_folder, "pair_1.fastq") + " "
         singleton_repop_filter += os.path.join(final_folder, "pair_2.fastq") + " "
         singleton_repop_filter += os.path.join(final_folder, "singletons.fastq")
-
-        singleton_repop_filter_rRNA = self.tool_path_obj.Python + " "
+    
+        singleton_repop_filter_rRNA = ">&2 echo filtering rRNA for new singletons | "  
+        singleton_repop_filter_rRNA += self.tool_path_obj.Python + " "
         singleton_repop_filter_rRNA += self.tool_path_obj.orphaned_read_filter + " "
         singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq") + " "
-        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_2_rNRA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(repop_folder, "singletons_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
@@ -1714,10 +1715,11 @@ class mt_pipe_commands:
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        final_folder        = os.path.join(data_folder, "final_results")
+        final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
+        self.make_folder(mpl_folder)
         self.make_folder(final_folder)
 
         network_generation = ">&2 echo generating RPKM table and Cytoscape network | "
@@ -1747,21 +1749,75 @@ class mt_pipe_commands:
             read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons.fastq") + " "
         elif self.read_mode == "paired":
-            read_counts += self.sequence_path_1
-            read_counts += os.path.join(quality_folder, "singletons.fastq") + "," 
-            read_counts += os.path.join(quality_folder, "pair_1_match") + " "
-            read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + "," 
+            read_counts += self.sequence_path_1 + " "
+            read_counts += os.path.join(quality_folder, "singletons.fastq") + ","
+            read_counts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
+            read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + ","
             read_counts += os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
-            read_counts += os.path.join(repopulation_folder, "singletons.fastq") + "," 
+            read_counts += os.path.join(repopulation_folder, "singletons.fastq") + ","
             read_counts += os.path.join(repopulation_folder, "pair_1.fastq") + " "
         read_counts += os.path.join(diamond_folder, "gene_map.tsv") + " "
         read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
         read_counts += os.path.join(final_folder, "read_count.tsv")
-
+        
+        if(self.read_mode == "single"):
+            per_read_start_single = ">&2 echo collecting per-read quality: input | "
+            per_read_start_single += self.tool_path_obj.Python + " "
+            per_read_start_single += self.tool_path_obj.read_quality_metrics + " "
+            per_read_start_single += self.sequence_single + " "
+            per_read_start_single += os.path.join(final_folder, "input")
+            
+            per_read_quality_single = ">&2 echo collecting per-read quality: after quality filter | "
+            per_read_quality_single += self.tool_path_obj.Python + " "
+            per_read_quality_single += self.tool_path_obj.read_quality_metrics + " "
+            per_read_quality_single += os.path.join(quality_folder, "singletons.fastq")+ " "
+            per_read_quality_single += os.path.join(final_folder, "quality_filter")
+            
+        elif(self.read_mode == "paired"):
+            per_read_start_pair_1 = ">&2 echo collecting per-read quality: input pair 1 | " 
+            per_read_start_pair_1 += self.tool_path_obj.Python + " " 
+            per_read_start_pair_1 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_start_pair_1 += self.sequence_path_1 + " "
+            per_read_start_pair_1 += os.path.join(final_folder, "input_pair_1")
+            
+            per_read_start_pair_2 = ">&2 echo collecting per-read quality: input pair 2 | " 
+            per_read_start_pair_2 += self.tool_path_obj.Python + " " 
+            per_read_start_pair_2 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_start_pair_2 += self.sequence_path_2 + " "
+            per_read_start_pair_2 += os.path.join(final_folder, "input_pair_2")
+            
+            per_read_quality_pair_1 = ">&2 echo collecting per-read quality: after quality filter pair 1 | "
+            per_read_quality_pair_1 += self.tool_path_obj.Python + " "
+            per_read_quality_pair_1 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_quality_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " " 
+            per_read_quality_pair_1 += os.path.join(final_folder, "qc_pair_1")
+            
+            per_read_quality_pair_2 = ">&2 echo collecting per-read quality: after quality filter pair 2 | "
+            per_read_quality_pair_2 += self.tool_path_obj.Python + " "
+            per_read_quality_pair_2 += self.tool_path_obj.read_quality_metrics + " "
+            per_read_quality_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " " 
+            per_read_quality_pair_2 += os.path.join(final_folder, "qc_pair_2")
+            
+    
         COMMANDS_Outputs = [
             network_generation,
             chart_generation,
-            final_chart
+            final_chart,
+            read_counts
         ]
-
+        read_quality_extra = []
+        if(self.read_mode == "single"):
+            read_quality_extra = [
+                per_read_start_single,
+                per_read_quality_single
+            ]
+        
+        elif(self.read_mode == "paired"):
+            read_quality_extra = [
+                per_read_start_pair_1,
+                per_read_start_pair_2,
+                per_read_quality_pair_1,
+                per_read_quality_pair_2
+            ]
+        COMMANDS_Outputs += read_quality_extra
         return COMMANDS_Outputs
