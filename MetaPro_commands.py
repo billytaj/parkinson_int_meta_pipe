@@ -184,9 +184,9 @@ class mt_pipe_commands:
         orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_1_hq.fastq") + " "
         orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_2_hq.fastq") + " "
         orphan_read_filter += os.path.join(vsearch_filter_folder, "singletons_hq.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2.fastq") + " "
-        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons.fastq")
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
 
         # remove duplicates (to shrink the data size)
         cdhit_singletons = ">&2 echo removing singleton duplicates | "
