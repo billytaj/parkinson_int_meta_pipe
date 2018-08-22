@@ -131,4 +131,5 @@ class tool_path_obj:
         self.RPKM                       = os.path.join(script_path, "output_table.py")
         self.read_count                 = os.path.join(script_path, "output_read_counts.py")
         self.read_quality_metrics       = os.path.join(script_path, "output_read_quality_metrics.py")
+        self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
         self.chart                      = os.path.join(script_path, "output_visualization.py")
