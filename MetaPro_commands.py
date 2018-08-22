@@ -1706,11 +1706,12 @@ class mt_pipe_commands:
 
         return COMMANDS_EC_Postprocess
 
-    def create_output_generation_command(self, current_stage_name, quality_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_generation_command(self, current_stage_name, quality_stage, contig_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         mpl_folder          = os.path.join(data_folder, "0_MPL")
         quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
+        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
         repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
@@ -1760,64 +1761,41 @@ class mt_pipe_commands:
         read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
         read_counts += os.path.join(final_folder, "read_count.tsv")
         
+        
+        per_read_scores = ">&2 echo collecting per-read quality | " 
+        per_read_scores += self.tool_path_obj.Python + " "
+        per_read_scores += self.tool_path_obj.read_quality_metrics + " "
         if(self.read_mode == "single"):
-            per_read_start_single = ">&2 echo collecting per-read quality: input | "
-            per_read_start_single += self.tool_path_obj.Python + " "
-            per_read_start_single += self.tool_path_obj.read_quality_metrics + " "
-            per_read_start_single += self.sequence_single + " "
-            per_read_start_single += os.path.join(final_folder, "input")
-            
-            per_read_quality_single = ">&2 echo collecting per-read quality: after quality filter | "
-            per_read_quality_single += self.tool_path_obj.Python + " "
-            per_read_quality_single += self.tool_path_obj.read_quality_metrics + " "
-            per_read_quality_single += os.path.join(quality_folder, "singletons.fastq")+ " "
-            per_read_quality_single += os.path.join(final_folder, "quality_filter")
+            per_read_scores += "single" + " "
+            per_read_scores += self.sequence_single + " "
+            per_read_scores += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + " "
+            per_read_scores += os.path.join(final_folder)
             
         elif(self.read_mode == "paired"):
-            per_read_start_pair_1 = ">&2 echo collecting per-read quality: input pair 1 | " 
-            per_read_start_pair_1 += self.tool_path_obj.Python + " " 
-            per_read_start_pair_1 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_start_pair_1 += self.sequence_path_1 + " "
-            per_read_start_pair_1 += os.path.join(final_folder, "input_pair_1")
+            per_read_scores += "paired" + " " 
+            per_read_scores += self.sequence_path_1 + " "
+            per_read_scores += self.sequence_path_2 + " "
+            per_read_scores += os.path.join(quality_folder, "pair_1_match.fastq") + " "
+            per_read_scores += os.path.join(quality_folder, "pair_2_match.fastq") + " "
+            per_read_scores += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + " "
+            per_read_scores += os.path.join(final_folder)
             
-            per_read_start_pair_2 = ">&2 echo collecting per-read quality: input pair 2 | " 
-            per_read_start_pair_2 += self.tool_path_obj.Python + " " 
-            per_read_start_pair_2 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_start_pair_2 += self.sequence_path_2 + " "
-            per_read_start_pair_2 += os.path.join(final_folder, "input_pair_2")
-            
-            per_read_quality_pair_1 = ">&2 echo collecting per-read quality: after quality filter pair 1 | "
-            per_read_quality_pair_1 += self.tool_path_obj.Python + " "
-            per_read_quality_pair_1 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_quality_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " " 
-            per_read_quality_pair_1 += os.path.join(final_folder, "qc_pair_1")
-            
-            per_read_quality_pair_2 = ">&2 echo collecting per-read quality: after quality filter pair 2 | "
-            per_read_quality_pair_2 += self.tool_path_obj.Python + " "
-            per_read_quality_pair_2 += self.tool_path_obj.read_quality_metrics + " "
-            per_read_quality_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " " 
-            per_read_quality_pair_2 += os.path.join(final_folder, "qc_pair_2")
+        contig_stats = ">&2 echo collecting contig stats | " 
+        contig_stats += self.tool_path_obj.Python + " "
+        contig_stats += self.tool_path_obj.contig_stats + " "
+        contig_stats += os.path.join(contig_folder, "contigs.fasta") + " "
+        contig_stats += os.path.join(final_folder, "contig_stats.txt")
+        
             
     
         COMMANDS_Outputs = [
             network_generation,
             chart_generation,
             final_chart,
-            read_counts
+            read_counts,
+            per_read_scores,
+            contig_stats
         ]
-        read_quality_extra = []
-        if(self.read_mode == "single"):
-            read_quality_extra = [
-                per_read_start_single,
-                per_read_quality_single
-            ]
+       
         
-        elif(self.read_mode == "paired"):
-            read_quality_extra = [
-                per_read_start_pair_1,
-                per_read_start_pair_2,
-                per_read_quality_pair_1,
-                per_read_quality_pair_2
-            ]
-        COMMANDS_Outputs += read_quality_extra
         return COMMANDS_Outputs
