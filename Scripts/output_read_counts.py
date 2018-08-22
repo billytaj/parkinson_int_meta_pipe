@@ -42,47 +42,48 @@ data = []
 
 headings.append("Total reads")
 raw_sequence_count = fastq_count(raw_sequence)
-data.append(str(raw_sequence_count))
+data.append(str(int(raw_sequence_count)))
 
 headings.append("High quality reads")
 quality_sequence_count = fastq_count(quality_sequence)
-data.append(str(quality_sequence_count))
+data.append(str(int(quality_sequence_count)))
 
 headings.append("% high quality")
 quality_sequence_pct = quality_sequence_count / raw_sequence_count
-data.append("%.2f" % quality_sequence_pct)
+data.append("%.2f" % quality_sequence_pct*100)
 
 headings.append("rRNA reads")
 rRNA_sequence_count = fastq_count(rRNA_sequence)
-data.append(str(rRNA_sequence_count))
+data.append(str(int(rRNA_sequence_count)))
 
 headings.append("% rRNA reads")
 rRNA_sequence_pct = rRNA_sequence_count / raw_sequence_count
-data.append("%.2f" % rRNA_sequence_pct)
+data.append("%.2f" % rRNA_sequence_pct*100)
 
 headings.append("Putative mRNA reads")
 mRNA_sequence_count = fastq_count(mRNA_sequence)
-data.append(str(mRNA_sequence_count))
+data.append(str(int(mRNA_sequence_count)))
 
 headings.append("% putative mRNA reads")
 mRNA_sequence_pct = mRNA_sequence_count / raw_sequence_count
-data.append("%.2f" % mRNA_sequence_pct)
+data.append("%.2f" % mRNA_sequence_pct*100)
 
 headings.append("Annotated mRNA reads")
 annotated_mRNA_count, genes_count = annotated_count(gene_to_read_map)
-data.append(str(annotated_mRNA_count))
+data.append(str(int(annotated_mRNA_count)))
 
 headings.append("% of putative mRNA reads annotated")
 annotated_mRNA_pct = annotated_mRNA_count / mRNA_sequence_count
-data.append("%.2f" % annotated_mRNA_pct)
+data.append("%.2f" % annotated_mRNA_pct*100)
 
 headings.append("Unique transcripts")
-data.append(str(genes_count))
+data.append(str(int(genes_count)))
 
 headings.append("Unique enzymes")
 unique_ec_count = ec_count(ec_map)
-data.append(str(unique_ec_count))
+data.append(str(int(unique_ec_count)))
 
 with open(output_file, "w") as outfile:
     outfile.write("\t".join(headings))
+    outfile.write("\n")
     outfile.write("\t".join(data))
