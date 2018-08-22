@@ -1763,8 +1763,8 @@ class mt_pipe_commands:
         
         
         per_read_scores = ">&2 echo collecting per-read quality | " 
-            per_read_scores += self.tool_path_obj.Python + " "
-            per_read_scores += self.tool_path_obj.read_quality_metrics + " "
+        per_read_scores += self.tool_path_obj.Python + " "
+        per_read_scores += self.tool_path_obj.read_quality_metrics + " "
         if(self.read_mode == "single"):
             per_read_scores += "single" + " "
             per_read_scores += self.sequence_single + " "
@@ -1772,6 +1772,7 @@ class mt_pipe_commands:
             per_read_scores += os.path.join(final_folder)
             
         elif(self.read_mode == "paired"):
+            per_read_scores += "paired" + " " 
             per_read_scores += self.sequence_path_1 + " "
             per_read_scores += self.sequence_path_2 + " "
             per_read_scores += os.path.join(quality_folder, "pair_1_match.fastq") + " "
@@ -1781,7 +1782,7 @@ class mt_pipe_commands:
             
         contig_stats = ">&2 echo collecting contig stats | " 
         contig_stats += self.tool_path_obj.Python + " "
-        contig_stats += self.tool_path_obj.output_contig_stats + " "
+        contig_stats += self.tool_path_obj.contig_stats + " "
         contig_stats += os.path.join(contig_folder, "contigs.fasta") + " "
         contig_stats += os.path.join(final_folder, "contig_stats.txt")
         
