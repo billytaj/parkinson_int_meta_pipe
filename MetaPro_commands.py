@@ -1726,10 +1726,13 @@ class mt_pipe_commands:
         network_generation = ">&2 echo generating RPKM table and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
         network_generation += self.tool_path_obj.RPKM + " "
+        network_generation += "0.01" + " " + "" + " " # placeholders, need to create method for users to modify
         network_generation += self.tool_path_obj.nodes + " "
+        network_generation += self.tool_path_obj.names + " "
         network_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
         network_generation += os.path.join(ta_folder, "taxonomic_classifications.tsv") + " "
         network_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
+        network_generation += os.path.join(final_folder, "Count_table.tsv") + " "
         network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
         network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
 
