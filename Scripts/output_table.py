@@ -16,6 +16,8 @@ raw_count = sys.argv[8]
 RPKM = sys.argv[9]
 cytoscape = sys.argv[10]
 
+show_unclassified = True # temp, should be a user modifiable setting
+
 rank_name = []
 if ID_list == "":
     rank_taxid = []
@@ -176,6 +178,10 @@ while len(sorting_list) < len(parent_sorted_rank_taxid):
 rank_taxid = sorting_list
 for taxid in rank_taxid:
     rank_name.append(names_dict[taxid])
+
+if show_unclassified:
+    rank_taxid.append("1")
+    rank_name.append("Unclassified")
 
 # parse gene annotations
 mapped_reads = 0
