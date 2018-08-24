@@ -5,16 +5,16 @@ import matplotlib
 from matplotlib import cm
 
 # Two methods to define taxa in order of increasing priority: Cutoff or Tax ID list
-cutoff = "0.05" #Proportion of annotated reads
-ID_list = ""#"2759,2157,2,976,201174,1224,1236,28216,28211,1239,91061,186801,186803,186806,541000,31979,216572"
-nodes = sys.argv[1]
-names = sys.argv[1][:-9] + "names.dmp"
-gene2read = sys.argv[2]
-read2taxid = sys.argv[3]
-gene2EC = sys.argv[4]
-raw_count = sys.argv[5]
-RPKM = sys.argv[5]
-cytoscape = sys.argv[6]
+cutoff = sys.argv[1] #Proportion of annotated reads
+ID_list = sys.argv[2]
+nodes = sys.argv[3]
+names = sys.argv[4]
+gene2read = sys.argv[5]
+read2taxid = sys.argv[6]
+gene2EC = sys.argv[7]
+raw_count = sys.argv[8]
+RPKM = sys.argv[9]
+cytoscape = sys.argv[10]
 
 rank_name = []
 if ID_list == "":
@@ -177,6 +177,7 @@ rank_taxid = sorting_list
 for taxid in rank_taxid:
     rank_name.append(names_dict[taxid])
 
+# parse gene annotations
 mapped_reads = 0
 gene2read_dict = {}
 with open(gene2read, "r") as infile:
@@ -193,6 +194,7 @@ with open(gene2read, "r") as infile:
         else:
             gene2read_dict[gene] = (gene_len, reads)
 
+# parse EC annotations
 EC2genes_dict = {}
 with open(gene2EC, "r") as infile:
     for line in infile:
@@ -205,18 +207,21 @@ with open(gene2EC, "r") as infile:
             EC2genes_dict[EC] = [gene]
 
 # Read count and RPKM Tables
+raw_count_dict = {}
 RPKM_dict = {}
 for gene in gene2read_dict:
+    raw_count_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
     RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
     RPKM_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
     for EC in EC2genes_dict:
         if gene in EC2genes_dict[EC]:
+            raw_count_dict[gene].append(EC)
             RPKM_dict[gene].append(EC)
             break
     else:
+        raw_count_dict[gene].append("0.0.0.0")
         RPKM_dict[gene].append("0.0.0.0")
     RPKM_dict[gene].append(len(gene2read_dict[gene][1])/RPKM_div)
-    unclassified_reads = 0
     for taxa in rank_taxid:
         read_count = 0
         for read in gene2read_dict[gene][1]:
@@ -224,16 +229,22 @@ for gene in gene2read_dict:
                 if read2taxid_dict[read] == taxa:
                     read_count += 1
             except:
-                unclassified_reads += 1
+                pass
         else:
+            raw_count_dict[gene].append(read_count)
             RPKM_dict[gene].append(read_count / RPKM_div)
-    else:
-        RPKM_dict[gene].append(unclassified_reads / RPKM_div)
+
+with open(raw_count, "w") as raw_count_out:
+    raw_count_out.write("GeneID\tLenght\tReads\tEC#\t" + "\t".join(str(x) for x in rank_name) + "\n")
+    for entry in raw_count_dict:
+        raw_count_out.write(entry + "\t" + "\t".join(str(x) for x in raw_count_dict[entry]) + "\n")
+    raw_count_out.write(",".join(str(x) for x in rank_taxid))
 
 with open(RPKM, "w") as RPKM_out:
-    RPKM_out.write("GeneID\tLenght\t#Reads\tEC#\tRPKM\t" + "\t".join(str(x) for x in rank_name) + "\tOther\n")
+    RPKM_out.write("GeneID\tLenght\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in rank_name) + "\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
+    raw_count_out.write(",".join(str(x) for x in rank_taxid))
 
 # Cytoscape table
 rank_colour = []
