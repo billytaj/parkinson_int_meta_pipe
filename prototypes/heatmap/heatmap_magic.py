@@ -16,57 +16,33 @@ if __name__ == "__main__":
     temp_columns = path_df.index
     path_df = path_df.pivot(values='EC', columns = 'path')
     path_df = path_df.T
+    path_df["EC_list"] = path_df[path_df.columns[:]].apply(lambda x: ",".join(x.dropna()), axis=1)
+    path_df.drop(temp_columns, axis=1, inplace=True)
     #print(path_df)
     
     rpkm_df = pd.read_csv(rpkm_table_file, sep = '\t', skip_blank_lines = False)
     super_df = pd.read_csv(pathway_superpathway_file, sep = ',', skip_blank_lines = False)
     super_df.drop(columns = ["Pathway"], inplace=True)
-    super_df.index = super_df.groupby("Superpathway").cumcount()
-    super_df = super_df.pivot(values = 'Pathway ID', columns = 'Superpathway')
-    super_df = super_df.T
+    
+    
+    #super_df.to_csv("super_path.csv", mode=  "w")
+    #path_df.to_csv("path_enzymes.csv", mode = "w")
     #print(super_df | path_df)
-    print(super_df.iloc[0:10])
-    print("--------------------------------------------")
-    print("path df")
-    print(path_df.iloc[0:10])
-    #print(super_df)
     
-    #pathway_ec_df = path_df.loc[path_df["path"] == super_df["Pathway ID"]]
-    #print(pathway_ec_df)
-    """
-    super_pathways = list(super_df["Superpathway"].unique())
-    path_list = set(super_df.loc[super_df["Superpathway"] == super_pathways[0]].values.flatten())
-    path_list.discard(super_pathways[0])
-    path_list = list(path_list)
-    superpath_df = pd.DataFrame.from_dict({super_pathways[0]: path_list})
-    for item in super_pathways:
-        if(item == super_pathways[0]):
-            continue
-        temp_path_list = set(super_df.loc[super_df["Superpathway"] == item].values.flatten())
-        temp_path_list.discard(item)
-        path_list = list(temp_path_list)
-        temp_df = pd.DataFrame.from_dict({item: path_list})
-        #print(temp_df)
-        superpath_df = superpath_df.merge(temp_df, left_index = True, right_index = True, how = 'outer')
+    super_df = super_df.join(path_df, how = 'left', on = 'Pathway ID')
+    super_df.drop(columns = ["Pathway ID"], inplace = True)
+    super_df.index = super_df.groupby("Superpathway").cumcount()
+    super_df = super_df.pivot(values = "EC_list", columns = 'Superpathway')
     
-    #superpath_df.dropna(inplace=True)
-    superpath_df.fillna('0', inplace=True)
-    superpath_df = superpath_df.T
-    superpath_df.to_csv("superpath_redrawn.csv", header=False) 
-    print(superpath_df)
-    """
+    super_df = super_df.T
+    super_temp_columns = super_df.columns
+    super_df["combined"] = super_df[super_df.columns[:]].apply(lambda x: ",".join(x.dropna()), axis=1)
+    super_df.drop(super_temp_columns, axis=1, inplace=True)
     
-    """
-    print("===============================")
-    print("ec paths:")
-    print(path_df.iloc[0:10])
-    print("==============================")
-    print("rpkm:")
-    print(rpkm_df.iloc[0:10])
-    """
+    super_enzyme_df = pd.DataFrame(super_df.combined.str.split(',').tolist(), index = super_df.index)
+    print(super_enzyme_df)
     
-    #print("===================================")
-    #print("superpathway file")
-    #print(super_df.iloc[0:10])
+    #we have superpathway -> enzyme now
     
+    found_df = 
     
