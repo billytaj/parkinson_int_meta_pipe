@@ -31,6 +31,7 @@ if __name__ == "__main__":
     
     super_df.index = super_df.groupby("Superpathway").cumcount()
     super_df = super_df.pivot(values = "EC_list", columns = 'Superpathway')
+    
     super_df = super_df.T
     
     super_temp_columns = super_df.columns
@@ -41,9 +42,15 @@ if __name__ == "__main__":
     super_enzyme_df["count"] = super_enzyme_df.count(axis=1)
     #super_enzyme_df["Superpathway"] = super_enzyme_df.index
     #super_enzyme_df.index = range(super_enzyme_df.shape[0])
+    super_enzyme_df.to_csv("superpath_enzyme_reg.csv", mode="w")
+    superpath_list = list(super_enzyme_df.index)
+    print(superpath_list)
     super_enzyme_df = super_enzyme_df.T
-    
-    
+    for item in superpath_list:
+        super_enzyme_df[item].fillna(9999)
+        super_enzyme_df[item] = super_enzyme_df[item].unique()
+        #print(item, super_enzyme_df[item].iloc[0])
+    #print(list(super_enzyme_df.columns.values))
     super_enzyme_df.to_csv("superpath_enzyme.csv", mode="w")
     print("done superpath-to-enzyme")
     #print(super_enzyme_df["count"])
