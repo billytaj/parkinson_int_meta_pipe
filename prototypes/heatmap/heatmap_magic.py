@@ -39,24 +39,64 @@ if __name__ == "__main__":
     super_df.drop(super_temp_columns, axis=1, inplace=True)
     
     super_enzyme_df = pd.DataFrame(super_df.combined.str.split(',').tolist(), index = super_df.index)
-    super_enzyme_df["count"] = super_enzyme_df.count(axis=1)
+    #super_enzyme_df["count"] = super_enzyme_df.count(axis=1)
     #super_enzyme_df["Superpathway"] = super_enzyme_df.index
     #super_enzyme_df.index = range(super_enzyme_df.shape[0])
     super_enzyme_df.to_csv("superpath_enzyme_reg.csv", mode="w")
     superpath_list = list(super_enzyme_df.index)
     print(superpath_list)
     super_enzyme_df = super_enzyme_df.T
+    count = 0
+    cleaned_enzyme_df = None
     for item in superpath_list:
-        super_enzyme_df[item].fillna(9999)
-        super_enzyme_df[item] = super_enzyme_df[item].unique()
+        
+        new_df = pd.DataFrame(super_enzyme_df[item])
+        new_df = pd.DataFrame(new_df[item].unique())
+        new_name = item + "_decoupled.csv"
+        new_df.to_csv(new_name, mode = "w")
+        if(count == 0):
+            cleaned_enzyme_df = new_df
+            cleaned_enzyme_df.columns = [item]
+            cleaned_enzyme_df.to_csv("first_one.csv", mode="w")
+        else:
+            cleaned_enzyme_df[item] = new_df
+        count += 1
+    cleaned_enzyme_df.to_csv("cleaned_enzyme_df.csv", mode = "w")
         #print(item, super_enzyme_df[item].iloc[0])
     #print(list(super_enzyme_df.columns.values))
+    super_enzyme_df = cleaned_enzyme_df
     super_enzyme_df.to_csv("superpath_enzyme.csv", mode="w")
     print("done superpath-to-enzyme")
     #print(super_enzyme_df["count"])
     
-    #we have superpathway -> enzyme now
+    #we have superpathway -> enzyme now, and they're unique per superpath.  gets us how many enzymes make up the complete set in a superpath
     
+    #This df now contains all genes -> enzymes, listed with their superpathway
+    actual_read_df = rpkm_df[["GeneID", "EC#"]]
+    #actual_read_df["EC#"] = actual_read_df["EC#"].apply(lambda x: "ec:"+x)
+    actual_read_df["EC#"] = "ec:" + actual_read_df["EC#"]
+    count = 0
+    just_matched_enzymes_df = None
+    for item in cleaned_enzyme_df.columns.values:
+        print(item)
+        actual_read_df[item] = actual_read_df["EC#"].isin(cleaned_enzyme_df[item])
+        new_df = pd.DataFrame(actual_read_df["EC#"].loc[actual_read_df["EC#"].isin(cleaned_enzyme_df[item])])
+        #new_df = pd.DataFrame(actual_read_df["EC#"].loc[actual_read_df["EC#"].isin(cleaned_enzyme_df[item])].unique())
+        if(count == 0):
+            just_matched_enzymes_df = new_df       
+            just_matched_enzymes_df.columns = [item]
+        else:
+            
+            just_matched_enzymes_df[item] = new_df
+        count += 1
+    just_matched_enzymes_df.to_csv("just_matched.csv", mode = "w")
+    actual_read_df.to_csv("newer_summary.csv", mode = "w")
+    
+    #now we've got a list of all stuff that's matched against each superpath
+    
+    #actual_read_df = actual_read_df.join(enzyme_super_df, on = "EC#")
+    
+    """
     path_df = pd.read_csv(ec_pathway_file, header=None, names=None, sep = '\t', skip_blank_lines = False)
     path_df.columns = ["path", "EC"]
     path_df["path"] = path_df["path"].apply(lambda x: x.split(":")[1])  
@@ -98,6 +138,8 @@ if __name__ == "__main__":
     actual_read_df = actual_read_df[~actual_read_df.index.duplicated(keep='first')] #removes the weird copy effect we're seeing with the same index multiple times
     #each line is a new, different gene.  many genes can be a part of an enzyme.  
     #actual_read_df.index = actual_read_df.groupby("Superpathway").cumcount()
+    actual_read_df.to_csv("pathway_summary_no_dupes.csv", mode="w")
+    actual_read_df.drop_duplicates(subset = ["EC", "Superpathway"], inplace = True)
     print(actual_read_df.iloc[0:10])
     actual_read_df.to_csv("pathway_summary.csv", mode="w")
-    
+    """
