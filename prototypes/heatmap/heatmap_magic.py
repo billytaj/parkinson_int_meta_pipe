@@ -1,8 +1,16 @@
 import pandas as pd
 import sys
 import os
+from matplotlib import pyplot as plt
+import numpy as np
+import seaborn as sns
+
 
 if __name__ == "__main__":
+
+    plt.ioff()
+    
+    
     ec_pathway_file = sys.argv[1]   #path->EC file  -> EC_pathway.txt
     rpkm_table_file = sys.argv[2]   #EC-> gene file -> RPKM_table.tsv
     pathway_superpathway_file = sys.argv[3] #path->superpath file -> pathway_to_superpathway.csv
@@ -65,11 +73,17 @@ if __name__ == "__main__":
         #print(item, super_enzyme_df[item].iloc[0])
     #print(list(super_enzyme_df.columns.values))
     super_enzyme_df = cleaned_enzyme_df
+    super_enzyme_df = super_enzyme_df.T
+    super_enzyme_df["count"] = super_enzyme_df.count(axis = 1)
+    super_enzyme_df = super_enzyme_df.T
     super_enzyme_df.to_csv("superpath_enzyme.csv", mode="w")
     print("done superpath-to-enzyme")
     #print(super_enzyme_df["count"])
     
     #we have superpathway -> enzyme now, and they're unique per superpath.  gets us how many enzymes make up the complete set in a superpath
+    
+    
+    
     
     #This df now contains all genes -> enzymes, listed with their superpathway
     actual_read_df = rpkm_df[["GeneID", "EC#"]]
@@ -91,6 +105,39 @@ if __name__ == "__main__":
         count += 1
     just_matched_enzymes_df.to_csv("just_matched.csv", mode = "w")
     actual_read_df.to_csv("newer_summary.csv", mode = "w")
+    
+    
+    
+    #this takes the rpkm df and transforms it to get our heatmap, with help from cleaned_enzyme_df
+    fixed_rpkm_df = rpkm_df
+    fixed_rpkm_df["EC#"] = "ec:" + fixed_rpkm_df["EC#"]
+    fixed_rpkm_df.drop(columns = ["Length", "RPKM", "#Reads", "Other"], inplace = True)
+    count = 0
+    selected_heatmap_df = None
+    for item in cleaned_enzyme_df.columns.values:
+        new_df = pd.DataFrame(fixed_rpkm_df.loc[fixed_rpkm_df["EC#"].isin(cleaned_enzyme_df[item])])
+        new_df["Superpathway"] = item
+        if(count == 0):
+            selected_heatmap_df = new_df
+        else:
+            selected_heatmap_df = pd.concat([selected_heatmap_df, new_df])
+        count+= 1
+    
+    selected_heatmap_df = selected_heatmap_df.groupby(["Superpathway"]).sum()
+    plt.subplots(figsize = (25,10))
+    heatmap = sns.heatmap(selected_heatmap_df)
+    heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation = 40, ha = "right")
+    heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation = 40, ha = "right")
+    heatmap.figure.savefig("new_heatmap.jpg")
+    #plt.pcolor(selected_heatmap_df)
+    #plt.yticks(np.arange(0.5, len(selected_heatmap_df.index), 1), selected_heatmap_df.index)
+    #plt.xticks(np.arange(1, len(selected_heatmap_df.columns), 1), selected_heatmap_df.columns)
+    #plt.savefig("heatmap.jpg")
+    
+    selected_heatmap_df.to_csv("selected_heatmap_df.csv", mode="w")
+    #this gets us the summed-up array for heatmap
+    
+    
     
     #now we've got a list of all stuff that's matched against each superpath
     
