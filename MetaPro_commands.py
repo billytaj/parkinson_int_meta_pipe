@@ -1792,7 +1792,10 @@ class mt_pipe_commands:
         EC_heatmap = ">&2 echo forming EC heatmap | "
         EC_heatmap += self.tool_path_obj.Python + " "
         EC_heatmap += self.tool_path_obj.ec_heatmap + " "
-        EC_heatmap += 
+        EC_heatmap += self.tool_path_obj.EC_pathway + " "
+        EC_heatmap += os.path.join(final_folder, "RPKM_table.tsv") + " "
+        EC_heatmap += self.tool_path_obj.path_to_superpath + " "
+        EC_heatmap += final_folder
         
             
     
@@ -1802,7 +1805,8 @@ class mt_pipe_commands:
             final_chart,
             read_counts,
             per_read_scores,
-            contig_stats
+            contig_stats,
+            EC_heatmap
         ]
        
         

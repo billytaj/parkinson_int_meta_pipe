@@ -10,7 +10,7 @@ import seaborn as sns
 #an annotation of the enzymes we collected in the run
 
 if __name__ == "__main__":
-
+    pd.options.mode.chained_assignment = None  # default='warn' -> program makes too much noise.  this quiets it
     plt.ioff()
     
     ec_pathway_file = sys.argv[1]   #path->EC file  -> EC_pathway.txt
@@ -51,13 +51,13 @@ if __name__ == "__main__":
     super_enzyme_df = super_enzyme_df.T
     
     #sort the ECs we've got and only retain the unique ones (for each superpath) 
+    #pull each column from the DF (1 per superpath, so the loop isn't that bad), get their unique, and glue back into a new DF
     count = 0
     cleaned_enzyme_df = None
     for item in superpath_list:        
         new_df = pd.DataFrame(super_enzyme_df[item])
         new_df = pd.DataFrame(new_df[item].unique())
         new_name = item + "_decoupled.csv"
-        new_df.to_csv(new_name, mode = "w")
         if(count == 0):
             cleaned_enzyme_df = new_df
             cleaned_enzyme_df.columns = [item]
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         count += 1
     super_enzyme_df = cleaned_enzyme_df
     super_enzyme_df = super_enzyme_df.T
-    super_enzyme_df["count"] = super_enzyme_df.count(axis = 1) #get the total for each category
+    super_enzyme_df["count"] = super_enzyme_df.count(axis = 1) #get the total for each category (and thus total for all superpaths)
     #we have superpathway -> enzyme now, and they're unique per superpath.  gets us how many enzymes make up the complete set in a superpath
     
     #now we get the number of enzymes, annotated against the list to figure out what we have
@@ -77,7 +77,8 @@ if __name__ == "__main__":
     actual_read_df["EC#"] = "ec:" + actual_read_df["EC#"]
     count = 0
     just_matched_enzymes_df = None
-    for item in cleaned_enzyme_df.columns.values:
+    #same logic as above, just on a different DF (pull each col, unique, glue to new df)
+    for item in cleaned_enzyme_df.columns.values:      
         actual_read_df[item] = actual_read_df["EC#"].isin(cleaned_enzyme_df[item])
         new_df = pd.DataFrame(actual_read_df["EC#"].loc[actual_read_df["EC#"].isin(cleaned_enzyme_df[item])].unique())
         if(count == 0):
@@ -94,6 +95,7 @@ if __name__ == "__main__":
     just_matched_enzymes_df["% coverage"] = round((just_matched_enzymes_df["count"] / just_matched_enzymes_df["total for category"]) * 100, 2)
     just_matched_enzymes_df = just_matched_enzymes_df.T
     just_matched_enzymes_df.to_csv(output_dir + "EC_coverage.csv", mode = "w")
+    #We've got our % coverage now.  
     
     #this takes the rpkm df and transforms it to get our heatmap, with help from cleaned_enzyme_df
     fixed_rpkm_df = rpkm_df
@@ -110,12 +112,12 @@ if __name__ == "__main__":
             selected_heatmap_df = pd.concat([selected_heatmap_df, new_df])
         count+= 1
     
-    selected_heatmap_df = selected_heatmap_df.groupby(["Superpathway"]).sum()
-    plt.subplots(figsize = (25,10))
+    selected_heatmap_df = selected_heatmap_df.groupby(["Superpathway"]).sum()           #collapse the rows, grouped by the superpath`
+    plt.subplots(figsize = (25,10))                                                     #set the image size    
     heatmap = sns.heatmap(selected_heatmap_df)
-    heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation = 40, ha = "right")
+    heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation = 40, ha = "right")     #make the labels pretty
     heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation = 40, ha = "right")
-    heatmap.figure.savefig(output_dir + "enzyme_superpathway_heatmap.jpg")
+    heatmap.figure.savefig(output_dir + "enzyme_superpathway_heatmap.jpg")              #export it
     selected_heatmap_df.to_csv(output_dir + "enzyme_superpathway_heatmap.csv", mode="w")
     
     
