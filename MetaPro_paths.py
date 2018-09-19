@@ -1,11 +1,11 @@
 import os.path
-from configparser import ConfigParser
+from configparser import ConfigParser, ExtendedInterpolation
 
 class tool_path_obj:
     def __init__ (self, config_path):
 
         if config_path:
-            config = ConfigParser()
+            config = ConfigParser() #change this to ex
             config.read(config_path)
         else:
             config = None
