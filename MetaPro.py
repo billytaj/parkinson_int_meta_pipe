@@ -4,7 +4,7 @@ import sys
 import os
 import os.path
 from argparse import ArgumentParser
-from configparser import ConfigParser
+from configparser import ConfigParser, ExtendedInterpolation
 import multiprocessing as mp
 import MetaPro_commands as mpcom
 import MetaPro_paths as mpp
@@ -715,7 +715,7 @@ if __name__ == "__main__":
         os.makedirs(output_folder)
     os.chdir(output_folder)
 
-    config = ConfigParser()
+    config = ConfigParser(interpolation = ExtendedInterpolation())
     if args.config:
         config.read(config_file)
         if not args.pair1 and not args.pair2 and not args.single:
