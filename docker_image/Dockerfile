@@ -39,7 +39,7 @@ RUN rm -r adapterremoval-2.1.7
 # Install Barrnap
 RUN wget https://github.com/tseemann/barrnap/archive/master.zip -O barrnap.zip && unzip barrnap.zip && rm barrnap.zip | mkdir barrnap
 WORKDIR barrnap-master
-RUN make | mv bin/barrnap /pipeline_tools/barrnap
+RUN make | mv bin/barrnap /pipeline_tools/Barrnap
 WORKDIR /pipeline_tools
 RUN rm -r barrnap-master
 
