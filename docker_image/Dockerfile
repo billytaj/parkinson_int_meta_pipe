@@ -189,6 +189,7 @@ RUN rm -r WEVOTE-master
 #RUN gunzip Rfam.cm.gz
 #RUN /pipeline_tools/infernal/cmpress Rfam.cm
 
+
 #-------------------------------------------
 # add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
 WORKDIR /pipeline
@@ -205,6 +206,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BWA.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_Diamond.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_contig_stats.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_EC_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_read_counts.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_read_quality_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_table.py /pipeline/Scripts
