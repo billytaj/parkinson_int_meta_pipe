@@ -37,11 +37,7 @@ RUN rm -r adapterremoval-2.1.7
 
 #---------------------------------------
 # Install Barrnap
-RUN wget https://github.com/tseemann/barrnap/archive/master.zip -O barrnap.zip && unzip barrnap.zip && rm barrnap.zip | mkdir barrnap
-WORKDIR barrnap-master
-RUN make | mv bin/barrnap /pipeline_tools/barrnap
-WORKDIR /pipeline_tools
-RUN rm -r barrnap-master
+RUN wget https://github.com/tseemann/barrnap/archive/0.8.zip -O barrnap.zip && unzip barrnap.zip && rm barrnap.zip | mkdir Barrnap && cd barrnap-0.8 && make | mv * /pipeline_tools/Barrnap && cd /pipeline_tools && rm -r barrnap-0.8
 
 #------------------------------------
 # Install BLAST+
@@ -230,6 +226,7 @@ ADD Scripts/ga_BLAT.py /pipeline/Scripts
 ADD Scripts/ga_BWA.py /pipeline/Scripts
 ADD Scripts/ga_Diamond.py /pipeline/Scripts
 ADD Scripts/output_contig_stats.py /pipeline/Scripts
+ADD Scripts/output_EC_metrics.py /pipeline/Scripts
 ADD Scripts/output_read_counts.py /pipeline/Scripts
 ADD Scripts/output_read_quality_metrics.py /pipeline/Scripts
 ADD Scripts/output_table.py /pipeline/Scripts
