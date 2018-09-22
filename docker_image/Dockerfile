@@ -37,11 +37,11 @@ RUN rm -r adapterremoval-2.1.7
 
 #---------------------------------------
 # Install Barrnap
-RUN wget https://github.com/tseemann/barrnap/archive/master.zip -O barrnap.zip && unzip barrnap.zip && rm barrnap.zip | mkdir barrnap
-WORKDIR barrnap-master
+RUN wget https://github.com/tseemann/barrnap/archive/0.8.zip -O barrnap.zip && unzip barrnap.zip && rm barrnap.zip | mkdir Barrnap
+WORKDIR barrnap-0.8
 RUN make | mv bin/barrnap /pipeline_tools/Barrnap
 WORKDIR /pipeline_tools
-RUN rm -r barrnap-master
+RUN rm -r barrnap-0.8
 
 #------------------------------------
 # Install BLAST+
