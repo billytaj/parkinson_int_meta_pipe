@@ -172,25 +172,12 @@ RUN mkdir ../WEVOTE && ./install.sh && mkdir WEVOTE_db && mv bin/WEVOTE ../WEVOT
 WORKDIR /pipeline_tools
 RUN rm -r WEVOTE-master
 
-#--------------------------------------------
-# get reference files
-# 
-#WORKDIR /pipeline_reference_files
-#there's a bunch of DBs that need to be downloaded too.  including the wevote files, called by the download script they supply, and the priam DB files. 
-#RUN wget ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec_Core -O UniVec_Core.fasta
-#RUN mkdir Trimmomatic_adapters
-#RUN mv /pipeline_tools/Trimmomatic/adapters/* /pipeline_reference_files/Trimmomatic_adapters
-#RUN wget ftp://ftp.ensembl.org/pub/release-92/fasta/mus_musculus/cds/Mus_musculus.GRCm38.cds.all.fa.gz -O Mouse_cds.gz
-#RUN gunzip Mouse_cds.gz && mv Mouse_cds Mouse_cds.fasta
-#RUN wget ftp://ftp.ebi.ac.uk/pub/databases/Rfam/13.0/Rfam.cm.gz
-#RUN gunzip Rfam.cm.gz
-#RUN /pipeline_tools/infernal/cmpress Rfam.cm
-
 
 #-------------------------------------------
 # add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
 WORKDIR /pipeline
-RUN mkdir /pipeline/Scripts
+RUN mkdir /pipeline/Scripts && mkdir /pipeline/custom_databases
+
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro_paths.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro_commands.py /pipeline
@@ -219,6 +206,13 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_combine.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_constrain.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_taxid.py /pipeline/Scripts
+
+#--------------------------------------------
+# get reference files
+# 
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/custom_databases/EC_pathway.txt /pipeline/custom_databases
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/custom_databases/pathway_to_superpathway.csv /pipeline/custom_databases
+
 
 
 RUN chmod -R 555 /pipeline
