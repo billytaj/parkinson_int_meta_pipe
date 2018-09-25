@@ -2,9 +2,10 @@ import pandas as pd
 import sys
 import os
 import numpy as np
-from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+
 import math
 
 

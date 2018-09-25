@@ -1,9 +1,9 @@
 import pandas as pd
 import sys
 import os
-from matplotlib import pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 import numpy as np
 import seaborn as sns
 
