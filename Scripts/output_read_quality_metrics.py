@@ -4,6 +4,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib
+matplotlib.use('Agg')
 import math
 
 
@@ -98,6 +99,7 @@ class read_quality_metrics:
             print("hist location:", location + "_hist.jpg")
             plt.savefig(location + "_hist.jpg")
             df_0.to_csv(new_name, mode = "w+", header=False, index=False)
+            
             
         else:
             print("can't run per-read quality on this file. it's not as FASTQ (.fastq)")
