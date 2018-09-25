@@ -19,7 +19,7 @@ cytoscape = sys.argv[10]
 show_unclassified = True # temp, should be a user modifiable setting
 
 rank_name = []
-if ID_list == "":
+if ID_list == "" or ID_list == "empty":
     rank_taxid = []
 else:
     rank_taxid = [ID.strip() for ID in ID_list.split(",")]
