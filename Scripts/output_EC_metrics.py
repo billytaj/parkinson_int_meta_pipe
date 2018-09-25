@@ -100,7 +100,7 @@ if __name__ == "__main__":
     #this takes the rpkm df and transforms it to get our heatmap, with help from cleaned_enzyme_df
     fixed_rpkm_df = rpkm_df
     fixed_rpkm_df["EC#"] = "ec:" + fixed_rpkm_df["EC#"]
-    fixed_rpkm_df.drop(columns = ["Length", "RPKM", "#Reads", "Other"], inplace = True)  #removes the cols we don't need.  Also removes "Other"
+    fixed_rpkm_df.drop(columns = ["Length", "RPKM", "Reads"], inplace = True)  #removes the cols we don't need.  Also removes "Other"
     count = 0
     selected_heatmap_df = None
     for item in cleaned_enzyme_df.columns.values:
