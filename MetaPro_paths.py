@@ -10,9 +10,10 @@ class tool_path_obj:
         else:
             config = None
 
-        script_path     = "/pipeline/Scripts"
-        tool_path       = "/pipeline_tools/"
-        database_path   = "/project/j/jparkin/Lab_Databases/"
+        script_path             = "/pipeline/Scripts"
+        tool_path               = "/pipeline_tools/"
+        database_path           = "/project/j/jparkin/Lab_Databases/"
+        custom_database_path    = "/pipeline/custom_databases/"
 
         #----------------------------------------------------------
         # Reference Databases
@@ -37,27 +38,27 @@ class tool_path_obj:
             self.DetectDB           = config["Databases"]["DetectDB"]           if config["Databases"]["DetectDB"]          or config["Databases"]["DetectDB"]          == "" else os.path.join(database_path, "DETECTv2")
             self.WEVOTEDB           = config["Databases"]["WEVOTEDB"]           if config["Databases"]["WEVOTEDB"]          or config["Databases"]["WEVOTEDB"]          == "" else os.path.join(database_path, "WEVOTE_db/")
             self.EC_pathway         = config["Databases"]["EC_pathway"]         if config["Databases"]["EC_pathway"]        or config["Databases"]["EC_pathway"]        == "" else os.path.join(database_path, "EC_pathway.txt")
-            self.path_to_superpath  = config["Databases"]["path_to_superpath"]  if config["Databases"]["path_to_superpath"] or config["Databases"]["path_to_superpath"] == "" else os.path.join(database_path, "pathway_to_superpathway.csv")
+            self.path_to_superpath  = config["Databases"]["path_to_superpath"]  if config["Databases"]["path_to_superpath"] or config["Databases"]["path_to_superpath"] == "" else os.path.join(custom_database_path, "pathway_to_superpathway.csv")
         else:
-            self.UniVec_Core        = os.path.join(database_path, "univec_core/UniVec_Core.fasta")
-            self.Adapter            = os.path.join(database_path, "Trimmomatic_adapters/TruSeq3-PE-2.fa")
-            self.Host               = os.path.join(database_path, "Human_cds/Human_cds.fasta")
-            self.Rfam               = os.path.join(database_path, "Rfam/Rfam.cm")
-            self.DNA_DB             = os.path.join(database_path, "ChocoPhlAn/ChocoPhlAn.fasta")
-            self.DNA_DB_Split       = os.path.join(database_path, "ChocoPhlAn/ChocoPhlAn_split/")
-            self.Prot_DB            = os.path.join(database_path, "nr/nr")
-            self.accession2taxid    = os.path.join(database_path, "accession2taxid/accession2taxid")
-            self.nodes              = os.path.join(database_path, "WEVOTE_db/nodes.dmp")
-            self.names              = os.path.join(database_path, "WEVOTE_db/names.dmp")
-            self.Kaiju_db           = os.path.join(database_path, "kaiju_db/kaiju_db_nr.fmi")
-            self.Centrifuge_db      = os.path.join(database_path, "centrifuge_db/nt")
-            self.SWISS_PROT         = os.path.join(database_path, "swiss_prot_db/swiss_prot_db")
-            self.SWISS_PROT_map     = os.path.join(database_path, "swiss_prot_db/SwissProt_EC_Mapping.tsv")
-            self.PriamDB            = os.path.join(database_path, "PRIAM_db/")
-            self.DetectDB           = os.path.join(database_path, "DETECTv2")
-            self.WEVOTEDB           = os.path.join(database_path, "WEVOTE_db/")
-            self.EC_pathway         = os.path.join(database_path, "EC_pathway.txt")
-            self.path_to_superpath  = os.path.join(database_path, "pathway_to_superpathway.csv")
+            self.UniVec_Core        = os.path.join(database_path,           "univec_core/UniVec_Core.fasta")
+            self.Adapter            = os.path.join(database_path,           "Trimmomatic_adapters/TruSeq3-PE-2.fa")
+            self.Host               = os.path.join(database_path,           "Human_cds/Human_cds.fasta")
+            self.Rfam               = os.path.join(database_path,           "Rfam/Rfam.cm")
+            self.DNA_DB             = os.path.join(database_path,           "ChocoPhlAn/ChocoPhlAn.fasta")
+            self.DNA_DB_Split       = os.path.join(database_path,           "ChocoPhlAn/ChocoPhlAn_split/")
+            self.Prot_DB            = os.path.join(database_path,           "nr/nr")
+            self.accession2taxid    = os.path.join(database_path,           "accession2taxid/accession2taxid")
+            self.nodes              = os.path.join(database_path,           "WEVOTE_db/nodes.dmp")
+            self.names              = os.path.join(database_path,           "WEVOTE_db/names.dmp")
+            self.Kaiju_db           = os.path.join(database_path,           "kaiju_db/kaiju_db_nr.fmi")
+            self.Centrifuge_db      = os.path.join(database_path,           "centrifuge_db/nt")
+            self.SWISS_PROT         = os.path.join(database_path,           "swiss_prot_db/swiss_prot_db")
+            self.SWISS_PROT_map     = os.path.join(database_path,           "swiss_prot_db/SwissProt_EC_Mapping.tsv")
+            self.PriamDB            = os.path.join(database_path,           "PRIAM_db/")
+            self.DetectDB           = os.path.join(database_path,           "DETECTv2")
+            self.WEVOTEDB           = os.path.join(database_path,           "WEVOTE_db/")
+            self.EC_pathway         = os.path.join(custom_database_path,    "EC_pathway.txt")
+            self.path_to_superpath  = os.path.join(custom_database_path,    "pathway_to_superpathway.csv")
             
         #----------------------------------------------------------
         # external tools
