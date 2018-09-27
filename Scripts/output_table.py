@@ -150,7 +150,7 @@ for gene in gene2read_dict:
         RPKM_dict[gene].append(unclassified_reads / RPKM_div)
 
 with open(RPKM, "w") as RPKM_out:
-    RPKM_out.write("GeneID\tLength\t#Reads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\n")
+    RPKM_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
 
