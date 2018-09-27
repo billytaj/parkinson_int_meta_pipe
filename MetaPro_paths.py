@@ -57,8 +57,8 @@ class tool_path_obj:
             self.PriamDB            = os.path.join(database_path,           "PRIAM_db/")
             self.DetectDB           = os.path.join(database_path,           "DETECTv2")
             self.WEVOTEDB           = os.path.join(database_path,           "WEVOTE_db/")
-            self.EC_pathway         = os.path.join(custom_database_path,    "EC_pathway/EC_pathway.txt")
-            self.path_to_superpath  = os.path.join(custom_database_path,    "path_to_superpath/pathway_to_superpathway.csv")
+            self.EC_pathway         = os.path.join(custom_database_path,    "EC_pathway.txt")
+            self.path_to_superpath  = os.path.join(custom_database_path,    "pathway_to_superpathway.csv")
             
         #----------------------------------------------------------
         # external tools
