@@ -291,6 +291,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         process.join()
         print(dt.today(), "done splitting files")
         
+        """
         sections = ["singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
@@ -325,6 +326,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             #    item.join()  # wait for things to finish
             #mp_store[:] = []  # clear the list
 
+        
         inner_name = "rRNA_filter_post"
         process = mp.Process(
             target=commands.create_and_launch,
@@ -345,6 +347,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             compress_folder(rRNA_filter_path)
             delete_folder(rRNA_filter_path)
         cleanup_rRNA_filter_end = time.time()
+        """
 
     rRNA_filter_end = time.time()
     # -------------------------------------------------------------
