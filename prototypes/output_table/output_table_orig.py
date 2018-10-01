@@ -2,12 +2,12 @@
 
 import sys
 
-nodes = sys.argv[1]
-gene2read = sys.argv[2]
-read2taxid = sys.argv[3]
-gene2EC = sys.argv[4]
-RPKM = sys.argv[5]
-Cytoscape = sys.argv[6]
+nodes = sys.argv[1]         # nodes.dmp
+gene2read = sys.argv[2]     # gene_map.tsv
+read2taxid = sys.argv[3]    # taxonomic_classifications.tsv
+gene2EC = sys.argv[4]       # proteins.ECs_All
+RPKM = sys.argv[5]          # output-> RPKM_table
+Cytoscape = sys.argv[6]     # output-> Cytoscape_network
 
 
 Rank = ["Eukaryota",
@@ -68,7 +68,7 @@ Rank_colour = ["#FFA500",
     ]
 
 
-nodes_dict = {}
+nodes_dict = {} # parses the nodes file and puts it all into a dict:  key = taxid, val = its parent and what its rank is in the tree
 with open(nodes, "r") as infile:
     for line in infile:
         cols = line.split("\t|\t")
@@ -79,7 +79,7 @@ with open(nodes, "r") as infile:
     else:
         nodes_dict["0"] = ("0", "unclassified")
 
-read2taxid_dict = {}
+read2taxid_dict = {} # parses the 
 with open(read2taxid, "r") as infile:
     for line in infile:
         cols = line.split("\t")
