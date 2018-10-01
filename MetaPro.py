@@ -11,6 +11,7 @@ import MetaPro_paths as mpp
 import time
 import zipfile
 import shutil
+from datetime import datetime as dt
 
 
 def make_folder(folder_path):
@@ -275,28 +276,32 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     if not check_where_resume(rRNA_filter_path, None, vector_path):
     
         #split the data
+        print(dt.today(), "splitting files")
+        inner_name = "rRNA_filter_prep"
         process = mp.Process(
             target = commands.create_and_launch,
             args=(
-                "rRNA_filter_prep",
+                "rRNA_filter",
                 commands.create_rRNA_filter_prep_command(rRNA_filter_label, int(mp.cpu_count()/2), vector_filter_label, read_mode),
-                True
+                True,
+                inner_name
             )
         )
         process.start()
         process.join()
+        print(dt.today(), "done splitting files")
         
         sections = ["singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
         for section in sections:
-            folder_name = output_folder + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
+            folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
             for item in os.listdir(folder_name):
                 process = mp.Process(
                     target=commands.create_and_launch,
                     args=(
                         "rRNA_filter",
-                        comm.create_rRNA_filter_command("rRNA_filter", section, item, vector_filter_label),
+                        commands.create_rRNA_filter_command("rRNA_filter", section, item, vector_filter_label),
                         True
                     )
                 )

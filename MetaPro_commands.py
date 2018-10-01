@@ -6,6 +6,7 @@ import os.path
 import MetaPro_paths as mpp
 import subprocess as sp
 
+from datetime import datetime as dt
 
 class mt_pipe_commands:
     # --------------------------------------------------------------------
@@ -753,7 +754,7 @@ class mt_pipe_commands:
         file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
         file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
         file_splitter_pair_2 += str(file_split_count)
-
+        
         if self.read_mode == "single":
             COMMANDS_rRNA_prep = [
                 file_splitter_singletons
@@ -764,7 +765,7 @@ class mt_pipe_commands:
                 file_splitter_pair_1,
                 file_splitter_pair_2
             ]
-
+        print(dt.today(), COMMANDS_rRNA_prep)
         return COMMANDS_rRNA_prep
 
     def create_rRNA_filter_command(self, stage_name, category, file_name, dependency_name):
