@@ -305,6 +305,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         True
                     )
                 )
+                process.start()
                 mp_store.append(process)
             for p_item in mp_store:
                 p_item.join()
