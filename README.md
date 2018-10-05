@@ -11,6 +11,15 @@ Alternatively, individual parts of the pipeline are avaiable from this Github re
 
 # How to use
 ---
+The entire pipeline, including all tools (except for databases) are located within the docker container.  To Run this pipeline, the command is:
+python3 /pipeline/MetaPro.py -c <path to config file> -1 <path to forward-end reads> -2 <path to reverse-end reads> -o <path to output directory> --verbose_mode <optional flag> --nhost <optional flag>
+
+The MetaPro command line arguements are:
+- -c for the config file
+- -1 or --Pair1: The path to the file containing Forward paired-end reads in FASTQ format
+- -2 or --Pair2: The path to the file containing Reverse paired-end reads in FASTQ format
+
+
 This pipeline comes with a config.ini file.  The user is meant to change, configure, and contort the file to point to the location of local files and Databases.
 Our config file is written with Python's ConfigParser, using the basic interpretation.  
 The following is an outline of wwhat each of the sections mean:
