@@ -9,6 +9,9 @@ This package is meant to work in conjunction with Docker/Singularity.  All of th
 is delivered via the Docker Hub. https://hub.docker.com/r/billyc59/parkinson_pipeline/
 Alternatively, individual parts of the pipeline are avaiable from this Github repository.
 
+Therefore, to use this pipeline, Docker (https://www.docker.com/) or Singularity (https://www.sylabs.io/guides/2.6/user-guide/) is needed.
+This also means there is nothing to install (tools and code) besides Docker/Docker CE/Singularity
+
 # How to use
 ---
 This pipeline comes with a config.ini file.  The user is meant to change, configure, and contort the file to point to the location of local files and Databases.
@@ -33,9 +36,10 @@ Pair 1 is for Forward Reads.  Pair 2 is for Reverse Reads.  Some portions of the
 
 ## Databases
 ---
-We intentionally did not include any database files in this distribution so as to allow the user more flexibility in how they want to use the pipeline.  Below is a description of each of the fields we used.  
+We intentionally did not include any database files in this distribution so as to allow the user more flexibility in how they want to use the pipeline.  Databases also become obselete quickly, and the image size would be enormous.  
+Below is a description of each of the fields we used.  
 * database_path
-This field isn't apart of the parameters that the pipeline accepts.  It's a shortcut argument that makes filling the path to each database easier.
+This field isn't a part of the parameters that the pipeline accepts.  It's a shortcut argument that makes filling the path to each database easier.
 
 * Univec_Core
 The Univec_Core Database is used in the Vector Contaminents removal stage.  A copy can be found at: https://www.ncbi.nlm.nih.gov/tools/vecscreen/univec/
@@ -47,7 +51,7 @@ This pipeline was built and tested using the TruSeq3-PE-2.fa Adapter Database
 The Host Database is used to filter out Host Contaminents from your seuqence file.  You will need to change this with the CDS database of whichever animal was used in your experiment.
 We get our CDS databases from the NCBI, eg: ftp://ftp.ncbi.nlm.nih.gov/pub/CCDS/current_human
 * Rfam
-The Rfam Database is used by Infernal, the rRNA filter.  
+The Rfam Database is used by Infernal, the rRNA filter.
 A copy can be found here: http://rfam.xfam.org/
 * DNA_DB
 The DNA DB is what we use to annotate the sequence data against.  We use the ChocoPhlAn database.
@@ -89,16 +93,22 @@ Detect is an enzyme annotation tool.
 
 # Important Features
 ---
-This pipeline was built with a few key features that make it easier to use than other pipes.
+This pipeline was built with a few key features that make it easier to use than other pipelines.
 ## Verbose-mode
 This pipeline will produce many interim files along the way.  In an effort to maintain transparency, and allow for debugging and inspection of stages, the interim files have been saved, and compressed at each stage of the pipeline.  If the user wishes to avoid compression (saving roughly 1/100th of the runtime), the compress flag argument should be set to "verbose".  Otherwise, the default is to compress the interim files.
 
 ## Auto-resume
-The pipeline is capable of skipping any and all stages it has run before.  If the user wishes to run a subset of stages, the user has to remove the stage folders, and any compressed files of the accompanying stage, and the pipeline will re-run the missing stages.  Note:  The removed stages do not have to be contiguous, but it is recommended that they are, to ensure the accuracy of the pipeline results.  Eg: a pipeline runs A -> B -> C -> D -> E.  If A, and D are removed, The pipeline will re-run A and D, leaving B, C, and E alone.  However, if D depends on C, then the changes from A -> B -> C will not propagate downward.  This feature also has the benefit of being able to resume running if the pipeline run was operating on a job-scheduler-controlled system, and inadequate time was allocated to the job.  
+The pipeline is capable of skipping any and all stages it has run before.  If the user wishes to run a subset of stages, the user has to remove the stage folders, and any compressed files of the accompanying stage, and the pipeline will re-run the missing stages.  Note:  The removed stages do not have to be contiguous, but it is recommended that they are, to ensure the accuracy of the pipeline results.  Eg: a pipeline runs A -> B -> C -> D -> E.  If A, and D are removed, The pipeline will re-run A and D, leaving B, C, and E alone.  However, if D depends on C, then the changes from A -> B -> C will not propagate downward.  This feature also has the benefit of being able to resume running if the pipeline run was operating on a job-scheduler-controlled system, and inadequate time was allocated to the job.  The pipeline will simply pick up where it left off until the job is complete. 
 
 ## Auto-death
 In an effort to save computational resources, the pipeline will shut itself down if the dependencies of a stage are not met.  This is to ensure that if a pipeline run is part of a batch-processing scheduler, the pipeline will not continue to waste resources on an erroneous job.  
 
-# Parallelism in the pipeline
+# Increasing performance
 ---
-The pipeline operates in a singularity machine.  As of writing (Sept 28, 2018), singularity does not support multi-machine parallelism.  This pipeline does not utilize MPI, but instead strives to use all the cores made available by the singularity machine through the Python Multiprocessing module.  To increase the performance of the pipeline, more cores should be given to the host machine, and increasing the number of cores the pipeline is allowed to use.
+## Operating mode
+The pipeline operates in a Singularity machine.  As of writing (Sept 28, 2018), Singularity does not support multi-machine parallelism.  This pipeline does not utilize MPI, but instead strives to use all the cores made available by the singularity machine through the Python Multiprocessing module.  To increase the performance of the pipeline, more cores should be given to the host machine, and increasing the number of cores the pipeline is allowed to use.
+
+## Verbose-mode
+---
+The "keep" and "quiet" settings to verbose_mode will use additional time to compress (keep) or delete (quiet) the interim files produced by the pipeline.  If the performance of a single run is the priority, the "verbose" option should be used to avoid this overhead. 
+
