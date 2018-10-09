@@ -199,6 +199,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             delete_folder(quality_path)
         cleanup_quality_end = time.time()
     quality_end = time.time()
+    print("quality filter:", '%1.1f' % (quality_end - quality_start - (cleanup_quality_end - cleanup_quality_start)), "s")
+    print("quality filter cleanup:", '%1.1f' %(cleanup_quality_end - cleanup_quality_start), "s")
+    
 
     # The host read filter stage
     if not no_host:
@@ -224,6 +227,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             cleanup_host_end = time.time()
                 
         host_end = time.time()
+        print("host filter:", '%1.1f' % (host_end - host_start - (cleanup_host_end - cleanup_host_start)), "s")
+        print("host filter cleanup:", '%1.1f' %(cleanup_host_end - cleanup_host_start),"s")
+        
 
     # The vector contaminant filter stage
     vector_start = time.time()
@@ -267,6 +273,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 delete_folder(vector_path)
             cleanup_vector_end = time.time()
     vector_end = time.time()
+    print("vector filter:", '%1.1f' % (vector_end - vector_start - (cleanup_vector_end - cleanup_vector_start)), "s")
+    print("vector filter cleanup:", '%1.1f' % (cleanup_vector_end - cleanup_vector_start), "s")
+    
 
     # ----------------------------------------------
     # rRNA removal stage
@@ -336,10 +345,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             compress_folder(rRNA_filter_path)
             delete_folder(rRNA_filter_path)
         cleanup_rRNA_filter_end = time.time()
-        
-
     rRNA_filter_end = time.time()
-    # -------------------------------------------------------------
+    
+    print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start - (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start)), "s")
+    print("rRNA filter cleanup:", '%1.1f' % (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start), "s")
+    
     # Duplicate repopulation
     repop_start = time.time()
     repop_job_path = os.path.join(output_folder_path, repop_job_label)
@@ -362,6 +372,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             delete_folder(repop_job_path)
         cleanup_repop_end = time.time()
     repop_end = time.time()
+    print("repop:", '%1.1f' % (repop_end - repop_start - (cleanup_repop_end - cleanup_repop_start)), "s")
+    print("repop cleanup:", '%1.1f' % (cleanup_repop_end - cleanup_repop_start), "s")
+    # -------------------------------------------------------------
+    
     # ----------------------------------------
     # Assemble contigs
     assemble_contigs_start = time.time()
@@ -385,7 +399,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             delete_folder(assemble_contigs_path)
         cleanup_assemble_contigs_end = time.time()
     assemble_contigs_end = time.time()
-
+    print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
+    print("assemble contigs cleanup:", '%1.1f' % (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start), "s")
+    
     # ----------------------------------------------
     # BWA gene annotation
     GA_BWA_start = time.time()
@@ -434,7 +450,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             delete_folder(gene_annotation_BWA_path)
         cleanup_GA_BWA_end = time.time()
     GA_BWA_end = time.time()
-
+    print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
+    print("GA BWA cleanup:", '%1.1f' % (cleanup_GA_BWA_end - cleanup_GA_BWA_start), "s")
+    
     # ------------------------------------------------
     # BLAT gene annotation
     GA_BLAT_start = time.time()
@@ -498,7 +516,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             delete_folder(gene_annotation_BLAT_path)
         cleanup_GA_BLAT_end = time.time()
     GA_BLAT_end = time.time()
-
+    print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start - (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start)), "s")
+    print("GA BLAT cleanup:", '%1.1f' % (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start), "s")
+    
     # ------------------------------------------------------
     # Diamond gene annotation
     GA_DIAMOND_start = time.time()
@@ -545,6 +565,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             delete_folder(gene_annotation_DIAMOND_path)
         cleanup_GA_DIAMOND_end = time.time()
     GA_DIAMOND_end = time.time()
+    print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
+    print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
+    
     # ------------------------------------------------------
     # Taxonomic annotation
     TA_start = time.time()
@@ -568,7 +591,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             delete_folder(taxon_annotation_path)
         cleanup_TA_end = time.time()
     TA_end = time.time()
-
+    print("TA:", '%1.1f' % (TA_end - TA_start - (cleanup_TA_end - cleanup_TA_start)), "s")
+    print("TA cleanup:", '%1.1f' % (cleanup_TA_end - cleanup_TA_start), "s")
+    
     # ------------------------------------------------------
     # Detect EC annotation
     EC_DETECT_start = time.time()
@@ -608,7 +633,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         mp_store[:] = []  # clear the list
         
     EC_DETECT_end = time.time()
-
+    print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+    
     # --------------------------------------------------------------
     # Priam and Diamond EC annotation
     EC_PRIAM_DIAMOND_start = time.time()
@@ -646,7 +672,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         cleanup_EC_end = time.time()
         
     EC_PRIAM_DIAMOND_end = time.time()
-
+    print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
+    print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
+    
     # ------------------------------------------------------
     # RPKM Table and Cytoscape Network
     Cytoscape_start = time.time()
@@ -673,7 +701,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
     Cytoscape_end = time.time()
     end_time = time.time()
-    
+    print("Outputs:", '%1.1f' % (Cytoscape_end - Cytoscape_start - (cleanup_cytoscape_end - cleanup_cytoscape_start)), "s")
+    print("Outputs cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
+    print("=============================================================================================")
+    print("Final summary")
+    print("--------------------------------------------------------")
     print("Total runtime:", '%1.1f' % (end_time - start_time), "s")
     print("quality filter:", '%1.1f' % (quality_end - quality_start - (cleanup_quality_end - cleanup_quality_start)), "s")
     print("quality filter cleanup:", '%1.1f' %(cleanup_quality_end - cleanup_quality_start), "s")
