@@ -112,3 +112,15 @@ The pipeline operates in a Singularity machine.  As of writing (Sept 28, 2018), 
 ---
 The "keep" and "quiet" settings to verbose_mode will use additional time to compress (keep) or delete (quiet) the interim files produced by the pipeline.  If the performance of a single run is the priority, the "verbose" option should be used to avoid this overhead. 
 
+
+# Adding a module
+---
+The pipeline framework is designed with the mindset that modules will want to be swapped.  The framework has 4 critical design components that should be considered:
+- The pipeline generates shellscripts which it runs inside a python process (The MetaPro Commands file).  Each stage is a new command.  Each command is its own class function.
+- The pipeline's control flow is controlled entirely by the main program (which facilitates the auto-resume, stage-dependency synchronization, file management system, and auto-kill)
+- The pipeline's external tool paths are controlled by the MetaPro paths file (which itself is a large object, whereby the MetaPro Commands file instantiates to use the tools)
+- Every stage ends with its final results placed inside a folder called "final_results"
+
+To add a module, the editor is expected to do the following:
+- 1) Either add a new member function to the MetaPro Commands class, or make a new class entirely
+- 2) Slot in the new stage at the appropriate section.  Should it be dependent on another stage, the pipeline already has examples of dependency-reliant stage integration
