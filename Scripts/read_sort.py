@@ -17,6 +17,8 @@ def sort_and_export(input_file, output_file):
     df = pd.DataFrame(df.values.reshape(int(len(df)/4), 4))
     df.columns = ["ID", "sequences", "junk", "quality"]
     df["ID"] = df["ID"].apply(lambda x: x.split(" ")[0])
+    df["ID"] = df["ID"].apply(lambda x: x.replace(".", "_"))
+    
     df = df.sort_values(by=['ID'])
     end_df_time = time.clock()
     df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False)

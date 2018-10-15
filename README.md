@@ -116,11 +116,12 @@ The "keep" and "quiet" settings to verbose_mode will use additional time to comp
 # Adding a module
 ---
 The pipeline framework is designed with the mindset that modules will want to be swapped.  The framework has 4 critical design components that should be considered:
-- The pipeline generates shellscripts which it runs inside a python process (The MetaPro Commands file).  Each stage is a new command.  Each command is its own class function.
-- The pipeline's control flow is controlled entirely by the main program (which facilitates the auto-resume, stage-dependency synchronization, file management system, and auto-kill)
-- The pipeline's external tool paths are controlled by the MetaPro paths file (which itself is a large object, whereby the MetaPro Commands file instantiates to use the tools)
+- The pipeline generates shellscripts which it runs inside a python process through MetaPro_commands.py.  Each stage is a new command.  Each command is its own class function.
+- The pipeline's control flow is controlled entirely by the main program: MetaPro.py.  The main program is responsible for the auto-resume, stage-dependency synchronization, file management system, and auto-kill features.
+- The pipeline's external tool paths are controlled by the MetaPro paths file.  This file is a single large object, where the MetaPro Commands file instantiates to use the tools.
 - Every stage ends with its final results placed inside a folder called "final_results"
 
 To add a module, the editor is expected to do the following:
 - 1) Either add a new member function to the MetaPro Commands class, or make a new class entirely
 - 2) Slot in the new stage at the appropriate section.  Should it be dependent on another stage, the pipeline already has examples of dependency-reliant stage integration
+Note:  Changes to the pipeline code will not persist in the Docker Container's default location of /pipeline.  To keep the changes, a local copy will have to be used.  The 
