@@ -121,6 +121,7 @@ class tool_path_obj:
         self.sort_reads                 = os.path.join(script_path, "read_sort.py")
         self.duplicate_repopulate       = os.path.join(script_path, "read_repopulation.py")
         self.orphaned_read_filter       = os.path.join(script_path, "read_orphan.py")
+        self.remove_tag                 = os.path.join(script_path, "read_remove_tag.py")
         self.BLAT_Contaminant_Filter    = os.path.join(script_path, "read_BLAT_filter.py")
         self.File_splitter              = os.path.join(script_path, "read_split.py")
         self.barrnap_post               = os.path.join(script_path, "read_rRNA_barrnap.py")

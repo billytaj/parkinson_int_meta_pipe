@@ -219,6 +219,7 @@ ADD Scripts/output_table.py /pipeline/Scripts
 ADD Scripts/output_visualization.py /pipeline/Scripts
 ADD Scripts/read_BLAT_filter.py /pipeline/Scripts
 ADD Scripts/read_orphan.py /pipeline/Scripts
+ADD Scripts/read_remove_tag.py /pipeline/Scripts
 ADD Scripts/read_rRNA_barrnap.py /pipeline/Scripts
 ADD Scripts/read_rRNA_infernal.py /pipeline/Scripts
 ADD Scripts/read_repopulation.py /pipeline/Scripts

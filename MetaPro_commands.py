@@ -85,16 +85,18 @@ class mt_pipe_commands:
         data_folder                 = os.path.join(subfolder, "data")
         sorted_read_folder          = os.path.join(data_folder, "0_sorted_raw_input")
         adapter_folder              = os.path.join(data_folder, "1_adapter_removal")
-        vsearch_merge_folder        = os.path.join(data_folder, "2_vsearch_pair_merge")
-        vsearch_filter_folder       = os.path.join(data_folder, "3_quality_filter")
-        orphan_read_filter_folder   = os.path.join(data_folder, "4_orphan_read_filter")
-        cdhit_folder                = os.path.join(data_folder, "5_remove_duplicates")
+        tag_remove_folder           = os.path.join(data_folder, "2_tag_remove")
+        vsearch_merge_folder        = os.path.join(data_folder, "3_vsearch_pair_merge")
+        vsearch_filter_folder       = os.path.join(data_folder, "4_quality_filter")
+        orphan_read_filter_folder   = os.path.join(data_folder, "5_orphan_read_filter")
+        cdhit_folder                = os.path.join(data_folder, "6_remove_duplicates")
         final_folder                = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(sorted_read_folder)
         self.make_folder(adapter_folder)
+        self.make_folder(tag_remove_folder)
         self.make_folder(vsearch_merge_folder)
         self.make_folder(vsearch_filter_folder)
         self.make_folder(orphan_read_filter_folder)
@@ -133,12 +135,30 @@ class mt_pipe_commands:
             adapter_removal_line += " --output2 " + os.path.join(adapter_folder, "pair_2_adptr_rem.fastq")
             adapter_removal_line += " --singleton " + os.path.join(adapter_folder, "singletons_adptr_rem.fastq")
 
+        #Sort-reads introduces tags at the read-level of the 
+        tag_remove_pair_1 = ">&2 echo Remove tags pair 1 | "
+        tag_remove_pair_1 += self.tool_path_obj.Python + " "
+        tag_remove_pair_1 += self.tool_path_obj.remove_tag + " "
+        tag_remove_pair_1 += os.path.join(adapter_folder, "pair_1_adptr_rem.fastq") + " "
+        tag_remove_pair_1 += os.path.join(tag_remove_folder, "pair_1_no_tags.fastq")
+        
+        tag_remove_pair_2 = ">&2 echo Remove tags pair 2 | "
+        tag_remove_pair_2 += self.tool_path_obj.Python + " "
+        tag_remove_pair_2 += self.tool_path_obj.remove_tag + " "
+        tag_remove_pair_2 += os.path.join(adapter_folder, "pair_2_adptr_rem.fastq") + " "
+        tag_remove_pair_2 += os.path.join(tag_remove_folder, "pair_2_no_tags.fastq")
+
+        tag_remove_singletons =  ">&2 echo Remove tags singletons | " 
+        tag_remove_singletons += self.tool_path_obj.Python + " "
+        tag_remove_singletons += self.tool_path_obj.remove_tag + " "
+        tag_remove_singletons += os.path.join(adapter_folder, "singletons_adptr_rem.fastq") + " "
+        tag_remove_singletons += os.path.join(tag_remove_folder, "singletons_no_tags.fastq")
         # tries to merge the cleaned pairs
         # rejects get sent out
         vsearch_merge = ">&2 echo " + "Vsearch Merge pairs | "
         vsearch_merge += self.tool_path_obj.vsearch
-        vsearch_merge += " --fastq_mergepairs " + os.path.join(adapter_folder, "pair_1_adptr_rem.fastq")
-        vsearch_merge += " --reverse " + os.path.join(adapter_folder, "pair_2_adptr_rem.fastq")
+        vsearch_merge += " --fastq_mergepairs " + os.path.join(tag_remove_folder, "pair_1_no_tags.fastq")
+        vsearch_merge += " --reverse " + os.path.join(tag_remove_folder, "pair_2_no_tags.fastq")
         vsearch_merge += " --fastq_ascii " + str(self.Qual_str)
         vsearch_merge += " --fastqout " + os.path.join(vsearch_merge_folder, "merge_success.fastq")
         vsearch_merge += " --fastqout_notmerged_fwd " + os.path.join(vsearch_merge_folder, "pair_1_merge_reject.fastq")
@@ -148,11 +168,12 @@ class mt_pipe_commands:
         cat_glue = ">&2 echo concatenating singletons | "
         cat_glue += "cat "
         cat_glue += os.path.join(vsearch_merge_folder, "merge_success.fastq") + " "
-        cat_glue += os.path.join(adapter_folder, "singletons_adptr_rem.fastq")
+        cat_glue += os.path.join(tag_remove_folder, "singletons_no_tags.fastq")
         cat_glue += " > " + os.path.join(vsearch_merge_folder, "singletons.fastq")
 
         # Filter out low-quality reads
         # start with the singles / merged sections
+        
         vsearch_filter_0 = ">&2 echo low-quality filter on singletons | "
         vsearch_filter_0 += self.tool_path_obj.vsearch
         if self.read_mode == "single":
@@ -256,6 +277,9 @@ class mt_pipe_commands:
                 sort_pair_1,
                 sort_pair_2,
                 adapter_removal_line,
+                tag_remove_pair_1,
+                tag_remove_pair_2,
+                tag_remove_singletons,
                 vsearch_merge,
                 cat_glue,
                 vsearch_filter_0,

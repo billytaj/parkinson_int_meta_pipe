@@ -5,7 +5,7 @@ import pandas as pd
 # This code started off as a testbed to develop a method to import FASTQs effectively into pandas.
 # It simply imports the FASTQ file, sorts by the ID, and exports it back. 
 
-def sort_and_export(input_file, output_file):
+def sort_and_export(input_file, output_file, direction):
 
     start_total_call = time.clock()
     print("input file:", input_file)
@@ -18,8 +18,12 @@ def sort_and_export(input_file, output_file):
     df.columns = ["ID", "sequences", "junk", "quality"]
     df["ID"] = df["ID"].apply(lambda x: x.split(" ")[0])
     df["ID"] = df["ID"].apply(lambda x: x.replace(".", "_"))
-    
     df = df.sort_values(by=['ID'])
+    if(direction == "forward"):
+        df["ID"] = df["ID"].apply(lambda x: x + "/1")
+    elif(direction == "reverse"):
+        df["ID"] = df["ID"].apply(lambda x: x + "/2")
+        
     end_df_time = time.clock()
     df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False)
     end_total_call = time.clock()
@@ -33,11 +37,12 @@ def sort_and_export(input_file, output_file):
     
 if __name__ == "__main__":
     scinet_flag = False
-    if(len(sys.argv) != 3):
+    if(len(sys.argv) != 4):
         print("something wrong with the args")
         sys.exit()
     else:
         input_fastq_path = sys.argv[1]      # expects a path to the fastq file, including the name
         export_path = sys.argv[2]           # expects a place to dump the new fastq, including the name
+        direction = sys.argv[3]
     
-    sort_and_export(input_fastq_path, export_path)
+    sort_and_export(input_fastq_path, export_path, direction)
