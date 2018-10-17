@@ -107,13 +107,15 @@ class mt_pipe_commands:
         sort_pair_1 += self.tool_path_obj.Python + " "
         sort_pair_1 += self.tool_path_obj.sort_reads + " "
         sort_pair_1 += self.sequence_path_1 + " "
-        sort_pair_1 += os.path.join(sorted_read_folder, "pair_1_sorted.fastq")
+        sort_pair_1 += os.path.join(sorted_read_folder, "pair_1_sorted.fastq") + " "
+        sort_pair_1 += "forward"
 
         sort_pair_2 = ">&2 echo Sorting pair 2 | "
         sort_pair_2 += self.tool_path_obj.Python + " "
         sort_pair_2 += self.tool_path_obj.sort_reads + " "
         sort_pair_2 += self.sequence_path_2 + " "
-        sort_pair_2 += os.path.join(sorted_read_folder, "pair_2_sorted.fastq")
+        sort_pair_2 += os.path.join(sorted_read_folder, "pair_2_sorted.fastq") + " "
+        sort_pair_2 += "reverse"
 
         adapter_removal_line = ">&2 echo Removing adapters | "
         adapter_removal_line += self.tool_path_obj.AdapterRemoval
