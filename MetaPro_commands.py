@@ -760,27 +760,30 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(singleton_split_folder)
                 
+        file_splitter_singletons = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+        file_splitter_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
+        file_splitter_singletons += os.path.join(singleton_split_folder, "singletons") + " "
+        file_splitter_singletons += str(file_split_count)
+        
+        file_splitter_pair_1 = None
+        file_splitter_pair_2 = None
+        
         if(operating_mode == "paired"):
             pair_1_split_folder     = os.path.join(data_folder, "pair_1", "pair_1_fastq")
             pair_2_split_folder     = os.path.join(data_folder, "pair_2", "pair_2_fastq")
             self.make_folder(pair_1_split_folder)
             self.make_folder(pair_2_split_folder)        
 
-        file_splitter_singletons = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
-        file_splitter_singletons += os.path.join(singleton_split_folder, "singletons") + " "
-        file_splitter_singletons += str(file_split_count)
-        
-        file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
-        file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
-        file_splitter_pair_1 += str(file_split_count)
+            file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+            file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
+            file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
+            file_splitter_pair_1 += str(file_split_count)
 
-        file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
-        file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
-        file_splitter_pair_2 += str(file_split_count)
-        
+            file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+            file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
+            file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
+            file_splitter_pair_2 += str(file_split_count)
+            
         if self.read_mode == "single":
             COMMANDS_rRNA_prep = [
                 file_splitter_singletons
@@ -791,7 +794,7 @@ class mt_pipe_commands:
                 file_splitter_pair_1,
                 file_splitter_pair_2
             ]
-        print(dt.today(), COMMANDS_rRNA_prep)
+        #print(dt.today(), COMMANDS_rRNA_prep)
         return COMMANDS_rRNA_prep
 
     def create_rRNA_filter_barrnap_command(self, stage_name, category, fastq_name, dependency_name):
