@@ -481,9 +481,18 @@ if __name__=="__main__":
     print("PANDAS TIME:", pd_end - pd_start)
     print("loop time:", sql_end - sql_start)
     
+    process_list = []
     for i,seq in enumerate(sequences):
-        
-        
+        process = mp.Process(
+            target = do_stuff,
+            args = (seq, blast_db,num_threads, e_value, bit_score, ids_to_recs, blastp, needle)
+        )
+        process.start()
+        process_list.append(process)
+    for item in process_list:
+        item.join()
+    process_list[:] = []
+    
 
     if (args.top_predictions_file):
         top_predictions_file.close()
