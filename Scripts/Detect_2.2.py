@@ -15,6 +15,10 @@ import pandas as pd
 import time
 
 import multiprocessing as mp
+def import_blastp_file(blastp_file):
+    blastp_df = pd.read_csv(blastp_file, sep="\t", error_bad_lines=False, header=None)
+    blastp.columns = ["key", "junk"]
+    return blastp_df
 
 def get_ec_to_cutoff(mapping_file, beta):
     """Return the mapping of EC to cutoff from the file with the mapping."""
@@ -100,7 +104,7 @@ verbose=False
 zero_density = 1e-10
 """Small number that is used as zero"""
 
-def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff, ids_to_recs, blastp, needle):
+def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff, ids_to_recs, blastp, needle, process_name):
     """Core alignment routine.
     1) Takes a single sequence, acquires multiple BLASTp alignemnts to the swissprot enzyme database.
     2) Canonical sequences of the results from (1) are retrieved from dictionary of ids to swissprot records derived
@@ -108,46 +112,60 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
     3) Original query is globally aligned versus sequences from (2)
     """
     
-    #First pass cutoff with BLAST alignments
-    if verbose: print( "[DETECT]: Running BLASTp for {} ...".format(seq.name()))
-
+    
+    file_out_name = "new_blast_hits_" + seq.name()
+    #First pass cutoff with BLAST alignments.  BLASTp returns uniprot sequence IDs that match what the sample sequence was.
+    print( "[DETECT]: Running BLASTp for {} ...".format(seq.name()))
     invalid_chars = ["?","<",">","\\",":","*","|"]
     valid_seq_name = seq.name()
     for char in invalid_chars:
         valid_seq_name = valid_seq_name.replace(char, "_")
     try:
+    #this code is putting in the sequence as the stdin.  
+        file_out_name = "new_blast_hits_" + seq.name()
         p = subprocess.Popen((blastp, "-query", "-", 
-                        "-out", "-",
+                        "-out", file_out_name,
                         "-db", blast_db,
                         "-outfmt", "6 sseqid bitscore",
                         "-max_target_seqs", "100000",
                         "-num_threads",str(num_threads),
                         "-evalue", str(e_value_min)),
                     stdin=subprocess.PIPE,  
-                    stdout=subprocess.PIPE,
                     encoding='utf8')
-        stdout,stderr = p.communicate(seq.data)
+        stdin = p.communicate(seq.data)
+        
+        
+        
     except Exception as e:
         print(dt.today(), "BLASTp FAILED", e)
         sys.exit()
     
+    
+    
+        
+    #this portion litters the OS with "blast_hits###
+    #why is it needed? -> it's re-read from IO back into the program for Needle.... BARF
+    
     with open("blast_hits_" + valid_seq_name,"w") as blast_hits:
         blast_hit_list = list() 
         for line in stdout.split("\n"):
+            print("stdout line:", line)
             if not line in whitespace:
                 swissprot_id,bitscore = line.split("\t")
                 if float(bitscore) > bitscore_cutoff:
                     blast_hit_list.append(swissprot_id)
         blast_hit_ids = "\n".join(frozenset(blast_hit_list))
             
-        if verbose: print( "[DETECT]: Found {} hits for {} ...".format(len(blast_hit_ids),seq.name()))
+        print( "[DETECT]: Found {} hits for {} ...".format(len(blast_hit_ids),seq.name()))
         
         #stop if nothing found
         if len(blast_hit_ids) == 0:
             return list()
 
-        SeqIO.write((ids_to_recs[hid] for hid in blast_hit_ids.split("\n")), blast_hits, "fasta")
-
+        #still needed, but disabled to prove a point.  needs redesigning
+        #SeqIO.write((ids_to_recs[hid] for hid in blast_hit_ids.split("\n")), blast_hits, "fasta")
+    
+    """
     if verbose: print( "[DETECT]: Running Needleman-Wunch alignments for {} ...".format(seq.name()))
 
     #Run Needleman-Wunsch alignment on the results of the BLAST search
@@ -165,8 +183,10 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
     except Exception as e:
         print(dt.today(), "NEEDLE FAILED:", e)
         sys.exit()
+    
     return parse_needle_results(stdout)
-
+    """
+    return stdout
 """Split a fasta file into separate sequences, 
     return a list of Sequence objects.
     See class definition below"""
@@ -305,7 +325,8 @@ def calculate_probability (hypothesis, db_connection):
     return probability
     
 def import_fasta(file_name_in):
-    #this replaces the "split fasta" function, as that original function doesn't actually split, but imports to a python list
+    #this replaces the "split fasta" function, as that original function doesn't actually split, but imports to a python list.
+    #it won't be used.  it's actually slower (0.5 secs vs 0.005 secs using the loop method. )
     fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
     fasta_df.columns = ["row"]
     #There's apparently a possibility for NaNs to be introduced in the raw fasta.  We have to strip it before we process (from DIAMOND proteins.faa)
@@ -323,16 +344,17 @@ def import_fasta(file_name_in):
     fasta_df = fasta_df.T  # transpose
     fasta_df["sequence"] = fasta_df[fasta_df.columns[:]].apply(lambda x: "".join(x.dropna()), axis=1)  # consolidate all cols into a single sequence
     fasta_df.drop(temp_columns, axis=1, inplace=True)
+    #fasta_df["index"] = fasta_df["names"].apply(lambda x: x.split(" ")[0])
     
     return fasta_df
     
     
-def do_stuff(seq, blast_db, num_threads, e_value, bit_score, ids_to_recs, blastp, needle):
+def do_stuff(seq, blast_db, num_threads, e_value, bit_score, uniprot_df, blastp, needle, process_name):
     if verbose: 
         print( "[DETECT]: Analyzing {} ({}/{}) ...".format(seq.name(), i + 1, len(sequences)))
 
     identification = Identification(seq.name())
-    identification.hypotheses = run_pair_alignment(seq, blast_db,num_threads, e_value, bit_score, ids_to_recs, blastp, needle)
+    identification.hypotheses = run_pair_alignment(seq, blast_db,num_threads, e_value, bit_score, uniprot_df, blastp, needle, process_name)
     return identification
     """
     if not identification.hypotheses:
@@ -399,31 +421,19 @@ if __name__=="__main__":
     parser = ArgumentParser(description="DETECT - Density Estimation Tool for Enzyme ClassificaTion. "
                                         "Version 2.0. May 2016")
     
-    parser.add_argument("target_file",type=str,
-                        help="Path to the file containing the target FASTA sequence(s)")
-    parser.add_argument("--output_file",type=str,
-                        help="Path of the file to contain the output of the predictions")
-    parser.add_argument("--verbose",
-                        help="print verbose output",action="store_true")
-    parser.add_argument("--num_threads",type=int,
-                        help="Number of threads used by BLASTp")
-    parser.add_argument("--bit_score",type=float,
-                        help="The cutoff for BLASTp alignment bitscore")
-    parser.add_argument("--e_value",type=float,
-                        help="The cutoff for BLASTp alignment E-value")
-    parser.add_argument("--top_predictions_file",type=str,
-                        help="Path to the file that enumerates predictions with probability over 0.2")
-    parser.add_argument("--fbeta_file",type=str,
-                        help="Path to the file that enumerates predictions that pass EC-specific cutoffs")
-    parser.add_argument("--beta",type=float,choices=[1.0, 0.5, 2.0], default=1.0,
-                        help="Value of beta in Fbeta: 1 (default), 0.5 or 2. Fbeta is maximized along EC-specific "
-                             "precision-recall curves to derive EC-specific score cutoffs")
-    parser.add_argument("--db",type=str,
-                        help="Location of the Detect databases")
-    parser.add_argument("--blastp",type=str,
-                        help="Path for the blastp binary")
-    parser.add_argument("--needle",type=str,
-                        help="Path for the Needleman-Wunsch search binary")
+    parser.add_argument("target_file", type=str, help="Path to the file containing the target FASTA sequence(s)")
+    parser.add_argument("--output_file", type=str, help="Path of the file to contain the output of the predictions")
+    parser.add_argument("--interim_dump", type=str, help="Path to interim file dumps created by this program")
+    parser.add_argument("--verbose", help="print verbose output", action="store_true")
+    parser.add_argument("--num_threads", type=int, help="Number of threads used by BLASTp")
+    parser.add_argument("--bit_score", type=float, help="The cutoff for BLASTp alignment bitscore")
+    parser.add_argument("--e_value", type=float, help="The cutoff for BLASTp alignment E-value")
+    parser.add_argument("--top_predictions_file", type=str, help="Path to the file that enumerates predictions with probability over 0.2")
+    parser.add_argument("--fbeta_file", type=str, help="Path to the file that enumerates predictions that pass EC-specific cutoffs")
+    parser.add_argument("--beta", type=float, choices=[1.0, 0.5, 2.0], default=1.0, help="Value of beta in Fbeta: 1 (default), 0.5 or 2. Fbeta is maximized along EC-specific " "precision-recall curves to derive EC-specific score cutoffs")
+    parser.add_argument("--db", type=str, help="Location of the Detect databases")
+    parser.add_argument("--blastp", type=str, help="Path for the blastp binary")
+    parser.add_argument("--needle",type=str, help="Path for the Needleman-Wunsch search binary")
     
     args = parser.parse_args()
     script_path = args.db if args.db else os.path.dirname(os.path.realpath(__file__))
@@ -434,16 +444,17 @@ if __name__=="__main__":
     e_value = args.e_value if args.e_value else 1
     blastp = args.blastp if args.blastp else "blastp"
     needle = args.needle if args.needle else "needle"
+    interim_dump = args.interim_dump if args.interim_dump else os.getcwd()
     
-    pd_start = time.time()
-    sequences = import_fasta(args.target_file) #split_fasta(args.target_file) #sequences is a class
-    pd_end = time.time()
-    sql_start = time.time()
-    sequences = split_fasta(args.target_file) #sequences is a class
-    sql_end = time.time()
+    #pd_start = time.time()
+    sequence_df = import_fasta(args.target_file) #split_fasta(args.target_file) #sequences is a class
+    #pd_end = time.time()
+    #sql_start = time.time()
+    #sequences = split_fasta(args.target_file) #sequences is a class
+    #sql_end = time.time()
     
-    print("SQL time:", sql_end - sql_start)
-    print("pandas time:", pd_end - pd_start)
+    #print("SQL time:", sql_end - sql_start)
+    #print("pandas time:", pd_end - pd_start)
     
     #for item in sequences:
     #    print(item.name())
@@ -475,32 +486,56 @@ if __name__=="__main__":
         mapping_file = script_path + "/ec_to_cutoff.mappings"
         ec_to_cutoff = get_ec_to_cutoff(mapping_file, args.beta)
 
-    ids_to_recs = SeqIO.index(script_path + "/data/uniprot_sprot.fsa", "fasta")
+    #ids_to_recs = SeqIO.index(script_path + "/data/uniprot_sprot.fsa", "fasta")
+    #import the uniprot db.  we're going to need it
+    import_uniprot_start = time.time()
+    uniprot_df = import_fasta(script_path + "/data/uniprot_sprot.fsa")
+    import_uniprot_end = time.time()
+    print("import uniprot:", import_uniprot_end - import_uniprot_start, "s")
+    
+    
+    selected_df = sequence_df.iloc[0:10]
+    print(selected_df)
     #for item in ids_to_recs:
     #    print("ID to rec:", item)
-    print("PANDAS TIME:", pd_end - pd_start)
-    print("loop time:", sql_end - sql_start)
-    
+    """
+    rpa_start = time.time()
     process_list = []
+    count = 0
+    cum_count = 0
     for i,seq in enumerate(sequences):
+        process_name = "rpa_"+str(cum_count)
         process = mp.Process(
+            name = process_name,
             target = do_stuff,
-            args = (seq, blast_db,num_threads, e_value, bit_score, ids_to_recs, blastp, needle)
+            args = (seq, blast_db,num_threads, e_value, bit_score, uniprot_df, blastp, needle, process_name)
         )
         process.start()
         process_list.append(process)
+        count += 1
+        cum_count += 1
+        #if(count >= 1000):
+        #    break
+        #if(count >= 10):
+        #    print(dt.today(), "[", cum_count, "] pausing at 10 runs")
+        #    count = 0
+        #    for item in process_list:
+        #        item.join()
+        #    process_list[:] = []
     for item in process_list:
         item.join()
     process_list[:] = []
+    rpa_end = time.time()
     
-
+    print("RPA time:", rpa_end - rpa_start)
+    
     if (args.top_predictions_file):
         top_predictions_file.close()
 
     if (args.fbeta_file):
         fbeta_file.close()
     
-    
+    """
     output.close()
     connection.close()
     
