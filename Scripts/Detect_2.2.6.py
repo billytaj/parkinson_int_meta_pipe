@@ -135,7 +135,7 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
         sys.exit()
     
     blast_hits_path = dump_dir + "blast_hits_" + valid_seq_name
-    print("creating:", blast_hits_path)
+    #print("creating:", blast_hits_path)
     #blast_hits = open(blast_hits_path,"w")
     blast_hit_list = list() 
     for line in stdout.split("\n"):
@@ -172,7 +172,7 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
         stdout,stderr = p.communicate(seq.fasta())
     except Exception as e:
         print(dt.today(), "NEEDLE FAILED:", e)
-        print("deleting:", blast_hits_path)
+        #print("deleting:", blast_hits_path)
         os.remove(blast_hits_path)
         sys.exit()
     print("deleting:", blast_hits_path)
@@ -470,8 +470,11 @@ if __name__=="__main__":
     if not(dump_dir.endswith("/")):
         dump_dir += "/"
     make_folder(dump_dir) #make if doesn't exist
-    n_count = int(args.n_count)
-    
+    if(args.n_count):
+        n_count = int(args.n_count)
+    else:
+        n_count = 0
+        
     sequences = split_fasta(args.target_file)
     if verbose: print( "Found {} sequences in file.".format(len(sequences)))
     blast_db = script_path+"/data/uniprot_sprot.fsa"
@@ -522,6 +525,11 @@ if __name__=="__main__":
     outer_dict = dict()
     number_of_seqs = len(sequences)
     true_job_count = 0
+    
+    #limiter bypass
+    if n_count == 0:
+        n_count = number_of_seqs
+    print("Number of concurrent processes:", n_count)    
     for i,seq in enumerate(sequences):
         
     #    if verbose: 
@@ -536,6 +544,7 @@ if __name__=="__main__":
         process_counter += 1
         true_job_count += 1
         process_list.append(process)
+        print(dt.today(), "[" + str(process_counter) + "]: job launched")
         if(process_counter >= n_count or true_job_count == number_of_seqs):
             print(dt.today(), "[" + str(wait_counter) + "]: holding for process batch to finish")
             wait_counter += 1
