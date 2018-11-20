@@ -1650,26 +1650,26 @@ class mt_pipe_commands:
 
         return COMMANDS_DETECT_prep
 
-    def create_EC_DETECT_command(self, current_stage_name, prot_name):
+    def create_EC_DETECT_command(self, current_stage_name, diamond_stage):
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
-        proteins_folder = os.path.join(data_folder, "0_proteins")
-        detect_folder   = os.path.join(data_folder, "1_detect")
-        prot_folder     = os.path.join(detect_folder, prot_name)
+        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        detect_folder   = os.path.join(data_folder, "0_detect")
+        #prot_folder     = os.path.join(detect_folder, prot_name)
 
-        self.make_folder(prot_folder)
+        #self.make_folder(prot_folder)
 
-        detect_protein = ">&2 echo running detect on split file " + prot_name + " | "
+        detect_protein = ">&2 echo running detect on split file | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
-        detect_protein += os.path.join(proteins_folder, prot_name + ".fasta")
-        detect_protein += " --output_file " + os.path.join(detect_folder, prot_name + ".detect")
-        detect_protein += " --fbeta " + os.path.join(detect_folder, prot_name + ".fbeta")
+        detect_protein += os.path.join(diamond_folder,"proteins.faa")
+        detect_protein += " --output_file " + os.path.join(detect_folder, "proteins.detect")
+        detect_protein += " --fbeta " + os.path.join(detect_folder, "proteins.fbeta")
         detect_protein += " --db " + self.tool_path_obj.DetectDB
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
         detect_protein += " --needle " + self.tool_path_obj.Needle
-        detect_protein += " --dump_dir " + prot_folder 
-        detect_protein += " --n_count 100"
+        detect_protein += " --dump_dir " + detect_folder 
+        detect_protein += " --n_count 0"
 
         COMMANDS_DETECT = [
             detect_protein
@@ -1681,8 +1681,8 @@ class mt_pipe_commands:
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        PRIAM_folder        = os.path.join(data_folder, "2_priam")
-        diamond_ea_folder   = os.path.join(data_folder, "3_diamond")
+        PRIAM_folder        = os.path.join(data_folder, "1_priam")
+        diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
 
         self.make_folder(PRIAM_folder)
         self.make_folder(diamond_ea_folder)
@@ -1718,19 +1718,19 @@ class mt_pipe_commands:
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        detect_folder       = os.path.join(data_folder, "1_detect")
-        PRIAM_folder        = os.path.join(data_folder, "2_priam")
-        diamond_ea_folder   = os.path.join(data_folder, "3_diamond")
+        detect_folder       = os.path.join(data_folder, "0_detect")
+        PRIAM_folder        = os.path.join(data_folder, "1_priam")
+        diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
         final_folder        = os.path.join(subfolder, "final_results")
 
-        combine_detect = "cat " + os.path.join(detect_folder, "protein_*.toppred")
-        combine_detect += " > " + os.path.join(detect_folder, "proteins.toppred")
+        #combine_detect = "cat " + os.path.join(detect_folder, "protein_*.toppred")
+        #combine_detect += " > " + os.path.join(detect_folder, "proteins.toppred")
 
         postprocess_command = ">&2 echo combining enzyme annotation output | "
         postprocess_command += self.tool_path_obj.Python + " "
         postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
         postprocess_command += os.path.join(diamond_folder, "proteins.faa") + " "
-        postprocess_command += os.path.join(detect_folder, "proteins.toppred") + " "
+        postprocess_command += os.path.join(detect_folder, "proteins.fbeta") + " "
         postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
@@ -1738,7 +1738,7 @@ class mt_pipe_commands:
         postprocess_command += final_folder
 
         COMMANDS_EC_Postprocess = [
-            combine_detect,
+            #combine_detect,
             postprocess_command
         ]
 
