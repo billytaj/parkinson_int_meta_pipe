@@ -1624,41 +1624,16 @@ class mt_pipe_commands:
 
         return COMMANDS_Classify
 
-    def create_EC_DETECT_prep(self, current_stage_name, diamond_stage, file_split_count):
-        subfolder       = os.path.join(self.Output_Path, current_stage_name)
-        data_folder     = os.path.join(subfolder, "data")
-        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        proteins_folder = os.path.join(data_folder, "0_proteins")
-        detect_folder   = os.path.join(data_folder, "1_detect")
-        final_folder    = os.path.join(subfolder, "final_results")
-
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(proteins_folder)
-        self.make_folder(detect_folder)
-        self.make_folder(final_folder)
-
-        file_splitter = ">&2 echo splitting protein files for Detect | "
-        file_splitter += self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter += os.path.join(diamond_folder, "proteins.faa") + " "
-        file_splitter += os.path.join(proteins_folder, "protein") + " "
-        file_splitter += str(file_split_count)
-
-        COMMANDS_DETECT_prep = [
-            file_splitter
-        ]
-
-        return COMMANDS_DETECT_prep
-
     def create_EC_DETECT_command(self, current_stage_name, diamond_stage):
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
         diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
         detect_folder   = os.path.join(data_folder, "0_detect")
-        #prot_folder     = os.path.join(detect_folder, prot_name)
 
-        #self.make_folder(prot_folder)
-
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(detect_folder)
+        
         detect_protein = ">&2 echo running detect on split file | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
@@ -1723,6 +1698,7 @@ class mt_pipe_commands:
         diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
         final_folder        = os.path.join(subfolder, "final_results")
 
+        self.make_folder(final_folder)
         #combine_detect = "cat " + os.path.join(detect_folder, "protein_*.toppred")
         #combine_detect += " > " + os.path.join(detect_folder, "proteins.toppred")
 

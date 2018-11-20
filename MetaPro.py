@@ -599,7 +599,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     EC_DETECT_start = time.time()
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-        inner_name = "ec_post"
+        inner_name = "ec_detect"
         process = mp.Process(
             target = commands.create_and_launch,
             args = (
@@ -632,7 +632,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         process.start()
         process.join()
 
-        inner_name = "ea_post"
+        inner_name = "ec_post"
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
