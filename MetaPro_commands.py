@@ -1644,7 +1644,7 @@ class mt_pipe_commands:
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
         detect_protein += " --needle " + self.tool_path_obj.Needle
         detect_protein += " --dump_dir " + detect_folder 
-        detect_protein += " --n_count 0"
+        detect_protein += " --n_count 20000"
 
         COMMANDS_DETECT = [
             detect_protein
