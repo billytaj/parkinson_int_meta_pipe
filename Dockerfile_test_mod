@@ -204,7 +204,7 @@ ADD MetaPro.py /pipeline
 ADD MetaPro_paths.py /pipeline
 ADD MetaPro_commands.py /pipeline
 ADD Config.ini /pipeline
-ADD Scripts/Detect_2.2.6.py /pipeline/Scripts
+ADD Scripts/Detect_2.2.7.py /pipeline/Scripts
 ADD Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD Scripts/assembly_map.py /pipeline/Scripts
 ADD Scripts/ea_combine.py /pipeline/Scripts
