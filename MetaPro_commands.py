@@ -1645,7 +1645,7 @@ class mt_pipe_commands:
         detect_protein += " --needle " + self.tool_path_obj.Needle
         detect_protein += " --dump_dir " + detect_folder 
         detect_protein += " --n_count 20000"
-        detect_protein += " $>> " + os.path.join(detect_folder, "detect_out.txt")
+        detect_protein += " &>> " + os.path.join(detect_folder, "detect_out.txt")
 
         COMMANDS_DETECT = [
             detect_protein
