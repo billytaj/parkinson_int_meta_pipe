@@ -105,6 +105,8 @@ zero_density = 1e-10
 """Small number that is used as zero"""
 
 def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff, uniprot_df, blastp, needle, dump_dir):
+    
+    
     """Core alignment routine.
     1) Takes a single sequence, acquires multiple BLASTp alignemnts to the swissprot enzyme database.
     2) Canonical sequences of the results from (1) are retrieved from dictionary of ids to swissprot records derived
@@ -160,11 +162,16 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
         
 
     #Run Needleman-Wunsch alignment on the results of the BLAST search
+    
+    gapextend_value = "0.5"
+    if(needle.endswith("stretcher")):
+        gapextend_value = "2"
+        
     try:
         p = subprocess.Popen((needle, "-filter",
                         "-bsequence", blast_hits_path, #"blast_hits_" + valid_seq_name,
                         "-gapopen", "10",
-                        "-gapextend", "0.5",
+                        "-gapextend", gapextend_value,
                         "-sprotein", "Y",
                         "-aformat_outfile", "score"),
                     stdin=subprocess.PIPE,
