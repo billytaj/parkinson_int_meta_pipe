@@ -483,6 +483,8 @@ if __name__=="__main__":
     else:
         n_count = 0
         
+    
+        
     sequences = split_fasta(args.target_file)
     if verbose: print( "Found {} sequences in file.".format(len(sequences)))
     blast_db = script_path+"/data/uniprot_sprot.fsa"
@@ -537,6 +539,9 @@ if __name__=="__main__":
     #limiter bypass
     if n_count == 0:
         n_count = number_of_seqs
+    if n_count > mp.cpu_count():
+        print("n_count is NERF'd:", mp.cpu_count())
+        n_count = mp.cpu_count()
     print("Number of concurrent processes:", n_count)    
     for i,seq in enumerate(sequences):
         
