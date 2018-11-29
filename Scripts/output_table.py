@@ -146,11 +146,13 @@ for gene in gene2read_dict:
                 unclassified_reads += 1
         else:
             RPKM_dict[gene].append(read_count / RPKM_div)
+            RPKM_dict[gene].append(read_count) #needed for for humann2 comparison:  raw, un-normalized
     else:
         RPKM_dict[gene].append(unclassified_reads / RPKM_div)
+        RPKM_dict[gene].append(unclassified_reads) #needed to compare against humann2.  -> raw, un-normalized
 
 with open(RPKM, "w") as RPKM_out:
-    RPKM_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\n")
+    RPKM_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\tNot_normalized\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
 
