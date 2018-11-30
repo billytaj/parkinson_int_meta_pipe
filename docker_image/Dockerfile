@@ -182,7 +182,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/M
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro_paths.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/MetaPro_commands.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Config.ini /pipeline
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/Detect_2.1.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/Detect_2.2.6.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/assembly_map.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ea_combine.py /pipeline/Scripts

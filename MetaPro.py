@@ -598,39 +598,20 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Detect EC annotation
     EC_DETECT_start = time.time()
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
-    if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-        # Preparing folders for DETECT
+    ec_detect_path = os.path.join(ec_annotation_path, "0_detect")
+    if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
+        inner_name = "ec_detect"
         process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                ec_annotation_label,
-                commands.create_EC_DETECT_prep(ec_annotation_label, gene_annotation_DIAMOND_label, int(mp.cpu_count() / 2)),
-                True
+            target = commands.create_and_launch,
+            args = (
+                ec_annotation_label, 
+                commands.create_EC_DETECT_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                True,
+                inner_name
             )
         )
         process.start()
         process.join()
-
-        # Running DETECT on split protein files
-        proteins_path = os.path.join(output_folder_path, ec_annotation_label, "data", "0_proteins")
-        for item in os.listdir(proteins_path):
-            file_root_name = os.path.splitext(item)[0]
-            inner_name = file_root_name + "_detect"
-            process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    ec_annotation_label,
-                    commands.create_EC_DETECT_command(ec_annotation_label, file_root_name),
-                    True,
-                    inner_name
-                )
-            )
-            process.start()
-            mp_store.append(process)  # pack all the processes into a list
-
-        for item in mp_store:
-            item.join()  # wait for things to finish
-        mp_store[:] = []  # clear the list
         
     EC_DETECT_end = time.time()
     print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
@@ -639,18 +620,20 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Priam and Diamond EC annotation
     EC_PRIAM_DIAMOND_start = time.time()
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
+        inner_name = "ec_priam_diamond"
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
                 ec_annotation_label,
                 commands.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                True
+                True,
+                inner_name
             )
         )
         process.start()
         process.join()
 
-        inner_name = "ea_post"
+        inner_name = "ec_post"
         process = mp.Process(
             target=commands.create_and_launch,
             args=(

@@ -760,27 +760,30 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(singleton_split_folder)
                 
+        file_splitter_singletons = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+        file_splitter_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
+        file_splitter_singletons += os.path.join(singleton_split_folder, "singletons") + " "
+        file_splitter_singletons += str(file_split_count)
+        
+        file_splitter_pair_1 = None
+        file_splitter_pair_2 = None
+        
         if(operating_mode == "paired"):
             pair_1_split_folder     = os.path.join(data_folder, "pair_1", "pair_1_fastq")
             pair_2_split_folder     = os.path.join(data_folder, "pair_2", "pair_2_fastq")
             self.make_folder(pair_1_split_folder)
             self.make_folder(pair_2_split_folder)        
 
-        file_splitter_singletons = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
-        file_splitter_singletons += os.path.join(singleton_split_folder, "singletons") + " "
-        file_splitter_singletons += str(file_split_count)
-        
-        file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
-        file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
-        file_splitter_pair_1 += str(file_split_count)
+            file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+            file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
+            file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
+            file_splitter_pair_1 += str(file_split_count)
 
-        file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
-        file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
-        file_splitter_pair_2 += str(file_split_count)
-        
+            file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+            file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
+            file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
+            file_splitter_pair_2 += str(file_split_count)
+            
         if self.read_mode == "single":
             COMMANDS_rRNA_prep = [
                 file_splitter_singletons
@@ -791,7 +794,7 @@ class mt_pipe_commands:
                 file_splitter_pair_1,
                 file_splitter_pair_2
             ]
-        print(dt.today(), COMMANDS_rRNA_prep)
+        #print(dt.today(), COMMANDS_rRNA_prep)
         return COMMANDS_rRNA_prep
 
     def create_rRNA_filter_barrnap_command(self, stage_name, category, fastq_name, dependency_name):
@@ -1621,51 +1624,28 @@ class mt_pipe_commands:
 
         return COMMANDS_Classify
 
-    def create_EC_DETECT_prep(self, current_stage_name, diamond_stage, file_split_count):
+    def create_EC_DETECT_command(self, current_stage_name, diamond_stage):
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
         diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        proteins_folder = os.path.join(data_folder, "0_proteins")
-        detect_folder   = os.path.join(data_folder, "1_detect")
-        final_folder    = os.path.join(subfolder, "final_results")
+        detect_folder   = os.path.join(data_folder, "0_detect")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(proteins_folder)
         self.make_folder(detect_folder)
-        self.make_folder(final_folder)
-
-        file_splitter = ">&2 echo splitting protein files for Detect | "
-        file_splitter += self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter += os.path.join(diamond_folder, "proteins.faa") + " "
-        file_splitter += os.path.join(proteins_folder, "protein") + " "
-        file_splitter += str(file_split_count)
-
-        COMMANDS_DETECT_prep = [
-            file_splitter
-        ]
-
-        return COMMANDS_DETECT_prep
-
-    def create_EC_DETECT_command(self, current_stage_name, prot_name):
-        subfolder       = os.path.join(self.Output_Path, current_stage_name)
-        data_folder     = os.path.join(subfolder, "data")
-        proteins_folder = os.path.join(data_folder, "0_proteins")
-        detect_folder   = os.path.join(data_folder, "1_detect")
-        prot_folder     = os.path.join(detect_folder, prot_name)
-
-        self.make_folder(prot_folder)
-
-        detect_protein = "(cd " + prot_folder + " && "
-        detect_protein += ">&2 echo running detect on split file " + prot_name + " | "
+        
+        detect_protein = ">&2 echo running detect on split file | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
-        detect_protein += os.path.join(proteins_folder, prot_name + ".fasta")
-        detect_protein += " --output_file " + os.path.join(detect_folder, prot_name + ".detect")
-        detect_protein += " --top_predictions_file " + os.path.join(detect_folder, prot_name + ".toppred")
+        detect_protein += os.path.join(diamond_folder,"proteins.faa")
+        detect_protein += " --output_file " + os.path.join(detect_folder, "proteins.detect")
+        detect_protein += " --fbeta " + os.path.join(detect_folder, "proteins.fbeta")
         detect_protein += " --db " + self.tool_path_obj.DetectDB
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
-        detect_protein += " --needle " + self.tool_path_obj.Needle + ")"
+        detect_protein += " --needle " + self.tool_path_obj.Needle
+        detect_protein += " --dump_dir " + detect_folder 
+        detect_protein += " --n_count 20000"
+        detect_protein += " >> " + os.path.join(detect_folder, "detect_out.txt") + " 2>&1"
 
         COMMANDS_DETECT = [
             detect_protein
@@ -1677,8 +1657,8 @@ class mt_pipe_commands:
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        PRIAM_folder        = os.path.join(data_folder, "2_priam")
-        diamond_ea_folder   = os.path.join(data_folder, "3_diamond")
+        PRIAM_folder        = os.path.join(data_folder, "1_priam")
+        diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
 
         self.make_folder(PRIAM_folder)
         self.make_folder(diamond_ea_folder)
@@ -1714,19 +1694,20 @@ class mt_pipe_commands:
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        detect_folder       = os.path.join(data_folder, "1_detect")
-        PRIAM_folder        = os.path.join(data_folder, "2_priam")
-        diamond_ea_folder   = os.path.join(data_folder, "3_diamond")
+        detect_folder       = os.path.join(data_folder, "0_detect")
+        PRIAM_folder        = os.path.join(data_folder, "1_priam")
+        diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
         final_folder        = os.path.join(subfolder, "final_results")
 
-        combine_detect = "cat " + os.path.join(detect_folder, "protein_*.toppred")
-        combine_detect += " > " + os.path.join(detect_folder, "proteins.toppred")
+        self.make_folder(final_folder)
+        #combine_detect = "cat " + os.path.join(detect_folder, "protein_*.toppred")
+        #combine_detect += " > " + os.path.join(detect_folder, "proteins.toppred")
 
         postprocess_command = ">&2 echo combining enzyme annotation output | "
         postprocess_command += self.tool_path_obj.Python + " "
         postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
         postprocess_command += os.path.join(diamond_folder, "proteins.faa") + " "
-        postprocess_command += os.path.join(detect_folder, "proteins.toppred") + " "
+        postprocess_command += os.path.join(detect_folder, "proteins.fbeta") + " "
         postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
@@ -1734,7 +1715,7 @@ class mt_pipe_commands:
         postprocess_command += final_folder
 
         COMMANDS_EC_Postprocess = [
-            combine_detect,
+            #combine_detect,
             postprocess_command
         ]
 
