@@ -216,6 +216,7 @@ ADD Scripts/output_EC_metrics.py /pipeline/Scripts
 ADD Scripts/output_read_counts.py /pipeline/Scripts
 ADD Scripts/output_read_quality_metrics.py /pipeline/Scripts
 ADD Scripts/output_table.py /pipeline/Scripts
+ADD Scripts/output_table_v2.py /pipeline/Scripts
 ADD Scripts/output_visualization.py /pipeline/Scripts
 ADD Scripts/read_BLAT_filter.py /pipeline/Scripts
 ADD Scripts/read_orphan.py /pipeline/Scripts

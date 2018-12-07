@@ -92,7 +92,7 @@ class tool_path_obj:
             self.Python         = "python3"
             self.Java           = "java -jar"
             self.cdhit_dup      = os.path.join(tool_path, "cdhit_dup/cd-hit-dup")
-            self.Timmomatic     = os.path.join(tool_path, "Trimmomatic/trimmomatic-0.36.jar")
+            self.Trimmomatic     = os.path.join(tool_path, "Trimmomatic/trimmomatic-0.36.jar")
             self.AdapterRemoval = os.path.join(tool_path, "adapterremoval/AdapterRemoval")
             self.vsearch        = os.path.join(tool_path, "vsearch/vsearch")
             self.Flash          = os.path.join(tool_path, "FLASH/flash")
@@ -135,7 +135,7 @@ class tool_path_obj:
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine.py")
-        self.RPKM                       = os.path.join(script_path, "output_table.py")
+        self.RPKM                       = os.path.join(script_path, "output_table_v2.py")
         self.read_count                 = os.path.join(script_path, "output_read_counts.py")
         self.read_quality_metrics       = os.path.join(script_path, "output_read_quality_metrics.py")
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
