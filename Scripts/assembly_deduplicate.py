@@ -19,7 +19,7 @@ if __name__ == "__main__":
     print("Output Location:", output_path)
     
     #imports all fastq files into df
-    read_df = pd.read_csv(read_path, header=None, names=[None], sep ='\n', skip_blank_lines = False)
+    read_df = pd.read_csv(read_path, header=None, names=[None], sep ='\n', skip_blank_lines = False, quoting=3)
     read_df = pd.DataFrame(read_df.values.reshape(int(len(read_df) / 4), 4))
     
     read_df.columns = ["ID", "sequence", "junk", "quality"]

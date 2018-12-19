@@ -3,7 +3,7 @@ import time
 import pandas as pd
 
 def remove_tag(input_file, output_file):
-    df = pd.read_csv(input_file, header=None, names=[None], sep='\n', skip_blank_lines = False)
+    df = pd.read_csv(input_file, header=None, names=[None], sep='\n', skip_blank_lines = False, quoting=3)
     end_read_time = time.clock()
     
     df = pd.DataFrame(df.values.reshape(int(len(df)/4), 4))

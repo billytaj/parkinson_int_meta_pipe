@@ -21,7 +21,7 @@ def extract_rRNA_ID(barrnap_file):
 
 def filter_rRNA(rRNA_ID_list, fastq_sequence, mRNA_loc, rRNA_loc, file_name):
     #import the fastq as a DF
-    fastq_df = pd.read_csv(fastq_sequence, sep="\n", skip_blank_lines=False, header=None, names = [None])
+    fastq_df = pd.read_csv(fastq_sequence, sep="\n", skip_blank_lines=False, quoting=3, header=None, names = [None])
     fastq_df = pd.DataFrame(fastq_df.values.reshape(int(len(fastq_df)/4), 4))
     fastq_df.columns = ["ID", "seq", "junk", "quality"]
     

@@ -10,11 +10,11 @@ import sys
 import pandas as pd
 
 def repopulate_single(ref_filename, mRNA_filename, cluster_filename, output_filename):
-    ref_file = pd.read_csv(ref_filename, header = None, names = [None], sep = '\n', skip_blank_lines = False)
+    ref_file = pd.read_csv(ref_filename, header = None, names = [None], sep = '\n', skip_blank_lines = False, quoting=3)
     ref_df = pd.DataFrame(ref_file.values.reshape(int(len(ref_file)/4), 4))
     ref_df.columns = ["ID", "seq", "junk", "quality"]
 
-    mRNA_file = pd.read_csv(mRNA_filename, header=None, names=[None], sep = '\n', skip_blank_lines = False)
+    mRNA_file = pd.read_csv(mRNA_filename, header=None, names=[None], sep = '\n', skip_blank_lines = False, quoting=3)
     mRNA_df = pd.DataFrame(mRNA_file.values.reshape(int(len(mRNA_file)/4), 4))
     mRNA_df.columns = ["ID", "seq", "junk", "quality"]
     cluster_file = cluster_filename

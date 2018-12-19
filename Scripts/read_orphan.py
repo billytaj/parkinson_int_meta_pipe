@@ -8,8 +8,8 @@ import pandas as pd
 # we expect this code to be called multiple times
 
 def filter_for_orphans(pair_0_path_i, pair_1_path_i, orphans_path_i, pair_0_path_o, pair_1_path_o, unique_path_o):
-    pre_df_0 = pd.read_csv(pair_0_path_i, header=None, names=[None], sep = '\n', skip_blank_lines = False)
-    pre_df_1 = pd.read_csv(pair_1_path_i, header=None, names=[None], sep = '\n', skip_blank_lines = False)
+    pre_df_0 = pd.read_csv(pair_0_path_i, header=None, names=[None], sep = '\n', skip_blank_lines = False, quoting=3)
+    pre_df_1 = pd.read_csv(pair_1_path_i, header=None, names=[None], sep = '\n', skip_blank_lines = False, quoting=3)
     df_0 = pd.DataFrame(pre_df_0.values.reshape(int(len(pre_df_0)/4), 4))
     df_1 = pd.DataFrame(pre_df_1.values.reshape(int(len(pre_df_1)/4), 4))
     
