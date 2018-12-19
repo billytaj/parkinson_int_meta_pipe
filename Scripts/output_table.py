@@ -125,16 +125,23 @@ with open(gene2EC, "r") as infile:
             EC2genes_dict[EC] = [gene]
 
 RPKM_dict = {}
+RPKM_raw_dict = {}
 for gene in gene2read_dict:
     RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
     RPKM_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
+    RPKM_raw_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
     for EC in EC2genes_dict:
         if gene in EC2genes_dict[EC]:
             RPKM_dict[gene].append(EC)
+            RPKM_raw_dict[gene].append(EC)
             break
     else:
         RPKM_dict[gene].append("0.0.0.0")
+        RPKM_raw_dict[gene].append("0.0.0.0")
+    
     RPKM_dict[gene].append(len(gene2read_dict[gene][1])/RPKM_div)
+    RPKM_raw_dict[gene].append(len(gene2read_dict[gene][1]))
+    
     unclassified_reads = 0
     for taxa in Rank_id:
         read_count = 0
@@ -146,15 +153,21 @@ for gene in gene2read_dict:
                 unclassified_reads += 1
         else:
             RPKM_dict[gene].append(read_count / RPKM_div)
-            RPKM_dict[gene].append(read_count) #needed for for humann2 comparison:  raw, un-normalized
+            RPKM_raw_dict[gene].append(read_count)
     else:
         RPKM_dict[gene].append(unclassified_reads / RPKM_div)
-        RPKM_dict[gene].append(unclassified_reads) #needed to compare against humann2.  -> raw, un-normalized
+        RPKM_raw_dict[gene].append(unclassified_reads)
 
 with open(RPKM, "w") as RPKM_out:
-    RPKM_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\tNot_normalized\n")
+    RPKM_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
+
+new_file_name = RPKM + "_raw.csv"
+with open(new_file_name, "w") as RPKM_raw_out:
+    RPKM_raw_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\n")
+    for entry in RPKM_raw_dict:
+        RPKM_raw_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_raw_dict[entry]) + "\n")
 
 
 Cytoscape_dict = {}
