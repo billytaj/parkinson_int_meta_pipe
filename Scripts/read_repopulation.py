@@ -53,7 +53,7 @@ def repopulate_single(ref_filename, mRNA_filename, cluster_filename, output_file
             reduplicated_ids.add("@" + sequence)
 
     #exports the full mRNA by fetching from ref
-    ref_df[ref_df.ID.isin(sorted(reduplicated_ids))].to_csv(full_mRNA_file, sep = '\n', mode = "w+", header = False, index = False)
+    ref_df[ref_df.ID.isin(sorted(reduplicated_ids))].to_csv(full_mRNA_file, sep = '\n', mode = "w+", header = False, index = False, quoting = 3)
 
 
 if __name__ == "__main__":

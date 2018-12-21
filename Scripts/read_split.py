@@ -42,7 +42,7 @@ def split_fastq(file_name_in, file_name_out, split_count = 4):
         #if(chunks == 1):
         #    end_index += 1 #override on splits that only have 1 
         if not(fastq_df.iloc[start_index:end_index, :].empty):
-            fastq_df.iloc[start_index:end_index, :].to_csv(new_file_name, chunksize = chunks, mode = "w+", index=False, sep='\n', header=False)
+            fastq_df.iloc[start_index:end_index, :].to_csv(new_file_name, chunksize = chunks, mode = "w+", index=False, sep='\n', header=False, quoting = 3)
         else:
             print("empty frame detected.  no sense in running the rest")
             break

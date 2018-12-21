@@ -2,13 +2,23 @@ import sys
 import time
 import pandas as pd
 
+def remove_tag(x):
+    new_name = x
+    if (x.endswith("/1")): 
+        new_name = x.split("/")[0]
+    elif(x.endswith("/2")):
+        new_name = x.split("/")[0]
+        
+    return x
+
 def remove_tag(input_file, output_file):
     df = pd.read_csv(input_file, header=None, names=[None], sep='\n', skip_blank_lines = False, quoting=3)
     end_read_time = time.clock()
     
     df = pd.DataFrame(df.values.reshape(int(len(df)/4), 4))
     df.columns = ["ID", "sequences", "junk", "quality"]
-    df["ID"] = df["ID"].apply(lambda x: x.split("/")[0])
+    df["ID"] = df["ID"].apply(lambda x: )
+    df["ID"] = df["ID"].apply(lambda x: if (x.endswith("/2")): x.split("/")[0])
     df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False)
     
 if __name__ == "__main__":

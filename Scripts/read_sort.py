@@ -19,13 +19,10 @@ def sort_and_export(input_file, output_file, direction):
     df["ID"] = df["ID"].apply(lambda x: x.split(" ")[0])
     df["ID"] = df["ID"].apply(lambda x: x.replace(".", "_"))
     df = df.sort_values(by=['ID'])
-    if(direction == "forward"):
-        df["ID"] = df["ID"].apply(lambda x: x + "/1")
-    elif(direction == "reverse"):
-        df["ID"] = df["ID"].apply(lambda x: x + "/2")
+    
         
     end_df_time = time.clock()
-    df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False)
+    df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False, quoting = 3)
     end_total_call = time.clock()
     #-------------------------------------------------------------------------------------------
     

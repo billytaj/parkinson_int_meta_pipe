@@ -158,7 +158,7 @@ def run_pair_alignment (seq, blast_db, num_threads, e_value_min, bitscore_cutoff
         if(blast_df.empty):
             print(blast_hits_path, "BLAST_DF is empty... ERROR")
             return list()
-        blast_df.to_csv(blast_hits_path, mode="w+", sep='\n', header=False)
+        blast_df.to_csv(blast_hits_path, mode="w+", sep='\n', header=False, quoting = 3)
         
 
     #Run Needleman-Wunsch alignment on the results of the BLAST search

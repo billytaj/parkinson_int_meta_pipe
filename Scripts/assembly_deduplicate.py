@@ -46,6 +46,6 @@ if __name__ == "__main__":
     #write it
     read_name = os.path.basename(read_path)
     # export only the rows that are unmapped
-    read_df[read_df.ID.isin(unmapped_read_sam_df)].to_csv(os.path.join(output_path, read_name), sep='\n', mode ="w+", header=False, index=False)
+    read_df[read_df.ID.isin(unmapped_read_sam_df)].to_csv(os.path.join(output_path, read_name), sep='\n', mode ="w+", header=False, index=False, quoting = 3)
     # then export only the rows that are mapped
-    read_df[read_df.ID.isin(mapped_read_sam_df)].to_csv(os.path.join(output_path, os.path.splitext(read_name)[0] + "_mapped" + os.path.splitext(read_name)[1]), sep='\n', mode ="w+", header=False, index=False)
+    read_df[read_df.ID.isin(mapped_read_sam_df)].to_csv(os.path.join(output_path, os.path.splitext(read_name)[0] + "_mapped" + os.path.splitext(read_name)[1]), sep='\n', mode ="w+", header=False, index=False, quoting = 3)
