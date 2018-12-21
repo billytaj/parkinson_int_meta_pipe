@@ -171,20 +171,6 @@ RUN mkdir ../WEVOTE && ./install.sh && mkdir WEVOTE_db && mv bin/WEVOTE ../WEVOT
 WORKDIR /pipeline_tools
 RUN rm -r WEVOTE-master
 
-#--------------------------------------------
-# get reference files
-# 
-#WORKDIR /pipeline_reference_files
-#there's a bunch of DBs that need to be downloaded too.  including the wevote files, called by the download script they supply, and the priam DB files. 
-#RUN wget ftp://ftp.ncbi.nlm.nih.gov/pub/UniVec/UniVec_Core -O UniVec_Core.fasta
-#RUN mkdir Trimmomatic_adapters
-#RUN mv /pipeline_tools/Trimmomatic/adapters/* /pipeline_reference_files/Trimmomatic_adapters
-#RUN wget ftp://ftp.ensembl.org/pub/release-92/fasta/mus_musculus/cds/Mus_musculus.GRCm38.cds.all.fa.gz -O Mouse_cds.gz
-#RUN gunzip Mouse_cds.gz && mv Mouse_cds Mouse_cds.fasta
-#RUN wget ftp://ftp.ebi.ac.uk/pub/databases/Rfam/13.0/Rfam.cm.gz
-#RUN gunzip Rfam.cm.gz
-#RUN /pipeline_tools/infernal/cmpress Rfam.cm
-
 #-------------------------------------------
 # add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
 WORKDIR /pipeline
@@ -193,7 +179,7 @@ RUN mkdir /pipeline/Scripts
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/MetaPro_paths.py /pipeline
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/MetaPro_commands.py /pipeline
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Config.ini /pipeline
-#ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Scripts/Detect_2.2.6.py /pipeline/Scripts
+#ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Scripts/Detect_2.1.py /pipeline/Scripts
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Scripts/assembly_deduplicate.py /pipeline/Scripts
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Scripts/assembly_map.py /pipeline/Scripts
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Scripts/ea_combine.py /pipeline/Scripts
@@ -214,34 +200,45 @@ RUN mkdir /pipeline/Scripts
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Scripts/ta_constrain.py /pipeline/Scripts
 #ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/quiet_mode/Scripts/ta_taxid.py /pipeline/Scripts
 
-ADD MetaPro.py /pipeline
-ADD MetaPro_paths.py /pipeline
-ADD MetaPro_commands.py /pipeline
-ADD Config.ini /pipeline
-ADD Scripts/Detect_2.1.py /pipeline/Scripts
-ADD Scripts/assembly_deduplicate.py /pipeline/Scripts
-ADD Scripts/assembly_map.py /pipeline/Scripts
-ADD Scripts/ea_combine.py /pipeline/Scripts
-ADD Scripts/ga_BLAT.py /pipeline/Scripts
-ADD Scripts/ga_BWA.py /pipeline/Scripts
-ADD Scripts/ga_Diamond.py /pipeline/Scripts
-ADD Scripts/output_contig_stats.py /pipeline/Scripts
-ADD Scripts/output_EC_metrics.py /pipeline/Scripts
-ADD Scripts/output_read_counts.py /pipeline/Scripts
-ADD Scripts/output_read_quality_metrics.py /pipeline/Scripts
-ADD Scripts/output_table.py /pipeline/Scripts
-ADD Scripts/output_visualization.py /pipeline/Scripts
-ADD Scripts/read_BLAT_filter.py /pipeline/Scripts
-ADD Scripts/read_orphan.py /pipeline/Scripts
-ADD Scripts/read_rRNA_barrnap.py /pipeline/Scripts
-ADD Scripts/read_rRNA_infernal.py /pipeline/Scripts
-ADD Scripts/read_repopulation.py /pipeline/Scripts
-ADD Scripts/read_sam.py /pipeline/Scripts
-ADD Scripts/read_sort.py /pipeline/Scripts
-ADD Scripts/read_split.py /pipeline/Scripts
-ADD Scripts/ta_combine.py /pipeline/Scripts
-ADD Scripts/ta_constrain.py /pipeline/Scripts
-ADD Scripts/ta_taxid.py /pipeline/Scripts
+ADD ../MetaPro.py /pipeline
+ADD ../MetaPro_paths.py /pipeline
+ADD ../MetaPro_commands.py /pipeline
+ADD ../Config.ini /pipeline
+ADD ../Scripts/Detect_2.2.7.py /pipeline/Scripts
+ADD ../Scripts/assembly_deduplicate.py /pipeline/Scripts
+ADD ../Scripts/assembly_map.py /pipeline/Scripts
+ADD ../Scripts/ea_combine.py /pipeline/Scripts
+ADD ../Scripts/ga_BLAT.py /pipeline/Scripts
+ADD ../Scripts/ga_BWA.py /pipeline/Scripts
+ADD ../Scripts/ga_Diamond.py /pipeline/Scripts
+ADD ../Scripts/output_contig_stats.py /pipeline/Scripts
+ADD ../Scripts/output_EC_metrics.py /pipeline/Scripts
+ADD ../Scripts/output_read_counts.py /pipeline/Scripts
+ADD ../Scripts/output_read_quality_metrics.py /pipeline/Scripts
+ADD ../Scripts/output_table.py /pipeline/Scripts
+ADD ../Scripts/output_visualization.py /pipeline/Scripts
+ADD ../Scripts/read_BLAT_filter.py /pipeline/Scripts
+ADD ../Scripts/read_orphan.py /pipeline/Scripts
+ADD ../Scripts/read_remove_tag.py /pipeline/Scripts
+ADD ../Scripts/read_rRNA_barrnap.py /pipeline/Scripts
+ADD ../Scripts/read_rRNA_infernal.py /pipeline/Scripts
+ADD ../Scripts/read_repopulation.py /pipeline/Scripts
+ADD ../Scripts/read_sam.py /pipeline/Scripts
+ADD ../Scripts/read_sort.py /pipeline/Scripts
+ADD ../Scripts/read_split.py /pipeline/Scripts
+ADD ../Scripts/ta_combine.py /pipeline/Scripts
+ADD ../Scripts/ta_constrain.py /pipeline/Scripts
+ADD ../Scripts/ta_taxid.py /pipeline/Scripts
+
+#--------------------------------------------
+# get reference files
+# 
+ADD custom_databases/EC_pathway.txt /pipeline/custom_databases
+ADD custom_databases/pathway_to_superpathway.csv /pipeline/custom_databases
+
+#--------------------------------------------
+# get setup scripts
+ADD Setup_scripts/Download_EC_Annotated_SwissProt.py /pipeline/setup_scripts
 
 RUN chmod -R 555 /pipeline
 
