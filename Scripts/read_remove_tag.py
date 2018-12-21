@@ -9,7 +9,7 @@ def eat_tag(x):
     elif(x.endswith("/2")):
         new_name = x.split("/")[0]
         
-    return x
+    return new_name
 
 def remove_tag(input_file, output_file):
     df = pd.read_csv(input_file, header=None, names=[None], sep='\n', skip_blank_lines = False, quoting=3)
