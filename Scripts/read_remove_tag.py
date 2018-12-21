@@ -18,7 +18,7 @@ def remove_tag(input_file, output_file):
     df = pd.DataFrame(df.values.reshape(int(len(df)/4), 4))
     df.columns = ["ID", "sequences", "junk", "quality"]
     df["ID"] = df["ID"].apply(lambda x: eat_tag(x))
-    df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False)
+    df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False, quoting = 3)
     
 if __name__ == "__main__":
     scinet_flag = False
