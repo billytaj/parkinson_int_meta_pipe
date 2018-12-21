@@ -2,7 +2,7 @@ import sys
 import time
 import pandas as pd
 
-def remove_tag(x):
+def eat_tag(x):
     new_name = x
     if (x.endswith("/1")): 
         new_name = x.split("/")[0]
@@ -17,7 +17,7 @@ def remove_tag(input_file, output_file):
     
     df = pd.DataFrame(df.values.reshape(int(len(df)/4), 4))
     df.columns = ["ID", "sequences", "junk", "quality"]
-    df["ID"] = df["ID"].apply(lambda x: remove_tag(x))
+    df["ID"] = df["ID"].apply(lambda x: eat_tag(x))
     df.to_csv(output_file, sep='\n', mode = 'w+', header=False, index=False)
     
 if __name__ == "__main__":
