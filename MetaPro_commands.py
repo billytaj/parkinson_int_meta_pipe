@@ -318,7 +318,7 @@ class mt_pipe_commands:
         self.make_folder(blat_hr_folder)
         self.make_folder(final_folder)
 
-        Host_Contaminants = host_removal_folder + "host_contaminents_seq.fasta"
+        Host_Contaminants = os.path.join(host_removal_folder, "host_contaminents_seq.fasta")
         copy_host = ">&2 echo Copy the host file over | "
         copy_host += "cp " + self.tool_path_obj.Host + " " + Host_Contaminants
 
