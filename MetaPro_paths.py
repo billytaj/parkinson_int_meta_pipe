@@ -8,6 +8,7 @@ class tool_path_obj:
             config = ConfigParser() #change this to ex
             config.read(config_path)
         else:
+            print("no config found, defaulting")
             config = None
 
         script_path             = "/pipeline/Scripts"

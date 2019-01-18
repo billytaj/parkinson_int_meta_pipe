@@ -743,7 +743,7 @@ if __name__ == "__main__":
         print("You cannot specify both paired-end and single-end reads in a single run.")
         sys.exit()
 
-    config_file = args.config if args.pair1 else ""
+    config_file = args.config if args.config else ""
     pair_1 =        args.pair1 if args.pair1 else ""
     pair_2 =        args.pair2 if args.pair2 else ""
     single =        args.single if args.single else ""
