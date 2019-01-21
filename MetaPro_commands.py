@@ -1009,7 +1009,7 @@ class mt_pipe_commands:
         self.make_folder(repop_folder)
         self.make_folder(final_folder)
 
-        repop_singletons = ">&2 echo Duplication repopulation singletons | "
+        repop_singletons = ">&2 echo Duplication repopulation singletons mRNA| "
         repop_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         if self.read_mode == "single":
             repop_singletons += os.path.join(singleton_path, "singletons_hq.fastq") + " "
@@ -1022,12 +1022,12 @@ class mt_pipe_commands:
         elif self.read_mode == "paired":
             repop_singletons += os.path.join(repop_folder, "singletons.fastq")  # out
 
-        repop_singletons_rRNA = self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_singletons_rRNA = ">&2 echo Duplication repopulations singletons rRNA | "
+        repop_singletons_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         if self.read_mode == "single":
-            repop_singletons_rRNA += os.path.join(preprocess_subfolder, "data", "4_quality_filter", "singletons_hq.fastq") + " "
+            repop_singletons_rRNA += os.path.join(singleton_path, "singletons_hq.fastq") + " "
         elif self.read_mode == "paired":
             repop_singletons_rRNA += os.path.join(hq_path, "singletons.fastq") + " "
-        
         repop_singletons_rRNA += os.path.join(dep_loc, "rRNA", "singletons.fastq") + " "  # in -> rRNA filtration output
         repop_singletons_rRNA += os.path.join(cluster_path, "singletons_unique.fastq.clstr") + " "  # in -> duplicates filter output
         if self.read_mode == "single":
@@ -1035,14 +1035,15 @@ class mt_pipe_commands:
         elif self.read_mode == "paired":
             repop_singletons_rRNA += os.path.join(repop_folder, "singletons_rRNA.fastq")  # out
 
-        repop_pair_1 = ">&2 echo Duplication repopulation pair 1 | "
+        repop_pair_1 = ">&2 echo Duplication repopulation pair 1 mRNA | "
         repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_1 += os.path.join(hq_path, "pair_1_match.fastq") + " "
         repop_pair_1 += os.path.join(dep_loc, "mRNA", "pair_1.fastq") + " "
         repop_pair_1 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1 += os.path.join(repop_folder, "pair_1.fastq")
 
-        repop_pair_1_rRNA = self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_1_rRNA = ">&2 echo Duplication repopulation pair 1 rRNA | "
+        repop_pair_1_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_1_rRNA += os.path.join(hq_path, "pair_1_match.fastq") + " "
         repop_pair_1_rRNA += os.path.join(dep_loc, "rRNA", "pair_1.fastq") + " "
         repop_pair_1_rRNA += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
@@ -1055,7 +1056,8 @@ class mt_pipe_commands:
         repop_pair_2 += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
         repop_pair_2 += os.path.join(repop_folder, "pair_2.fastq")
 
-        repop_pair_2_rRNA = self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_2_rRNA = ">&2 echo Duplication repopulation pair 2 | "
+        repop_pair_2_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_2_rRNA += os.path.join(hq_path, "pair_2_match.fastq") + " "
         repop_pair_2_rRNA += os.path.join(dep_loc, "rRNA", "pair_2.fastq") + " "
         repop_pair_2_rRNA += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
