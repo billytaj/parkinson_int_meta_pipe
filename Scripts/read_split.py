@@ -101,7 +101,7 @@ if __name__ == "__main__":
             split_count = 1
             
         input_extension = os.path.splitext(input_file)[1]
-        if input_extension == ".fastq":
+        if ((input_extension == ".fastq") or (input_extension ==".fq")):
             split_fastq(input_file, output_name, split_count)
         elif input_extension == ".fasta" or input_extension == ".ffn" or input_extension == ".fna" or input_extension == ".faa":
             split_fasta(input_file, output_name, split_count)

@@ -16,6 +16,10 @@ This also means there is nothing to install (tools and code) besides Docker/Dock
 ---
 This pipeline comes with a config.ini file.  The user is meant to change, configure, and contort the file to point to the location of local files and Databases.
 Our config file is written with Python's ConfigParser, using the basic interpretation.  
+The docker invocation command should look like:
+
+> docker run 
+
 The following is an outline of wwhat each of the sections mean:
 
 ## Parameters
