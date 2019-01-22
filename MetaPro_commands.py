@@ -1790,7 +1790,7 @@ class mt_pipe_commands:
         if(self.read_mode == "single"):
             per_read_scores += "single" + " "
             per_read_scores += self.sequence_single + " "
-            per_read_scores += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + " "
+            per_read_scores += os.path.join(quality_folder, "singletons_hq.fastq") + " "
             per_read_scores += os.path.join(final_folder)
             
         elif(self.read_mode == "paired"):
