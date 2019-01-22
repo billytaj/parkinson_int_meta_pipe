@@ -598,61 +598,63 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Detect EC annotation
     EC_DETECT_start = time.time()
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
-    ec_detect_path = os.path.join(ec_annotation_path, "0_detect")
-    if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
-        inner_name = "ec_detect"
-        process = mp.Process(
-            target = commands.create_and_launch,
-            args = (
-                ec_annotation_label, 
-                commands.create_EC_DETECT_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                True,
-                inner_name
-            )
-        )
-        process.start()
-        process.join()
-        
-    EC_DETECT_end = time.time()
-    print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
-    
-    # --------------------------------------------------------------
-    # Priam and Diamond EC annotation
-    EC_PRIAM_DIAMOND_start = time.time()
+    #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-        inner_name = "ec_priam_diamond"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                ec_annotation_label,
-                commands.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                True,
-                inner_name
+        ec_detect_path = os.path.join(ec_annotation_path, "0_detect")
+        if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
+            inner_name = "ec_detect"
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (
+                    ec_annotation_label, 
+                    commands.create_EC_DETECT_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                    True,
+                    inner_name
+                )
             )
-        )
-        process.start()
-        process.join()
-
-        inner_name = "ec_post"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                ec_annotation_label,
-                commands.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                True,
-                inner_name
-            )
-        )
-        process.start()
-        process.join()
+            process.start()
+            process.join()
+            
+        EC_DETECT_end = time.time()
+        print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
         
-        cleanup_EC_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(ec_annotation_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(ec_annotation_path)
-            delete_folder(ec_annotation_path)
-        cleanup_EC_end = time.time()
+        # --------------------------------------------------------------
+        # Priam and Diamond EC annotation
+        EC_PRIAM_DIAMOND_start = time.time()
+        if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
+            inner_name = "ec_priam_diamond"
+            process = mp.Process(
+                target=commands.create_and_launch,
+                args=(
+                    ec_annotation_label,
+                    commands.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            process.join()
+
+            inner_name = "ec_post"
+            process = mp.Process(
+                target=commands.create_and_launch,
+                args=(
+                    ec_annotation_label,
+                    commands.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            process.join()
+            
+            cleanup_EC_start = time.time()
+            if(verbose_mode == "quiet"):
+                delete_folder(ec_annotation_path)
+            elif(verbose_mode == "compress"):
+                compress_folder(ec_annotation_path)
+                delete_folder(ec_annotation_path)
+            cleanup_EC_end = time.time()
         
     EC_PRIAM_DIAMOND_end = time.time()
     print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
