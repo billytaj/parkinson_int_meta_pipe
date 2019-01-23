@@ -134,7 +134,7 @@ class tool_path_obj:
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
-        self.Constrain_classification   = os.path.join(script_path, "ta_constrain.py")
+        self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine.py")
         self.RPKM                       = os.path.join(script_path, "output_table.py")
         self.read_count                 = os.path.join(script_path, "output_read_counts.py")

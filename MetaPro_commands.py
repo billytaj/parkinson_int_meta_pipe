@@ -1596,6 +1596,15 @@ class mt_pipe_commands:
         centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "rRNA.tsv")
         centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "rRNA.txt")
 
+        constrain = ">&2 echo Constraining the Taxonomic Annotation | " 
+        constrain += self.tool_path_obj.Python + " " + self.tool_path_obj.Constrain_classification + " "
+        constrain += ??? + " " 
+        constrain += os.path.join(final_folder, "taxonomic_classifications.tsv") + " "
+        constrain += self.tool_path_obj.nodes + " "
+        constrain += self.tool_path_obj.names + " "
+        constrain += os.path.join(final_folder, "constrain_classification.txt")
+        
+        
         if self.read_mode == "single":
             COMMANDS_Classify = [
                 get_taxa_from_gene,
@@ -1626,6 +1635,8 @@ class mt_pipe_commands:
             ]
 
         return COMMANDS_Classify
+        
+      
 
     def create_EC_DETECT_command(self, current_stage_name, diamond_stage):
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
