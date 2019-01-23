@@ -142,3 +142,13 @@ class tool_path_obj:
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
         self.chart                      = os.path.join(script_path, "output_visualization.py")
         self.ec_heatmap                 = os.path.join(script_path, "output_EC_metrics.py")
+        
+        #--------------------------------------------------
+        # miscellaneous values
+        if config:
+            self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
+            self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
+            
+        else:
+            self.target_rank = "genus"
+            self.adapterremoval_minlength = 30
