@@ -1598,7 +1598,7 @@ class mt_pipe_commands:
 
         constrain = ">&2 echo Constraining the Taxonomic Annotation | " 
         constrain += self.tool_path_obj.Python + " " + self.tool_path_obj.Constrain_classification + " "
-        constrain += ??? + " " 
+        constrain += self.tool_path_obj.target_rank + " "
         constrain += os.path.join(final_folder, "taxonomic_classifications.tsv") + " "
         constrain += self.tool_path_obj.nodes + " "
         constrain += self.tool_path_obj.names + " "

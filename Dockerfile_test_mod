@@ -227,7 +227,7 @@ ADD Scripts/read_sam.py /pipeline/Scripts
 ADD Scripts/read_sort.py /pipeline/Scripts
 ADD Scripts/read_split.py /pipeline/Scripts
 ADD Scripts/ta_combine.py /pipeline/Scripts
-ADD Scripts/ta_constrain.py /pipeline/Scripts
+ADD Scripts/ta_constrain_taxonomy_v2.py /pipeline/Scripts
 ADD Scripts/ta_taxid.py /pipeline/Scripts
 
 #--------------------------------------------
