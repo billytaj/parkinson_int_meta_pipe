@@ -1616,7 +1616,8 @@ class mt_pipe_commands:
                 cat_centrifuge,
                 wevote_combine,
                 wevote_call,
-                awk_cleanup
+                awk_cleanup,
+                constrain
             ]
         elif self.read_mode == "paired":
             COMMANDS_Classify = [
@@ -1631,7 +1632,8 @@ class mt_pipe_commands:
                 wevote_combine,
                 wevote_call,
                 awk_cleanup,
-                centrifuge_on_rRNA
+                centrifuge_on_rRNA,
+                constrain
             ]
 
         return COMMANDS_Classify
