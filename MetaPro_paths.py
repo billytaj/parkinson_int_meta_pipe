@@ -136,7 +136,7 @@ class tool_path_obj:
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine.py")
-        self.RPKM                       = os.path.join(script_path, "output_table.py")
+        self.RPKM                       = os.path.join(script_path, "output_table_with_taxonomy.py") #"output_table.py")
         self.read_count                 = os.path.join(script_path, "output_read_counts.py")
         self.read_quality_metrics       = os.path.join(script_path, "output_read_quality_metrics.py")
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
