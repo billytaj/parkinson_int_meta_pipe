@@ -133,6 +133,9 @@ with open(gene2EC, "r") as infile:
             EC2genes_dict[EC] = [gene]
 
 RPKM_dict = {}
+#gene2read_dict is a table with genes on one side, and the reads that make it up on the other (in a list)
+#the table contains (gene ID, the length, the number of reads, the constituent read IDs themselves)
+#Javi note: This piece of code is actually a little weird.
 for gene in gene2read_dict:
     RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
     RPKM_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
@@ -183,7 +186,7 @@ for gene in gene2read_dict:
         RPKM_taxonomy_dict[gene+"||"+taxon].append(len(taxon2read_dict[taxon])/RPKM_div)
 
 with open(RPKM, "w") as RPKM_out:
-    RPKM_out.write("GeneID\tTaxonomy\tLength\tReads\tEC\tRPKM\n")
+    RPKM_out.write("GeneID\tTaxonomy\tLength\tReads\tEC#\tRPKM\n")
     for entry in RPKM_taxonomy_dict:
         RPKM_out.write("\t".join(str(x) for x in RPKM_taxonomy_dict[entry]) + "\n")
 
