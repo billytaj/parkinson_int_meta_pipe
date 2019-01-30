@@ -57,11 +57,16 @@ if __name__ == "__main__":
         
     pre_count = pre_df.shape[0]
     post_count = post_df.shape[0]
+    diff = pre_count - post_count
+    diff_percent = round(((diff / pre_count) * 100), 2)
+    
     data_table = open(summary_table_file, "w")
     data_table.write("number of reads before operation\t" + "number of reads after operation\n")
     data_table.write(str(pre_count) + "\t" + str(post_count) + "\n")
     data_table.write("difference\t" + str(pre_count - post_count) + "\n")
+    data_table.write("diff percent\t" + str(diff_percent))
     data_table.close()
+    
     
     
         
