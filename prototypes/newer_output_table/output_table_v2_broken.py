@@ -5,16 +5,16 @@ import matplotlib
 from matplotlib import cm
 
 # Two methods to define taxa in order of increasing priority: Cutoff or Tax ID list
-cutoff = sys.argv[1] #Proportion of annotated reads
-ID_list = sys.argv[2]
-nodes = sys.argv[3]
-names = sys.argv[4]
-gene2read = sys.argv[5]
-read2taxid = sys.argv[6]
-gene2EC = sys.argv[7]
-raw_count = sys.argv[8]
-RPKM = sys.argv[9]
-cytoscape = sys.argv[10]
+cutoff = sys.argv[1]    #IN: Proportion of annotated reads
+ID_list = sys.argv[2]   #IN: literally a list of taxid we can optionally use.  If nothing, it's empty and it's fine.
+nodes = sys.argv[3]     #IN: nodes.dmp
+names = sys.argv[4]     #IN: names.dmp
+gene2read = sys.argv[5] #IN: genes -> reads (from GA)
+read2taxid = sys.argv[6]#IN: reads -> taxid (from TA)
+gene2EC = sys.argv[7]   #IN: genes -> EC mapping (from EC, EC.All)
+raw_count = sys.argv[8] #OUT
+RPKM = sys.argv[9]      #OUT
+cytoscape = sys.argv[10]#OUT
 
 show_unclassified = True # temp, should be a user modifiable setting
 
