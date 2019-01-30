@@ -134,11 +134,21 @@ class tool_path_obj:
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
-        self.Constrain_classification   = os.path.join(script_path, "ta_constrain.py")
+        self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine.py")
-        self.RPKM                       = os.path.join(script_path, "output_table.py")
+        self.RPKM                       = os.path.join(script_path, "output_table_with_taxonomy.py") #"output_table.py")
         self.read_count                 = os.path.join(script_path, "output_read_counts.py")
         self.read_quality_metrics       = os.path.join(script_path, "output_read_quality_metrics.py")
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
         self.chart                      = os.path.join(script_path, "output_visualization.py")
         self.ec_heatmap                 = os.path.join(script_path, "output_EC_metrics.py")
+        
+        #--------------------------------------------------
+        # miscellaneous values
+        if config:
+            self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
+            self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
+            
+        else:
+            self.target_rank = "genus"
+            self.adapterremoval_minlength = 30

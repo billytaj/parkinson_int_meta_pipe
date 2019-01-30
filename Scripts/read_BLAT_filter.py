@@ -50,7 +50,6 @@ with open(BLAT_tab_file, "r") as tabfile:
                         SeqIO.write(contaminat_output_seqs, outfile, "fastq")
                 contaminat_output_seqs = []
                 
-                
     if len(output_seqs) > 0:
         if not output_file_made:
             output_file_made = True
