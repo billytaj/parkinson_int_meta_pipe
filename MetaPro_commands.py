@@ -264,6 +264,20 @@ class mt_pipe_commands:
 
         copy_pair_2_cluster = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq.clstr") + " "
         copy_pair_2_cluster += os.path.join(final_folder, "pair_2_unique.fastq.clstr")
+        
+        data_change_qual = ">&2 echo Scanning for relative change between RAW and post-Quality-filter (pair 1 only)| "
+        data_change_qual += self.tool_path_obj.Python + " "
+        data_change_qual += self.tool_path_obj.data_change_metrics + " " 
+        if(self.read_mode == "single"):
+            data_change_qual += self.sequence_single + " "
+            data_change_qual += os.path.join(final_folder, "singletons.fastq") + " "
+            data_change_qual += os.path.join(final_folder, "raw_to_qual_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_qual += self.sequence_path_1 + " "
+            data_change_qual += os.path.join(final_folder, "pair_1.fastq")
+            data_change_qual += os.path.join(final_folder, "raw_to_qual_pair_1.tsv")
+        
+            
 
         if self.read_mode == "single":
             COMMANDS_qual = [
@@ -272,7 +286,8 @@ class mt_pipe_commands:
                 cdhit_singletons,
                 copy_singletons,
                 copy_duplicate_singletons,
-                copy_singletons_cluster
+                copy_singletons_cluster,
+                data_change_qual
             ]
         elif self.read_mode == "paired":
             COMMANDS_qual = [
@@ -299,7 +314,8 @@ class mt_pipe_commands:
                 copy_pair_1_match,
                 copy_pair_1_cluster,
                 copy_pair_2_match,
-                copy_pair_2_cluster
+                copy_pair_2_cluster,
+                data_change_qual
             ]
 
         return COMMANDS_qual
@@ -478,6 +494,19 @@ class mt_pipe_commands:
 
         copy_pair_2 = "cp " + os.path.join(blat_hr_folder, "pair_2_no_host.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
+        
+        data_change_host = ">&2 echo Scanning for relative change in host filtering | " 
+        data_change_host += self.tool_path_obj.Python + " "
+        data_change_host += self.tool_path_obj.data_change_metrics + " "
+        if(self.read_mode == "single"):
+            data_change_host += os.path.join(quality_folder, "singletons.fastq") + " "
+            data_change_host += os.path.join(final_folder, "singletons.fastq") + " "
+            data_change_host += os.path.join(final_folder, "qual_to_host_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_host += os.path.join(quality_folder, "pair_1.fastq") + " "
+            data_change_host += os.path.join(final_folder, "pair_1.fastq") + " "
+            data_change_host += os.path.join(final_folder, "qual_to_host_pair_1.tsv")
+        
 
         if self.read_mode == "single":
             COMMANDS_host = [
@@ -492,7 +521,8 @@ class mt_pipe_commands:
                 vsearch_filter_3,
                 blat_hr_singletons,
                 hr_singletons,
-                copy_singletons
+                copy_singletons,
+                data_change_host
             ]
         elif self.read_mode == "paired":
             COMMANDS_host = [
@@ -523,7 +553,8 @@ class mt_pipe_commands:
                 hr_pair_2,
                 copy_singletons,
                 copy_pair_1,
-                copy_pair_2
+                copy_pair_2,
+                data_change_host
             ]
 
         return COMMANDS_host
@@ -699,6 +730,18 @@ class mt_pipe_commands:
 
         copy_pair_2 = "cp " + os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
+        
+        data_change_vectors = ">&2 echo checking changes from host filter to vector filter | "
+        data_change_vectors += self.tool_path_obj.Python + " "
+        data_change_vectors += self.tool_path_obj.data_change_metrics + " "
+        if(self.read_mode == "single"):
+            data_change_vectors += os.path.join(dependency_folder, "singletons.fastq") + " "
+            data_change_vectors += os.path.join(final_folder, "singletons.fastq") + " "
+            data_change_vectors += os.path.join(final_folder, "host_to_vectors_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_vectors += os.path.join(dependency_folder, "pair_1.fastq") + " "
+            data_change_vectors += os.path,join(final_folder, "pair_1.fastq") + " "
+            data_change_vectors += os.path.join(final_folder, "host_to_vectors_pair_1.tsv")
 
         if self.read_mode == "single":
             COMMANDS_vector = [
@@ -713,7 +756,8 @@ class mt_pipe_commands:
                 vsearch_filter_6,
                 blat_vr_singletons,
                 blat_containment_vector_singletons,
-                copy_singletons
+                copy_singletons,
+                data_change_vectors
             ]
         elif self.read_mode == "paired":
             COMMANDS_vector = [
@@ -744,7 +788,8 @@ class mt_pipe_commands:
                 blat_containment_vector_pair_2,
                 copy_singletons,
                 copy_pair_1,
-                copy_pair_2
+                copy_pair_2,
+                data_change_vectors
             ]
 
         return COMMANDS_vector
@@ -903,9 +948,10 @@ class mt_pipe_commands:
         ]
         return COMMANDS_infernal
 
-    def create_rRNA_filter_post_command(self, stage_name):
+    def create_rRNA_filter_post_command(self, dependency_stage_name, stage_name):
         # rRNA filtration orphaned some reads in the pairs.  We need to refilter the singletons.
         # Cat then refilter
+        dep_folder              = os.path.join(dependency_stage_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
         pre_filter_folder       = os.path.join(data_folder, "0_pre_singletons")
@@ -960,11 +1006,37 @@ class mt_pipe_commands:
         singleton_rRNA_filter += os.path.join(final_rRNA_folder, "pair_1.fastq") + " "
         singleton_rRNA_filter += os.path.join(final_rRNA_folder, "pair_2.fastq") + " "
         singleton_rRNA_filter += os.path.join(final_rRNA_folder, "singletons.fastq")
-
+        
+        data_change_rRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal (rRNA) | "
+        data_change_rRNA += self.tool_path_obj.Python + " "
+        data_change_rRNA += self.tool_path_obj.data_change_metrics + " "
+        if(self.read_mode == "single"):
+            data_change_rRNA += os.path.join(dep_folder, "singletons.fastq") + " "
+            data_change_rRNA += os.path.join(final_rRNA_folder, "singletons.fastq") + " "
+            data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_rRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
+            data_change_rRNA += os.path.join(final_rRNA_folder, "pair_1.fastq") + " "
+            data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_pair_1.tsv")
+        
+        data_change_mRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal (rRNA) | "
+        data_change_mRNA += self.tool_path_obj.Python + " "
+        data_change_mRNA += self.tool_path_obj.data_change_metrics + " "
+        if(self.read_mode == "single"):
+            data_change_mRNA += os.path.join(dep_folder, "singletons.fastq") + " "
+            data_change_mRNA += os.path.join(final_mRNA_folder, "singletons.fastq") + " "
+            data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_mRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
+            data_change_mRNA += os.path.join(final_mRNA_folder, "pair_1.fastq") + " "
+            data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_pair_1.tsv")
+        
         if self.read_mode == "single":
             COMMANDS_rRNA_post = [
                 cat_singletons_mRNA,
-                cat_singletons_rRNA
+                cat_singletons_rRNA,
+                data_change_mRNA,
+                data_change_rRNA
             ]
         elif self.read_mode == "paired":
             COMMANDS_rRNA_post = [
@@ -975,7 +1047,9 @@ class mt_pipe_commands:
                 cat_pair_2_mRNA,
                 cat_pair_2_rRNA,
                 singleton_mRNA_filter,
-                singleton_rRNA_filter
+                singleton_rRNA_filter,
+                data_change_mRNA,
+                data_change_rRNA
             ]
 
         return COMMANDS_rRNA_post
@@ -1082,11 +1156,37 @@ class mt_pipe_commands:
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq")
+        
+        data_change_repop_rRNA = ">&2 echo scanning for changes from rRNA filter to repop (rRNA) | "
+        data_change_repop_rRNA += self.tool_path_obj.Python + " "
+        data_change_repop_rRNA += self.tool_path_obj.data_change_metrics + " "
+        if(self.read_mode == "single"):
+            data_change_repop_rRNA += os.path.join(dep_loc, "singletons.fastq") + " "
+            data_change_repop_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq") + " "
+            data_change_repop_rRNA += os.path.join(final_folder, "rRNA_filter_to_repop_rRNA_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_repop_rRNA += os.path.join(dep_loc, "pair_1.fastq") + " "
+            data_change_repop_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
+            data_change_repop_rRNA += os.path.join(final_folder, "rRNA_filter_to_repop_rRNA_pair_1.tsv")
+            
+        data_change_repop_mRNA = ">&2 echo scanning for changes from rRNA filter to repop (mRNA) | "
+        data_change_repop_mRNA += self.tool_path_obj.Python + " "
+        data_change_repop_mRNA += self.tool_path_obj.data_change_metrics + " "
+        if(self.read_mode == "single"):
+            data_change_repop_mRNA += os.path.join(dep_loc, "singletons.fastq") + " "
+            data_change_repop_mRNA += os.path.join(final_folder, "singletons.fastq") + " "
+            data_change_repop_mRNA += os.path.join(final_folder, "rRNA_filter_to_repop_mRNA_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_repop_mRNA += os.path.join(dep_loc, "pair_1.fastq") + " "
+            data_change_repop_mRNA += os.path.join(final_folder, "pair_1.fastq") + " "
+            data_change_repop_mRNA += os.path.join(final_folder, "rRNA_filter_to_repop_mRNA_pair_1.tsv")    
 
         if self.read_mode == "single":
             COMMANDS_Repopulate = [
                 repop_singletons,
-                repop_singletons_rRNA
+                repop_singletons_rRNA,
+                data_change_repop_mRNA,
+                data_change_repop_rRNA
             ]
         elif self.read_mode == "paired":
             COMMANDS_Repopulate = [
@@ -1097,7 +1197,9 @@ class mt_pipe_commands:
                 repop_pair_2,
                 repop_pair_2_rRNA,
                 singleton_repop_filter,
-                singleton_repop_filter_rRNA
+                singleton_repop_filter_rRNA,
+                data_change_repop_mRNA,
+                data_change_repop_rRNA
             ]
 
         return COMMANDS_Repopulate
@@ -1217,6 +1319,19 @@ class mt_pipe_commands:
         sort_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
         sort_paired += os.path.join(final_folder, "pair_2.fastq") + " "
         sort_paired += os.path.join(final_folder, "pair_2_sorted.fastq")
+        
+        data_change_contig = ">&2 echo checking relative change in data between repop and contig assembly | "
+        data_change_contig += self.tool_path_obj.Python + " "
+        data_change_contig += self.tool_path_obj.data_change_metrics + " "
+        if(self.read_mode == "single"):
+            data_change_contig += os.path.join(dep_loc, "singletons.fastq") + " "
+            data_change_contig += os.path.join(final_folder, "singletons.fastq") + " "
+            data_change_contig += os.path.join(final_folder, "repop_to_contigs_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_contig += os.path.join(dep_loc, "pair_1.fastq") + " "
+            data_change_contig += os.path.join(final_folder, "pair_1.fastq") + " "
+            data_change_contig += os.path.join(final_folder, "repop_to_contigs_pair_1.tsv")
+            
 
         if self.read_mode == "single":
             COMMANDS_Assemble = [
@@ -1228,7 +1343,8 @@ class mt_pipe_commands:
                 contig_duplicate_remover_singletons,
                 map_read_contig,
                 copy_singletons,
-                copy_contigs
+                copy_contigs, 
+                data_change_contig
             ]
         elif self.read_mode == "paired":
             COMMANDS_Assemble = [
@@ -1247,7 +1363,8 @@ class mt_pipe_commands:
                 map_read_contig,
                 copy_contigs,
                 singleton_assembly_filter,
-                sort_paired
+                sort_paired,
+                data_change_contig
             ]
 
         return COMMANDS_Assemble

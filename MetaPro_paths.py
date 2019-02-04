@@ -142,6 +142,7 @@ class tool_path_obj:
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
         self.chart                      = os.path.join(script_path, "output_visualization.py")
         self.ec_heatmap                 = os.path.join(script_path, "output_EC_metrics.py")
+        self.data_change_metrics        = os.path.join(script_path, "output_data_change_metrics.py")
         
         #--------------------------------------------------
         # miscellaneous values

@@ -190,6 +190,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BWA.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_Diamond.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_contig_stats.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_data_change_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_EC_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_read_counts.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_read_quality_metrics.py /pipeline/Scripts

@@ -330,7 +330,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             target=commands.create_and_launch,
             args=(
                 rRNA_filter_label,
-                commands.create_rRNA_filter_post_command(rRNA_filter_label),
+                commands.create_rRNA_filter_post_command(vector_filter_label, rRNA_filter_label),
                 True,
                 inner_name
             )
