@@ -38,7 +38,7 @@ from collections import defaultdict
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from datetime import datetime as dt
-from shutil import copyfile
+fromshutil import copyfile
 
 Prot_DB             = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
 contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]

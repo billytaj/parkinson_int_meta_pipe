@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#note: the 100k length cutoff was an old design choice for parallelization.  It's no longer relevant.
 
 import sys
 from Bio import SeqIO

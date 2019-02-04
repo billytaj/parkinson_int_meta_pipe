@@ -330,7 +330,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             target=commands.create_and_launch,
             args=(
                 rRNA_filter_label,
-                commands.create_rRNA_filter_post_command(rRNA_filter_label),
+                commands.create_rRNA_filter_post_command(vector_filter_label, rRNA_filter_label),
                 True,
                 inner_name
             )
@@ -656,8 +656,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 delete_folder(ec_annotation_path)
             cleanup_EC_end = time.time()
     else:
+        #EC bypassed
         EC_PRIAM_DIAMOND_start = time.time()
         EC_DETECT_start = time.time()
+        EC_DETECT_end = time.time()
+        cleanup_EC_start = time.time()
+        cleanup_EC_start = time.time()
+        
         print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
     EC_PRIAM_DIAMOND_end = time.time()
     print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")

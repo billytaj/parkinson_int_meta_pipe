@@ -14,3 +14,5 @@ refactored_pipeline/blat_pp_test_data/
 *.odg#
 
 refactored_pipeline/docker_image/dump\.txt
+
+*.tsv
