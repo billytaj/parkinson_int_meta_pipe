@@ -740,7 +740,7 @@ class mt_pipe_commands:
             data_change_vectors += os.path.join(final_folder, "host_to_vectors_singletons.tsv")
         elif(self.read_mode == "paired"):
             data_change_vectors += os.path.join(dependency_folder, "pair_1.fastq") + " "
-            data_change_vectors += os.path,join(final_folder, "pair_1.fastq") + " "
+            data_change_vectors += os.path.join(final_folder, "pair_1.fastq") + " "
             data_change_vectors += os.path.join(final_folder, "host_to_vectors_pair_1.tsv")
 
         if self.read_mode == "single":
