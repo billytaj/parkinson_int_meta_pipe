@@ -265,7 +265,7 @@ class mt_pipe_commands:
         copy_pair_2_cluster = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq.clstr") + " "
         copy_pair_2_cluster += os.path.join(final_folder, "pair_2_unique.fastq.clstr")
         
-        data_change_qual = ">&2 echo Scanning for relative change between RAW and post-Quality-filter (pair 1 only)| "
+        data_change_qual = ">&2 echo Scanning for relative change between RAW and post-Quality-filter pair 1 only | "
         data_change_qual += self.tool_path_obj.Python + " "
         data_change_qual += self.tool_path_obj.data_change_metrics + " " 
         if(self.read_mode == "single"):
@@ -1157,7 +1157,7 @@ class mt_pipe_commands:
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq")
         
-        data_change_repop_rRNA = ">&2 echo scanning for changes from rRNA filter to repop (rRNA) | "
+        data_change_repop_rRNA = ">&2 echo scanning for changes from rRNA filter to repop rRNA | "
         data_change_repop_rRNA += self.tool_path_obj.Python + " "
         data_change_repop_rRNA += self.tool_path_obj.data_change_metrics + " "
         if(self.read_mode == "single"):
@@ -1169,7 +1169,7 @@ class mt_pipe_commands:
             data_change_repop_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
             data_change_repop_rRNA += os.path.join(final_folder, "rRNA_filter_to_repop_rRNA_pair_1.tsv")
             
-        data_change_repop_mRNA = ">&2 echo scanning for changes from rRNA filter to repop (mRNA) | "
+        data_change_repop_mRNA = ">&2 echo scanning for changes from rRNA filter to repop mRNA | "
         data_change_repop_mRNA += self.tool_path_obj.Python + " "
         data_change_repop_mRNA += self.tool_path_obj.data_change_metrics + " "
         if(self.read_mode == "single"):
