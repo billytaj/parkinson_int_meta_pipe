@@ -951,7 +951,7 @@ class mt_pipe_commands:
     def create_rRNA_filter_post_command(self, dependency_stage_name, stage_name):
         # rRNA filtration orphaned some reads in the pairs.  We need to refilter the singletons.
         # Cat then refilter
-        dep_folder              = os.path.join(dependency_stage_name, "final_results")
+        dep_folder              = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
         pre_filter_folder       = os.path.join(data_folder, "0_pre_singletons")
@@ -1007,7 +1007,7 @@ class mt_pipe_commands:
         singleton_rRNA_filter += os.path.join(final_rRNA_folder, "pair_2.fastq") + " "
         singleton_rRNA_filter += os.path.join(final_rRNA_folder, "singletons.fastq")
         
-        data_change_rRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal (rRNA) | "
+        data_change_rRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal rRNA | "
         data_change_rRNA += self.tool_path_obj.Python + " "
         data_change_rRNA += self.tool_path_obj.data_change_metrics + " "
         if(self.read_mode == "single"):
@@ -1019,7 +1019,7 @@ class mt_pipe_commands:
             data_change_rRNA += os.path.join(final_rRNA_folder, "pair_1.fastq") + " "
             data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_pair_1.tsv")
         
-        data_change_mRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal (rRNA) | "
+        data_change_mRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal mRNA | "
         data_change_mRNA += self.tool_path_obj.Python + " "
         data_change_mRNA += self.tool_path_obj.data_change_metrics + " "
         if(self.read_mode == "single"):
