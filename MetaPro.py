@@ -42,7 +42,7 @@ def compress_folder(folder_path):
 def check_code(segment):
     encoding = 64
     for item in segment:
-        if(ord(item) < 76):
+        if(ord(item) < 64):
             encoding = 33
             return encoding
     return encoding
