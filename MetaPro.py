@@ -54,7 +54,7 @@ def determine_encoding(fastq):
     fastq_df = pd.DataFrame(fastq_df.values.reshape(int(len(fastq_df)/4), 4))
     fastq_df.columns = ["ID", "seq", "junk", "quality"]
     quality_encoding = fastq_df["quality"].apply(lambda x: check_code(x)).mean() #condense into a single number.
-    if(quality_encoding == 64):
+    if(quality_encoding == 64): #all must be 64 or else it's 33
         quality_encoding = 64
     else:
         quality_encoding =  33
