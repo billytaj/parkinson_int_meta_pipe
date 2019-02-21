@@ -44,7 +44,7 @@ def check_code(segment):
     for item in segment:
         if(ord(item) < 64):
             encoding = 33
-            return encoding
+            break
     return encoding
 
 def determine_encoding(fastq):
