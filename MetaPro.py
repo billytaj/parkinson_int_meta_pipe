@@ -38,23 +38,26 @@ def compress_folder(folder_path):
         
 # Used to determine quality encoding of fastq sequences.
 # Assumes Phred+64 unless there is a character within the first 10000 reads with encoding in the Phred+33 range.
-def determine_encoding(fastq):
+def check_code(segment):
     encoding = 64
-    with open(fastq) as fq:
-        line_count = 0
-        encoding_count = 0
-        for line in fq:
-            line_count += 1
-            if line_count % 4 == 0:
-                encoding_count += 1
-                for char in line:
-                    if ord(char) < 64: #logic is: if the ascii code falls under 64, then it's Phred+33
-                        encoding = 33
-                        break
-                if encoding_count == 10000 or encoding == 33:
-                    break
-
+    for item in segment:
+        if(ord(item) < 76):
+            encoding = 33
+            return encoding
     return encoding
+
+def determine_encoding(fastq):
+    #import the first 10k lines, then check the quality scores.
+    #if the quality score symbols are below 76, it's phred33.  
+    fastq_df = pd.read_csv(file_name_in, header=None, names=[None], sep="\n", skip_blank_lines = False, quoting=3, nrows=40000)
+    fastq_df = pd.DataFrame(fastq_df.values.reshape(int(len(fastq_df)/4), 4))
+    fastq_df.columns = ["ID", "seq", "junk", "quality"]
+    quality_encoding = fastq_df["quality"].apply(lambda x: check_code(x)).mean() #condense into a single number.
+    if(quality_encoding > 33):
+        quality_encoding = 64
+    else:
+        quality_encoding =  33
+    return quality_encoding
 
 
 # handles where to kill the pipeline, due to the prev step behaving badly
@@ -120,11 +123,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     if not single_path == "":
         read_mode = "single"
         quality_encoding = determine_encoding(single_path)
+        print("ENCODING USED:", quality_encoding)
         print("OPERATING IN SINGLE-ENDED MODE")
     else:
         read_mode = "paired"
         quality_encoding = determine_encoding(pair_1_path)
+        print("ENCODING USED:", quality_encoding)
         print("OPERATING IN PAIRED-MODE")
+        
     if threads == 0:
         thread_count = mp.cpu_count()
     else:
