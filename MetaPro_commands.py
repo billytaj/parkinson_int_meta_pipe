@@ -126,7 +126,7 @@ class mt_pipe_commands:
             adapter_removal_line += " --file2 " + os.path.join(sorted_read_folder, "pair_2_sorted.fastq")
         adapter_removal_line += " --qualitybase " + str(self.Qual_str)
         if(self.Qual_str == "33"):
-            adapter_removal_line += " --maxquality"
+            adapter_removal_line += " --qualitymax 75"
         adapter_removal_line += " --threads " + self.Threads_str
         adapter_removal_line += " --minlength " + "30"
         adapter_removal_line += " --basename " + adapter_folder
