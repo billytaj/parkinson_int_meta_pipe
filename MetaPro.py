@@ -10,6 +10,7 @@ import MetaPro_commands as mpcom
 import MetaPro_paths as mpp
 import time
 import zipfile
+import pandas as pd
 import shutil
 from datetime import datetime as dt
 
