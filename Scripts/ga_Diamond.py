@@ -43,7 +43,7 @@ from shutil import copyfile
 Prot_DB             = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
 contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
 gene2read_file      = sys.argv[3]   # INPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
-new_gene2read_file  = sys.argv[4]   # ->OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
+new_gene2read_file  = sys.argv[4]   # OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
 gene_file           = sys.argv[5]   # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
 prot_file           = sys.argv[6]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
 

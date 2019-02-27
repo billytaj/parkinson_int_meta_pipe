@@ -43,7 +43,7 @@ from shutil import copyfile
 Prot_DB             = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
 contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
 gene2read_file      = sys.argv[3]   # INPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
-new_gene2read_file  = sys.argv[4]   # ->OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
+new_gene2read_file  = sys.argv[4]   # OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
 gene_file           = sys.argv[5]   # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
 prot_file           = sys.argv[6]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
 
@@ -298,7 +298,8 @@ if read_sets==4:
     read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
     DMD_tab_file_1= sys.argv[3*x+8]
     if(os.path.getsize(DMD_tab_file_1) == 0):
-        sys.exit(DMD_tab_file_1, "is empty.  aborting")
+        copyfile(gene2read_file, new_gene2read_file)
+        sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is empty.  aborting")
     output_file_1= sys.argv[3*x+9]
     DMD_hits_1= read_aligned(DMD_tab_file_1, read_seqs_1)   # Store info in DMD_hits_1 (list of lists).
 
@@ -308,7 +309,8 @@ if read_sets==4:
     read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
     DMD_tab_file_2= sys.argv[3*x+8]
     if(os.path.getsize(DMD_tab_file_2) == 0):
-        sys.exit(DMD_tab_file_2, "is empty.  aborting")
+        copyfile(gene2read_file, new_gene2read_file)
+        sys.exit(DMD_tab_file_2 + " -> DMD tab file 2 is empty.  aborting")
     output_file_2= sys.argv[3*x+9]
     DMD_hits_2= read_aligned(DMD_tab_file_2, read_seqs_2)   # Store info in DMD_hits_2 (list of lists).
 
