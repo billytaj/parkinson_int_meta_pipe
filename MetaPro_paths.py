@@ -131,7 +131,7 @@ class tool_path_obj:
         self.contig_duplicate_remover   = os.path.join(script_path, "assembly_deduplicate.py")
         self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA.py")
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT.py")
-        self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond.py")
+        self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond_v2.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
