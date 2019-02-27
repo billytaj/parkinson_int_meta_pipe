@@ -28,7 +28,8 @@
 # - Sometimes a read is aligned via multiple contigs and annoteted only according
 #   to the best matched contig only. Theoretically, this breaks up the other contigs.
 
-
+#OTHER NOTES: Feb 27, 2019
+# - this is a messy Piece-of-shit code that needs to be written without those dumb import loops.
 
 import os
 import os.path
@@ -40,52 +41,7 @@ from Bio.SeqRecord import SeqRecord
 from datetime import datetime as dt
 from shutil import copyfile
 
-Prot_DB             = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
-contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
-gene2read_file      = sys.argv[3]   # INPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
-new_gene2read_file  = sys.argv[4]   # OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
-gene_file           = sys.argv[5]   # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
-prot_file           = sys.argv[6]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
 
-
-# make dict of contigID<->readsID(s):
-contig2read_map= {}
-with open(contig2read_file,"r") as mapping:
-    for line in mapping:
-        if len(line)>5:                             # line starts with 'NODE_'
-            entry= line.strip("\n").split("\t")     # break tab-separated into list
-            contig2read_map[entry[0]]= entry[2:]    # key=contigID, value=list of readID(s)
-
-# make dict of BWA&BLAT-aligned geneID<->readID(s):
-BWABLATreads= []                                    # DEBUG
-gene2read_map= {}
-gene_len= {}
-with open(gene2read_file,"r") as mapping:
-    for line in mapping:
-        if len(line)>5:                             # line at least 5 characeters?
-            entry= line.strip("\n").split("\t")
-            gene2read_map[entry[0]]= entry[3:]      # key=geneID, value=list of readID(s)
-                                                    # (using [:] syntax ensures a list, even if one ele)
-            gene_len[entry[0]]= entry[1]            # key=geneID, value=gene length; to avoid recalc later
-            BWABLATreads.extend(entry[3:])          # DEBUG
-
-# make dict of BWA&BLAT-aligned geneID<->seq:
-gene_seqs= SeqIO.index(gene_file,"fasta")           # key=geneID, value=SeqRecord
-
-# tracking DMD-assigned:
-mapped_reads= set()                                 # tracks DMD-assigned reads
-prot2read_map= defaultdict(list)                    # dict of DMD-aligned protID<->readID(s)
-                                                    #  key=protID, value=list of readID(s)
-prev_mapping_count= 0
-
-# DEBUG:
-if len(set(BWABLATreads))==len(BWABLATreads):
-    print ('BWA&/orBLAT-aligned reads are all unique.\n')
-else:
-    print ('There are repeating BWA&/orBLAT-aligned reads:')
-    print ('no. unique reads= ' + str(len(set(BWABLATreads))))
-    print ('no. total reads= ' + str(len(BWABLATreads)) + '\n')
-BWABLATreads_count= Counter(BWABLATreads)           # dict of read<->no. of contigs
 
 
 #####################################
@@ -238,175 +194,228 @@ def prot_map(hits):                         # fail-mapped contig/readIDs=
     # return unmapped set:
     return unmapped
 
-#####################################
-
-# check number of readtype sets (file inputs)
-read_sets = int((len(sys.argv)-7)/3) 
-if (len(sys.argv)-7) % 3 != 0:
-    sys.exit('Incorrect number of readtype sets: ' + str(len(sys.argv)))
-
-# process DIAMOND output:
-# readtype sets: contigs, merged:
-for x in range(0,2):
-    read_file= sys.argv[3*x+7]      # INPUT: non-BWA&BLAT-aligned contig/readIDs and seqs (.fasta)
-    read_seqs= SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
-                                    # dict of non-BWA&BLAT-aligned read SeqRecords: key=contig/readID
-                                    #  (second argument specifies filetype, e.g., "fasta")
-    DMD_tab_file= sys.argv[3*x+8]  # INPUT: DMD-aligned contig/readIDs (.dmdout)
-    if(os.path.getsize(DMD_tab_file) == 0):
-        print(dt.today(), "missing file in reading DIAMOND outputs.  likely it wasn't enough data for diamond.")
-        copyfile(gene2read_file, new_gene2read_file)
-        sys.exit(DMD_tab_file + " is empty, exiting")
-
-    output_file= sys.argv[3*x+9]    # OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs and seqs (.fasta)
-
-    # read DMD output & get read/contig lengths:
-    DMD_hits= read_aligned(DMD_tab_file, read_seqs)     # Store info in DMD_hits (list of lists).
-
-    # process DMD-aligned reads:
-    unmapped_reads= prot_map(DMD_hits)                  # Store DMD-aligned contigs/reads in prot2read_map
-                                                        #  (aligned protID<->readID(s) dict),
-                                                        #  and return a set of failed mapping readIDs.
-    # add reads never mapped by DMD in the
-    # first place to the unmapped set:
-    unmapped_len_before= len(unmapped_reads)            # DEBUG
-    for read in read_seqs:                              # Take all non-BWA&BLAT-aligned contigs/reads (input to DMD)
-        if read not in mapped_reads:                    #  that are still unmapped and
-            unmapped_reads.add(read)                    #  add them to the unmapped_reads set (won't add duplicates).
-
-    print ('no. additional contigs/reads completely unmapped by DMD= ' + str(len(unmapped_reads)-unmapped_len_before))
-
-    # WRITE OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs:
-    # and seqs (.fasta)
-    unmapped_seqs= []                                   # Initialize list of SeqRecords.
-    for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
-        unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
-    with open(output_file,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
-
-    # print no. aligned reads from current readtype set:
-    print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
-    prev_mapping_count= len(mapped_reads)
-
-# process DMD output:
-# readtype sets: unmerged1, unmerged2
-if read_sets==4:
-    
-    # unmerged1:
-    x= 2
-    read_file_1= sys.argv[3*x+7]
-    read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
-    DMD_tab_file_1= sys.argv[3*x+8]
-    if(os.path.getsize(DMD_tab_file_1) == 0):
-        copyfile(gene2read_file, new_gene2read_file)
-        sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is empty.  aborting")
-    output_file_1= sys.argv[3*x+9]
-    DMD_hits_1= read_aligned(DMD_tab_file_1, read_seqs_1)   # Store info in DMD_hits_1 (list of lists).
-
-    # unmerged2:
-    x= 3
-    read_file_2= sys.argv[3*x+7]
-    read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
-    DMD_tab_file_2= sys.argv[3*x+8]
-    if(os.path.getsize(DMD_tab_file_2) == 0):
-        copyfile(gene2read_file, new_gene2read_file)
-        sys.exit(DMD_tab_file_2 + " -> DMD tab file 2 is empty.  aborting")
-    output_file_2= sys.argv[3*x+9]
-    DMD_hits_2= read_aligned(DMD_tab_file_2, read_seqs_2)   # Store info in DMD_hits_2 (list of lists).
-
-    # process DMD-aligned reads together:
-    DMD_hits= DMD_hits_1+DMD_hits_2                     # Concatenate DMD info lists,
-    unmapped_reads= prot_map(DMD_hits)                  #  add DMD-aligned contigs/reads to gene2read_map
-                                                        #  and return a set of failed mapping readIDs.
-    # add reads never mapped by DMD in the
-    # first place to the unmapped set:
-    unmapped_len_before= len(unmapped_reads)
-    for read in read_seqs_1:
-        if read not in mapped_reads:
-            unmapped_reads.add(read)
-    print ('(1st paired end) no. additional contigs/reads completely unmapped by DMD= ' + str(len(unmapped_reads)-unmapped_len_before))
-
-    # add reads never mapped by DMD in the
-    # first place to the unmapped set:
-    unmapped_len_before= len(unmapped_reads)
-    for read in read_seqs_2:
-        if read not in mapped_reads:
-            unmapped_reads.add(read)
-    print ('(2nd paired end) no. additional contigs/reads completely unmapped by DMD= ' + str(len(unmapped_reads)-unmapped_len_before) + ' (should be 0)')
-
-    # WRITE unmerged1 OUTPUT: non-BWA&BLAT&DMD-aligned:
-    unmapped_seqs= []
-    for read in unmapped_reads:
-        read_key = read
-        #if(not read.startswith("@")):
-        #    read_key = "@" + read
-        if(read_key in read_seqs_1):
-            unmapped_seqs.append(read_seqs_1[read_key])
-        else:
-            print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
-    with open(output_file_1,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")
-
-    # WRITE unmerged2 OUTPUT: non-BWA&BLAT&DMD-aligned:
-    unmapped_seqs= []
-    for read in unmapped_reads:
-        read_key = read
-        #if(not read.startswith("@")):
-        #    read_key = "@" + read
-        if(read_key in read_seqs_2):    
-            unmapped_seqs.append(read_seqs_2[read_key])
-        
-        else:
-            print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
-    with open(output_file_2,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")
-
-    # print no. aligned reads from current readtype set:
-    print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file_1))
-    print ('  and ' + os.path.basename(read_file_2) + '\n')
-    prev_mapping_count= len(mapped_reads)
-
 # WRITE OUTPUT: rewrite gene<->read map file to include DMD-aligned:
 # [BWA&BLAT&DMD-aligned geneID, length, #reads, readIDs ...]
-reads_count= 0
-proteins= []
-with open(new_gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
-
-    # write genes:
-    for gene in gene2read_map:                          # Take each BWA&BLAT-aligned gene and
-        out_map.write(gene + "\t" + gene_len[gene] + "\t" + str(len(gene2read_map[gene])))
-                                                        #  write [aligned geneID, length (in nt), #reads],
-        for read in gene2read_map[gene]:
-            out_map.write("\t" + read.strip("\n"))      #  [readIDs ...],
-        else:
-            out_map.write("\n")                         #  and a new line character.
-
-    # write proteins:
-    for record in SeqIO.parse(Prot_DB,"fasta"):         # Loop through SeqRec of all prot in PROTdb:
-                                                        #  (PROTdb is needed to get the aa sequence.)
-        if record.id in prot2read_map:                  #  If PROTdb prot is one of the matched proteins,
-            proteins.append(record)                     #  append the SeqRec to proteins list (for next file), and
-            out_map.write(record.id + "\t" + str(len(record.seq)*3) + "\t" + str(len(prot2read_map[record.id])))
-                                                        #  write [aligned protID, length (in nt), #reads, ...],
-            for read in prot2read_map[record.id]:
-                out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
-                reads_count+= 1
+def write_proteins_genemap(gene_seqs, prot2read_map, Prot_DB, prot_file, new_gene2read_file):
+    reads_count= 0
+    proteins= []
+    with open(new_gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
+    
+        # write genes:
+        for gene in gene2read_map:                          # Take each BWA&BLAT-aligned gene and
+            out_map.write(gene + "\t" + gene_len[gene] + "\t" + str(len(gene2read_map[gene])))
+                                                            #  write [aligned geneID, length (in nt), #reads],
+            for read in gene2read_map[gene]:
+                out_map.write("\t" + read.strip("\n"))      #  [readIDs ...],
             else:
-                out_map.write("\n")                     #  and a new line character.
+                out_map.write("\n")                         #  and a new line character.
+    
+        # write proteins:
+        for record in SeqIO.parse(Prot_DB,"fasta"):         # Loop through SeqRec of all prot in PROTdb:
+                                                            #  (PROTdb is needed to get the aa sequence.)
+            if record.id in prot2read_map:                  #  If PROTdb prot is one of the matched proteins,
+                proteins.append(record)                     #  append the SeqRec to proteins list (for next file), and
+                out_map.write(record.id + "\t" + str(len(record.seq)*3) + "\t" + str(len(prot2read_map[record.id])))
+                                                            #  write [aligned protID, length (in nt), #reads, ...],
+                for read in prot2read_map[record.id]:
+                    out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+                    reads_count+= 1
+                else:
+                    out_map.write("\n")                     #  and a new line character.
+    
+    # WRITE OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs
+    # (.faa; fasta-format):
+    genes_trans= []
+    for gene in gene_seqs:                                  # Take each BWA&BLAT-aligned genes
+        try:
+            genes_trans.append(SeqRecord(seq= gene_seqs[gene].seq.translate(stop_symbol=""), id= gene_seqs[gene].id, description= gene_seqs[gene].description))
+                                                            #  and translate its SeqRecord sequence to aa.
+        except:
+            pass
+    with open(prot_file,"w") as out_prot:
+        SeqIO.write(genes_trans, out_prot, "fasta")         # Write aligned gene aa seqs
+        SeqIO.write(proteins, out_prot, "fasta")            #  and aligned proteins aa seqs.
+    
+    # print DMD stats:
+    print (str(reads_count) + ' reads were mapped with Diamond.')
+    print ('Reads mapped to ' + str(len(proteins)) + ' proteins.')
 
-# WRITE OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs
-# (.faa; fasta-format):
-genes_trans= []
-for gene in gene_seqs:                                  # Take each BWA&BLAT-aligned genes
-    try:
-        genes_trans.append(SeqRecord(seq= gene_seqs[gene].seq.translate(stop_symbol=""), id= gene_seqs[gene].id, description= gene_seqs[gene].description))
-                                                        #  and translate its SeqRecord sequence to aa.
-    except:
-        pass
-with open(prot_file,"w") as out_prot:
-    SeqIO.write(genes_trans, out_prot, "fasta")         # Write aligned gene aa seqs
-    SeqIO.write(proteins, out_prot, "fasta")            #  and aligned proteins aa seqs.
+#####################################
+if __name__ == "__main__":
 
-# print DMD stats:
-print (str(reads_count) + ' reads were mapped with Diamond.')
-print ('Reads mapped to ' + str(len(proteins)) + ' proteins.')
+    Prot_DB             = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
+    contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
+    gene2read_file      = sys.argv[3]   # INPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
+    new_gene2read_file  = sys.argv[4]   # OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
+    gene_file           = sys.argv[5]   # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
+    prot_file           = sys.argv[6]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
+    
+    
+    # make dict of contigID<->readsID(s):
+    contig2read_map= {}
+    with open(contig2read_file,"r") as mapping:
+        for line in mapping:
+            if len(line)>5:                             # line starts with 'NODE_'
+                entry= line.strip("\n").split("\t")     # break tab-separated into list
+                contig2read_map[entry[0]]= entry[2:]    # key=contigID, value=list of readID(s)
+    
+    # make dict of BWA&BLAT-aligned geneID<->readID(s):
+    BWABLATreads= []                                    # DEBUG
+    gene2read_map= {}
+    gene_len= {}
+    with open(gene2read_file,"r") as mapping:
+        for line in mapping:
+            if len(line)>5:                             # line at least 5 characeters?
+                entry= line.strip("\n").split("\t")
+                gene2read_map[entry[0]]= entry[3:]      # key=geneID, value=list of readID(s)
+                                                        # (using [:] syntax ensures a list, even if one ele)
+                gene_len[entry[0]]= entry[1]            # key=geneID, value=gene length; to avoid recalc later
+                BWABLATreads.extend(entry[3:])          # DEBUG
+    
+    # make dict of BWA&BLAT-aligned geneID<->seq:
+    gene_seqs= SeqIO.index(gene_file,"fasta")           # key=geneID, value=SeqRecord
+    
+    # tracking DMD-assigned:
+    mapped_reads= set()                                 # tracks DMD-assigned reads
+    prot2read_map= defaultdict(list)                    # dict of DMD-aligned protID<->readID(s)
+                                                        #  key=protID, value=list of readID(s)
+    prev_mapping_count= 0
+    
+    # DEBUG:
+    if len(set(BWABLATreads))==len(BWABLATreads):
+        print ('BWA&/orBLAT-aligned reads are all unique.\n')
+    else:
+        print ('There are repeating BWA&/orBLAT-aligned reads:')
+        print ('no. unique reads= ' + str(len(set(BWABLATreads))))
+        print ('no. total reads= ' + str(len(BWABLATreads)) + '\n')
+    BWABLATreads_count= Counter(BWABLATreads)           # dict of read<->no. of contigs
+    # Write the outputs that don't actually need the dmdout crap
+    write_proteins_genemap(gene_seqs, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
+    
+    
+    # check number of readtype sets (file inputs)
+    read_sets = int((len(sys.argv)-7)/3) 
+    if (len(sys.argv)-7) % 3 != 0:
+        sys.exit('Incorrect number of readtype sets: ' + str(len(sys.argv)))
+    
+    # process DIAMOND output:
+    # readtype sets: contigs, merged:
+    for x in range(0,2):
+        read_file= sys.argv[3*x+7]      # INPUT: non-BWA&BLAT-aligned contig/readIDs and seqs (.fasta)
+        read_seqs= SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
+                                        # dict of non-BWA&BLAT-aligned read SeqRecords: key=contig/readID
+                                        #  (second argument specifies filetype, e.g., "fasta")
+        DMD_tab_file= sys.argv[3*x+8]  # INPUT: DMD-aligned contig/readIDs (.dmdout)
+        if(os.path.getsize(DMD_tab_file) == 0):
+            print(dt.today(), "missing file in reading DIAMOND outputs.  likely it wasn't enough data for diamond.")
+            copyfile(gene2read_file, new_gene2read_file)
+            sys.exit(DMD_tab_file + " is empty, exiting")
+    
+        output_file= sys.argv[3*x+9]    # OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs and seqs (.fasta)
+    
+        # read DMD output & get read/contig lengths:
+        DMD_hits= read_aligned(DMD_tab_file, read_seqs)     # Store info in DMD_hits (list of lists).
+    
+        # process DMD-aligned reads:
+        unmapped_reads= prot_map(DMD_hits)                  # Store DMD-aligned contigs/reads in prot2read_map
+                                                            #  (aligned protID<->readID(s) dict),
+                                                            #  and return a set of failed mapping readIDs.
+        # add reads never mapped by DMD in the
+        # first place to the unmapped set:
+        unmapped_len_before= len(unmapped_reads)            # DEBUG
+        for read in read_seqs:                              # Take all non-BWA&BLAT-aligned contigs/reads (input to DMD)
+            if read not in mapped_reads:                    #  that are still unmapped and
+                unmapped_reads.add(read)                    #  add them to the unmapped_reads set (won't add duplicates).
+    
+        print ('no. additional contigs/reads completely unmapped by DMD= ' + str(len(unmapped_reads)-unmapped_len_before))
+    
+        # WRITE OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs:
+        # and seqs (.fasta)
+        unmapped_seqs= []                                   # Initialize list of SeqRecords.
+        for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
+            unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
+        with open(output_file,"w") as outfile:
+            SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
+    
+        # print no. aligned reads from current readtype set:
+        print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
+        prev_mapping_count= len(mapped_reads)
+    
+    # process DMD output:
+    # readtype sets: unmerged1, unmerged2
+    if read_sets==4:
+        
+        # unmerged1:
+        x= 2
+        read_file_1= sys.argv[3*x+7]
+        read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
+        DMD_tab_file_1= sys.argv[3*x+8]
+        if(os.path.getsize(DMD_tab_file_1) == 0):
+            copyfile(gene2read_file, new_gene2read_file)
+            sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is empty.  aborting")
+        output_file_1= sys.argv[3*x+9]
+        DMD_hits_1= read_aligned(DMD_tab_file_1, read_seqs_1)   # Store info in DMD_hits_1 (list of lists).
+    
+        # unmerged2:
+        x= 3
+        read_file_2= sys.argv[3*x+7]
+        read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
+        DMD_tab_file_2= sys.argv[3*x+8]
+        if(os.path.getsize(DMD_tab_file_2) == 0):
+            copyfile(gene2read_file, new_gene2read_file)
+            sys.exit(DMD_tab_file_2 + " -> DMD tab file 2 is empty.  aborting")
+        output_file_2= sys.argv[3*x+9]
+        DMD_hits_2= read_aligned(DMD_tab_file_2, read_seqs_2)   # Store info in DMD_hits_2 (list of lists).
+    
+        # process DMD-aligned reads together:
+        DMD_hits= DMD_hits_1+DMD_hits_2                     # Concatenate DMD info lists,
+        unmapped_reads= prot_map(DMD_hits)                  #  add DMD-aligned contigs/reads to gene2read_map
+                                                            #  and return a set of failed mapping readIDs.
+        # add reads never mapped by DMD in the
+        # first place to the unmapped set:
+        unmapped_len_before= len(unmapped_reads)
+        for read in read_seqs_1:
+            if read not in mapped_reads:
+                unmapped_reads.add(read)
+        print ('(1st paired end) no. additional contigs/reads completely unmapped by DMD= ' + str(len(unmapped_reads)-unmapped_len_before))
+    
+        # add reads never mapped by DMD in the
+        # first place to the unmapped set:
+        unmapped_len_before= len(unmapped_reads)
+        for read in read_seqs_2:
+            if read not in mapped_reads:
+                unmapped_reads.add(read)
+        print ('(2nd paired end) no. additional contigs/reads completely unmapped by DMD= ' + str(len(unmapped_reads)-unmapped_len_before) + ' (should be 0)')
+    
+        # WRITE unmerged1 OUTPUT: non-BWA&BLAT&DMD-aligned:
+        unmapped_seqs= []
+        for read in unmapped_reads:
+            read_key = read
+            #if(not read.startswith("@")):
+            #    read_key = "@" + read
+            if(read_key in read_seqs_1):
+                unmapped_seqs.append(read_seqs_1[read_key])
+            else:
+                print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
+        with open(output_file_1,"w") as outfile:
+            SeqIO.write(unmapped_seqs, outfile, "fasta")
+    
+        # WRITE unmerged2 OUTPUT: non-BWA&BLAT&DMD-aligned:
+        unmapped_seqs= []
+        for read in unmapped_reads:
+            read_key = read
+            #if(not read.startswith("@")):
+            #    read_key = "@" + read
+            if(read_key in read_seqs_2):    
+                unmapped_seqs.append(read_seqs_2[read_key])
+            
+            else:
+                print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
+        with open(output_file_2,"w") as outfile:
+            SeqIO.write(unmapped_seqs, outfile, "fasta")
+    
+        # print no. aligned reads from current readtype set:
+        print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file_1))
+        print ('  and ' + os.path.basename(read_file_2) + '\n')
+        prev_mapping_count= len(mapped_reads)
+
