@@ -250,7 +250,7 @@ with open(raw_count, "w") as raw_count_out:
     raw_count_out.write(",".join(str(x) for x in combined_taxid))
 
 with open(RPKM, "w") as RPKM_out:
-    RPKM_out.write("GeneID\tLenght\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in rank_name) + "\n")
+    RPKM_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in rank_name) + "\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
     #raw_count_out.write(",".join(str(x) for x in rank_taxid))
