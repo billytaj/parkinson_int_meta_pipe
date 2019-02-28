@@ -5,7 +5,7 @@ import matplotlib
 from matplotlib import cm
 
 # Two methods to define taxa in order of increasing priority: Cutoff or Tax ID list
-cutoff = sys.argv[1]    #IN: Proportion of annotated reads
+cutoff = sys.argv[1]    #IN: Proportion of annotated reads -> 0.01 from the example command list.
 ID_list = sys.argv[2]   #IN: literally a list of taxid we can optionally use.  If nothing, it's empty and it's fine.
 nodes = sys.argv[3]     #IN: nodes.dmp
 names = sys.argv[4]     #IN: names.dmp
@@ -19,9 +19,11 @@ cytoscape = sys.argv[10]#OUT
 show_unclassified = True # temp, should be a user modifiable setting
 
 rank_name = []
-if ID_list == "":
+if ID_list == "None":
     rank_taxid = []
+    print("no taxid supplied.  using blank")
 else:
+    print("using taxid supplied")
     rank_taxid = [ID.strip() for ID in ID_list.split(",")]
 
 # parse nodes.dmp
@@ -91,7 +93,7 @@ for taxid in taxid_count:
 
 # adds child nodes to parent nodesif they do not meet cutoff or are not in ID list
 # if given no list of taxids, given cutoff is used
-if ID_list == "":
+if ID_list == "None":
     for taxid in taxid_count:
         processed_children = set()
         while True:
@@ -244,14 +246,16 @@ with open(raw_count, "w") as raw_count_out:
     raw_count_out.write("GeneID\tLenght\tReads\tEC#\t" + "\t".join(str(x) for x in rank_name) + "\n")
     for entry in raw_count_dict:
         raw_count_out.write(entry + "\t" + "\t".join(str(x) for x in raw_count_dict[entry]) + "\n")
-    raw_count_out.write(",".join(str(x) for x in rank_taxid))
+    #raw_count_out.write(",".join(str(x) for x in rank_taxid))
+    raw_count_out.write(",".join(str(x) for x in combined_taxid))
 
 with open(RPKM, "w") as RPKM_out:
     RPKM_out.write("GeneID\tLenght\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in rank_name) + "\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
-    raw_count_out.write(",".join(str(x) for x in rank_taxid))
-
+    #raw_count_out.write(",".join(str(x) for x in rank_taxid))
+    RPKM_out.write(",".join(str(x) for x in combined_taxid))
+    
 # Cytoscape table
 rank_colour = []
 cs=cm.get_cmap("nipy_spectral", len(rank_taxid))

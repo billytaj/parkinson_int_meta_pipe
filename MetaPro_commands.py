@@ -1874,16 +1874,28 @@ class mt_pipe_commands:
         self.make_folder(mpl_folder)
         self.make_folder(final_folder)
         
-        network_generation = ">&2 echo generating RPKM table and Cytoscape network with taxonomy| "
+        taxa_table_generation = ">&2 echo generating taxonomy table | "
+        taxa_table_generation += self.tool_path_obj.Python + " "
+        taxa_table_generation += self.tool_path_obj.taxa_table + " "
+        taxa_table_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        taxa_table_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
+        taxa_table_generation += os.path.join(ta_folder, "constrain_classification.tsv") + " "
+        taxa_table_generation += os.path.join(final_folder, "taxa_table.tsv")
+        
+        network_generation = ">&2 echo Generating RPKM and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
         network_generation += self.tool_path_obj.RPKM + " "
+        network_generation += "0.01" + " "
+        network_generation += "None" + " "
         network_generation += self.tool_path_obj.nodes + " "
+        network_generation += self.tool_path_obj.names + " "
         network_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
         network_generation += os.path.join(ta_folder, "taxonomic_classifications.tsv") + " "
         network_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
-        network_generation += os.path.join(ta_folder, "constrain_classification.tsv") + " "
+        network_generation += os.path.join(final_folder, "Count_table.tsv") + " "
         network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
         network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
+        
 
         chart_generation = ">&2 echo generating visualizations for ECs | "
         chart_generation += self.tool_path_obj.Python + " "
@@ -1949,6 +1961,7 @@ class mt_pipe_commands:
             
     
         COMMANDS_Outputs = [
+            taxa_table_generation,
             network_generation,
             chart_generation,
             final_chart,
