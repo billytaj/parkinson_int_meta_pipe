@@ -243,7 +243,7 @@ for gene in gene2read_dict:
             RPKM_dict[gene].append(read_count / RPKM_div)
 
 with open(raw_count, "w") as raw_count_out:
-    raw_count_out.write("GeneID\tLenght\tReads\tEC#\t" + "\t".join(str(x) for x in rank_name) + "\n")
+    raw_count_out.write("GeneID\tLength\tReads\tEC#\t" + "\t".join(str(x) for x in rank_name) + "\n")
     for entry in raw_count_dict:
         raw_count_out.write(entry + "\t" + "\t".join(str(x) for x in raw_count_dict[entry]) + "\n")
     #raw_count_out.write(",".join(str(x) for x in rank_taxid))
