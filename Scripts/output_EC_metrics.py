@@ -116,7 +116,7 @@ if __name__ == "__main__":
     
     selected_heatmap_df = selected_heatmap_df.groupby(["Superpathway"]).sum()           #collapse the rows, grouped by the superpath`
     plt.subplots(figsize = (25,10))                                                     #set the image size    
-    heatmap = sns.heatmap(selected_heatmap_df)
+    heatmap = sns.heatmap(selected_heatmap_df, cmap="YlGnBu")                           #maek the heatmap.  Use a colour palette
     heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation = 40, ha = "right")     #make the labels pretty
     heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation = 40, ha = "right")
     heatmap.figure.savefig(output_dir + "enzyme_superpathway_heatmap.jpg")              #export it
