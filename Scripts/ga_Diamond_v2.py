@@ -306,11 +306,13 @@ if __name__ == "__main__":
                                         # dict of non-BWA&BLAT-aligned read SeqRecords: key=contig/readID
                                         #  (second argument specifies filetype, e.g., "fasta")
         DMD_tab_file= sys.argv[3*x+8]  # INPUT: DMD-aligned contig/readIDs (.dmdout)
-        if(os.path.getsize(DMD_tab_file) == 0):
-            print(dt.today(), "missing file in reading DIAMOND outputs.  likely it wasn't enough data for diamond.")
-            copyfile(gene2read_file, new_gene2read_file)
-            sys.exit(DMD_tab_file + " is empty, exiting")
-    
+        if(os.path.exists(DMD_tab_file)):            
+            if(os.path.getsize(DMD_tab_file) == 0):
+                print(dt.today(), "missing file in reading DIAMOND outputs.  likely it wasn't enough data for diamond.")
+                #copyfile(gene2read_file, new_gene2read_file)
+                sys.exit(DMD_tab_file + " is empty, exiting")
+        else:
+            sys.exit(DMD_tab_file + " is missing, exiting")
         output_file= sys.argv[3*x+9]    # OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs and seqs (.fasta)
     
         # read DMD output & get read/contig lengths:
@@ -350,9 +352,12 @@ if __name__ == "__main__":
         read_file_1= sys.argv[3*x+7]
         read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
         DMD_tab_file_1= sys.argv[3*x+8]
-        if(os.path.getsize(DMD_tab_file_1) == 0):
-            copyfile(gene2read_file, new_gene2read_file)
-            sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is empty.  aborting")
+        if(os.path.exists(DMD_tab_file_1)):
+            if(os.path.getsize(DMD_tab_file_1) == 0):
+                #copyfile(gene2read_file, new_gene2read_file)
+                sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is empty.  aborting")
+        else:
+            sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is missing.  aborting")
         output_file_1= sys.argv[3*x+9]
         DMD_hits_1= read_aligned(DMD_tab_file_1, read_seqs_1)   # Store info in DMD_hits_1 (list of lists).
     
@@ -361,9 +366,12 @@ if __name__ == "__main__":
         read_file_2= sys.argv[3*x+7]
         read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
         DMD_tab_file_2= sys.argv[3*x+8]
-        if(os.path.getsize(DMD_tab_file_2) == 0):
-            copyfile(gene2read_file, new_gene2read_file)
-            sys.exit(DMD_tab_file_2 + " -> DMD tab file 2 is empty.  aborting")
+        if(os.path.exists(DMD_tab_file_2)):
+            if(os.path.getsize(DMD_tab_file_2) == 0):
+                #copyfile(gene2read_file, new_gene2read_file)
+                sys.exit(DMD_tab_file_2 + " -> DMD tab file 2 is empty.  aborting")
+        else:
+            sys.exit(DMD_tab_file_2 + " -> DMD tab file 2 is missing.  aborting")
         output_file_2= sys.argv[3*x+9]
         DMD_hits_2= read_aligned(DMD_tab_file_2, read_seqs_2)   # Store info in DMD_hits_2 (list of lists).
     
