@@ -1563,7 +1563,7 @@ class mt_pipe_commands:
         diamond_pp = ">&2 echo DIAMOND post process | "
         diamond_pp += self.tool_path_obj.Python + " "
         diamond_pp += self.tool_path_obj.Map_reads_prot_DMND + " "
-        diamond_pp += self.tool_path_obj.Prot_DB + " "  # IN
+        diamond_pp += self.tool_path_obj.Prot_DB_reads + " "  # IN
         diamond_pp += os.path.join(dep_loc_0, "contig_map.tsv") + " "  # IN
         diamond_pp += os.path.join(dep_loc_0, "gene_map.tsv") + " "  # IN
         diamond_pp += os.path.join(final_folder, "gene_map.tsv") + " "  # OUT
