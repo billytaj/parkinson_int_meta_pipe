@@ -5,18 +5,22 @@ import matplotlib
 from matplotlib import cm
 
 # Two methods to define taxa in order of increasing priority: Cutoff or Tax ID list
-cutoff = sys.argv[1]    #IN: Proportion of annotated reads -> 0.01 from the example command list.
-ID_list = sys.argv[2]   #IN: literally a list of taxid we can optionally use.  If nothing, it's empty and it's fine.
-nodes = sys.argv[3]     #IN: nodes.dmp
-names = sys.argv[4]     #IN: names.dmp
-gene2read = sys.argv[5] #IN: genes -> reads (from GA)
-read2taxid = sys.argv[6]#IN: reads -> taxid (from TA)
-gene2EC = sys.argv[7]   #IN: genes -> EC mapping (from EC, EC.All)
-raw_count = sys.argv[8] #OUT
-RPKM = sys.argv[9]      #OUT
-cytoscape = sys.argv[10]#OUT
+cutoff = sys.argv[1]                    #IN: Proportion of annotated reads -> 0.01 from the example command list.
+ID_list = sys.argv[2]                   #IN: literally a list of taxid we can optionally use.  If nothing, it's empty and it's fine.
+nodes = sys.argv[3]                     #IN: nodes.dmp
+names = sys.argv[4]                     #IN: names.dmp
+gene2read = sys.argv[5]                 #IN: genes -> reads (from GA)
+read2taxid = sys.argv[6]                #IN: reads -> taxid (from TA)
+gene2EC = sys.argv[7]                   #IN: genes -> EC mapping (from EC, EC.All)
+show_unclassified_flag = sys.argv[8]    #IN: either true or false.  Pull from config.  default: true
+raw_count = sys.argv[9]                 #OUT
+RPKM = sys.argv[10]                     #OUT
+cytoscape = sys.argv[11]                #OUT
 
-show_unclassified = True # temp, should be a user modifiable setting
+
+show_unclassified = True
+if(show_unclassified_flag == "No"):
+    show_unclassified = False # temp, should be a user modifiable setting
 
 rank_name = []
 if ID_list == "None":
@@ -254,7 +258,7 @@ with open(RPKM, "w") as RPKM_out:
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
     #raw_count_out.write(",".join(str(x) for x in rank_taxid))
-    #RPKM_out.write(",".join(str(x) for x in combined_taxid))
+    RPKM_out.write(",".join(str(x) for x in rank_taxid))
     
 # Cytoscape table
 rank_colour = []

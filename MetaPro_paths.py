@@ -152,7 +152,9 @@ class tool_path_obj:
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
             self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
+            self.show_unclassified          = config["Settings"]["Show_unclassified"]           if config["Settings"]["Show_unclassified"]          or config["Settings"]["Show_unclassified"]          == "" else "No"
             
         else:
             self.target_rank = "genus"
             self.adapterremoval_minlength = 30
+            self.show_unclassified = "No"
