@@ -1896,15 +1896,6 @@ class mt_pipe_commands:
         network_generation += os.path.join(final_folder, "Count_table.tsv") + " "
         network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
         network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
-        
-
-        chart_generation = ">&2 echo generating visualizations for ECs | "
-        chart_generation += self.tool_path_obj.Python + " "
-        chart_generation += self.tool_path_obj.chart + " "
-        chart_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
-        chart_generation += mpl_folder
-
-        final_chart = "cp " + os.path.join(mpl_folder, "All_EC.png") + " " + os.path.join(final_folder, "All_EC.png")
 
         read_counts = ">&2 echo generating read count table | "
         read_counts += self.tool_path_obj.Python + " "
@@ -1964,8 +1955,6 @@ class mt_pipe_commands:
         COMMANDS_Outputs = [
             taxa_table_generation,
             network_generation,
-            chart_generation,
-            final_chart,
             read_counts,
             per_read_scores,
             contig_stats,
