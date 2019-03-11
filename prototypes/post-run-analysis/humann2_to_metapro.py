@@ -54,11 +54,11 @@ if __name__ == "__main__":
     like_findings_df = pd.merge(cleaned_hum2_df, gene_id_df, how = 'inner', on = "GeneID")
     print(like_findings_df)
     
-    mpro_missed_df = pd.merge(cleaned_hum2_df, gene_id_df, how = "left", on = "GeneID")
+    mpro_missed_df = pd.merge(cleaned_hum2_df, gene_id_df, how = "left", left_on = "GeneID", right_on = None)
     print("HUMANN2 caught | MetaPro missed")
     print(mpro_missed_df)
     
     
-    hum2_missed_df = pd.merge(cleaned_hum2_df, gene_id_df, how = "right", on = "GeneID")
+    hum2_missed_df = pd.merge(cleaned_hum2_df, gene_id_df, how = "right", left_on = None, right_on = "GeneID")
     print("MetaPro caught | Humann2 missed")
     print(hum2_missed_df)
