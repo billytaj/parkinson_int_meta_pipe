@@ -23,11 +23,17 @@ if __name__ == "__main__":
     
     mpro_df = pd.read_csv(mpro_rpkm, sep='\t', error_bad_lines=False)
     gene_id_df = mpro_df["GeneID"].str.split("|", 0, expand=True)
-    cols = [0, 1, 2, 3, 4, 5, 6, 8]
-    gene_id_df.drop(gene_id_df.columns[cols], axis=1, inplace=True)
-    gene_id_df.columns = ["GeneID"]
-    gene_id_df.drop_duplicates(inplace = True)
+    cols = [0, 1, 2, 3, 4, 5, 6, "GeneID", 8]
+    #gene_id_df.drop(gene_id_df.columns[cols], axis=1, inplace=True)
+    gene_id_df.columns = cols#["GeneID"]
+    #gene_id_df.drop_duplicates(inplace = True)
     gene_id_df.reset_index(drop = True, inplace = True)
+    
+    unique_gene_id_df = gene_id_df.drop_duplicates()
+    print("UNIQUE gene ID DF")
+    print(unique_gene_id_df)
+    
+    print("REGULAR")
     
     print(gene_id_df)
     
@@ -47,18 +53,23 @@ if __name__ == "__main__":
     print("cleaned")
     print(cleaned_hum2_df)
     
+    unique_hum2_df = cleaned_hum2_df.drop_duplicates()
+    print("humann2 unique")
+    print(unique_hum2_df)
+    
     #print("RAW")
     #print(raw_df)
     
     
-    like_findings_df = pd.merge(cleaned_hum2_df, gene_id_df, how = 'inner', on = "GeneID")
+    like_findings_df = gene_id_df[gene_id_df.GeneID.isin(cleaned_hum2_df.GeneID)]
+    print("HUMANN2 and MetaPro caught")
     print(like_findings_df)
     
-    mpro_missed_df = pd.merge(cleaned_hum2_df, gene_id_df, how = "left", left_on = "GeneID", right_on = None)
+    mpro_missed_df = cleaned_hum2_df[~cleaned_hum2_df.GeneID.isin(gene_id_df.GeneID)]
     print("HUMANN2 caught | MetaPro missed")
     print(mpro_missed_df)
     
     
-    hum2_missed_df = pd.merge(cleaned_hum2_df, gene_id_df, how = "right", left_on = None, right_on = "GeneID")
+    hum2_missed_df = gene_id_df[~gene_id_df.GeneID.isin(cleaned_hum2_df.GeneID)]
     print("MetaPro caught | Humann2 missed")
     print(hum2_missed_df)
