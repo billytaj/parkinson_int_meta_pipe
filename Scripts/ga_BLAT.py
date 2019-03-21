@@ -327,19 +327,30 @@ if numsets==4:
 # [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
 reads_count= 0
 genes= []
-with open(new_gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
+
+raw_path = os.path.split(new_gene2read_file)[0]
+blat_only_gene_file = os.path.join(raw_path, "blat_only_gene_map.tsv")
+blat_only_gene_map = open(blat_only_gene_file, "w")
+out_map = open(new_gene2read_file,"w")               # Delete old gene2read_file and write a new one.
     for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
                                                         #  (DNA db is needed to get the sequence.)
         if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
             genes.append(record)                        #  append the SeqRec to genes list (for next file), and
+            blat_only_gene_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
             out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
                                                         #  write [aligned geneID, length, #reads, ...],
             for read in gene2read_map[record.id]:
                 out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+                blat_only_gene_map.write("\t" + read.strip("\n"))
                 reads_count+= 1
             else:
                 out_map.write("\n")                     #  and a new line character.
+                blat_only_gene_map.write("\n")
 
+out_map.close()
+blat_only_gene_map.close()                
+                
+                
 # WRITE OUTPUT: BWA&BLAT-aligned geneIDs and seqs (.fna; fasta-format):
 # (this wasn't done in BWA post-processing)
 with open(gene_file,"w") as outfile:

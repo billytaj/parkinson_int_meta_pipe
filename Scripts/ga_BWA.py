@@ -255,18 +255,30 @@ for x in range(int((len(sys.argv)-4)/3)):
 # [BWA-aligned geneID, length, #reads, readIDs ...]
 reads_count= 0
 genes= []
-with open(gene2read_file,"w") as out_map:
-    for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
-                                                        #  (DNA db is needed to get the sequence.)
-        if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
-            genes.append(record)                        #  append the SeqRec to genes list (NOT REALLY USED), and
-            out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
-                                                        #  write [aligned geneID, length, #reads, ...],
-            for read in gene2read_map[record.id]:
-                out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
-                reads_count+= 1
-            else:
-                out_map.write("\n")                     #  and a new line character.
+
+raw_path = os.path.split(gene2read_file)[0]
+bwa_only_gene_map = os.path.join(raw_path, "bwa_only_gene_map.tsv")
+
+out_map = open(gene2read_file,"w")
+bwa_only_out_map = open(bwa_only_gene_map, "w")
+for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
+                                                    #  (DNA db is needed to get the sequence.)
+    if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
+        genes.append(record)                        #  append the SeqRec to genes list (NOT REALLY USED), and
+        out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
+        bwa_only_out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
+                                                    #  write [aligned geneID, length, #reads, ...],
+        for read in gene2read_map[record.id]:
+            out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+            bwa_only_out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+            reads_count+= 1
+        else:
+            out_map.write("\n")                     #  and a new line character.
+            bwa_only_out_map.write("\n")                     #  and a new line character.    
+
+out_map.close()
+bwa_only_out_map.close()
+                
 
 # print BWA stats:
 print (str(reads_count) + ' reads were mapped with BWA.')
