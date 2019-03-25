@@ -50,7 +50,7 @@ from Bio import SeqIO
 # =	Read Match; the nucleotide is present in the reference.
 # X	Read Mismatch; the nucleotide is present in the reference.
 
-def gene_map(sam):                                      # Set of unmapped contig/readIDs=
+def gene_map(sam):         # Set of unmapped contig/readIDs=
                                                         #  gene_map(BWA .sam file)
     # tracking BWA-assigned & unassigned:
     query2gene_map= defaultdict(set)                    # Dict of BWA-aligned contig/readID<->geneID(s).
@@ -60,6 +60,12 @@ def gene_map(sam):                                      # Set of unmapped contig
     len_chars= ["M","I","S","=","X"]                    # These particular CIGAR operations cause the
                                                         #  alignment to step along the query sequence.
                                                         # Sum of lengths of these ops=length of seq.
+                                                        
+    # tracking BWA-assigned:
+    gene2read_map= defaultdict(list)                    # dict of BWA-aligned geneID<->readID(s) Defaultdict auto-creates an empty entry when keyerror happens.
+    mapped_reads= set()                                 # tracks BWA-assigned reads, uniquely 
+    mapped_list= []
+                                                        
 
     # first, process .sam file, one contig/read (query) at a time:
     with open(sam,"r") as samfile:
@@ -176,7 +182,7 @@ def gene_map(sam):                                      # Set of unmapped contig
         print ('no reads in the set= ' + str(len(mapped_reads)))
 
     # return unmapped set:
-    return unmapped
+    return (unmapped, mapped_reads, gene2read_map)
 
 #####################################
 
@@ -204,6 +210,8 @@ def import_fasta(file_name_in):
     return fasta_df
 
 def filter_consumed_reads(read_file, BWA_sam_file, output_file, is_unmerged_flag):
+    prev_mapping_count= 0
+    #The idea is that this code now gets called for each batch of files, separately
     if (not os.path.exists(read_file)):
         return None
     if (not os.path.exists(BWA_sam_file)):
@@ -224,7 +232,7 @@ def filter_consumed_reads(read_file, BWA_sam_file, output_file, is_unmerged_flag
     # extraction of "non-BWA-aligned" and "BWA-aligned":
     unmapped_reads = None
     if (is_unmerged_flag):                          # Only do once for unmerged paired end (same .sam file).
-        unmapped_reads= gene_map(BWA_sam_file)      # Store BWA-aligned contigs/reads in gene2read_map
+        unmapped_reads, mapped_reads, gene2read_map = gene_map(BWA_sam_file)      # Store BWA-aligned contigs/reads in gene2read_map
                                                     #  (aligned geneID<->readID(s) dict),
                                                     #  and return a set of unmapped readIDs
     # WRITE OUTPUT: non-BWA-aligned contig/readIDs:
@@ -242,82 +250,105 @@ def filter_consumed_reads(read_file, BWA_sam_file, output_file, is_unmerged_flag
     print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file))
     prev_mapping_count= len(mapped_reads)
 
+    return gene2read_map
 
-
-
+def merge_defaultdicts(main_map, mini_map):
+    for item in main_map.items():
+        if(item in mini_map):
+            main_map[item].update(mini_map[item])
+        else:
+            main_map[item] = mini_map[item]
+    return main_map        
 
 
 if __name__ == "__main__":
     DNA_DB= sys.argv[1]             # INPUT: DNA db used for BWA alignement
     contig2read_file= sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
     gene2read_file= sys.argv[3]     # OUTPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
+    
+    contigs_fasta = sys.argv[4]
+    contigs_sam = sys.argv[5]
+    contigs_out = sys.argv[6]
+    
+    singletons_fasta = sys.argv[7]
+    singletons_sam = sys.argv[8]
+    singletons_out = sys.argv[9]
+    
+    pair_1_fasta = sys.argv[10]
+    pair_1_sam = sys.argv[11]
+    pair_1_out = sys.argv[12]
+    
+    pair_2_fasta = sys.argv[13]
+    pair_2_sam = sys.argv[14]
+    pair_2_out = sys.argv[15]
 
-# make initial dict of contigID<->readsID(s):
-contig2read_map= {}
-contig_reads= []                                    # list of just reads
-with open(contig2read_file,"r") as mapping:
-    for line in mapping:
-        if len(line)>5:                             # line starts with 'NODE_'
-            entry= line.strip("\n").split("\t")     # break tab-separated into list
-            contig2read_map[entry[0]]= entry[2:]    # key=contigID, value=list of readID(s)
-            contig_reads.extend(entry[2:])          # append all the reads
+    # make initial dict of contigID<->readsID(s):
+    contig2read_map= {}
+    contig_reads= []                                    # list of just reads
+    with open(contig2read_file,"r") as mapping:
+        for line in mapping:
+            if len(line)>5:                             # line starts with 'NODE_'
+                entry= line.strip("\n").split("\t")     # break tab-separated into list
+                contig2read_map[entry[0]]= entry[2:]    # key=contigID, value=list of readID(s)
+                contig_reads.extend(entry[2:])          # append all the reads
 
-# make new dict only of contigs with unique reads:
-# (hard to tell w BWA what contigs match better, so for reads associated
-# w multiple matched contigs, avoid choosing btw contigs for now.)
-contig_reads_count= Counter(contig_reads)           # dict of read<->no. of contigs
-contig2read_map_uniq= {}
-contig_unique_reads= []                             # DEBUG
-for contig in contig2read_map:
-    for read in contig2read_map[contig]:            # If contig has
-        if contig_reads_count[read]>1:              #  a read assoc. w multiple contigs
-            break                                   #  then throw the contig away,
-    else:
-        contig2read_map_uniq[contig]= contig2read_map[contig]
-                                                    #  else, store it in the unique dict.
-        contig_unique_reads.extend(contig2read_map[contig]) # DEBUG
-
-# tracking BWA-assigned:
-gene2read_map= defaultdict(list)                    # dict of BWA-aligned geneID<->readID(s)
-mapped_reads= set()                                 # tracks BWA-assigned reads
-mapped_list= []
-prev_mapping_count= 0
-
-
-
-# check number of readtype sets (file inputs)
-numsets= (len(sys.argv)-4)/3
-
-
-# WRITE OUTPUT: write gene<->read mapfile of BWA-aligned:
-# [BWA-aligned geneID, length, #reads, readIDs ...]
-reads_count= 0
-genes= []
-
-raw_path = os.path.split(gene2read_file)[0]
-bwa_only_gene_map = os.path.join(raw_path, "bwa_only_gene_map.tsv")
-
-out_map = open(gene2read_file,"w")
-bwa_only_out_map = open(bwa_only_gene_map, "w")
-for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
-                                                    #  (DNA db is needed to get the sequence.)
-    if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
-        genes.append(record)                        #  append the SeqRec to genes list (NOT REALLY USED), and
-        out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
-        bwa_only_out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
-                                                    #  write [aligned geneID, length, #reads, ...],
-        for read in gene2read_map[record.id]:
-            out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
-            bwa_only_out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
-            reads_count+= 1
+    # make new dict only of contigs with unique reads:
+    # (hard to tell w BWA what contigs match better, so for reads associated
+    # w multiple matched contigs, avoid choosing btw contigs for now.)
+    contig_reads_count= Counter(contig_reads)           # dict of read<->no. of contigs
+    contig2read_map_uniq= {}
+    contig_unique_reads= []                             # DEBUG
+    for contig in contig2read_map:
+        for read in contig2read_map[contig]:            # If contig has
+            if contig_reads_count[read]>1:              #  a read assoc. w multiple contigs
+                break                                   #  then throw the contig away,
         else:
-            out_map.write("\n")                     #  and a new line character.
-            bwa_only_out_map.write("\n")                     #  and a new line character.    
+            contig2read_map_uniq[contig]= contig2read_map[contig]
+                                                        #  else, store it in the unique dict.
+            contig_unique_reads.extend(contig2read_map[contig]) # DEBUG
+    
+    #Do the work
+    gene2read_map_contigs = filter_consumed_reads(contigs_fasta, contigs_sam, contigs_out, True)
+    gene2read_map_singletons = filter_consumed_reads(singletons_fasta, singletons_sam, singletons_out, True)
+    gene2read_map_pair_1 = filter_consumed_reads(pair_1_fasta, pair_1_sam, pair_1_out, False)
+    gene2read_map_pair_2 = filter_consumed_reads(pair_2_fasta, pair_2_sam, pair_2_out, True)
+    
+    #combine the defaultdicts
+    gene2read_map = gene2read_map_contigs
+    gene2read_map = merge_defaultdicts(gene2read_map, gene2read_map_singletons)
+    gene2read_map = merge_defaultdicts(gene2read_map, gene2read_map_pair_1)
+    gene2read_map = merge_defaultdicts(gene2read_map, gene2read_map_pair_2)
+    
+    
+    # WRITE OUTPUT: write gene<->read mapfile of BWA-aligned:
+    # [BWA-aligned geneID, length, #reads, readIDs ...]
+    reads_count= 0
+    genes= []
 
-out_map.close()
-bwa_only_out_map.close()
-                
+    raw_path = os.path.split(gene2read_file)[0]
+    bwa_only_gene_map = os.path.join(raw_path, "bwa_only_gene_map.tsv")
 
-# print BWA stats:
-print (str(reads_count) + ' reads were mapped with BWA.')
-print ('Reads mapped to ' + str(len(genes)) + ' genes.')
+    out_map = open(gene2read_file,"w")
+    bwa_only_out_map = open(bwa_only_gene_map, "w")
+    for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
+                                                        #  (DNA db is needed to get the sequence.)
+        if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
+            genes.append(record)                        #  append the SeqRec to genes list (NOT REALLY USED), and
+            out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
+            bwa_only_out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
+                                                        #  write [aligned geneID, length, #reads, ...],
+            for read in gene2read_map[record.id]:
+                out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+                bwa_only_out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+                reads_count+= 1
+            else:
+                out_map.write("\n")                     #  and a new line character.
+                bwa_only_out_map.write("\n")                     #  and a new line character.    
+
+    out_map.close()
+    bwa_only_out_map.close()
+                    
+
+    # print BWA stats:
+    print (str(reads_count) + ' reads were mapped with BWA.')
+    print ('Reads mapped to ' + str(len(genes)) + ' genes.')
