@@ -1,11 +1,11 @@
-English name,read length,number of reads,,MetaPro,SAMSA2,SAMSA2 without label
-Clostridium ASF356,2869408,96428,,2202,3,892 + 3
-Clostridium ASF502,449910,35545,,0,0,0
-Eubacterium Plexicaudatum ASF492,736249,13310,,0,0,0
-Firmicutes ASF500,1398166,340,,0,0,0
-Lactobacillus ASF360,19383,3340,,0,0,0
-Lactobacillus Murinus ASF361,1896521,17398,,356,0,174
-Mucispirillum Schaedleri ASF457,2263990,11610,,322,0,129
-Parabacteroides ASF519,6829845,774544,,5373,0,32
-mapped reads,0,952515,,,,
-unmapped reads,0,417982,,,,
+English name,read length,number of reads,,MetaPro,SAMSA2,SAMSA2 without label,humann2
+Clostridium ASF356,2869408,96428,,2202,3,892 + 3,0
+Clostridium ASF502,449910,35545,,0,0,0,0
+Eubacterium Plexicaudatum ASF492,736249,13310,,0,0,0,0
+Firmicutes ASF500,1398166,340,,0,0,0,0
+Lactobacillus ASF360,19383,3340,,0,0,0,0
+Lactobacillus Murinus ASF361,1896521,17398,,356,0,174,0
+Mucispirillum Schaedleri ASF457,2263990,11610,,322,0,129,0
+Parabacteroides ASF519,6829845,774544,,5373,0,32,0
+mapped reads,0,952515,,,,,0
+unmapped reads,0,417982,,,,,

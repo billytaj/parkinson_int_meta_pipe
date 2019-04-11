@@ -25,8 +25,8 @@ def get_rpk_df(gene_map_file):
     return ID_df
     
 if __name__ == "__main__":
-    gene_map_file = sys.argv[1]
-    read_lengths_file = sys.argv[2]
+    gene_map_file = sys.argv[1] #the ones with rpk -> gene familes
+    read_lengths_file = sys.argv[2] #the bowtie file
     
     length_df = get_length_df(read_lengths_file)
     rpk_df = get_rpk_df(gene_map_file)
@@ -34,12 +34,25 @@ if __name__ == "__main__":
     rpk_df.to_csv("rpk_df.csv", mode = "w", index = False)
     length_df.to_csv("length_df.csv", mode = "w", index = False)
     
-    result = pd.merge(length_df, rpk_df, how = "right", on = "uniref90")
-    result.drop("uniref50", 1, inplace = True)
+    
+    #result_df = length_df[length_df["uniref90"].isin(rpk_df["uniref90"])]
+    #result_df["RPK"] = rpk_df["RPK"]
+    
+    result_df = rpk_df
+    result_df["length"] = length_df["length"]
+    result_df = pd.DataFrame(result_df)
+    result_df["read_count"] = result_df["RPK"] * result_df["length"] / 1000
+    
+    result_df = result_df.groupby(["taxa"]).sum()
+    
+    result_df.to_csv("humann2_final.csv")
+    print(result_df)
+    #result = pd.merge(length_df, rpk_df, how = "right", on = "uniref90")
+    #result.drop("uniref50", 1, inplace = True)
     #result.drop("taxa", 1, inplace = True)
     
-    result.drop_duplicates("uniref90", inplace = True)
-    result.to_csv("merged.csv", mode = "w", index = False)
+    #result.drop_duplicates("uniref90", inplace = True)
+    #result.to_csv("merged.csv", mode = "w", index = False)
     #print(result)
     
    
