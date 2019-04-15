@@ -1,0 +1,27 @@
+--------------------------------------------------------
+Total runtime: 10163.1 s
+quality filter: 72.1 s
+quality filter cleanup: 0.0 s
+host filter: 77.5 s
+host filter cleanup: 0.0 s
+vector filter: 11.3 s
+vector filter cleanup: 0.0 s
+rRNA filter: 678.1 s
+rRNA filter cleanup: 0.0 s
+repop: 20.1 s
+repop cleanup: 0.0 s
+assemble contigs: 70.2 s
+assemble contigs cleanup: 0.0 s
+GA BWA: 510.0 s
+GA BWA cleanup: 0.0 s
+GA BLAT: 883.9 s
+GA BLAT cleanup: 0.0 s
+GA DIAMOND: 1170.0 s
+GA DIAMOND cleanup: 0.0 s
+TA: 1110.9 s
+TA cleanup: 0.0 s
+EC DETECT: 2450.9 s
+EC PRIAM + DIAMOND: 3033.4 s
+EC cleanup: 0.0 s
+Outputs: 74.8 s
+Outputs cleanup: 0.0 s
