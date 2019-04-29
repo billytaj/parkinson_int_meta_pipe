@@ -190,6 +190,7 @@ if show_unclassified:
     rank_name.append("Unclassified")
 
 # parse gene annotations
+# but also grab the total mapped reads count, needed to calculate RPKM 
 mapped_reads = 0
 gene2read_dict = {}
 with open(gene2read, "r") as infile:
@@ -219,12 +220,16 @@ with open(gene2EC, "r") as infile:
             EC2genes_dict[EC] = [gene]
 
 # Read count and RPKM Tables
+# RPKM = reads / (length / 1000) / (mapped reads / 1e6)
 raw_count_dict = {}
 RPKM_dict = {}
 for gene in gene2read_dict:
-    raw_count_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
-    RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
-    RPKM_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
+    gene_length = gene2read_dict[gene][0]
+    number_of_reads = len(gene2read_dict[gene][1])
+    
+    raw_count_dict[gene] = [gene_length, number_of_reads]
+    RPKM_div = ((float(gene_length)/float(1000))*(mapped_reads/float(1000000)))
+    RPKM_dict[gene] = [gene_length, number_of_reads]
     for EC in EC2genes_dict:
         if gene in EC2genes_dict[EC]:
             raw_count_dict[gene].append(EC)
@@ -233,7 +238,7 @@ for gene in gene2read_dict:
     else:
         raw_count_dict[gene].append("0.0.0.0")
         RPKM_dict[gene].append("0.0.0.0")
-    RPKM_dict[gene].append(len(gene2read_dict[gene][1])/RPKM_div)
+    RPKM_dict[gene].append(number_of_reads/RPKM_div)
     for taxa in rank_taxid:
         read_count = 0
         for read in gene2read_dict[gene][1]:

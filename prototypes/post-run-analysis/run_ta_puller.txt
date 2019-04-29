@@ -1,0 +1,27 @@
+python humann2_taxa_puller.py 501_CecQ_N\NOD501CecQN_r1_new_genefamilies.tsv 501_cecq_n
+python humann2_taxa_puller.py 501_CecQ_Y\NOD501CecQY_r1_new_genefamilies.tsv 501_cecq_y
+python humann2_taxa_puller.py 501_ColQ_N\NOD501ColQN_r1_new_genefamilies.tsv 501_colq_n
+python humann2_taxa_puller.py 502_CecQ_N\NOD502CecQN_r1_new_genefamilies.tsv 502_cecq_n
+python humann2_taxa_puller.py 502_CecQ_Y\NOD502CecQY_r1_new_genefamilies.tsv 502_cecq_y
+python humann2_taxa_puller.py 502_ColQ_N\NOD502ColQN_r1_new_genefamilies.tsv 502_colq_n
+python humann2_taxa_puller.py 503_CecM_N\NOD503CecMN_r1_new_genefamilies.tsv 503_cecm_n
+python humann2_taxa_puller.py 503_CecQ_N\NOD503CecQN_r1_new_genefamilies.tsv 503_cecq_n
+python humann2_taxa_puller.py 504_CecM_N\NOD504CecMN_r1_new_genefamilies.tsv 504_cecm_n
+python humann2_taxa_puller.py 504_CecQ_N\NOD504CecQN_r1_new_genefamilies.tsv 504_cecq_n
+python humann2_taxa_puller.py 504_CecQ_Y\NOD504CecQy_r1_new_genefamilies.tsv 504_cecq_y
+python humann2_taxa_puller.py 504_ColQ_N\NOD504ColQN_r1_new_genefamilies.tsv 504_colq_n
+
+
+python mpro_taxa_puller.py 501_CecQ_N\taxa_table.tsv 501_cecq_n
+python mpro_taxa_puller.py 501_CecQ_Y\taxa_table.tsv 501_cecq_y
+python mpro_taxa_puller.py 501_ColQ_N\taxa_table.tsv 501_colq_n
+python mpro_taxa_puller.py 502_CecQ_N\taxa_table.tsv 502_cecq_n
+python mpro_taxa_puller.py 502_CecQ_Y\taxa_table.tsv 502_cecq_y
+python mpro_taxa_puller.py 502_ColQ_N\taxa_table.tsv 502_colq_n
+python mpro_taxa_puller.py 503_CecM_N\taxa_table.tsv 503_cecm_n
+python mpro_taxa_puller.py 503_CecQ_N\taxa_table.tsv 503_cecq_n
+python mpro_taxa_puller.py 504_CecM_N\taxa_table.tsv 504_cecm_n
+python mpro_taxa_puller.py 504_CecQ_N\taxa_table.tsv 504_cecq_n
+python mpro_taxa_puller.py 504_CecQ_Y\taxa_table.tsv 504_cecq_y
+python mpro_taxa_puller.py 504_ColQ_N\taxa_table.tsv 504_colq_n
+
