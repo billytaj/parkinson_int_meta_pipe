@@ -3,6 +3,18 @@ import os
 import pandas as pd
 
 
+def make_genus_label (taxa):
+    taxa_tree = taxa.split(";")
+    if(len(taxa_tree) < 7):
+        return "g_unknown"
+    else:
+        if(taxa_tree[6] == "g_"):
+            return "g_unknown"
+        else:
+            return taxa_tree[6]
+
+
+
 if __name__ == "__main__":
     gene_file = sys.argv[1]
     new_name = sys.argv[2]
@@ -19,8 +31,10 @@ if __name__ == "__main__":
     
     
     
-    taxa_df = selected_df["Taxonomy"].apply(lambda x: x.split(";"))
-    print(taxa_df)
+    selected_df["genus"] = selected_df["Taxonomy"].apply(lambda x: make_genus_label(x))
+    print(selected_df)
+    selected_df = selected_df.groupby(["genus"], as_index = False).sum()
+    
     
     
     selected_df.to_csv(new_taxa_name, index = False)
