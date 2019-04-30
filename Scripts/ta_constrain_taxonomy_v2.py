@@ -132,7 +132,7 @@ with open(classification_file, "r") as infile:
                 else:
                     if nlevels!=0 and nlevels!=7:
                             if nlevels==1:
-                                taxonomy="k_;p_;c_;o_;f_;g;_" + taxonomy
+                                taxonomy="k_;p_;c_;o_;f_;g_" + taxonomy
                             elif nlevels==2:
                                 taxonomy="k_;p_;c_;o_;f_;" + taxonomy
                             elif nlevels==3:
