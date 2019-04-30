@@ -25,3 +25,17 @@ python mpro_taxa_puller.py 504_CecQ_N\taxa_table.tsv 504_cecq_n
 python mpro_taxa_puller.py 504_CecQ_Y\taxa_table.tsv 504_cecq_y
 python mpro_taxa_puller.py 504_ColQ_N\taxa_table.tsv 504_colq_n
 
+
+
+sbatch 501_CecQ_n.sh
+sbatch 501_CecQ_y.sh
+sbatch 501_ColQ_n.sh
+sbatch 502_CecQ_n.sh
+sbatch 502_CecQ_y.sh
+sbatch 502_ColQ_n.sh
+sbatch 503_CecM_n.sh
+sbatch 503_CecQ_n.sh
+sbatch 504_CecM_n.sh
+sbatch 504_CecQ_n.sh
+sbatch 504_CecQ_y.sh
+sbatch 504_ColQ_n.sh
