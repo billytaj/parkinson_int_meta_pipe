@@ -1,0 +1,33 @@
+taxa,RPK,length,total count,read_count,percentage_reads
+unclassified,2062406,6960061,2420793.184,129987.024,5.369604675
+g__Parabacteroides.s__Parabacteroides_goldsteinii,1373761,36094302,2420793.184,97844.14858,4.041821879
+g__Clostridium.s__Clostridium_sp_ASF356,159115,8957576,2420793.184,12343.07692,0.509877382
+g__Mucispirillum.s__Mucispirillum_schaedleri,48028,6851421,2420793.184,3875.534833,0.160093595
+g__Escherichia.s__Escherichia_coli,31690,4688213,2420793.184,2053.66225,0.084834271
+g__Blautia.s__Ruminococcus_torques,19921,11538,2420793.184,1119.77025,0.046256337
+g__Blautia.s__Blautia_producta,14713,2064409,2420793.184,1055.315583,0.043593794
+g__Lactobacillus.s__Lactobacillus_murinus,5896,1034659,2420793.184,410.9075833,0.016974089
+g__Gammaretrovirus.s__Spleen_focus_forming_virus,15,2901,2420793.184,1.40925,5.82144E-05
+g__Gammaretrovirus.s__Murine_osteosarcoma_virus,20,2910,2420793.184,1.1635,4.80628E-05
+g__Betaretrovirus.s__Mouse_mammary_tumor_virus,4,1215,2420793.184,0.17175,7.09478E-06
+unmapped,,,2420793.184,2172101,89.72683061
+,,,,,
+,,,,2420793.184,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+unmapped,,,,,
+501 cecq n,,,,2164110,
+501 cecq y,,,,2421648,
+501 colq n,,,,1088422,
+502 cecq n,,,,2933606,
+502 cecq y,,,,1900477,
+502 colq n,,,,1414049,
+503 cecm n,,,,2443977,
+503 cecq n,,,,1418697,
+504 cecm n,,,,2103262,
+504 cecq n,,,,2338975,
+504 cecq y,,,,3811278,
+504 colq n,,,,2026711,

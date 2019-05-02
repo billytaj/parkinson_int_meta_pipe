@@ -3,13 +3,12 @@ import sys
 import os
 import pandas as pd
 
-
 if __name__ == "__main__":
     list_of_files = os.listdir(os.getcwd())
     df_count = 0
     base_df = None
     for item in list_of_files:
-        if("humann2_taxa_found" in item):
+        if("humann2_final" in item):
             print("WORKING ON:", item)
             if (df_count == 0):
                 df_count += 1
@@ -29,9 +28,9 @@ if __name__ == "__main__":
                 #print("==================================================================================")
     
     #print("DF count:", df_count)
-    base_df["RPK"] = base_df["RPK"].mask(base_df["RPK"] > 0, base_df["RPK"]/df_count)
-    total_rpk = base_df["RPK"].sum()
-    base_df["percentage_rpk"] = 1
-    base_df["percentage_rpk"] = base_df["percentage_rpk"].mask(base_df["percentage_rpk"] > 0, 100* base_df["RPK"] / total_rpk)
-    base_df.sort_values("percentage_rpk", ascending = False, inplace = True)
+    base_df["read_count"] = base_df["read_count"].mask(base_df["read_count"] > 0, base_df["read_count"]/df_count)
+    total_rpk = base_df["read_count"].sum()
+    base_df["percentage_reads"] = 1
+    base_df["percentage_reads"] = base_df["percentage_reads"].mask(base_df["percentage_reads"] > 0, 100* base_df["read_count"] / total_rpk)
+    base_df.sort_values("percentage_reads", ascending = False, inplace = True)
     base_df.to_csv("humann2_avg_taxa_coverage.csv")
