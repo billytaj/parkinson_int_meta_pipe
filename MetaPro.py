@@ -142,18 +142,19 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # profiling vars are init here, in case a stage is skipped
     start_time = time.time()
     
-    quality_start           = quality_end           = cleanup_quality_start             = cleanup_quality_end                                       = 0
-    host_start              = host_end              = cleanup_host_start                = cleanup_host_end                                          = 0
-    vector_start            = vector_end            = cleanup_vector_start              = cleanup_vector_end                                        = 0
-    rRNA_filter_start       = rRNA_filter_end       = cleanup_rRNA_filter_start         = cleanup_rRNA_filter_end                                   = 0
-    repop_start             = repop_end             = cleanup_repop_start               = cleanup_repop_end                                         = 0
-    assemble_contigs_start  = assemble_contigs_end  = cleanup_assemble_contigs_start    = cleanup_assemble_contigs_end                              = 0
-    GA_BWA_start            = GA_BWA_end            = cleanup_GA_BWA_start              = cleanup_GA_BWA_end                                        = 0
-    GA_BLAT_start           = GA_BLAT_end           = cleanup_GA_BLAT_start             = cleanup_GA_BLAT_end                                       = 0
-    GA_DIAMOND_start        = GA_DIAMOND_end        = cleanup_GA_DIAMOND_start          = cleanup_GA_DIAMOND_end                                    = 0
-    TA_start                = TA_end                = cleanup_TA_start                  = cleanup_TA_end                                            = 0
-    EC_DETECT_start         = EC_DETECT_end         = EC_PRIAM_DIAMOND_start            = EC_PRIAM_DIAMOND_end = cleanup_EC_start = cleanup_EC_end  = 0
-    Cytoscape_start         = Cytoscape_end         = cleanup_cytoscape_start           = cleanup_cytoscape_end                                     = 0
+    quality_start           = quality_end           = cleanup_quality_start             = cleanup_quality_end           = 0
+    host_start              = host_end              = cleanup_host_start                = cleanup_host_end              = 0
+    vector_start            = vector_end            = cleanup_vector_start              = cleanup_vector_end            = 0
+    rRNA_filter_start       = rRNA_filter_end       = cleanup_rRNA_filter_start         = cleanup_rRNA_filter_end       = 0
+    repop_start             = repop_end             = cleanup_repop_start               = cleanup_repop_end             = 0
+    assemble_contigs_start  = assemble_contigs_end  = cleanup_assemble_contigs_start    = cleanup_assemble_contigs_end  = 0
+    GA_BWA_start            = GA_BWA_end            = cleanup_GA_BWA_start              = cleanup_GA_BWA_end            = 0
+    GA_BLAT_start           = GA_BLAT_end           = cleanup_GA_BLAT_start             = cleanup_GA_BLAT_end           = 0
+    GA_DIAMOND_start        = GA_DIAMOND_end        = cleanup_GA_DIAMOND_start          = cleanup_GA_DIAMOND_end        = 0
+    TA_start                = TA_end                = cleanup_TA_start                  = cleanup_TA_end                = 0
+    EC_DETECT_start         = EC_DETECT_end         = EC_PRIAM_DIAMOND_start            = EC_PRIAM_DIAMOND_end          = 0
+    cleanup_EC_start        = cleanup_EC_end                                                                            = 0
+    Cytoscape_start         = Cytoscape_end         = cleanup_cytoscape_start           = cleanup_cytoscape_end         = 0
     
     # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
     # and to perform the auto-resume/kill features
@@ -667,7 +668,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         EC_DETECT_start = time.time()
         EC_DETECT_end = time.time()
         cleanup_EC_start = time.time()
-        cleanup_EC_start = time.time()
+        cleanup_EC_end = time.time()
         
         print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
     EC_PRIAM_DIAMOND_end = time.time()
