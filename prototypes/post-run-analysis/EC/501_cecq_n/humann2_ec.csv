@@ -1,0 +1,59 @@
+Pathway,num_Ecs,tally,coverage
+Acarbose and validamycin biosynthesis,14,1,7.142857142857143
+"Alanine, aspartate and glutamate metabolism",50,2,4.0
+Amino sugar and nucleotide sugar metabolism,119,3,2.5210084033613445
+Aminoacyl-tRNA biosynthesis,31,6,19.35483870967742
+Biosynthesis of antibiotics,496,22,4.435483870967742
+Biosynthesis of secondary metabolites,778,26,3.341902313624679
+Biosynthesis of vancomycin group antibiotics,10,1,10.0
+Biotin metabolism,20,2,10.0
+Carbon fixation in photosynthetic organisms,25,5,20.0
+Carbon fixation pathways in prokaryotes,50,1,2.0
+Citrate cycle (TCA cycle),26,3,11.538461538461538
+Cysteine and methionine metabolism,76,2,2.6315789473684212
+Drug metabolism - other enzymes,25,3,12.0
+Fatty acid biosynthesis,17,3,17.647058823529413
+Folate biosynthesis,51,1,1.9607843137254901
+Fructose and mannose metabolism,75,3,4.0
+Galactose metabolism,48,2,4.166666666666667
+Glutathione metabolism,39,1,2.5641025641025643
+Glycerolipid metabolism,40,1,2.5
+Glycerophospholipid metabolism,61,1,1.639344262295082
+"Glycine, serine and threonine metabolism",68,3,4.411764705882353
+Glycolysis / Gluconeogenesis,48,7,14.583333333333334
+Glyoxylate and dicarboxylate metabolism,73,1,1.36986301369863
+Histidine metabolism,38,1,2.6315789473684212
+Inositol phosphate metabolism,48,1,2.0833333333333335
+Lipopolysaccharide biosynthesis,27,1,3.7037037037037037
+Metabolic pathways,1650,52,3.1515151515151514
+Methane metabolism,87,3,3.4482758620689653
+Microbial metabolism in diverse environments,668,15,2.245508982035928
+Nitrogen metabolism,37,1,2.7027027027027026
+One carbon pool by folate,24,1,4.166666666666667
+Oxidative phosphorylation,11,1,9.090909090909092
+Pantothenate and CoA biosynthesis,31,2,6.451612903225806
+Pentose and glucuronate interconversions,67,3,4.477611940298507
+Pentose phosphate pathway,55,4,7.2727272727272725
+Peptidoglycan biosynthesis,19,1,5.2631578947368425
+Phenylalanine metabolism,67,1,1.492537313432836
+"Phenylalanine, tyrosine and tryptophan biosynthesis",39,2,5.128205128205129
+Phosphonate and phosphinate metabolism,29,1,3.4482758620689653
+Photosynthesis,3,1,33.333333333333336
+Polyketide sugar unit biosynthesis,27,1,3.7037037037037037
+Porphyrin and chlorophyll metabolism,106,1,0.9433962264150944
+Propanoate metabolism,55,1,1.8181818181818181
+Purine metabolism,110,7,6.363636363636363
+Pyrimidine metabolism,65,7,10.76923076923077
+Pyruvate metabolism,67,3,4.477611940298507
+Riboflavin metabolism,28,1,3.5714285714285716
+Starch and sucrose metabolism,76,1,1.3157894736842106
+Streptomycin biosynthesis,18,1,5.555555555555555
+Sulfur metabolism,50,1,2.0
+Taurine and hypotaurine metabolism,19,1,5.2631578947368425
+Terpenoid backbone biosynthesis,51,2,3.9215686274509802
+Ubiquinone and other terpenoid-quinone biosynthesis,40,2,5.0
+"Valine, leucine and isoleucine biosynthesis",14,1,7.142857142857143
+"Valine, leucine and isoleucine degradation",36,1,2.7777777777777777
+Vitamin B6 metabolism,26,2,7.6923076923076925
+Zeatin biosynthesis,10,1,10.0
+beta-Alanine metabolism,37,1,2.7027027027027026
