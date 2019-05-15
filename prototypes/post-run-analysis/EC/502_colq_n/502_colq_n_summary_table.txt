@@ -1,3 +1,0 @@
-matched: 246
-humann2 only: 129
-metapro only: 262
