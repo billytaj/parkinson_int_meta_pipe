@@ -1,249 +1,249 @@
 Pathway,num_Ecs,tally,coverage,who
-Acarbose and validamycin biosynthesis,14,2,14.285714285714286,both
-Aflatoxin biosynthesis,13,1,7.6923076923076925,humann2
-"Alanine, aspartate and glutamate metabolism",50,1,2.0,humann2
-"Alanine, aspartate and glutamate metabolism",50,8,16.0,mpro
-"Alanine, aspartate and glutamate metabolism",50,11,22.0,both
-Amino sugar and nucleotide sugar metabolism,119,15,12.605042016806722,mpro
-Amino sugar and nucleotide sugar metabolism,119,1,0.8403361344537815,humann2
-Amino sugar and nucleotide sugar metabolism,119,8,6.722689075630252,both
-Aminoacyl-tRNA biosynthesis,31,10,32.25806451612903,mpro
-Aminoacyl-tRNA biosynthesis,31,12,38.70967741935484,both
-Aminobenzoate degradation,51,1,1.9607843137254901,humann2
-Aminobenzoate degradation,51,1,1.9607843137254901,both
-Arginine and proline metabolism,86,7,8.13953488372093,mpro
-Arginine and proline metabolism,86,7,8.13953488372093,both
-Arginine and proline metabolism,86,1,1.1627906976744187,humann2
-Arginine biosynthesis,28,7,25.0,both
-Arginine biosynthesis,28,1,3.5714285714285716,humann2
-Arginine biosynthesis,28,7,25.0,mpro
-Ascorbate and aldarate metabolism,46,2,4.3478260869565215,mpro
-Ascorbate and aldarate metabolism,46,4,8.695652173913043,both
-Ascorbate and aldarate metabolism,46,1,2.1739130434782608,humann2
-Benzoate degradation,69,3,4.3478260869565215,mpro
-Benzoate degradation,69,3,4.3478260869565215,both
-Benzoate degradation,69,1,1.4492753623188406,humann2
-Biosynthesis of ansamycins,4,1,25.0,mpro
-Biosynthesis of antibiotics,496,42,8.46774193548387,mpro
-Biosynthesis of antibiotics,496,7,1.4112903225806452,humann2
-Biosynthesis of antibiotics,496,58,11.693548387096774,both
-Biosynthesis of secondary metabolites,778,69,8.868894601542417,both
-Biosynthesis of secondary metabolites,778,64,8.226221079691516,mpro
-Biosynthesis of secondary metabolites,778,9,1.1568123393316196,humann2
-Biosynthesis of siderophore group nonribosomal peptides,6,1,16.666666666666668,both
+Acarbose and validamycin biosynthesis,14,2,14.28571429,both
+Aflatoxin biosynthesis,13,1,7.692307692,humann2
+"Alanine, aspartate and glutamate metabolism",50,1,2,humann2
+"Alanine, aspartate and glutamate metabolism",50,8,16,mpro
+"Alanine, aspartate and glutamate metabolism",50,11,22,both
+Amino sugar and nucleotide sugar metabolism,119,15,12.60504202,mpro
+Amino sugar and nucleotide sugar metabolism,119,1,0.840336134,humann2
+Amino sugar and nucleotide sugar metabolism,119,8,6.722689076,both
+Aminoacyl-tRNA biosynthesis,31,10,32.25806452,mpro
+Aminoacyl-tRNA biosynthesis,31,12,38.70967742,both
+Aminobenzoate degradation,51,1,1.960784314,humann2
+Aminobenzoate degradation,51,1,1.960784314,both
+Arginine and proline metabolism,86,7,8.139534884,mpro
+Arginine and proline metabolism,86,7,8.139534884,both
+Arginine and proline metabolism,86,1,1.162790698,humann2
+Arginine biosynthesis,28,7,25,both
+Arginine biosynthesis,28,1,3.571428571,humann2
+Arginine biosynthesis,28,7,25,mpro
+Ascorbate and aldarate metabolism,46,2,4.347826087,mpro
+Ascorbate and aldarate metabolism,46,4,8.695652174,both
+Ascorbate and aldarate metabolism,46,1,2.173913043,humann2
+Benzoate degradation,69,3,4.347826087,mpro
+Benzoate degradation,69,3,4.347826087,both
+Benzoate degradation,69,1,1.449275362,humann2
+Biosynthesis of ansamycins,4,1,25,mpro
+Biosynthesis of antibiotics,496,42,8.467741935,mpro
+Biosynthesis of antibiotics,496,7,1.411290323,humann2
+Biosynthesis of antibiotics,496,58,11.69354839,both
+Biosynthesis of secondary metabolites,778,69,8.868894602,both
+Biosynthesis of secondary metabolites,778,64,8.22622108,mpro
+Biosynthesis of secondary metabolites,778,9,1.156812339,humann2
+Biosynthesis of siderophore group nonribosomal peptides,6,1,16.66666667,both
 Biosynthesis of unsaturated fatty acids,16,1,6.25,humann2
 Biosynthesis of unsaturated fatty acids,16,1,6.25,mpro
-Biosynthesis of vancomycin group antibiotics,10,1,10.0,both
-Biotin metabolism,20,1,5.0,humann2
-Biotin metabolism,20,3,15.0,mpro
-Biotin metabolism,20,1,5.0,both
-Butanoate metabolism,55,1,1.8181818181818181,humann2
-Butanoate metabolism,55,8,14.545454545454545,both
-Butanoate metabolism,55,2,3.6363636363636362,mpro
-C5-Branched dibasic acid metabolism,22,2,9.090909090909092,mpro
-C5-Branched dibasic acid metabolism,22,3,13.636363636363637,both
-Caprolactam degradation,21,1,4.761904761904762,mpro
-Caprolactam degradation,21,1,4.761904761904762,humann2
-Carbapenem biosynthesis,5,1,20.0,mpro
-Carbapenem biosynthesis,5,1,20.0,both
-Carbon fixation in photosynthetic organisms,25,7,28.0,mpro
-Carbon fixation in photosynthetic organisms,25,7,28.0,both
-Carbon fixation pathways in prokaryotes,50,11,22.0,mpro
-Carbon fixation pathways in prokaryotes,50,8,16.0,both
-Carbon fixation pathways in prokaryotes,50,2,4.0,humann2
-Chloroalkane and chloroalkene degradation,17,1,5.882352941176471,mpro
-Chloroalkane and chloroalkene degradation,17,1,5.882352941176471,both
-Chlorocyclohexane and chlorobenzene degradation,21,1,4.761904761904762,mpro
-Citrate cycle (TCA cycle),26,3,11.538461538461538,mpro
-Citrate cycle (TCA cycle),26,8,30.76923076923077,both
-Cyanoamino acid metabolism,30,3,10.0,mpro
-Cyanoamino acid metabolism,30,2,6.666666666666667,both
-Cysteine and methionine metabolism,76,10,13.157894736842104,both
-Cysteine and methionine metabolism,76,1,1.3157894736842106,humann2
-Cysteine and methionine metabolism,76,12,15.789473684210526,mpro
-D-Alanine metabolism,6,2,33.333333333333336,both
-D-Glutamine and D-glutamate metabolism,12,4,33.333333333333336,both
-Dioxin degradation,13,1,7.6923076923076925,mpro
-Dioxin degradation,13,2,15.384615384615385,both
+Biosynthesis of vancomycin group antibiotics,10,1,10,both
+Biotin metabolism,20,1,5,humann2
+Biotin metabolism,20,3,15,mpro
+Biotin metabolism,20,1,5,both
+Butanoate metabolism,55,1,1.818181818,humann2
+Butanoate metabolism,55,8,14.54545455,both
+Butanoate metabolism,55,2,3.636363636,mpro
+C5-Branched dibasic acid metabolism,22,2,9.090909091,mpro
+C5-Branched dibasic acid metabolism,22,3,13.63636364,both
+Caprolactam degradation,21,1,4.761904762,mpro
+Caprolactam degradation,21,1,4.761904762,humann2
+Carbapenem biosynthesis,5,1,20,mpro
+Carbapenem biosynthesis,5,1,20,both
+Carbon fixation in photosynthetic organisms,25,7,28,mpro
+Carbon fixation in photosynthetic organisms,25,7,28,both
+Carbon fixation pathways in prokaryotes,50,11,22,mpro
+Carbon fixation pathways in prokaryotes,50,8,16,both
+Carbon fixation pathways in prokaryotes,50,2,4,humann2
+Chloroalkane and chloroalkene degradation,17,1,5.882352941,mpro
+Chloroalkane and chloroalkene degradation,17,1,5.882352941,both
+Chlorocyclohexane and chlorobenzene degradation,21,1,4.761904762,mpro
+Citrate cycle (TCA cycle),26,3,11.53846154,mpro
+Citrate cycle (TCA cycle),26,8,30.76923077,both
+Cyanoamino acid metabolism,30,3,10,mpro
+Cyanoamino acid metabolism,30,2,6.666666667,both
+Cysteine and methionine metabolism,76,10,13.15789474,both
+Cysteine and methionine metabolism,76,1,1.315789474,humann2
+Cysteine and methionine metabolism,76,12,15.78947368,mpro
+D-Alanine metabolism,6,2,33.33333333,both
+D-Glutamine and D-glutamate metabolism,12,4,33.33333333,both
+Dioxin degradation,13,1,7.692307692,mpro
+Dioxin degradation,13,2,15.38461538,both
 Drug metabolism - cytochrome P450,8,1,12.5,humann2
 Drug metabolism - cytochrome P450,8,1,12.5,both
-Drug metabolism - other enzymes,25,5,20.0,both
-Drug metabolism - other enzymes,25,4,16.0,mpro
-Fatty acid biosynthesis,17,2,11.764705882352942,mpro
-Fatty acid biosynthesis,17,3,17.647058823529413,humann2
-Fatty acid biosynthesis,17,1,5.882352941176471,both
-Fatty acid degradation,29,1,3.4482758620689653,humann2
-Fatty acid degradation,29,3,10.344827586206897,both
-Fatty acid degradation,29,2,6.896551724137931,mpro
-Fatty acid elongation,13,1,7.6923076923076925,mpro
-Fatty acid elongation,13,1,7.6923076923076925,humann2
-Fluorobenzoate degradation,14,1,7.142857142857143,mpro
-Folate biosynthesis,51,4,7.8431372549019605,mpro
-Folate biosynthesis,51,4,7.8431372549019605,both
-Fructose and mannose metabolism,75,6,8.0,mpro
-Fructose and mannose metabolism,75,7,9.333333333333334,both
-Fructose and mannose metabolism,75,1,1.3333333333333333,humann2
+Drug metabolism - other enzymes,25,5,20,both
+Drug metabolism - other enzymes,25,4,16,mpro
+Fatty acid biosynthesis,17,2,11.76470588,mpro
+Fatty acid biosynthesis,17,3,17.64705882,humann2
+Fatty acid biosynthesis,17,1,5.882352941,both
+Fatty acid degradation,29,1,3.448275862,humann2
+Fatty acid degradation,29,3,10.34482759,both
+Fatty acid degradation,29,2,6.896551724,mpro
+Fatty acid elongation,13,1,7.692307692,mpro
+Fatty acid elongation,13,1,7.692307692,humann2
+Fluorobenzoate degradation,14,1,7.142857143,mpro
+Folate biosynthesis,51,4,7.843137255,mpro
+Folate biosynthesis,51,4,7.843137255,both
+Fructose and mannose metabolism,75,6,8,mpro
+Fructose and mannose metabolism,75,7,9.333333333,both
+Fructose and mannose metabolism,75,1,1.333333333,humann2
 Galactose metabolism,48,6,12.5,mpro
 Galactose metabolism,48,6,12.5,both
-Galactose metabolism,48,1,2.0833333333333335,humann2
-Geraniol degradation,10,1,10.0,mpro
-Geraniol degradation,10,1,10.0,humann2
-Glucosinolate biosynthesis,15,1,6.666666666666667,mpro
-Glutathione metabolism,39,6,15.384615384615385,mpro
-Glutathione metabolism,39,1,2.5641025641025643,humann2
-Glutathione metabolism,39,5,12.820512820512821,both
+Galactose metabolism,48,1,2.083333333,humann2
+Geraniol degradation,10,1,10,mpro
+Geraniol degradation,10,1,10,humann2
+Glucosinolate biosynthesis,15,1,6.666666667,mpro
+Glutathione metabolism,39,6,15.38461538,mpro
+Glutathione metabolism,39,1,2.564102564,humann2
+Glutathione metabolism,39,5,12.82051282,both
 Glycerolipid metabolism,40,3,7.5,mpro
-Glycerolipid metabolism,40,2,5.0,both
-Glycerophospholipid metabolism,61,4,6.557377049180328,mpro
-Glycerophospholipid metabolism,61,2,3.278688524590164,both
-"Glycine, serine and threonine metabolism",68,1,1.4705882352941178,humann2
-"Glycine, serine and threonine metabolism",68,13,19.11764705882353,both
-"Glycine, serine and threonine metabolism",68,7,10.294117647058824,mpro
-Glycolysis / Gluconeogenesis,48,1,2.0833333333333335,humann2
-Glycolysis / Gluconeogenesis,48,13,27.083333333333332,both
+Glycerolipid metabolism,40,2,5,both
+Glycerophospholipid metabolism,61,4,6.557377049,mpro
+Glycerophospholipid metabolism,61,2,3.278688525,both
+"Glycine, serine and threonine metabolism",68,1,1.470588235,humann2
+"Glycine, serine and threonine metabolism",68,13,19.11764706,both
+"Glycine, serine and threonine metabolism",68,7,10.29411765,mpro
+Glycolysis / Gluconeogenesis,48,1,2.083333333,humann2
+Glycolysis / Gluconeogenesis,48,13,27.08333333,both
 Glycolysis / Gluconeogenesis,48,9,18.75,mpro
-Glycosaminoglycan degradation,15,2,13.333333333333334,mpro
-Glycosphingolipid biosynthesis - ganglio series,8,2,25.0,mpro
-Glycosphingolipid biosynthesis - globo and isoglobo series,13,3,23.076923076923077,mpro
-Glyoxylate and dicarboxylate metabolism,73,1,1.36986301369863,humann2
-Glyoxylate and dicarboxylate metabolism,73,5,6.8493150684931505,both
-Glyoxylate and dicarboxylate metabolism,73,6,8.219178082191782,mpro
-Histidine metabolism,38,2,5.2631578947368425,both
-Histidine metabolism,38,7,18.42105263157895,mpro
-Histidine metabolism,38,2,5.2631578947368425,humann2
-Human cytomegalovirus infection,2,1,50.0,mpro
-Human papillomavirus infection,2,1,50.0,mpro
-Inositol phosphate metabolism,48,2,4.166666666666667,mpro
-Inositol phosphate metabolism,48,1,2.0833333333333335,both
-Insect hormone biosynthesis,9,1,11.11111111111111,mpro
-Isoquinoline alkaloid biosynthesis,57,1,1.7543859649122806,both
+Glycosaminoglycan degradation,15,2,13.33333333,mpro
+Glycosphingolipid biosynthesis - ganglio series,8,2,25,mpro
+Glycosphingolipid biosynthesis - globo and isoglobo series,13,3,23.07692308,mpro
+Glyoxylate and dicarboxylate metabolism,73,1,1.369863014,humann2
+Glyoxylate and dicarboxylate metabolism,73,5,6.849315068,both
+Glyoxylate and dicarboxylate metabolism,73,6,8.219178082,mpro
+Histidine metabolism,38,2,5.263157895,both
+Histidine metabolism,38,7,18.42105263,mpro
+Histidine metabolism,38,2,5.263157895,humann2
+Human cytomegalovirus infection,2,1,50,mpro
+Human papillomavirus infection,2,1,50,mpro
+Inositol phosphate metabolism,48,2,4.166666667,mpro
+Inositol phosphate metabolism,48,1,2.083333333,both
+Insect hormone biosynthesis,9,1,11.11111111,mpro
+Isoquinoline alkaloid biosynthesis,57,1,1.754385965,both
 Limonene and pinene degradation,16,1,6.25,mpro
 Limonene and pinene degradation,16,1,6.25,humann2
-Lipopolysaccharide biosynthesis,27,2,7.407407407407407,mpro
-Lipopolysaccharide biosynthesis,27,3,11.11111111111111,both
-Lysine biosynthesis,28,1,3.5714285714285716,humann2
-Lysine biosynthesis,28,4,14.285714285714286,both
-Lysine biosynthesis,28,5,17.857142857142858,mpro
-Lysine degradation,53,2,3.7735849056603774,both
-Lysine degradation,53,1,1.8867924528301887,humann2
-Lysine degradation,53,3,5.660377358490566,mpro
-Metabolic pathways,1650,144,8.727272727272727,mpro
-Metabolic pathways,1650,159,9.636363636363637,both
-Metabolic pathways,1650,25,1.5151515151515151,humann2
-Metabolism of xenobiotics by cytochrome P450,10,1,10.0,humann2
-Metabolism of xenobiotics by cytochrome P450,10,1,10.0,both
-Methane metabolism,87,10,11.494252873563218,both
-Methane metabolism,87,6,6.896551724137931,mpro
-Methane metabolism,87,1,1.1494252873563218,humann2
-Microbial metabolism in diverse environments,668,7,1.0479041916167664,humann2
-Microbial metabolism in diverse environments,668,41,6.137724550898204,mpro
-Microbial metabolism in diverse environments,668,55,8.233532934131736,both
-Monobactam biosynthesis,10,2,20.0,both
-Monobactam biosynthesis,10,1,10.0,humann2
-Monobactam biosynthesis,10,1,10.0,mpro
-Naphthalene degradation,9,1,11.11111111111111,both
-Nicotinate and nicotinamide metabolism,59,3,5.084745762711864,mpro
-Nicotinate and nicotinamide metabolism,59,3,5.084745762711864,both
-Nicotinate and nicotinamide metabolism,59,2,3.389830508474576,humann2
-Nitrogen metabolism,37,1,2.7027027027027026,both
-Nitrogen metabolism,37,4,10.81081081081081,mpro
-Nitrotoluene degradation,7,1,14.285714285714286,both
+Lipopolysaccharide biosynthesis,27,2,7.407407407,mpro
+Lipopolysaccharide biosynthesis,27,3,11.11111111,both
+Lysine biosynthesis,28,1,3.571428571,humann2
+Lysine biosynthesis,28,4,14.28571429,both
+Lysine biosynthesis,28,5,17.85714286,mpro
+Lysine degradation,53,2,3.773584906,both
+Lysine degradation,53,1,1.886792453,humann2
+Lysine degradation,53,3,5.660377358,mpro
+Metabolic pathways,1650,144,8.727272727,mpro
+Metabolic pathways,1650,159,9.636363636,both
+Metabolic pathways,1650,25,1.515151515,humann2
+Metabolism of xenobiotics by cytochrome P450,10,1,10,humann2
+Metabolism of xenobiotics by cytochrome P450,10,1,10,both
+Methane metabolism,87,10,11.49425287,both
+Methane metabolism,87,6,6.896551724,mpro
+Methane metabolism,87,1,1.149425287,humann2
+Microbial metabolism in diverse environments,668,7,1.047904192,humann2
+Microbial metabolism in diverse environments,668,41,6.137724551,mpro
+Microbial metabolism in diverse environments,668,55,8.233532934,both
+Monobactam biosynthesis,10,2,20,both
+Monobactam biosynthesis,10,1,10,humann2
+Monobactam biosynthesis,10,1,10,mpro
+Naphthalene degradation,9,1,11.11111111,both
+Nicotinate and nicotinamide metabolism,59,3,5.084745763,mpro
+Nicotinate and nicotinamide metabolism,59,3,5.084745763,both
+Nicotinate and nicotinamide metabolism,59,2,3.389830508,humann2
+Nitrogen metabolism,37,1,2.702702703,both
+Nitrogen metabolism,37,4,10.81081081,mpro
+Nitrotoluene degradation,7,1,14.28571429,both
 Novobiocin biosynthesis,16,1,6.25,both
 Novobiocin biosynthesis,16,1,6.25,mpro
-One carbon pool by folate,24,5,20.833333333333332,mpro
-One carbon pool by folate,24,4,16.666666666666668,both
-Other glycan degradation,9,3,33.333333333333336,mpro
-Oxidative phosphorylation,11,2,18.181818181818183,mpro
-Oxidative phosphorylation,11,3,27.272727272727273,both
-PI3K-Akt signaling pathway,2,1,50.0,mpro
-Pantothenate and CoA biosynthesis,31,1,3.225806451612903,humann2
-Pantothenate and CoA biosynthesis,31,7,22.580645161290324,both
-Pantothenate and CoA biosynthesis,31,5,16.129032258064516,mpro
-Penicillin and cephalosporin biosynthesis,14,1,7.142857142857143,humann2
-Pentose and glucuronate interconversions,67,9,13.432835820895523,both
-Pentose and glucuronate interconversions,67,4,5.970149253731344,humann2
-Pentose and glucuronate interconversions,67,2,2.985074626865672,mpro
-Pentose phosphate pathway,55,9,16.363636363636363,both
-Pentose phosphate pathway,55,8,14.545454545454545,mpro
-Peptidoglycan biosynthesis,19,2,10.526315789473685,mpro
-Peptidoglycan biosynthesis,19,8,42.10526315789474,both
-Phenazine biosynthesis,13,1,7.6923076923076925,both
-Phenylalanine metabolism,67,2,2.985074626865672,mpro
-Phenylalanine metabolism,67,2,2.985074626865672,humann2
-Phenylalanine metabolism,67,5,7.462686567164179,both
-"Phenylalanine, tyrosine and tryptophan biosynthesis",39,6,15.384615384615385,both
-"Phenylalanine, tyrosine and tryptophan biosynthesis",39,4,10.256410256410257,mpro
-Phenylpropanoid biosynthesis,30,1,3.3333333333333335,both
-Phosphatidylinositol signaling system,29,1,3.4482758620689653,both
-Phosphonate and phosphinate metabolism,29,2,6.896551724137931,humann2
-Phosphonate and phosphinate metabolism,29,1,3.4482758620689653,mpro
-Phosphonate and phosphinate metabolism,29,1,3.4482758620689653,both
-Photosynthesis,3,1,33.333333333333336,both
-Polyketide sugar unit biosynthesis,27,2,7.407407407407407,both
-Porphyrin and chlorophyll metabolism,106,4,3.7735849056603774,both
-Porphyrin and chlorophyll metabolism,106,9,8.49056603773585,mpro
-Primary bile acid biosynthesis,19,1,5.2631578947368425,mpro
-Propanoate metabolism,55,6,10.909090909090908,mpro
-Propanoate metabolism,55,7,12.727272727272727,both
-Propanoate metabolism,55,3,5.454545454545454,humann2
-Purine metabolism,110,22,20.0,both
-Purine metabolism,110,1,0.9090909090909091,humann2
-Purine metabolism,110,15,13.636363636363637,mpro
-Pyrimidine metabolism,65,17,26.153846153846153,both
-Pyrimidine metabolism,65,6,9.23076923076923,mpro
-Pyruvate metabolism,67,1,1.492537313432836,humann2
-Pyruvate metabolism,67,9,13.432835820895523,mpro
-Pyruvate metabolism,67,9,13.432835820895523,both
-Relaxin signaling pathway,1,1,100.0,mpro
-Retinol metabolism,14,1,7.142857142857143,both
-Riboflavin metabolism,28,5,17.857142857142858,mpro
-Riboflavin metabolism,28,2,7.142857142857143,both
-Riboflavin metabolism,28,1,3.5714285714285716,humann2
-Selenocompound metabolism,18,4,22.22222222222222,mpro
-Selenocompound metabolism,18,3,16.666666666666668,both
-Sphingolipid metabolism,27,3,11.11111111111111,mpro
-Starch and sucrose metabolism,76,4,5.2631578947368425,mpro
-Starch and sucrose metabolism,76,9,11.842105263157896,both
-Streptomycin biosynthesis,18,3,16.666666666666668,both
-Streptomycin biosynthesis,18,1,5.555555555555555,mpro
-Sulfur metabolism,50,7,14.0,both
-Sulfur metabolism,50,2,4.0,mpro
-Synthesis and degradation of ketone bodies,6,1,16.666666666666668,both
-Taurine and hypotaurine metabolism,19,4,21.05263157894737,mpro
-Taurine and hypotaurine metabolism,19,2,10.526315789473685,both
-Terpenoid backbone biosynthesis,51,4,7.8431372549019605,both
-Terpenoid backbone biosynthesis,51,5,9.803921568627452,mpro
-Thermogenesis,1,1,100.0,mpro
-Thiamine metabolism,26,5,19.23076923076923,both
-Thiamine metabolism,26,4,15.384615384615385,mpro
-Thiamine metabolism,26,1,3.8461538461538463,humann2
-Toluene degradation,26,2,7.6923076923076925,mpro
-"Tropane, piperidine and pyridine alkaloid biosynthesis",27,2,7.407407407407407,mpro
-"Tropane, piperidine and pyridine alkaloid biosynthesis",27,1,3.7037037037037037,both
-Tryptophan metabolism,60,3,5.0,mpro
-Tryptophan metabolism,60,2,3.3333333333333335,both
-Tryptophan metabolism,60,1,1.6666666666666667,humann2
+One carbon pool by folate,24,5,20.83333333,mpro
+One carbon pool by folate,24,4,16.66666667,both
+Other glycan degradation,9,3,33.33333333,mpro
+Oxidative phosphorylation,11,2,18.18181818,mpro
+Oxidative phosphorylation,11,3,27.27272727,both
+PI3K-Akt signaling pathway,2,1,50,mpro
+Pantothenate and CoA biosynthesis,31,1,3.225806452,humann2
+Pantothenate and CoA biosynthesis,31,7,22.58064516,both
+Pantothenate and CoA biosynthesis,31,5,16.12903226,mpro
+Penicillin and cephalosporin biosynthesis,14,1,7.142857143,humann2
+Pentose and glucuronate interconversions,67,9,13.43283582,both
+Pentose and glucuronate interconversions,67,4,5.970149254,humann2
+Pentose and glucuronate interconversions,67,2,2.985074627,mpro
+Pentose phosphate pathway,55,9,16.36363636,both
+Pentose phosphate pathway,55,8,14.54545455,mpro
+Peptidoglycan biosynthesis,19,2,10.52631579,mpro
+Peptidoglycan biosynthesis,19,8,42.10526316,both
+Phenazine biosynthesis,13,1,7.692307692,both
+Phenylalanine metabolism,67,2,2.985074627,mpro
+Phenylalanine metabolism,67,2,2.985074627,humann2
+Phenylalanine metabolism,67,5,7.462686567,both
+"Phenylalanine, tyrosine and tryptophan biosynthesis",39,6,15.38461538,both
+"Phenylalanine, tyrosine and tryptophan biosynthesis",39,4,10.25641026,mpro
+Phenylpropanoid biosynthesis,30,1,3.333333333,both
+Phosphatidylinositol signaling system,29,1,3.448275862,both
+Phosphonate and phosphinate metabolism,29,2,6.896551724,humann2
+Phosphonate and phosphinate metabolism,29,1,3.448275862,mpro
+Phosphonate and phosphinate metabolism,29,1,3.448275862,both
+Photosynthesis,3,1,33.33333333,both
+Polyketide sugar unit biosynthesis,27,2,7.407407407,both
+Porphyrin and chlorophyll metabolism,106,4,3.773584906,both
+Porphyrin and chlorophyll metabolism,106,9,8.490566038,mpro
+Primary bile acid biosynthesis,19,1,5.263157895,mpro
+Propanoate metabolism,55,6,10.90909091,mpro
+Propanoate metabolism,55,7,12.72727273,both
+Propanoate metabolism,55,3,5.454545455,humann2
+Purine metabolism,110,22,20,both
+Purine metabolism,110,1,0.909090909,humann2
+Purine metabolism,110,15,13.63636364,mpro
+Pyrimidine metabolism,65,17,26.15384615,both
+Pyrimidine metabolism,65,6,9.230769231,mpro
+Pyruvate metabolism,67,1,1.492537313,humann2
+Pyruvate metabolism,67,9,13.43283582,mpro
+Pyruvate metabolism,67,9,13.43283582,both
+Relaxin signaling pathway,1,1,100,mpro
+Retinol metabolism,14,1,7.142857143,both
+Riboflavin metabolism,28,5,17.85714286,mpro
+Riboflavin metabolism,28,2,7.142857143,both
+Riboflavin metabolism,28,1,3.571428571,humann2
+Selenocompound metabolism,18,4,22.22222222,mpro
+Selenocompound metabolism,18,3,16.66666667,both
+Sphingolipid metabolism,27,3,11.11111111,mpro
+Starch and sucrose metabolism,76,4,5.263157895,mpro
+Starch and sucrose metabolism,76,9,11.84210526,both
+Streptomycin biosynthesis,18,3,16.66666667,both
+Streptomycin biosynthesis,18,1,5.555555556,mpro
+Sulfur metabolism,50,7,14,both
+Sulfur metabolism,50,2,4,mpro
+Synthesis and degradation of ketone bodies,6,1,16.66666667,both
+Taurine and hypotaurine metabolism,19,4,21.05263158,mpro
+Taurine and hypotaurine metabolism,19,2,10.52631579,both
+Terpenoid backbone biosynthesis,51,4,7.843137255,both
+Terpenoid backbone biosynthesis,51,5,9.803921569,mpro
+Thermogenesis,1,1,100,mpro
+Thiamine metabolism,26,5,19.23076923,both
+Thiamine metabolism,26,4,15.38461538,mpro
+Thiamine metabolism,26,1,3.846153846,humann2
+Toluene degradation,26,2,7.692307692,mpro
+"Tropane, piperidine and pyridine alkaloid biosynthesis",27,2,7.407407407,mpro
+"Tropane, piperidine and pyridine alkaloid biosynthesis",27,1,3.703703704,both
+Tryptophan metabolism,60,3,5,mpro
+Tryptophan metabolism,60,2,3.333333333,both
+Tryptophan metabolism,60,1,1.666666667,humann2
 Tyrosine metabolism,64,1,1.5625,mpro
 Tyrosine metabolism,64,2,3.125,both
 Tyrosine metabolism,64,1,1.5625,humann2
-Ubiquinone and other terpenoid-quinone biosynthesis,40,2,5.0,mpro
+Ubiquinone and other terpenoid-quinone biosynthesis,40,2,5,mpro
 Ubiquinone and other terpenoid-quinone biosynthesis,40,3,7.5,both
-"Valine, leucine and isoleucine biosynthesis",14,6,42.857142857142854,both
-"Valine, leucine and isoleucine biosynthesis",14,1,7.142857142857143,mpro
-"Valine, leucine and isoleucine degradation",36,1,2.7777777777777777,humann2
-"Valine, leucine and isoleucine degradation",36,2,5.555555555555555,both
-"Valine, leucine and isoleucine degradation",36,5,13.88888888888889,mpro
-Various types of N-glycan biosynthesis,23,1,4.3478260869565215,mpro
-Vitamin B6 metabolism,26,2,7.6923076923076925,humann2
-Vitamin B6 metabolism,26,4,15.384615384615385,both
-Vitamin B6 metabolism,26,1,3.8461538461538463,mpro
-Xylene degradation,21,1,4.761904761904762,mpro
-Xylene degradation,21,2,9.523809523809524,both
-Zeatin biosynthesis,10,1,10.0,mpro
-alpha-Linolenic acid metabolism,12,1,8.333333333333334,both
-alpha-Linolenic acid metabolism,12,1,8.333333333333334,humann2
-beta-Alanine metabolism,37,2,5.405405405405405,mpro
-beta-Alanine metabolism,37,2,5.405405405405405,both
-beta-Alanine metabolism,37,2,5.405405405405405,humann2
-beta-Lactam resistance,1,1,100.0,humann2
-mTOR signaling pathway,5,1,20.0,mpro
+"Valine, leucine and isoleucine biosynthesis",14,6,42.85714286,both
+"Valine, leucine and isoleucine biosynthesis",14,1,7.142857143,mpro
+"Valine, leucine and isoleucine degradation",36,1,2.777777778,humann2
+"Valine, leucine and isoleucine degradation",36,2,5.555555556,both
+"Valine, leucine and isoleucine degradation",36,5,13.88888889,mpro
+Various types of N-glycan biosynthesis,23,1,4.347826087,mpro
+Vitamin B6 metabolism,26,2,7.692307692,humann2
+Vitamin B6 metabolism,26,4,15.38461538,both
+Vitamin B6 metabolism,26,1,3.846153846,mpro
+Xylene degradation,21,1,4.761904762,mpro
+Xylene degradation,21,2,9.523809524,both
+Zeatin biosynthesis,10,1,10,mpro
+alpha-Linolenic acid metabolism,12,1,8.333333333,both
+alpha-Linolenic acid metabolism,12,1,8.333333333,humann2
+beta-Alanine metabolism,37,2,5.405405405,mpro
+beta-Alanine metabolism,37,2,5.405405405,both
+beta-Alanine metabolism,37,2,5.405405405,humann2
+beta-Lactam resistance,1,1,100,humann2
+mTOR signaling pathway,5,1,20,mpro
