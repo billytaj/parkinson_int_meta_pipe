@@ -607,7 +607,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-        ec_detect_path = os.path.join(ec_annotation_path, "0_detect")
+        ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
         if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
             inner_name = "ec_detect"
             process = mp.Process(
