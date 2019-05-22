@@ -1,8 +1,9 @@
-taxa,RPK,length,read_count
-g__Blautia.s__Blautia_producta,3767.0,499186.0,2863.7410000000027
-g__Clostridium.s__Clostridium_sp_ASF356,47612.0,2473877.0,44060.56300000007
-g__Gammaretrovirus.s__Murine_osteosarcoma_virus,7.0,672.0,4.704
-g__Lactobacillus.s__Lactobacillus_murinus,622.0,241903.0,541.2559999999996
-g__Mucispirillum.s__Mucispirillum_schaedleri,5369.0,943977.0,5517.994999999971
-g__Parabacteroides.s__Parabacteroides_goldsteinii,147218.0,4676489.0,124642.46799999934
-unclassified,368967.0000001809,778668.0,258980.0046732736
+taxa,RPK,length,read_count,,,
+g__Blautia.s__Blautia_producta,3767,499186,2863.741,,,
+g__Clostridium.s__Clostridium_sp_ASF356,47612,2473877,44060.563,,,
+g__Gammaretrovirus.s__Murine_osteosarcoma_virus,7,672,4.704,,,
+g__Lactobacillus.s__Lactobacillus_murinus,622,241903,541.256,,,
+g__Mucispirillum.s__Mucispirillum_schaedleri,5369,943977,5517.995,,,
+g__Parabacteroides.s__Parabacteroides_goldsteinii,147218,4676489,124642.468,,,
+unclassified,368967,778668,258980.0047,,,
+,,,,,,177630.727
