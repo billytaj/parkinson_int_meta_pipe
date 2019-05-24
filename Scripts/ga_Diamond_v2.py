@@ -255,7 +255,7 @@ def write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot
     print ('Reads mapped to ' + str(len(proteins)) + ' proteins.')
     
     
-def filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads):    
+def filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, prev_mapping_count):    
     # check number of readtype sets (file inputs)
     read_sets = int((len(sys.argv)-7)/3) 
     if (len(sys.argv)-7) % 3 != 0:
@@ -365,7 +365,7 @@ if __name__ == "__main__":
         DMD_tab_file = sys.argv[3*x+8]
         output_file = sys.argv[3*x+9]
         
-        filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads)
+        filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, prev_mapping_count)
         
     # check number of readtype sets (file inputs)
     read_sets = int((len(sys.argv)-7)/3) 
