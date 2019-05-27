@@ -1,0 +1,12 @@
+503 cecq n,,,,,,,
+English name,read length,number of reads,,MetaPro,SAMSA2,SAMSA2 without label,humann2
+Clostridium ASF356,2876958,128931,,5538,22,22 + 2343,
+Clostridium ASF502,892237,23282,,,,1,
+Eubacterium Plexicaudatum ASF492,741912,12049,,,1,,
+Firmicutes ASF500,1398166,145,,,1,,
+Lactobacillus ASF360,19383,1104,,,,,
+Lactobacillus Murinus ASF361,1887274,11809,,551,237,,
+Mucispirillum Schaedleri ASF457,2241741,36719,,1413,622,,970
+Parabacteroides ASF519,6851306,381490,,14816,,122,
+mapped reads,0,595529,,,,,
+unmapped reads,0,1125408,,,,,

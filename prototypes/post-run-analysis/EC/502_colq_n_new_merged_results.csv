@@ -1,0 +1,118 @@
+Pathway,both,humann2,mpro,num_Ecs,sample
+Acarbose and validamycin biosynthesis,2.0,0.0,0.0,14,502_colq_n_new
+"Alanine, aspartate and glutamate metabolism",11.0,2.0,6.0,50,502_colq_n_new
+Amino sugar and nucleotide sugar metabolism,9.0,1.0,13.0,119,502_colq_n_new
+Aminoacyl-tRNA biosynthesis,14.0,0.0,9.0,31,502_colq_n_new
+Aminobenzoate degradation,0.0,1.0,0.0,51,502_colq_n_new
+Arginine and proline metabolism,3.0,1.0,3.0,86,502_colq_n_new
+Arginine biosynthesis,3.0,1.0,9.0,28,502_colq_n_new
+Ascorbate and aldarate metabolism,0.0,0.0,4.0,46,502_colq_n_new
+Atrazine degradation,0.0,0.0,1.0,10,502_colq_n_new
+Benzoate degradation,0.0,0.0,2.0,69,502_colq_n_new
+Biosynthesis of ansamycins,0.0,0.0,1.0,4,502_colq_n_new
+Biosynthesis of antibiotics,56.0,5.0,43.0,496,502_colq_n_new
+Biosynthesis of secondary metabolites,73.0,8.0,60.0,778,502_colq_n_new
+Biosynthesis of unsaturated fatty acids,0.0,0.0,1.0,16,502_colq_n_new
+Biosynthesis of vancomycin group antibiotics,1.0,0.0,0.0,10,502_colq_n_new
+Biotin metabolism,2.0,1.0,3.0,20,502_colq_n_new
+Butanoate metabolism,3.0,1.0,4.0,55,502_colq_n_new
+C5-Branched dibasic acid metabolism,3.0,0.0,4.0,22,502_colq_n_new
+Carbapenem biosynthesis,2.0,0.0,0.0,5,502_colq_n_new
+Carbon fixation in photosynthetic organisms,8.0,0.0,4.0,25,502_colq_n_new
+Carbon fixation pathways in prokaryotes,7.0,0.0,8.0,50,502_colq_n_new
+Chloroalkane and chloroalkene degradation,0.0,0.0,2.0,17,502_colq_n_new
+Chlorocyclohexane and chlorobenzene degradation,0.0,0.0,1.0,21,502_colq_n_new
+Citrate cycle (TCA cycle),6.0,1.0,4.0,26,502_colq_n_new
+Cyanoamino acid metabolism,2.0,0.0,2.0,30,502_colq_n_new
+Cysteine and methionine metabolism,7.0,2.0,7.0,76,502_colq_n_new
+D-Alanine metabolism,1.0,0.0,1.0,6,502_colq_n_new
+D-Glutamine and D-glutamate metabolism,3.0,0.0,1.0,12,502_colq_n_new
+Drug metabolism - cytochrome P450,0.0,0.0,1.0,8,502_colq_n_new
+Drug metabolism - other enzymes,4.0,0.0,3.0,25,502_colq_n_new
+Fatty acid biosynthesis,3.0,2.0,1.0,17,502_colq_n_new
+Fatty acid degradation,0.0,0.0,3.0,29,502_colq_n_new
+Fluorobenzoate degradation,0.0,0.0,1.0,14,502_colq_n_new
+Folate biosynthesis,1.0,0.0,9.0,51,502_colq_n_new
+Fructose and mannose metabolism,7.0,0.0,7.0,75,502_colq_n_new
+Galactose metabolism,1.0,1.0,10.0,48,502_colq_n_new
+Glucosinolate biosynthesis,0.0,0.0,1.0,15,502_colq_n_new
+Glutathione metabolism,3.0,0.0,3.0,39,502_colq_n_new
+Glycerolipid metabolism,1.0,0.0,1.0,40,502_colq_n_new
+Glycerophospholipid metabolism,2.0,0.0,4.0,61,502_colq_n_new
+"Glycine, serine and threonine metabolism",8.0,1.0,9.0,68,502_colq_n_new
+Glycolysis / Gluconeogenesis,11.0,1.0,9.0,48,502_colq_n_new
+Glycosaminoglycan degradation,0.0,0.0,2.0,15,502_colq_n_new
+Glycosphingolipid biosynthesis - ganglio series,0.0,0.0,2.0,8,502_colq_n_new
+Glycosphingolipid biosynthesis - globo and isoglobo series,0.0,0.0,3.0,13,502_colq_n_new
+Glycosphingolipid biosynthesis - lacto and neolacto series,0.0,0.0,1.0,16,502_colq_n_new
+Glyoxylate and dicarboxylate metabolism,3.0,0.0,7.0,73,502_colq_n_new
+Histidine metabolism,6.0,0.0,5.0,38,502_colq_n_new
+Human cytomegalovirus infection,0.0,0.0,1.0,2,502_colq_n_new
+Human papillomavirus infection,0.0,0.0,1.0,2,502_colq_n_new
+Inositol phosphate metabolism,1.0,0.0,5.0,48,502_colq_n_new
+Isoquinoline alkaloid biosynthesis,0.0,0.0,1.0,57,502_colq_n_new
+Lipoic acid metabolism,2.0,0.0,0.0,3,502_colq_n_new
+Lipopolysaccharide biosynthesis,4.0,1.0,3.0,27,502_colq_n_new
+Lysine biosynthesis,4.0,3.0,4.0,28,502_colq_n_new
+Lysine degradation,0.0,0.0,4.0,53,502_colq_n_new
+Metabolic pathways,136.0,19.0,159.0,1650,502_colq_n_new
+Metabolism of xenobiotics by cytochrome P450,0.0,0.0,1.0,10,502_colq_n_new
+Methane metabolism,8.0,0.0,4.0,87,502_colq_n_new
+Microbial metabolism in diverse environments,30.0,6.0,54.0,668,502_colq_n_new
+Monobactam biosynthesis,3.0,2.0,0.0,10,502_colq_n_new
+Naphthalene degradation,0.0,0.0,1.0,9,502_colq_n_new
+Nicotinate and nicotinamide metabolism,1.0,2.0,6.0,59,502_colq_n_new
+Nitrogen metabolism,1.0,1.0,5.0,37,502_colq_n_new
+Nitrotoluene degradation,0.0,0.0,1.0,7,502_colq_n_new
+Novobiocin biosynthesis,1.0,0.0,1.0,16,502_colq_n_new
+One carbon pool by folate,6.0,0.0,5.0,24,502_colq_n_new
+Other glycan degradation,0.0,0.0,3.0,9,502_colq_n_new
+Oxidative phosphorylation,3.0,1.0,4.0,11,502_colq_n_new
+PI3K-Akt signaling pathway,0.0,0.0,1.0,2,502_colq_n_new
+Pantothenate and CoA biosynthesis,9.0,1.0,3.0,31,502_colq_n_new
+Pentose and glucuronate interconversions,6.0,0.0,8.0,67,502_colq_n_new
+Pentose phosphate pathway,8.0,0.0,8.0,55,502_colq_n_new
+Peptidoglycan biosynthesis,7.0,1.0,4.0,19,502_colq_n_new
+Phenazine biosynthesis,0.0,0.0,1.0,13,502_colq_n_new
+Phenylalanine metabolism,1.0,1.0,2.0,67,502_colq_n_new
+"Phenylalanine, tyrosine and tryptophan biosynthesis",5.0,0.0,6.0,39,502_colq_n_new
+Phenylpropanoid biosynthesis,0.0,0.0,1.0,30,502_colq_n_new
+Phosphatidylinositol signaling system,0.0,0.0,1.0,29,502_colq_n_new
+Phosphonate and phosphinate metabolism,0.0,0.0,1.0,29,502_colq_n_new
+Photosynthesis,1.0,0.0,0.0,3,502_colq_n_new
+Polyketide sugar unit biosynthesis,2.0,0.0,1.0,27,502_colq_n_new
+Porphyrin and chlorophyll metabolism,2.0,1.0,11.0,106,502_colq_n_new
+Propanoate metabolism,3.0,3.0,6.0,55,502_colq_n_new
+Purine metabolism,17.0,0.0,12.0,110,502_colq_n_new
+Pyrimidine metabolism,14.0,0.0,5.0,65,502_colq_n_new
+Pyruvate metabolism,6.0,1.0,12.0,67,502_colq_n_new
+Relaxin signaling pathway,0.0,0.0,1.0,1,502_colq_n_new
+Retinol metabolism,0.0,0.0,1.0,14,502_colq_n_new
+Riboflavin metabolism,1.0,1.0,5.0,28,502_colq_n_new
+Selenocompound metabolism,2.0,0.0,1.0,18,502_colq_n_new
+Sphingolipid metabolism,0.0,0.0,4.0,27,502_colq_n_new
+Starch and sucrose metabolism,2.0,0.0,10.0,76,502_colq_n_new
+Steroid hormone biosynthesis,0.0,0.0,1.0,36,502_colq_n_new
+Streptomycin biosynthesis,2.0,0.0,4.0,18,502_colq_n_new
+Styrene degradation,0.0,0.0,1.0,19,502_colq_n_new
+Sulfur metabolism,2.0,1.0,1.0,50,502_colq_n_new
+Synthesis and degradation of ketone bodies,0.0,0.0,1.0,6,502_colq_n_new
+T cell receptor signaling pathway,0.0,0.0,1.0,2,502_colq_n_new
+Taurine and hypotaurine metabolism,3.0,0.0,2.0,19,502_colq_n_new
+Terpenoid backbone biosynthesis,3.0,0.0,6.0,51,502_colq_n_new
+Th1 and Th2 cell differentiation,0.0,0.0,1.0,1,502_colq_n_new
+Thermogenesis,0.0,0.0,1.0,1,502_colq_n_new
+Thiamine metabolism,5.0,0.0,3.0,26,502_colq_n_new
+Toluene degradation,0.0,0.0,1.0,26,502_colq_n_new
+"Tropane, piperidine and pyridine alkaloid biosynthesis",1.0,0.0,1.0,27,502_colq_n_new
+Tryptophan metabolism,1.0,0.0,3.0,60,502_colq_n_new
+Tyrosine metabolism,1.0,0.0,2.0,64,502_colq_n_new
+Ubiquinone and other terpenoid-quinone biosynthesis,3.0,1.0,0.0,40,502_colq_n_new
+"Valine, leucine and isoleucine biosynthesis",6.0,0.0,3.0,14,502_colq_n_new
+"Valine, leucine and isoleucine degradation",0.0,1.0,5.0,36,502_colq_n_new
+Various types of N-glycan biosynthesis,0.0,0.0,1.0,23,502_colq_n_new
+Vitamin B6 metabolism,2.0,2.0,1.0,26,502_colq_n_new
+Zeatin biosynthesis,1.0,0.0,0.0,10,502_colq_n_new
+alpha-Linolenic acid metabolism,0.0,0.0,1.0,12,502_colq_n_new
+beta-Alanine metabolism,3.0,0.0,0.0,37,502_colq_n_new
+mTOR signaling pathway,0.0,0.0,1.0,5,502_colq_n_new

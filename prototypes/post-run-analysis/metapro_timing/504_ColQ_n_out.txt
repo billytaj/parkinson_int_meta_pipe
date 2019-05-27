@@ -1,0 +1,253 @@
+output folder does not exist.  Now building directory.
+ENCODING USED: 33
+OPERATING IN PAIRED-MODE
+Forward Reads: /scratch/j/jparkin/billyc59/NOD_tests/NOD_Mouse_Data/cleaned/NOD504ColQN_r1_new.fastq
+Reverse Reads: /scratch/j/jparkin/billyc59/NOD_tests/NOD_Mouse_Data/cleaned/NOD504ColQN_r3_new.fastq
+Output filepath: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/quality_filter/final_results
+doesn't exist: running
+quality filter: 110.0 s
+quality filter cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/host_read_filter/final_results
+doesn't exist: running
+host filter: 95.9 s
+host filter cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/vector_read_filter/final_results
+doesn't exist: running
+vector filter: 21.2 s
+vector filter cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/rRNA_filter/final_results
+doesn't exist: running
+2019-02-28 22:57:30.701844 splitting files
+2019-02-28 22:57:36.510322 done splitting files
+rRNA filter inner name: rRNA_filter_singletons_18
+rRNA filter inner name: rRNA_filter_singletons_2
+rRNA filter inner name: rRNA_filter_singletons_22
+rRNA filter inner name: rRNA_filter_singletons_21
+rRNA filter inner name: rRNA_filter_singletons_33
+rRNA filter inner name: rRNA_filter_singletons_28
+rRNA filter inner name: rRNA_filter_singletons_38
+rRNA filter inner name: rRNA_filter_singletons_3
+rRNA filter inner name: rRNA_filter_singletons_30
+rRNA filter inner name: rRNA_filter_singletons_11
+rRNA filter inner name: rRNA_filter_singletons_24
+rRNA filter inner name: rRNA_filter_singletons_20
+rRNA filter inner name: rRNA_filter_singletons_14
+rRNA filter inner name: rRNA_filter_singletons_17
+rRNA filter inner name: rRNA_filter_singletons_10
+rRNA filter inner name: rRNA_filter_singletons_25
+rRNA filter inner name: rRNA_filter_singletons_23
+rRNA filter inner name: rRNA_filter_singletons_37
+rRNA filter inner name: rRNA_filter_singletons_1
+rRNA filter inner name: rRNA_filter_singletons_29
+rRNA filter inner name: rRNA_filter_singletons_7
+rRNA filter inner name: rRNA_filter_singletons_19
+rRNA filter inner name: rRNA_filter_singletons_5
+rRNA filter inner name: rRNA_filter_singletons_9
+rRNA filter inner name: rRNA_filter_singletons_15
+rRNA filter inner name: rRNA_filter_singletons_12
+rRNA filter inner name: rRNA_filter_singletons_16
+rRNA filter inner name: rRNA_filter_singletons_27
+rRNA filter inner name: rRNA_filter_singletons_26
+rRNA filter inner name: rRNA_filter_singletons_0
+rRNA filter inner name: rRNA_filter_singletons_35
+rRNA filter inner name: rRNA_filter_singletons_36
+rRNA filter inner name: rRNA_filter_singletons_31
+rRNA filter inner name: rRNA_filter_singletons_39
+rRNA filter inner name: rRNA_filter_singletons_4
+rRNA filter inner name: rRNA_filter_singletons_34
+rRNA filter inner name: rRNA_filter_singletons_13
+rRNA filter inner name: rRNA_filter_singletons_6
+rRNA filter inner name: rRNA_filter_singletons_8
+rRNA filter inner name: rRNA_filter_singletons_32
+rRNA filter inner name: rRNA_filter_pair_1_28
+rRNA filter inner name: rRNA_filter_pair_1_36
+rRNA filter inner name: rRNA_filter_pair_1_9
+rRNA filter inner name: rRNA_filter_pair_1_32
+rRNA filter inner name: rRNA_filter_pair_1_29
+rRNA filter inner name: rRNA_filter_pair_1_37
+rRNA filter inner name: rRNA_filter_pair_1_20
+rRNA filter inner name: rRNA_filter_pair_1_10
+rRNA filter inner name: rRNA_filter_pair_1_3
+rRNA filter inner name: rRNA_filter_pair_1_34
+rRNA filter inner name: rRNA_filter_pair_1_8
+rRNA filter inner name: rRNA_filter_pair_1_1
+rRNA filter inner name: rRNA_filter_pair_1_13
+rRNA filter inner name: rRNA_filter_pair_1_15
+rRNA filter inner name: rRNA_filter_pair_1_6
+rRNA filter inner name: rRNA_filter_pair_1_38
+rRNA filter inner name: rRNA_filter_pair_1_4
+rRNA filter inner name: rRNA_filter_pair_1_2
+rRNA filter inner name: rRNA_filter_pair_1_24
+rRNA filter inner name: rRNA_filter_pair_1_27
+rRNA filter inner name: rRNA_filter_pair_1_35
+rRNA filter inner name: rRNA_filter_pair_1_30
+rRNA filter inner name: rRNA_filter_pair_1_11
+rRNA filter inner name: rRNA_filter_pair_1_22
+rRNA filter inner name: rRNA_filter_pair_1_14
+rRNA filter inner name: rRNA_filter_pair_1_19
+rRNA filter inner name: rRNA_filter_pair_1_23
+rRNA filter inner name: rRNA_filter_pair_1_0
+rRNA filter inner name: rRNA_filter_pair_1_31
+rRNA filter inner name: rRNA_filter_pair_1_7
+rRNA filter inner name: rRNA_filter_pair_1_12
+rRNA filter inner name: rRNA_filter_pair_1_33
+rRNA filter inner name: rRNA_filter_pair_1_39
+rRNA filter inner name: rRNA_filter_pair_1_21
+rRNA filter inner name: rRNA_filter_pair_1_5
+rRNA filter inner name: rRNA_filter_pair_1_17
+rRNA filter inner name: rRNA_filter_pair_1_18
+rRNA filter inner name: rRNA_filter_pair_1_26
+rRNA filter inner name: rRNA_filter_pair_1_25
+rRNA filter inner name: rRNA_filter_pair_1_16
+rRNA filter inner name: rRNA_filter_pair_2_31
+rRNA filter inner name: rRNA_filter_pair_2_24
+rRNA filter inner name: rRNA_filter_pair_2_37
+rRNA filter inner name: rRNA_filter_pair_2_7
+rRNA filter inner name: rRNA_filter_pair_2_30
+rRNA filter inner name: rRNA_filter_pair_2_18
+rRNA filter inner name: rRNA_filter_pair_2_6
+rRNA filter inner name: rRNA_filter_pair_2_27
+rRNA filter inner name: rRNA_filter_pair_2_13
+rRNA filter inner name: rRNA_filter_pair_2_22
+rRNA filter inner name: rRNA_filter_pair_2_10
+rRNA filter inner name: rRNA_filter_pair_2_4
+rRNA filter inner name: rRNA_filter_pair_2_29
+rRNA filter inner name: rRNA_filter_pair_2_39
+rRNA filter inner name: rRNA_filter_pair_2_15
+rRNA filter inner name: rRNA_filter_pair_2_25
+rRNA filter inner name: rRNA_filter_pair_2_32
+rRNA filter inner name: rRNA_filter_pair_2_33
+rRNA filter inner name: rRNA_filter_pair_2_23
+rRNA filter inner name: rRNA_filter_pair_2_21
+rRNA filter inner name: rRNA_filter_pair_2_28
+rRNA filter inner name: rRNA_filter_pair_2_36
+rRNA filter inner name: rRNA_filter_pair_2_12
+rRNA filter inner name: rRNA_filter_pair_2_34
+rRNA filter inner name: rRNA_filter_pair_2_5
+rRNA filter inner name: rRNA_filter_pair_2_1
+rRNA filter inner name: rRNA_filter_pair_2_35
+rRNA filter inner name: rRNA_filter_pair_2_3
+rRNA filter inner name: rRNA_filter_pair_2_8
+rRNA filter inner name: rRNA_filter_pair_2_26
+rRNA filter inner name: rRNA_filter_pair_2_11
+rRNA filter inner name: rRNA_filter_pair_2_38
+rRNA filter inner name: rRNA_filter_pair_2_17
+rRNA filter inner name: rRNA_filter_pair_2_14
+rRNA filter inner name: rRNA_filter_pair_2_0
+rRNA filter inner name: rRNA_filter_pair_2_2
+rRNA filter inner name: rRNA_filter_pair_2_20
+rRNA filter inner name: rRNA_filter_pair_2_9
+rRNA filter inner name: rRNA_filter_pair_2_16
+rRNA filter inner name: rRNA_filter_pair_2_19
+rRNA filter: 1394.1 s
+rRNA filter cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/duplicate_repopulation/final_results
+doesn't exist: running
+repop: 41.9 s
+repop cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/assemble_contigs/final_results
+doesn't exist: running
+assemble contigs: 192.9 s
+assemble contigs cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/gene_annotation_BWA/final_results
+doesn't exist: running
+GA BWA: 1135.6 s
+GA BWA cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/gene_annotation_BLAT/final_results
+doesn't exist: running
+GA BLAT: 2102.2 s
+GA BLAT cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/gene_annotation_DIAMOND/final_results
+doesn't exist: running
+GA DIAMOND: 2496.0 s
+GA DIAMOND cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/taxonomic_annotation/final_results
+doesn't exist: running
+TA: 1072.4 s
+TA cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/enzyme_annotation/final_results
+doesn't exist: running
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/enzyme_annotation/0_detect
+doesn't exist: running
+EC DETECT: 3030.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/enzyme_annotation/final_results
+doesn't exist: running
+EC PRIAM + DIAMOND: 3287.5 s
+EC cleanup: 0.0 s
+looking at: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/504_ColQ_n/outputs/final_results
+doesn't exist: running
+Outputs: 96.0 s
+Outputs cleanup: 0.0 s
+=============================================================================================
+Final summary
+--------------------------------------------------------
+Total runtime: 15075.7 s
+quality filter: 110.0 s
+quality filter cleanup: 0.0 s
+host filter: 95.9 s
+host filter cleanup: 0.0 s
+vector filter: 21.2 s
+vector filter cleanup: 0.0 s
+rRNA filter: 1394.1 s
+rRNA filter cleanup: 0.0 s
+repop: 41.9 s
+repop cleanup: 0.0 s
+assemble contigs: 192.9 s
+assemble contigs cleanup: 0.0 s
+GA BWA: 1135.6 s
+GA BWA cleanup: 0.0 s
+GA BLAT: 2102.2 s
+GA BLAT cleanup: 0.0 s
+GA DIAMOND: 2496.0 s
+GA DIAMOND cleanup: 0.0 s
+TA: 1072.4 s
+TA cleanup: 0.0 s
+EC DETECT: 3030.0 s
+EC PRIAM + DIAMOND: 3287.5 s
+EC cleanup: 0.0 s
+Outputs: 96.0 s
+Outputs cleanup: 0.0 s
+
+scontrol show jobid 991950
+JobId=991950 JobName=MetaPro_NOD_504_ColQ_N
+   UserId=billyc59(3021423) GroupId=jparkin(6000446) MCS_label=N/A
+   Priority=2049533 Nice=0 Account=rrg-jparkin-ac QOS=normal
+   JobState=COMPLETED Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=04:11:21 TimeLimit=1-00:00:00 TimeMin=N/A
+   SubmitTime=2019-02-28T17:53:39 EligibleTime=2019-02-28T17:53:39
+   StartTime=2019-02-28T17:53:39 EndTime=2019-02-28T22:05:00 Deadline=N/A
+   PreemptTime=None SuspendTime=None SecsPreSuspend=0
+   LastSchedEval=2019-02-28T17:53:39
+   Partition=compute AllocNode:Sid=nia-login06:377579
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia0504
+   BatchHost=nia0504
+   NumNodes=1 NumCPUs=80 NumTasks=0 CPUs/Task=40 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=40 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   Gres=(null) Reservation=(null)
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/j/jparkin/billyc59/NOD_tests/NOD_jobs/MetaPro_jobs/504_ColQ_n.sh
+   WorkDir=/gpfs/fs0/scratch/j/jparkin/billyc59/NOD_tests/NOD_jobs/MetaPro_jobs
+   StdErr=/scratch/j/jparkin/billyc59/NOD_tests/run_logs/MetaPro/504_ColQ_n_err.txt
+   StdIn=/dev/null
+   StdOut=/scratch/j/jparkin/billyc59/NOD_tests/run_logs/MetaPro/504_ColQ_n_out.txt
+   Power=
+   
+
+sacct -j 991950
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+991950       MetaPro_N+ rrg-jpark+   04:11:21                         08:21:42 2-14:12:25      0:0 
+991950.batch      batch rrg-jpark+   04:11:21 388990448K 142414392K   08:21:42 2-14:12:25      0:0 
+991950.exte+     extern rrg-jpark+   04:11:21    168876K      1272K   00:00:00  00:00.001      0:0 
+
+kernel messages produced during job executions:
+[Feb28 16:59] loop: module loaded
+[  +0.013750] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[  +0.019711] TECH PREVIEW: Overlay filesystem may not be fully supported.
+Please review provided documentation for limitations.
