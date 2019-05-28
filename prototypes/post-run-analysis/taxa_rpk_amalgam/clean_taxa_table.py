@@ -1,3 +1,5 @@
+#This one's for mpro.  Feed it the taxa report.
+
 import os 
 import sys
 import pandas as pd
