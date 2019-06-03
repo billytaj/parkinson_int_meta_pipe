@@ -37,7 +37,13 @@ if __name__ == "__main__":
             
             #print(os.listdir(item))
     final_collection_df = pd.concat(final_results)
+    final_collection_df = final_collection_df.groupby("Pathway", as_index = False).mean()
     
+    final_collection_df = final_collection_df.round()
+    final_collection_df["remaining"] = 1
+    final_collection_df["remaining"] = final_collection_df["remaining"].mask(final_collection_df["remaining"] > 0, final_collection_df["num_Ecs"] - (final_collection_df["both"] + final_collection_df["humann2"] + final_collection_df["mpro"]))
     print("==============================")
     print("FINAL COLLECTION")
     print(final_collection_df)
+    
+    final_collection_df.to_csv("final_collection.csv", mode = "w", index = False)

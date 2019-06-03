@@ -1,0 +1,85 @@
+Pathway,both,humann2,mpro,remaining,coverage pct,,,Pathway,Ecs in pathway
+"Alanine, aspartate and glutamate metabolism",10,2,7,31,38,,,"Alanine, aspartate and glutamate metabolism",50
+Amino sugar and nucleotide sugar metabolism,10,1,14,94,21.00840336,,,Amino sugar and nucleotide sugar metabolism,119
+Aminoacyl-tRNA biosynthesis,15,0,7,9,70.96774194,,,Aminoacyl-tRNA biosynthesis,31
+Arginine and proline metabolism,4,1,7,74,13.95348837,,,Arginine and proline metabolism,86
+Arginine biosynthesis,5,1,7,15,46.42857143,,,Arginine biosynthesis,28
+Ascorbate and aldarate metabolism,1,0,3,42,8.695652174,,,Ascorbate and aldarate metabolism,46
+Biotin metabolism,4,1,3,12,40,,,Biotin metabolism,20
+Butanoate metabolism,4,1,5,45,18.18181818,,,Butanoate metabolism,55
+C5-Branched dibasic acid metabolism,3,0,2,17,22.72727273,,,C5-Branched dibasic acid metabolism,22
+Carbapenem biosynthesis,1,0,0,4,20,,,Carbapenem biosynthesis,5
+Carbon fixation in photosynthetic organisms,8,0,5,12,52,,,Carbon fixation in photosynthetic organisms,25
+Carbon fixation pathways in prokaryotes,7,0,13,30,40,,,Carbon fixation pathways in prokaryotes,50
+Chloroalkane and chloroalkene degradation,0,0,2,15,11.76470588,,,Chloroalkane and chloroalkene degradation,17
+Citrate cycle (TCA cycle),6,0,5,15,42.30769231,,,Citrate cycle (TCA cycle),26
+Cyanoamino acid metabolism,2,0,2,26,13.33333333,,,Cyanoamino acid metabolism,30
+Cysteine and methionine metabolism,10,2,9,55,27.63157895,,,Cysteine and methionine metabolism,76
+D-Alanine metabolism,1,0,0,5,16.66666667,,,D-Alanine metabolism,6
+D-Glutamine and D-glutamate metabolism,3,0,1,8,33.33333333,,,D-Glutamine and D-glutamate metabolism,12
+Fatty acid biosynthesis,4,1,2,10,41.17647059,,,Fatty acid biosynthesis,17
+Fatty acid degradation,1,0,4,24,17.24137931,,,Fatty acid degradation,29
+Folate biosynthesis,4,0,7,40,21.56862745,,,Folate biosynthesis,51
+Fructose and mannose metabolism,8,0,9,58,22.66666667,,,Fructose and mannose metabolism,75
+Galactose metabolism,5,1,8,34,29.16666667,,,Galactose metabolism,48
+Glutathione metabolism,4,0,5,30,23.07692308,,,Glutathione metabolism,39
+Glycerophospholipid metabolism,3,0,4,54,11.47540984,,,Glycerophospholipid metabolism,61
+"Glycine, serine and threonine metabolism",11,1,9,47,30.88235294,,,"Glycine, serine and threonine metabolism",68
+Glycolysis / Gluconeogenesis,13,0,9,26,45.83333333,,,Glycolysis / Gluconeogenesis,48
+Glycosaminoglycan degradation,1,0,2,12,20,,,Glycosaminoglycan degradation,15
+Glycosphingolipid biosynthesis - ganglio series,1,0,1,6,25,,,Glycosphingolipid biosynthesis - ganglio series,8
+Glycosphingolipid biosynthesis - globo and isoglobo series,0,0,3,10,23.07692308,,,Glycosphingolipid biosynthesis - globo and isoglobo series,13
+Glyoxylate and dicarboxylate metabolism,4,1,8,60,17.80821918,,,Glyoxylate and dicarboxylate metabolism,73
+Histidine metabolism,6,0,5,27,28.94736842,,,Histidine metabolism,38
+Human cytomegalovirus infection,0,0,1,1,50,,,Human cytomegalovirus infection,2
+Human papillomavirus infection,0,0,1,1,50,,,Human papillomavirus infection,2
+Lipopolysaccharide biosynthesis,5,0,4,18,33.33333333,,,Lipopolysaccharide biosynthesis,27
+Lysine biosynthesis,5,2,4,17,39.28571429,,,Lysine biosynthesis,28
+Lysine degradation,0,0,4,49,7.547169811,,,Lysine degradation,53
+Metabolism of xenobiotics by cytochrome P450,0,0,1,9,10,,,Metabolism of xenobiotics by cytochrome P450,10
+Methane metabolism,9,0,6,72,17.24137931,,,Methane metabolism,87
+Monobactam biosynthesis,3,2,0,5,50,,,Monobactam biosynthesis,10
+Naphthalene degradation,0,0,1,8,11.11111111,,,Naphthalene degradation,9
+Nicotinate and nicotinamide metabolism,3,1,5,50,15.25423729,,,Nicotinate and nicotinamide metabolism,59
+Nitrogen metabolism,3,0,3,31,16.21621622,,,Nitrogen metabolism,37
+Novobiocin biosynthesis,1,0,1,14,12.5,,,Novobiocin biosynthesis,16
+One carbon pool by folate,6,0,6,12,50,,,One carbon pool by folate,24
+Other glycan degradation,1,0,2,6,33.33333333,,,Other glycan degradation,9
+Oxidative phosphorylation,3,0,4,4,63.63636364,,,Oxidative phosphorylation,11
+PI3K-Akt signaling pathway,0,0,1,1,50,,,PI3K-Akt signaling pathway,2
+Pantothenate and CoA biosynthesis,8,1,3,19,38.70967742,,,Pantothenate and CoA biosynthesis,31
+Pentose and glucuronate interconversions,8,1,5,53,20.89552239,,,Pentose and glucuronate interconversions,67
+Pentose phosphate pathway,10,0,8,37,32.72727273,,,Pentose phosphate pathway,55
+Peptidoglycan biosynthesis,7,0,3,9,52.63157895,,,Peptidoglycan biosynthesis,19
+Phenylalanine metabolism,3,1,3,60,10.44776119,,,Phenylalanine metabolism,67
+"Phenylalanine, tyrosine and tryptophan biosynthesis",6,0,5,28,28.20512821,,,"Phenylalanine, tyrosine and tryptophan biosynthesis",39
+Phenylpropanoid biosynthesis,0,0,1,29,3.333333333,,,Phenylpropanoid biosynthesis,30
+Phosphatidylinositol signaling system,1,0,1,27,6.896551724,,,Phosphatidylinositol signaling system,29
+Phosphonate and phosphinate metabolism,2,0,1,26,10.34482759,,,Phosphonate and phosphinate metabolism,29
+Photosynthesis,1,0,0,2,33.33333333,,,Photosynthesis,3
+Polyketide sugar unit biosynthesis,2,0,1,24,11.11111111,,,Polyketide sugar unit biosynthesis,27
+Porphyrin and chlorophyll metabolism,5,1,9,91,14.1509434,,,Porphyrin and chlorophyll metabolism,106
+Propanoate metabolism,4,2,8,41,25.45454545,,,Propanoate metabolism,55
+Purine metabolism,21,2,14,73,33.63636364,,,Purine metabolism,110
+Pyrimidine metabolism,16,0,7,42,35.38461538,,,Pyrimidine metabolism,65
+Pyruvate metabolism,8,1,12,46,31.34328358,,,Pyruvate metabolism,67
+Relaxin signaling pathway,0,0,1,0,100,,,Relaxin signaling pathway,1
+Retinol metabolism,0,0,1,13,7.142857143,,,Retinol metabolism,14
+Riboflavin metabolism,2,1,5,20,28.57142857,,,Riboflavin metabolism,28
+Selenocompound metabolism,2,0,3,13,27.77777778,,,Selenocompound metabolism,18
+Sphingolipid metabolism,0,0,3,24,11.11111111,,,Sphingolipid metabolism,27
+Starch and sucrose metabolism,5,1,10,60,21.05263158,,,Starch and sucrose metabolism,76
+Streptomycin biosynthesis,2,0,4,12,33.33333333,,,Streptomycin biosynthesis,18
+Sulfur metabolism,4,1,3,42,16,,,Sulfur metabolism,50
+Synthesis and degradation of ketone bodies,0,0,1,5,16.66666667,,,Synthesis and degradation of ketone bodies,6
+Taurine and hypotaurine metabolism,2,0,2,15,21.05263158,,,Taurine and hypotaurine metabolism,19
+Terpenoid backbone biosynthesis,4,0,5,42,17.64705882,,,Terpenoid backbone biosynthesis,51
+Thermogenesis,0,0,1,0,100,,,Thermogenesis,1
+Thiamine metabolism,5,0,3,18,30.76923077,,,Thiamine metabolism,26
+"Tropane, piperidine and pyridine alkaloid biosynthesis",1,0,2,24,11.11111111,,,"Tropane, piperidine and pyridine alkaloid biosynthesis",27
+Tryptophan metabolism,1,0,4,55,8.333333333,,,Tryptophan metabolism,60
+Ubiquinone and other terpenoid-quinone biosynthesis,3,2,2,33,17.5,,,Ubiquinone and other terpenoid-quinone biosynthesis,40
+"Valine, leucine and isoleucine biosynthesis",5,0,3,6,57.14285714,,,"Valine, leucine and isoleucine biosynthesis",14
+"Valine, leucine and isoleucine degradation",1,1,6,28,22.22222222,,,"Valine, leucine and isoleucine degradation",36
+,,,,,,,,,
+,,,,,28.54170193,,,,

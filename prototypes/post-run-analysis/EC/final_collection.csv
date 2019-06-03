@@ -1,0 +1,107 @@
+Pathway,both,humann2,mpro,remaining,,,,Pathway,Ecs in pathway
+Acarbose and validamycin biosynthesis,1,0,0,13,,,,Acarbose and validamycin biosynthesis,14
+Aflatoxin biosynthesis,0,0,0,13,,,,Aflatoxin biosynthesis,13
+"Alanine, aspartate and glutamate metabolism",10,2,7,31,,,,"Alanine, aspartate and glutamate metabolism",50
+Amino sugar and nucleotide sugar metabolism,10,1,14,94,,,,Amino sugar and nucleotide sugar metabolism,119
+Aminoacyl-tRNA biosynthesis,15,0,7,9,,,,Aminoacyl-tRNA biosynthesis,31
+Arginine and proline metabolism,4,1,7,74,,,,Arginine and proline metabolism,86
+Arginine biosynthesis,5,1,7,15,,,,Arginine biosynthesis,28
+Ascorbate and aldarate metabolism,1,0,3,42,,,,Ascorbate and aldarate metabolism,46
+Benzoate degradation,1,0,3,65,,,,Benzoate degradation,69
+Biosynthesis of ansamycins,0,0,1,3,,,,Biosynthesis of ansamycins,4
+Biosynthesis of antibiotics,61,7,44,384,,,,Biosynthesis of antibiotics,496
+Biosynthesis of secondary metabolites,81,11,65,621,,,,Biosynthesis of secondary metabolites,778
+Biosynthesis of siderophore group nonribosomal peptides,1,0,1,4,,,,Biosynthesis of siderophore group nonribosomal peptides,6
+Biosynthesis of vancomycin group antibiotics,1,0,0,9,,,,Biosynthesis of vancomycin group antibiotics,10
+Biotin metabolism,4,1,3,12,,,,Biotin metabolism,20
+Butanoate metabolism,4,1,5,45,,,,Butanoate metabolism,55
+C5-Branched dibasic acid metabolism,3,0,2,17,,,,C5-Branched dibasic acid metabolism,22
+Carbapenem biosynthesis,1,0,0,4,,,,Carbapenem biosynthesis,5
+Carbon fixation in photosynthetic organisms,8,0,5,12,,,,Carbon fixation in photosynthetic organisms,25
+Carbon fixation pathways in prokaryotes,7,0,13,30,,,,Carbon fixation pathways in prokaryotes,50
+Chloroalkane and chloroalkene degradation,0,0,2,15,,,,Chloroalkane and chloroalkene degradation,17
+Citrate cycle (TCA cycle),6,0,5,15,,,,Citrate cycle (TCA cycle),26
+Cyanoamino acid metabolism,2,0,2,26,,,,Cyanoamino acid metabolism,30
+Cysteine and methionine metabolism,10,2,9,55,,,,Cysteine and methionine metabolism,76
+D-Alanine metabolism,1,0,0,5,,,,D-Alanine metabolism,6
+D-Glutamine and D-glutamate metabolism,3,0,1,8,,,,D-Glutamine and D-glutamate metabolism,12
+Drug metabolism - cytochrome P450,0,0,1,7,,,,Drug metabolism - cytochrome P450,8
+Drug metabolism - other enzymes,5,0,4,16,,,,Drug metabolism - other enzymes,25
+Fatty acid biosynthesis,4,1,2,10,,,,Fatty acid biosynthesis,17
+Fatty acid degradation,1,0,4,24,,,,Fatty acid degradation,29
+Folate biosynthesis,4,0,7,40,,,,Folate biosynthesis,51
+Fructose and mannose metabolism,8,0,9,58,,,,Fructose and mannose metabolism,75
+Galactose metabolism,5,1,8,34,,,,Galactose metabolism,48
+Glucosinolate biosynthesis,0,0,1,14,,,,Glucosinolate biosynthesis,15
+Glutathione metabolism,4,0,5,30,,,,Glutathione metabolism,39
+Glycerolipid metabolism,1,0,3,36,,,,Glycerolipid metabolism,40
+Glycerophospholipid metabolism,3,0,4,54,,,,Glycerophospholipid metabolism,61
+"Glycine, serine and threonine metabolism",11,1,9,47,,,,"Glycine, serine and threonine metabolism",68
+Glycolysis / Gluconeogenesis,13,0,9,26,,,,Glycolysis / Gluconeogenesis,48
+Glycosaminoglycan degradation,1,0,2,12,,,,Glycosaminoglycan degradation,15
+Glycosphingolipid biosynthesis - ganglio series,1,0,1,6,,,,Glycosphingolipid biosynthesis - ganglio series,8
+Glycosphingolipid biosynthesis - globo and isoglobo series,0,0,3,10,,,,Glycosphingolipid biosynthesis - globo and isoglobo series,13
+Glyoxylate and dicarboxylate metabolism,4,1,8,60,,,,Glyoxylate and dicarboxylate metabolism,73
+Histidine metabolism,6,0,5,27,,,,Histidine metabolism,38
+Human cytomegalovirus infection,0,0,1,1,,,,Human cytomegalovirus infection,2
+Human papillomavirus infection,0,0,1,1,,,,Human papillomavirus infection,2
+Inositol phosphate metabolism,1,0,4,43,,,,Inositol phosphate metabolism,48
+Isoquinoline alkaloid biosynthesis,0,0,1,56,,,,Isoquinoline alkaloid biosynthesis,57
+Lipopolysaccharide biosynthesis,5,0,4,18,,,,Lipopolysaccharide biosynthesis,27
+Lysine biosynthesis,5,2,4,17,,,,Lysine biosynthesis,28
+Lysine degradation,0,0,4,49,,,,Lysine degradation,53
+Metabolic pathways,168,21,162,1299,,,,Metabolic pathways,1650
+Metabolism of xenobiotics by cytochrome P450,0,0,1,9,,,,Metabolism of xenobiotics by cytochrome P450,10
+Methane metabolism,9,0,6,72,,,,Methane metabolism,87
+Microbial metabolism in diverse environments,46,6,53,563,,,,Microbial metabolism in diverse environments,668
+Monobactam biosynthesis,3,2,0,5,,,,Monobactam biosynthesis,10
+Naphthalene degradation,0,0,1,8,,,,Naphthalene degradation,9
+Nicotinate and nicotinamide metabolism,3,1,5,50,,,,Nicotinate and nicotinamide metabolism,59
+Nitrogen metabolism,3,0,3,31,,,,Nitrogen metabolism,37
+Novobiocin biosynthesis,1,0,1,14,,,,Novobiocin biosynthesis,16
+One carbon pool by folate,6,0,6,12,,,,One carbon pool by folate,24
+Other glycan degradation,1,0,2,6,,,,Other glycan degradation,9
+Oxidative phosphorylation,3,0,4,4,,,,Oxidative phosphorylation,11
+PI3K-Akt signaling pathway,0,0,1,1,,,,PI3K-Akt signaling pathway,2
+Pantothenate and CoA biosynthesis,8,1,3,19,,,,Pantothenate and CoA biosynthesis,31
+Pentose and glucuronate interconversions,8,1,5,53,,,,Pentose and glucuronate interconversions,67
+Pentose phosphate pathway,10,0,8,37,,,,Pentose phosphate pathway,55
+Peptidoglycan biosynthesis,7,0,3,9,,,,Peptidoglycan biosynthesis,19
+Phenazine biosynthesis,0,0,1,12,,,,Phenazine biosynthesis,13
+Phenylalanine metabolism,3,1,3,60,,,,Phenylalanine metabolism,67
+"Phenylalanine, tyrosine and tryptophan biosynthesis",6,0,5,28,,,,"Phenylalanine, tyrosine and tryptophan biosynthesis",39
+Phenylpropanoid biosynthesis,0,0,1,29,,,,Phenylpropanoid biosynthesis,30
+Phosphatidylinositol signaling system,1,0,1,27,,,,Phosphatidylinositol signaling system,29
+Phosphonate and phosphinate metabolism,2,0,1,26,,,,Phosphonate and phosphinate metabolism,29
+Photosynthesis,1,0,0,2,,,,Photosynthesis,3
+Polyketide sugar unit biosynthesis,2,0,1,24,,,,Polyketide sugar unit biosynthesis,27
+Porphyrin and chlorophyll metabolism,5,1,9,91,,,,Porphyrin and chlorophyll metabolism,106
+Propanoate metabolism,4,2,8,41,,,,Propanoate metabolism,55
+Purine metabolism,21,2,14,73,,,,Purine metabolism,110
+Pyrimidine metabolism,16,0,7,42,,,,Pyrimidine metabolism,65
+Pyruvate metabolism,8,1,12,46,,,,Pyruvate metabolism,67
+Relaxin signaling pathway,0,0,1,0,,,,Relaxin signaling pathway,1
+Retinol metabolism,0,0,1,13,,,,Retinol metabolism,14
+Riboflavin metabolism,2,1,5,20,,,,Riboflavin metabolism,28
+Selenocompound metabolism,2,0,3,13,,,,Selenocompound metabolism,18
+Sphingolipid metabolism,0,0,3,24,,,,Sphingolipid metabolism,27
+Starch and sucrose metabolism,5,1,10,60,,,,Starch and sucrose metabolism,76
+Streptomycin biosynthesis,2,0,4,12,,,,Streptomycin biosynthesis,18
+Sulfur metabolism,4,1,3,42,,,,Sulfur metabolism,50
+Synthesis and degradation of ketone bodies,0,0,1,5,,,,Synthesis and degradation of ketone bodies,6
+Taurine and hypotaurine metabolism,2,0,2,15,,,,Taurine and hypotaurine metabolism,19
+Terpenoid backbone biosynthesis,4,0,5,42,,,,Terpenoid backbone biosynthesis,51
+Thermogenesis,0,0,1,0,,,,Thermogenesis,1
+Thiamine metabolism,5,0,3,18,,,,Thiamine metabolism,26
+"Tropane, piperidine and pyridine alkaloid biosynthesis",1,0,2,24,,,,"Tropane, piperidine and pyridine alkaloid biosynthesis",27
+Tryptophan metabolism,1,0,4,55,,,,Tryptophan metabolism,60
+Tyrosine metabolism,1,0,2,61,,,,Tyrosine metabolism,64
+Ubiquinone and other terpenoid-quinone biosynthesis,3,2,2,33,,,,Ubiquinone and other terpenoid-quinone biosynthesis,40
+"Valine, leucine and isoleucine biosynthesis",5,0,3,6,,,,"Valine, leucine and isoleucine biosynthesis",14
+"Valine, leucine and isoleucine degradation",1,1,6,28,,,,"Valine, leucine and isoleucine degradation",36
+Various types of N-glycan biosynthesis,0,0,1,22,,,,Various types of N-glycan biosynthesis,23
+Vitamin B6 metabolism,3,1,1,21,,,,Vitamin B6 metabolism,26
+Zeatin biosynthesis,1,0,0,9,,,,Zeatin biosynthesis,10
+alpha-Linolenic acid metabolism,0,0,2,10,,,,alpha-Linolenic acid metabolism,12
+beta-Alanine metabolism,3,0,2,32,,,,beta-Alanine metabolism,37
+mTOR signaling pathway,0,0,1,4,,,,mTOR signaling pathway,5

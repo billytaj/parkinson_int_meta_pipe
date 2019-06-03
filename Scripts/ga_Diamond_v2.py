@@ -446,10 +446,17 @@ if __name__ == "__main__":
                 print ('  and ' + os.path.basename(read_file_2) + '\n')
                 prev_mapping_count= len(mapped_reads)
                 
+                print(dt.today(), "everything is fine.  writing gene map")
                 write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
             
             else:
+                print(dt.today(), "dmdout 2 file is missing or has an error.  we'll skip to writing the gene map")
                 write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
                 
         else:
+            print(dt.today(), "dmdout 1 file is missing or has an error. we'll skip to writing the gene map")
             write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
+    else:
+        print(dt.today(), "not enough read sets.  likely this sample doesn't contain pair 1 or pair 1 data.")  
+        print(dt.today(), "we'll write the map anyway, but it'll be a straight copy of the old one")
+        write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
