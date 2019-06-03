@@ -370,6 +370,8 @@ if __name__ == "__main__":
     # check number of readtype sets (file inputs)
     read_sets = int((len(sys.argv)-7)/3) 
     if (len(sys.argv)-7) % 3 != 0:
+        print(dt.today(), "incorrect number of read sets, but we'll still write the gene map")
+        write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
         sys.exit('Incorrect number of readtype sets: ' + str(len(sys.argv)))
 
     # process DMD output:
