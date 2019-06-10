@@ -1685,6 +1685,7 @@ class mt_pipe_commands:
         wevote_combine += os.path.join(assemble_contigs_folder, "contig_map.tsv")
         wevote_combine += " " + os.path.join(wevote_folder, "wevote_ensemble.csv") + " "
         wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
+        wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
         wevote_combine += os.path.join(kaiju_folder, "merged_kaiju.tsv") + " "
         wevote_combine += os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
 
