@@ -16,3 +16,9 @@ refactored_pipeline/blat_pp_test_data/
 refactored_pipeline/docker_image/dump\.txt
 
 *.tsv
+
+prototypes/post-run-analysis/taxa_rpk_amalgam/samsa2/nodes\.dmp
+
+prototypes/post-run-analysis/taxa_rpk_amalgam/samsa2/names\.dmp
+
+prototypes/post-run-analysis/taxa_rpk_amalgam/samsa2/taxa_family_finder\.py

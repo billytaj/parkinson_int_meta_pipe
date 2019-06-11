@@ -102,7 +102,7 @@ class mt_pipe_commands:
         self.make_folder(orphan_read_filter_folder)
         self.make_folder(cdhit_folder)
         self.make_folder(final_folder)
-
+        
         sort_pair_1 = ">&2 echo Sorting pair 1 | "
         sort_pair_1 += self.tool_path_obj.Python + " "
         sort_pair_1 += self.tool_path_obj.sort_reads + " "
@@ -128,7 +128,7 @@ class mt_pipe_commands:
         if(self.Qual_str == "33"):
             adapter_removal_line += " --qualitymax 75"
         adapter_removal_line += " --threads " + self.Threads_str
-        adapter_removal_line += " --minlength " + "30"
+        adapter_removal_line += " --minlength " + str(self.tool_path_obj.adapterremoval_minlength)
         adapter_removal_line += " --basename " + adapter_folder
         adapter_removal_line += "_AdapterRemoval"
         adapter_removal_line += " --trimqualities "
@@ -1886,7 +1886,7 @@ class mt_pipe_commands:
         network_generation = ">&2 echo Generating RPKM and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
         network_generation += self.tool_path_obj.RPKM + " "
-        network_generation += "0.01" + " "
+        network_generation += str(self.too_path_obj.rpkm_cutoff) + " "
         network_generation += "None" + " "
         network_generation += self.tool_path_obj.nodes + " "
         network_generation += self.tool_path_obj.names + " "
