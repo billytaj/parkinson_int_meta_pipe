@@ -1,0 +1,17 @@
+Clostridium sp. ASF356
+Clostridium sp. ASF502
+Eubacterium Plexicaudatum sp. ASF492
+Firmicutes sp. ASF500
+Lactobacillus sp. ASF360
+Lactobacillus Murinus sp. ASF361
+Mucispirillum Schaedleri sp. ASF457
+Parabacteroides sp. ASF519
+
+Clostridium sp. ASF356
+Clostridium sp. ASF502
+Eubacterium plexicaudatum
+Firmicutes sp. ASF500
+Lactobacillus sp. ASF360
+Lactobacillus murinus
+Mucispirillum schaedleri
+Parabacteroides sp. ASF519

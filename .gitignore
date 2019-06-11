@@ -16,3 +16,5 @@ refactored_pipeline/blat_pp_test_data/
 refactored_pipeline/docker_image/dump\.txt
 
 *.tsv
+
+*.dmp
