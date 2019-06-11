@@ -158,7 +158,17 @@ def find_common_ancestry(sample_name, ref_dict, sample_list, return_dict):
         if(search_depth > prior_depth):        
             return_dict[sample_name] = common_ancestor
             prior_depth = search_depth
-        
+
+def import_samsa_file(samsa_file):
+    samsa_df = pd.read_csv(samsa_file, sep = "\t", header = None)
+    samsa_df.columns = ["percent", "reads", "name"]
+    samsa_list = samsa_df["name"].tolist()
+    return samsa_list
+
+def import_mpro_file(mpro_file):
+    mpro_df = pd.read_csv(mpro_file, sep = "\t")
+    
+
 def export_from_dict(final_dict, ref_category_dict):
     if not final_dict:
         print("return dict is empty.  something's wrong")
@@ -224,27 +234,25 @@ if __name__ == "__main__":
     #print("375288")
     #print(nodes_df[nodes_df["taxa"] == 375288])
     
-    
-    #prep the SAMSA
+    """
+    #prep the samsa
     print(dt.today(), "started crafting sample tree dict")
-    samsa_df = pd.read_csv(samsa_file, sep = "\t", header = None)
-    samsa_df.columns = ["percent", "reads", "name"]
-    samsa_list = samsa_df["name"].tolist()
+    sample_list = import_samsa_file(samsa_file)
     
     print(dt.today(), "starting sample tree maker jobs")
     #sample_tree_dict, sample_category_dict = make_ref_dict(names_df, nodes_df, samsa_list)
-    samsa_job_store = []
-    for item in samsa_list:
-        samsa_job = mp.Process(
+    sample_tree_maker_job_store = []
+    for item in sample_list:
+        sample_tree_maker_job = mp.Process(
             target = make_sample_tree_dict,
             args = (names_df, nodes_df, item, sample_tree_return_dict)
             )
-        samsa_job_store.append(samsa_job)
-        samsa_job.start()
+        sample_tree_maker_job_store.append(sample_tree_maker_job)
+        sample_tree_maker_job.start()
     print(dt.today(), "sample tree jobs launched")
-    for item in samsa_job_store:
+    for item in sample_tree_maker_job_store:
         item.join()
-    samsa_job_store[:] = []
+    sample_tree_maker_job_store[:] = []
     sample_tree_dict = dict(sample_tree_return_dict)
     
     print(dt.today(), "finished crafting sample tree dict")
@@ -267,6 +275,11 @@ if __name__ == "__main__":
     mp_store[:] = []
     print(dt.today(), "finished running jobs")
     
+    """
+    
+    
+    #find common ancestry needs a list of numbers.  We have a list of names.  
+    #we need to translate the list of names into a list of numbers.  
     
     print(dt.today(),"dealing with final results")
     final_dict = dict(return_dict)
