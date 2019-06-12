@@ -1886,7 +1886,7 @@ class mt_pipe_commands:
         network_generation = ">&2 echo Generating RPKM and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
         network_generation += self.tool_path_obj.RPKM + " "
-        network_generation += str(self.too_path_obj.rpkm_cutoff) + " "
+        network_generation += str(self.tool_path_obj.rpkm_cutoff) + " "
         network_generation += "None" + " "
         network_generation += self.tool_path_obj.nodes + " "
         network_generation += self.tool_path_obj.names + " "

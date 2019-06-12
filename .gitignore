@@ -22,3 +22,5 @@ prototypes/post-run-analysis/taxa_rpk_amalgam/samsa2/nodes\.dmp
 prototypes/post-run-analysis/taxa_rpk_amalgam/samsa2/names\.dmp
 
 prototypes/post-run-analysis/taxa_rpk_amalgam/samsa2/taxa_family_finder\.py
+
+*.dmp
