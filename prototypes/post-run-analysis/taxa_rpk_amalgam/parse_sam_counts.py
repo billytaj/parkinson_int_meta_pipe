@@ -1,7 +1,7 @@
 import sys
 import os
 import pandas as pd
-
+#use on the humann2 file
 if __name__ == "__main__":
     counts_file = open(sys.argv[1], "r")
     counts_df = pd.read_csv(counts_file, sep = "\t", header = None)
@@ -11,6 +11,7 @@ if __name__ == "__main__":
     id_df["reads"] = counts_df["reads"]
     id_df.columns = ["the_rest","taxa", "uniref90", "uniref50",  "length", "reads"]
     id_df.drop(["the_rest"], axis = 1, inplace = True)
+    id_df["genes"] = 1
     print(id_df)
     print(id_df.shape)
     #print(id_df)

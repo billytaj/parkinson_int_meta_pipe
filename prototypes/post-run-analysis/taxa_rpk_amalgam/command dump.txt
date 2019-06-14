@@ -1,0 +1,55 @@
+python parse_taxa_mpro.py 501_cecq_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/501_cecq_n_summary
+python parse_taxa_mpro.py 501_cecq_y_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/501_cecq_y_summary
+python parse_taxa_mpro.py 501_colq_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/501_colq_n_summary
+python parse_taxa_mpro.py 502_cecq_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/502_cecq_n_summary
+python parse_taxa_mpro.py 502_cecq_y_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/502_cecq_y_summary
+python parse_taxa_mpro.py 502_colq_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/502_colq_n_summary
+python parse_taxa_mpro.py 503_cecm_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/503_cecm_n_summary
+python parse_taxa_mpro.py 503_cecq_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/503_cecq_n_summary
+python parse_taxa_mpro.py 504_cecm_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/504_cecm_n_summary
+python parse_taxa_mpro.py 504_cecq_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/504_cecq_n_summary
+python parse_taxa_mpro.py 504_cecq_y_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/504_cecq_y_summary
+python parse_taxa_mpro.py 504_colq_n_mpro_taxa_table.tsv names.dmp nodes.dmp asf_list.txt mpro_results/504_colq_n_summary
+
+
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD501CecQN.merged.RefSeq_annot_organism.tsv 501_cecq_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD501CecQY.merged.RefSeq_annot_organism.tsv 501_cecq_y_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD501ColQN.merged.RefSeq_annot_organism.tsv 501_colq_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD502CecQN.merged.RefSeq_annot_organism.tsv 502_cecq_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD502CecQY.merged.RefSeq_annot_organism.tsv 502_cecq_y_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD502ColQN.merged.RefSeq_annot_organism.tsv 502_colq_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD503CecMN.merged.RefSeq_annot_organism.tsv 503_cecm_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD503CecQN.merged.RefSeq_annot_organism.tsv 503_cecq_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD504CecMN.R1.fastq.merged.RefSeq_annot_organism.tsv 504_cecm_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD504CecQN.R1.fastq.merged.RefSeq_annot_organism.tsv 504_cecq_n_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD504CecQY.R1.fastq.merged.RefSeq_annot_organism.tsv 504_cecq_y_samsa2_summary
+python taxa_family_finder.py names.dmp nodes.dmp asf_list.txt control_NOD504ColQN.R1.fastq.merged.RefSeq_annot_organism.tsv 504_colq_n_samsa2_summary
+
+
+python extract_sam.py 501_cecq_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/501_cecq_n_gene_map new_results/501_cecq_n_gene_names
+python extract_sam.py 501_cecq_y.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/501_cecq_y_gene_map new_results/501_cecq_y_gene_names
+python extract_sam.py 501_colq_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/501_colq_n_gene_map new_results/501_colq_n_gene_names
+python extract_sam.py 502_cecq_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/502_cecq_n_gene_map new_results/502_cecq_n_gene_names
+python extract_sam.py 502_cecq_y.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/502_cecq_y_gene_map new_results/502_cecq_y_gene_names
+python extract_sam.py 502_colq_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/502_colq_n_gene_map new_results/502_colq_n_gene_names
+python extract_sam.py 503_cecm_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/503_cecm_n_gene_map new_results/503_cecm_n_gene_names
+python extract_sam.py 503_cecq_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/503_cecq_n_gene_map new_results/503_cecq_n_gene_names
+python extract_sam.py 504_cecm_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/504_cecm_n_gene_map new_results/504_cecm_n_gene_names
+python extract_sam.py 504_cecq_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/504_cecq_n_gene_map new_results/504_cecq_n_gene_names
+python extract_sam.py 504_cecq_y.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/504_cecq_y_gene_map new_results/504_cecq_y_gene_names
+python extract_sam.py 504_colq_n.sam $SCRATCH/ASF_genomes/ASF_genomes.fasta new_results/504_colq_n_gene_map new_results/504_colq_n_gene_names
+
+
+
+python summarize_gene_names.py 501_cecq_n_gene_names.tsv 501_cecq_n_BWA
+python summarize_gene_names.py 501_cecq_y_gene_names.tsv 501_cecq_y_BWA
+python summarize_gene_names.py 501_colq_n_gene_names.tsv 501_colq_n_BWA
+python summarize_gene_names.py 502_cecq_n_gene_names.tsv 502_cecq_n_BWA
+python summarize_gene_names.py 502_cecq_y_gene_names.tsv 502_cecq_y_BWA
+python summarize_gene_names.py 502_colq_n_gene_names.tsv 502_colq_n_BWA
+python summarize_gene_names.py 503_cecm_n_gene_names.tsv 503_cecm_n_BWA
+python summarize_gene_names.py 503_cecq_n_gene_names.tsv 503_cecq_n_BWA
+python summarize_gene_names.py 504_cecm_n_gene_names.tsv 504_cecm_n_BWA
+python summarize_gene_names.py 504_cecq_n_gene_names.tsv 504_cecq_n_BWA
+python summarize_gene_names.py 504_cecq_y_gene_names.tsv 504_cecq_y_BWA
+python summarize_gene_names.py 504_colq_n_gene_names.tsv 504_colq_n_BWA
