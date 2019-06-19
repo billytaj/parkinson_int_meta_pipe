@@ -74,8 +74,9 @@ if __name__ == "__main__":
     output_file = sys.argv[2]
     ga_taxon_results_0 = sys.argv[3] 
     ga_taxon_results_1 = sys.argv[4]
-    kaiju_results = sys.argv[5]
-    centrifuge_results = sys.argv[6]
+    ga_taxon_results_2 = sys.argv[5]
+    kaiju_results = sys.argv[6]
+    centrifuge_results = sys.argv[7]
     
     #import the contig map
     contig2read_map = import_contig2read_map(contig2read_file)
@@ -84,6 +85,7 @@ if __name__ == "__main__":
     Input_classifications = []
     Input_classifications.append(import_classifications(ga_taxon_results_0, contig2read_map))
     Input_classifications.append(import_classifications(ga_taxon_results_1, contig2read_map))
+    Input_classifications.append(import_classifications(ga_taxon_results_2, contig2read_map))
     Input_classifications.append(import_classifications(kaiju_results, contig2read_map))
     Input_classifications.append(import_classifications(centrifuge_results, contig2read_map))
 
