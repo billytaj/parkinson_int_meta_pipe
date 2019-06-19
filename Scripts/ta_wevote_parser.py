@@ -7,7 +7,8 @@ import pandas as pd
 
 if __name__ == "__main__":
     wevote_file = sys.argv[1]
+    output_file = sys.argv[2]
     wevote_df = pd.read_csv(wevote_file, sep = "\t", header = None)
     wevote_df.columns = ["read_id", "tool_count", "tools_can_classify", "agreed", "score", "junk", "tool_0", "tool_1", "tool_2", "tool_3", "tool_4", "assignment"]
     wevote_df = wevote_df[["read_id", "assignment"]]
-    wevote_df.to_csv("wevote_results.tsv", sep = "\t", index = False, header = None)
+    wevote_df.to_csv(output_file, sep = "\t", index = False, header = None)
