@@ -1700,10 +1700,16 @@ class mt_pipe_commands:
         wevote_call += " -a " + "0"
         wevote_call += " -s " + "0"
 
-        awk_cleanup = ">&2 echo AWK cleanup of WEVOTE results | "
-        awk_cleanup += "awk -F \'\\t\' \'{print \"C\\t\"$1\"\\t\"$9}\' "
-        awk_cleanup += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt")
-        awk_cleanup += " > " + os.path.join(final_folder, "taxonomic_classifications.tsv")
+        #awk_cleanup = ">&2 echo AWK cleanup of WEVOTE results | "
+        #awk_cleanup += "awk -F \'\\t\' \'{print \"C\\t\"$1\"\\t\"$9}\' "
+        #awk_cleanup += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt")
+        #awk_cleanup += " > " + os.path.join(final_folder, "taxonomic_classifications.tsv")
+        wevote_collect = ">&2 echo gathering WEVOTE results | "
+        wevote_collect += self.tool_path_obj.Python + " "
+        wevote_collect += self.tool_path_obj.Wevote_parser + " "
+        wevote_collect += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt") + " "
+        wevote_collect += os.path.join(final_folder, "taxonomic_classifications.tsv")
+        
 
         centrifuge_on_rRNA = ">&2 echo centrifuge on rRNA | "
         centrifuge_on_rRNA += self.tool_path_obj.Centrifuge
@@ -1738,7 +1744,7 @@ class mt_pipe_commands:
                 cat_centrifuge,
                 wevote_combine,
                 wevote_call,
-                awk_cleanup,
+                wevote_collect,
                 constrain
             ]
         elif self.read_mode == "paired":
@@ -1753,7 +1759,7 @@ class mt_pipe_commands:
                 cat_centrifuge,
                 wevote_combine,
                 wevote_call,
-                awk_cleanup,
+                wevote_collect,
                 centrifuge_on_rRNA,
                 constrain
             ]
