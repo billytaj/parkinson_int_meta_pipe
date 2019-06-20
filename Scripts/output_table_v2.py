@@ -57,8 +57,8 @@ tax_annotated_count = 0
 with open(read2taxid, "r") as infile:
     for line in infile:
         cols = line.split("\t")
-        read = cols[1]
-        taxid = cols[2].strip("\n")
+        read = cols[0]
+        taxid = cols[1].strip("\n")
         if taxid == "0":
             taxid = "1"
         if taxid != "1":
