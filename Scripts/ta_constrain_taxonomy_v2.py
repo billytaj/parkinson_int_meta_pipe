@@ -44,13 +44,14 @@ Ranks = ["unclassified", "no rank", "superkingdom", "phylum", "subphylum", "clas
 read_classifications = {}
 classification_count = {}
 # Go through the file, and convert the info into english
+#june 20, 2019:  Why was there a letter C in the file in the first place?? anyway, it's gone.  the columns are re-aligned. 
 with open(classification_file, "r") as infile:
     for line in infile:
         if len(line) < 1:
             continue
         cols = line.split("\t")
-        read = cols[1]
-        taxid = cols[2].strip("\n")
+        read = cols[0]
+        taxid = cols[1].strip("\n")
         if taxid != "0" and taxid in nodes:
             taxid2 = copy.deepcopy(taxid)
             taxonomy = ""
