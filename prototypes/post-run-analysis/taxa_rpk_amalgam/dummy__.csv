@@ -1,0 +1,484 @@
+taxa_id,name,reads,genes
+superkingdom,Achromatium sp. WMS1,3,1
+superkingdom,Achromobacter piechaudii,2,1
+superkingdom,Acidisphaera rubrifaciens,31,1
+superkingdom,Acidobacteria,2,1
+superkingdom,Acidovorax avenae,1,1
+superkingdom,Acidovorax delafieldii,1,1
+superkingdom,Acidovorax sp. KKS102,8,1
+superkingdom,Acidovorax sp. NO-1,12,1
+superkingdom,Acinetobacter baumannii,3,1
+superkingdom,Acinetobacter johnsonii,4,1
+superkingdom,Acinetobacter junii,1,1
+superkingdom,Acinetobacter radioresistens,2,1
+superkingdom,Acinetobacter sp. NIPH 284,1,1
+superkingdom,Acinetobacter sp. P8-3-8,1651,1
+superkingdom,Acinetobacter tandoii,4,1
+superkingdom,Acinetobacter tjernbergiae,1,1
+superkingdom,Acinetobacter venetianus,1,1
+superkingdom,Actinobacteria bacterium BACL15 MAG-120619-bin91,1,1
+superkingdom,Actinomyces naeslundii,3,1
+superkingdom,Actinomyces odontolyticus,61,1
+superkingdom,Actinomyces oris,1,1
+superkingdom,Actinomyces sp. oral taxon 170,1,1
+superkingdom,Actinomyces sp. oral taxon 175,3,1
+superkingdom,Actinomyces sp. oral taxon 849,1,1
+superkingdom,Actinomyces sp. oral taxon 877,1,1
+superkingdom,Actinomyces turicensis,4,1
+superkingdom,Actinomyces viscosus,10,1
+superkingdom,Aeromonas,3,1
+superkingdom,Aeromonas hydrophila,1,1
+superkingdom,Aeromonas veronii,1,1
+superkingdom,Afipia sp. GAS231,2,1
+superkingdom,Agromyces subbeticus,2,1
+superkingdom,Alicycliphilus denitrificans,37,1
+superkingdom,Alphaproteobacteria,14,1
+order,Anaerostipes caccae,8282,1
+order,Anaerotruncus colihominis,2,1
+phylum,Aquimarina agarivorans,2,1
+phylum,Arachidicoccus rhizosphaerae,36,1
+phylum,Arsenicibacter rosenii,1,1
+Can't find,Aspergillus clavatus,1,1
+superkingdom,Asticcacaulis excentricus,8,1
+superkingdom,Asticcacaulis sp. YBE204,2,1
+phylum,Aureispira sp. CCB-QB1,1,1
+superkingdom,Azospirillum brasilense,1,1
+superkingdom,Azospirillum lipoferum,1,1
+Can't find,Bacilli,1,1
+class,Bacillus bingmayongensis,1,1
+class,Bacillus coagulans,5,1
+class,Bacillus licheniformis,2,1
+class,Bacillus sp. BT1B_CT2,1,1
+class,Bacillus subtilis,2,1
+superkingdom,Bacteria,57,1
+order,Bacteroidales,9,1
+superkingdom,Bacteroides,9,1
+order,Bacteroides caccae,16233,1
+order,Bacteroides coprocola,6609,1
+order,Bacteroides fragilis,29,1
+order,Bacteroides intestinalis,28,1
+order,Bacteroides ovatus,60,1
+order,Bacteroides plebeius,149,1
+order,Bacteroides salyersiae,4,1
+order,Bacteroides sp. 1_1_30,2,1
+order,Bacteroides sp. 2_1_22,21983,1
+order,Bacteroides sp. 2_1_33B,9874,1
+order,Bacteroides sp. 2_2_4,5,1
+order,Bacteroides sp. 3_1_19,12,1
+order,Bacteroides sp. 3_1_23,1,1
+order,Bacteroides sp. 3_1_33FAA,1344,1
+order,Bacteroides sp. 4_1_36,2,1
+order,Bacteroides sp. D1,3,1
+order,Bacteroides sp. D2,2,1
+order,Bacteroides sp. D22,1,1
+order,Bacteroides sp. HPS0048,2,1
+order,Bacteroides stercoris,1,1
+order,Bacteroides thetaiotaomicron,2,1
+order,Bacteroides uniformis,35,1
+order,Bacteroides vulgatus,14,1
+order,Barnesiella intestinihominis,389,1
+superkingdom,Betaproteobacteria,1,1
+order,Blautia,22,1
+order,Blautia hansenii,44,1
+order,Blautia obeum,968,1
+order,Blautia producta,385,1
+order,Blautia sp. KLE 1732,1,1
+order,Blautia sp. YL58,15,1
+superkingdom,Bordetella pertussis,1,1
+superkingdom,Bordetella petrii,4,1
+Can't find,Botrytis cinerea,1,1
+superkingdom,Brachybacterium faecium,1,1
+superkingdom,Brachybacterium paraconglomeratum,7,1
+superkingdom,Brachybacterium squillarum,1,1
+superkingdom,Brachyspira innocens,2,1
+superkingdom,Brachyspira pilosicoli,1,1
+superkingdom,Bradyrhizobiaceae,16,1
+superkingdom,Bradyrhizobium,8,1
+superkingdom,Bradyrhizobium canariense,5,1
+superkingdom,Bradyrhizobium diazoefficiens,5,1
+superkingdom,Bradyrhizobium elkanii,13,1
+superkingdom,Bradyrhizobium embrapense,1,1
+superkingdom,Bradyrhizobium japonicum,10,1
+superkingdom,Bradyrhizobium oligotrophicum,2,1
+superkingdom,Bradyrhizobium sp. BTAi1,1,1
+superkingdom,Bradyrhizobium sp. DFCI-1,1,1
+superkingdom,Bradyrhizobium sp. ORS 375,2,1
+superkingdom,Bradyrhizobium sp. S23321,7,1
+superkingdom,Bradyrhizobium sp. STM 3809,4,1
+superkingdom,Bradyrhizobium sp. WSM1253,4,1
+superkingdom,Bradyrhizobium sp. WSM2793,2,1
+superkingdom,Bradyrhizobium sp. WSM4349,6,1
+superkingdom,Bradyrhizobium sp. WSM471,12,1
+superkingdom,Bradyrhizobium sp. YR681,18,1
+class,Brevibacillus borstelensis,10,1
+superkingdom,Brevibacterium casei,21,1
+superkingdom,Brevundimonas sp. BAL3,6,1
+superkingdom,Brevundimonas subvibrioides,25,1
+superkingdom,Brucella sp. 83/13,1,1
+superkingdom,Brucella suis,33,1
+superkingdom,Burkholderia glumae,1,1
+superkingdom,Burkholderia multivorans,6,1
+superkingdom,Burkholderiales,2,1
+class,Caldalkalibacillus thermarum,6,1
+superkingdom,Campylobacter coli,2,1
+superkingdom,Campylobacter jejuni,1,1
+superkingdom,Candidatus Chisholmbacteria bacterium RIFCSPLOWO2_01_FULL_49_14,1,1
+superkingdom,Candidatus Giovannonibacteria,1,1
+superkingdom,Candidatus Kaiserbacteria,1,1
+Can't find,Candidatus Pacearchaeota archaeon CG1_02_32_132,1,1
+Can't find,Candidatus Pacearchaeota archaeon CG1_02_39_14,3,1
+superkingdom,Candidatus Saccharibacteria,10,1
+superkingdom,Candidatus Solibacter usitatus,1,1
+superkingdom,Candidatus Taylorbacteria,2,1
+phylum,Capnocytophaga sputigena,2,1
+order,Carnobacterium maltaromaticum,78,1
+superkingdom,Caulobacter segnis,27,1
+superkingdom,Caulobacter sp. AP07,7,1
+superkingdom,Caulobacter sp. K31,2,1
+superkingdom,Caulobacter vibrioides,14,1
+phylum,Centipeda periodontii,2,1
+phylum,Chitinophagaceae,1,1
+superkingdom,Chlamydia psittaci,229,1
+superkingdom,Chlamydia trachomatis,2,1
+phylum,Chryseobacterium gleum,2,1
+superkingdom,Citricoccus sp. CH26A,2,1
+superkingdom,Citrobacter koseri,1,1
+superkingdom,Citrobacter rodentium,1,1
+superkingdom,Clavibacter sepedonicus,1,1
+order,Clostridiales,7,1
+genus,Clostridium botulinum,437,1
+genus,Clostridium butyricum,1,1
+genus,Clostridium perfringens,2,1
+species,Clostridium sp. ASF356,4658,1
+genus,Clostridium sp. BL8,29,1
+genus,Clostridium sp. D5,2,1
+genus,Clostridium sp. L2-50,234,1
+genus,Clostridium sp. M62/1,33,1
+genus,Clostridium sp. SS2/1,434,1
+genus,Clostridium sp. SY8519,18,1
+superkingdom,Comamonadaceae,10,1
+superkingdom,Comamonas testosteroni,6,1
+superkingdom,Conexibacter woesei,1,1
+order,Coprococcus eutactus,217,1
+order,Coprococcus sp. HPP0048,22,1
+order,Coprococcus sp. HPP0074,19,1
+superkingdom,Corynebacterium accolens,1,1
+superkingdom,Corynebacterium glucuronolyticum,1,1
+superkingdom,Corynebacterium kroppenstedtii,3,1
+superkingdom,Corynebacterium matruchotii,6,1
+superkingdom,Corynebacterium striatum,24,1
+superkingdom,Corynebacterium timonense,2,1
+superkingdom,Cupriavidus sp. WS,1,1
+superkingdom,Curvibacter gracilis,7,1
+superkingdom,Curvibacter lanceolatus,1,1
+superkingdom,Cutibacterium acnes,67,1
+superkingdom,Cyanothece sp. CCY0110,1,1
+superkingdom,Delftia acidovorans,2,1
+superkingdom,Dermacoccus sp. Ellin185,6,1
+superkingdom,Dickeya solani,1,1
+Can't find,Dictyostelium purpureum,3,1
+order,Dorea longicatena,1352,1
+order,Dorea sp. 5-2,1,1
+superkingdom,Duganella zoogloeoides,27,1
+superkingdom,Edwardsiella tarda,1,1
+phylum,Elizabethkingia anophelis,1283,1
+superkingdom,Elusimicrobia bacterium RIFCSPLOWO2_01_FULL_54_10,1,1
+superkingdom,Enterobacter cloacae,3,1
+superkingdom,Enterobacter cloacae complex 'Hoffmann cluster IV',1,1
+superkingdom,Enterobacterales,3,1
+superkingdom,Enterobacteriaceae,17,1
+order,Enterococcus casseliflavus,3,1
+order,Enterococcus cecorum,13,1
+order,Enterococcus durans,1,1
+order,Enterococcus faecalis,16,1
+order,Enterococcus faecium,225,1
+order,Enterococcus mundtii,5,1
+superkingdom,Erwinia billingiae,1,1
+phylum,Erysipelothrix rhusiopathiae,4,1
+superkingdom,Escherichia albertii,1,1
+superkingdom,Escherichia coli,151,1
+superkingdom,Escherichia fergusonii,4,1
+superkingdom,Escherichia sp. 1_1_43,70,1
+superkingdom,Escherichia sp. 4_1_40B,84,1
+superkingdom,Escherichia sp. KTE114,1,1
+superkingdom,Escherichia sp. TW09231,2,1
+superkingdom,Escherichia sp. TW09276,2,1
+superkingdom,Escherichia sp. TW09308,1,1
+superkingdom,Escherichia sp. TW10509,13,1
+genus,Eubacterium sp. 14-2,2,1
+genus,Eubacterium ventriosum,70,1
+order,Faecalibacterium prausnitzii,83,1
+phylum,Finegoldia magna,1,1
+phylum,Firmicutes,1,1
+phylum,Flavobacteria bacterium MS024-2A,46,1
+phylum,Flavobacteria bacterium MS024-3C,41,1
+phylum,Flavobacteriia,1,1
+phylum,Flavobacterium,1,1
+phylum,Flavobacterium aquatile,2,1
+order,Flavonifractor plautii,3,1
+superkingdom,Fusobacterium nucleatum,5,1
+superkingdom,Gammaproteobacteria,6,1
+superkingdom,Gammaproteobacteria bacterium 2W06,10,1
+superkingdom,Glaesserella parasuis,2,1
+superkingdom,Glycomyces arizonensis,2,1
+superkingdom,Haemophilus sputorum,1,1
+superkingdom,Helicobacter pullorum,1,1
+order,Heliobacterium modesticaldum,154,1
+family,Hungatella hathewayi,19,1
+phylum,Hymenobacter aerophilus,1,1
+superkingdom,Hyphomicrobiaceae,4,1
+order,Intestinibacter bartlettii,18,1
+superkingdom,Janthinobacterium sp. CG3,1,1
+superkingdom,Janthinobacterium sp. HH01,3,1
+superkingdom,Klebsiella aerogenes,1,1
+superkingdom,Klebsiella pneumoniae,4,1
+superkingdom,Klebsiella sp. OBRC7,1,1
+superkingdom,Kocuria palustris,5,1
+superkingdom,Kocuria rhizophila,21,1
+superkingdom,Kocuria sp. UCD-OTCP,4,1
+superkingdom,Labrenzia aggregata,2,1
+order,Lachnospiraceae,9,1
+order,Lachnospiraceae bacterium 3_1_57FAA_CT1,8,1
+order,Lachnospiraceae bacterium 5_1_63FAA,25,1
+order,Lachnospiraceae bacterium 6_1_37FAA,81,1
+order,Lachnospiraceae bacterium 6_1_63FAA,32,1
+order,Lachnospiraceae bacterium 8_1_57FAA,6,1
+order,Lachnospiraceae bacterium 9_1_43BFAA,118,1
+order,Lactobacillales,2,1
+family,Lactobacillus,11,1
+genus,Lactobacillus animalis,18,1
+genus,Lactobacillus antri,1,1
+genus,Lactobacillus casei,11,1
+genus,Lactobacillus crispatus,23,1
+genus,Lactobacillus fermentum,3,1
+genus,Lactobacillus jensenii,25,1
+genus,Lactobacillus murinus,96,1
+genus,Lactobacillus paracasei,21,1
+genus,Lactobacillus pentosus,2,1
+genus,Lactobacillus plantarum,2,1
+genus,Lactobacillus rhamnosus,109,1
+genus,Lactobacillus salivarius,6,1
+genus,Lactobacillus vaginalis,1,1
+order,Lactococcus lactis,2,1
+superkingdom,Lamprocystis purpurea,1,1
+superkingdom,Legionella pneumophila,1,1
+superkingdom,Leifsonia xyli,1,1
+Can't find,Leptosphaeria maculans,80,1
+superkingdom,Leptospira interrogans,1,1
+superkingdom,Leptospira weilii,1,1
+superkingdom,Limnohabitans sp. Rim28,2,1
+class,Listeria grayi,1,1
+class,Listeria monocytogenes,71,1
+superkingdom,Magnetospirillum caucaseum,30,1
+Can't find,Malassezia globosa,8,1
+class,Marinilabilia salmonicolor,6,1
+superkingdom,Massilia timonae,2,1
+superkingdom,Meiothermus silvanus,1,1
+superkingdom,Mesorhizobium amorphae,13,1
+superkingdom,Mesorhizobium ciceri,10,1
+superkingdom,Mesorhizobium japonicum,6,1
+superkingdom,Mesorhizobium loti,1,1
+superkingdom,Mesorhizobium metallidurans,2,1
+superkingdom,Mesorhizobium opportunistum,4,1
+superkingdom,Mesorhizobium sp. L103C105A0,3,1
+superkingdom,Mesorhizobium sp. L2C084A000,4,1
+superkingdom,Mesorhizobium sp. LNHC209A00,2,1
+superkingdom,Mesorhizobium sp. LNHC220B00,2,1
+superkingdom,Mesorhizobium sp. LNHC221B00,3,1
+superkingdom,Mesorhizobium sp. LNHC229A00,1,1
+superkingdom,Mesorhizobium sp. LNHC252B00,12,1
+superkingdom,Mesorhizobium sp. LSJC255A00,2,1
+superkingdom,Mesorhizobium sp. LSJC277A00,7,1
+superkingdom,Mesorhizobium sp. LSJC280B00,4,1
+superkingdom,Methylibium petroleiphilum,2,1
+superkingdom,Methylobacterium mesophilicum,2,1
+superkingdom,Methylophilus methylotrophus,1,1
+superkingdom,Methyloversatilis universalis,14,1
+superkingdom,Microbacterium,1,1
+superkingdom,Microbacterium laevaniformans,4,1
+superkingdom,Micrococcales,80,1
+superkingdom,Micrococcus luteus,8,1
+species,Mucispirillum schaedleri,772,1
+superkingdom,Mycobacterium avium,1,1
+superkingdom,Mycobacterium tuberculosis,2,1
+superkingdom,Nitrobacter hamburgensis,9,1
+superkingdom,Nitrobacter winogradskyi,12,1
+superkingdom,Nocardioides sp. JS614,5,1
+superkingdom,Nocardiopsis salina,1,1
+superkingdom,Novosphingobium nitrogenifigens,1,1
+superkingdom,Novosphingobium pentaromativorans,2,1
+superkingdom,Novosphingobium sp. Rr 2-17,1,1
+superkingdom,Oligotropha carboxidovorans,1,1
+superkingdom,Oxalobacteraceae,3,1
+class,Paenibacillus lactis,18,1
+superkingdom,Pantoea,6,1
+superkingdom,Pantoea agglomerans,9,1
+genus,Parabacteroides distasonis,35749,1
+genus,Parabacteroides goldsteinii,15814,1
+genus,Parabacteroides johnsonii,5527,1
+genus,Parabacteroides merdae,5307,1
+genus,Parabacteroides sp. 20_3,92,1
+species,Parabacteroides sp. ASF519,9450,1
+genus,Parabacteroides sp. D13,243,1
+genus,Parabacteroides sp. D25,19,1
+superkingdom,Paracoccus denitrificans,1,1
+order,Paraprevotella clara,15,1
+superkingdom,Pararhodospirillum photometricum,4,1
+superkingdom,Parcubacteria bacterium C7867-004,2,1
+superkingdom,Parvibaculum lavamentivorans,1,1
+phylum,Parvimonas micra,34,1
+phylum,Pedobacter oryzae,1,1
+Can't find,Perkinsus marinus,56,1
+superkingdom,Phenylobacterium zucineum,7,1
+Can't find,Plasmodium berghei,48,1
+Can't find,Plasmodium yoelii,187,1
+superkingdom,Polaromonas naphthalenivorans,5,1
+superkingdom,Polaromonas sp. JS666,1,1
+superkingdom,Polynucleobacter asymbioticus,9,1
+order,Porphyromonas crevioricanis,8,1
+order,Porphyromonas gingivalis,1,1
+order,Prevotella amnii,14,1
+order,Prevotella buccae,13,1
+order,Prevotella histicola,343,1
+order,Prevotella loescheii,5,1
+order,Prevotella nigrescens,14,1
+order,Prevotella oris,19,1
+order,Prevotella sp. oral taxon 317,1,1
+order,Prevotella sp. oral taxon 472,1,1
+superkingdom,Propionibacterium sp. 409-HC1,5,1
+superkingdom,Propionibacterium sp. 434-HC2,3,1
+superkingdom,Propionibacterium sp. 5_U_42AFAA,3,1
+superkingdom,Propionibacterium sp. CC003-HC2,3,1
+superkingdom,Propionibacterium sp. KPL1847,8,1
+superkingdom,Propionibacterium sp. KPL1849,6,1
+superkingdom,Propionibacterium sp. KPL1854,1,1
+superkingdom,Propionibacterium sp. KPL2003,2,1
+superkingdom,Propionibacterium sp. KPL2008,4,1
+superkingdom,Propionibacterium sp. KPL2009,1,1
+superkingdom,Proteobacteria,33,1
+phylum,Pseudarcicella hirudinis,1,1
+superkingdom,Pseudoalteromonas agarivorans,1,1
+superkingdom,Pseudoclavibacter faecalis,1,1
+order,Pseudoflavonifractor capillosus,8463,1
+superkingdom,Pseudomonadales,1,1
+superkingdom,Pseudomonas,6,1
+superkingdom,Pseudomonas aeruginosa,7,1
+superkingdom,Pseudomonas fluorescens,18,1
+superkingdom,Pseudomonas furukawaii,3,1
+superkingdom,Pseudomonas fuscovaginae,1,1
+superkingdom,Pseudomonas mendocina,1,1
+superkingdom,Pseudomonas psychrotolerans,1,1
+superkingdom,Pseudomonas sp. 313,2,1
+superkingdom,Pseudomonas sp. CF150,1,1
+superkingdom,Pseudomonas sp. GM79,7,1
+superkingdom,Pseudomonas sp. GM84,1,1
+superkingdom,Pseudomonas sp. P179,3,1
+superkingdom,Pseudomonas stutzeri,1,1
+superkingdom,Pseudomonas syringae,11,1
+superkingdom,Pseudorhodobacter ferrugineus,1,1
+superkingdom,Pseudovibrio sp. JE062,13,1
+superkingdom,Ralstonia solanacearum,1,1
+superkingdom,Ramlibacter tataouinensis,1,1
+superkingdom,Reyranella massiliensis,1,1
+superkingdom,Rhizobiales,9,1
+superkingdom,Rhizobium etli,8,1
+superkingdom,Rhizobium grahamii,2,1
+superkingdom,Rhizobium leguminosarum,6,1
+superkingdom,Rhizobium sp. 2MFCol3.1,17,1
+superkingdom,Rhizobium tropici,1,1
+superkingdom,Rhodococcus opacus,48,1
+superkingdom,Rhodococcus wratislaviensis,285,1
+superkingdom,Rhodomicrobium vannielii,4,1
+superkingdom,Rhodoplanes sp. Z2-YC6860,46,1
+superkingdom,Rhodopseudomonas palustris,10,1
+superkingdom,Rhodospirillaceae,3,1
+superkingdom,Rhodospirillales bacterium URHD0017,11,1
+superkingdom,Rothia aeria,5,1
+superkingdom,Rubrivivax gelatinosus,2,1
+order,Ruminiclostridium thermocellum,1,1
+order,Ruminococcus lactaris,121,1
+superkingdom,Salmonella enterica,4,1
+superkingdom,Sandaracinus amylolyticus,5,1
+Can't find,Scheffersomyces stipitis,2,1
+phylum,Selenomonas sp. oral taxon 138,1,1
+phylum,Selenomonas sp. oral taxon 149,1,1
+phylum,Selenomonas sputigena,1,1
+superkingdom,Serratia liquefaciens,3,1
+superkingdom,Serratia sp. M24T3,3,1
+superkingdom,Shigella boydii,26,1
+superkingdom,Shigella dysenteriae,5,1
+superkingdom,Shigella flexneri,18,1
+superkingdom,Shigella sonnei,60,1
+superkingdom,Shigella sp. SF-2015,8,1
+superkingdom,Sinorhizobium meliloti,5,1
+superkingdom,Sorangium cellulosum,2,1
+superkingdom,Sphingobium chinhatense,2,1
+superkingdom,Sphingobium xenophagum,2,1
+superkingdom,Sphingobium yanoikuyae,3,1
+superkingdom,Sphingomonas,3,1
+superkingdom,Sphingomonas echinoides,1,1
+superkingdom,Sphingomonas elodea,1,1
+superkingdom,Sphingomonas melonis,32,1
+superkingdom,Sphingomonas phyllosphaerae,8,1
+superkingdom,Sphingomonas sp. PAMC 26617,1,1
+superkingdom,Sphingomonas sp. PR090111-T3T-6A,1,1
+superkingdom,Sphingomonas wittichii,2,1
+superkingdom,Sphingopyxis alaskensis,1,1
+superkingdom,Sphingopyxis sp. MC1,17,1
+class,Staphylococcus aureus,30,1
+order,Streptococcus agalactiae,2,1
+order,Streptococcus anginosus,1,1
+order,Streptococcus australis,15,1
+order,Streptococcus infantarius,1,1
+order,Streptococcus iniae,2,1
+order,Streptococcus mitis,1,1
+order,Streptococcus mutans,22,1
+order,Streptococcus pneumoniae,2,1
+order,Streptococcus pseudopneumoniae,1,1
+order,Streptococcus salivarius,624,1
+order,Streptococcus sp. GMD4S,1,1
+superkingdom,Streptomyces,1,1
+superkingdom,Streptomyces himastatinicus,1,1
+superkingdom,Streptomyces sp. HmicA12,1,1
+superkingdom,Streptomyces sp. Mg1,1,1
+superkingdom,Streptomyces sp. S4,1,1
+superkingdom,Streptomyces turgidiscabies,2,1
+order,Subdoligranulum sp. 4_3_54A2FAA,1,1
+superkingdom,Synergistes sp. 3_1_syn1,1,1
+Can't find,Talaromyces stipitatus,6,1
+family,Tannerella forsythia,7,1
+family,Tannerella sp. 6_1_58FAA_CT1,120,1
+family,Tannerellaceae,8983,1
+superkingdom,Tetrasphaera elongata,11,1
+Can't find,Thalassiosira pseudonana,95,1
+phylum,Thermosinus carboxydivorans,9,1
+family,Thermotalea metallivorans,720,1
+Can't find,Thermothelomyces thermophila,103,1
+Can't find,Thielavia terrestris,101,1
+superkingdom,Thiorhodococcus drewsii,1,1
+superkingdom,Varibaculum cambriense,1,1
+superkingdom,Variovorax paradoxus,26,1
+superkingdom,Vibrio alginolyticus,1,1
+superkingdom,Vibrio cholerae,7,1
+superkingdom,Vibrio cyclitrophicus,1,1
+superkingdom,Vibrio parahaemolyticus,5,1
+superkingdom,Vibrio scophthalmi,3,1
+superkingdom,Xanthomonas arboricola,1,1
+superkingdom,Xanthomonas vesicatoria,6,1
+superkingdom,Xenophilus azovorans,3,1
+Can't find,Yarrowia lipolytica,1,1
+superkingdom,Yersinia,1,1
+Can't find,Zymoseptoria tritici,39,1
+order,[Clostridium] bolteae,85,1
+order,[Clostridium] clostridioforme,6043,1
+order,[Clostridium] hiranonis,2,1
+order,[Clostridium] leptum,81,1
+order,[Clostridium] scindens,20,1
+order,[Clostridium] symbiosum,13,1
+superkingdom,[Propionibacterium] namnetense,1,1
+order,[Ruminococcus] gnavus,228,1
+Can't find,[Ruminococcus] torques,5136,1
+superkingdom,methanotrophic bacterial endosymbiont of Bathymodiolus sp.,1,1
+superkingdom,uncultured bacterium,10,1
+Can't find,uncultured marine group II/III euryarchaeote KM3_87_G01,6,1
+superkingdom,uncultured organism,2,1

@@ -154,6 +154,11 @@ def make_sample_tree_dict(names_df, nodes_df, sample_name, tree_dict):
     taxa_list, taxa_dict = construct_tree_name(names_df, nodes_df, sample_name)
     tree_dict[sample_name] = taxa_list
     
+def try_ref_name(x, ref_category_dict):
+    if x in ref_category_dict:
+        return ref_category_dict[x]
+    else:
+        return "Can't find"
 
 if __name__ == "__main__":
     
@@ -286,7 +291,7 @@ if __name__ == "__main__":
     #print(reads_df)
     
     
-    final_df["taxa_id"] = final_df["taxa_id"].apply(lambda x: ref_category_dict[x])
+    final_df["taxa_id"] = final_df["taxa_id"].apply(lambda x:try_ref_name(x, ref_category_dict))
     inal_df = final_df.groupby("taxa_id", as_index = False).sum()
     
     final_df.to_csv(output_location + ".csv", index = False)
