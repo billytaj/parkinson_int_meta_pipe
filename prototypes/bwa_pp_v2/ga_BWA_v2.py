@@ -251,6 +251,28 @@ def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_m
     return gene2read_map, mapped_reads, mapped_list, prev_mapping_count
 
 
+def export_gene_map (gene2read_file, final_gene2read_map):
+
+# WRITE OUTPUT: write gene<->read mapfile of BWA-aligned:
+# [BWA-aligned geneID, length, #reads, readIDs ...]
+    reads_count= 0
+    genes= []
+    with open(gene2read_file,"w") as out_map:
+        for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
+                                                            #  (DNA db is needed to get the sequence.)
+            if record.id in final_gene2read_map:                  #  If DNA db gene is one of the matched genes,
+                genes.append(record)                        #  append the SeqRec to genes list (NOT REALLY USED), and
+                out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(final_gene2read_map[record.id])))
+                                                            #  write [aligned geneID, length, #reads, ...],
+                for read in final_gene2read_map[record.id]:
+                    out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+                    reads_count+= 1
+                else:
+                    out_map.write("\n")                     #  and a new line character.
+    
+    # print BWA stats:
+    print (str(reads_count) + ' reads were mapped with BWA.')
+    print ('Reads mapped to ' + str(len(genes)) + ' genes.')
 
 
 if __name__ == "__main__":
@@ -300,36 +322,12 @@ if __name__ == "__main__":
         pair_2_gene2read_map, pair_2_mapped_reads, pair_2_mapped_list, prev_mapping_count = process_bwa(pair_2_fasta, pair_2_sam, remaining_pair_2_out, False)
 
 
-
-# tracking BWA-assigned:
-gene2read_map= defaultdict(list)                    # dict of BWA-aligned geneID<->readID(s)
-mapped_reads= set()                                 # tracks BWA-assigned reads
-mapped_list= []
-prev_mapping_count= 0
-
-
-
-
+    final_gene2read_map = contig_gene2read_map
+    final_gene2read_map.update(singleton_gene2read_map)
+    if(pair_mode):
+        final_gene2read_map.update(pair_1_gene2read_map)
+        final_gene2read_map.update(pair_2_gene2read_map)
     
     
-
-# WRITE OUTPUT: write gene<->read mapfile of BWA-aligned:
-# [BWA-aligned geneID, length, #reads, readIDs ...]
-reads_count= 0
-genes= []
-with open(gene2read_file,"w") as out_map:
-    for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
-                                                        #  (DNA db is needed to get the sequence.)
-        if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
-            genes.append(record)                        #  append the SeqRec to genes list (NOT REALLY USED), and
-            out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
-                                                        #  write [aligned geneID, length, #reads, ...],
-            for read in gene2read_map[record.id]:
-                out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
-                reads_count+= 1
-            else:
-                out_map.write("\n")                     #  and a new line character.
-
-# print BWA stats:
-print (str(reads_count) + ' reads were mapped with BWA.')
-print ('Reads mapped to ' + str(len(genes)) + ' genes.')
+    export_gene_map(gene2read_file, final_gene2read_map)
+    
