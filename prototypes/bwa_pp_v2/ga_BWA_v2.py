@@ -295,8 +295,9 @@ if __name__ == "__main__":
     prev_mapping_count = 0
     contig_gene2read_map, contig_mapped_reads, contig_mapped_list, prev_mapping_count = process_bwa(contig_fasta, contig_sam, remaining_contig_out, True)
     singleton_gene2read_map, singleton_mapped_reads, singleton_mapped_list, prev_mapping_count = process_bwa(singleton_fasta, singleton_sam, remaining_singleton_out, True)
-    pair_1_gene2read_map, pair_1_mapped_reads, pair_1_mapped_list, prev_mapping_count = process_bwa(pair_1_fasta, pair_1_sam, remaining_pair_1_out, True)
-    pair_2_gene2read_map, pair_2_mapped_reads, pair_2_mapped_list, prev_mapping_count = process_bwa(pair_2_fasta, pair_2_sam, remaining_pair_2_out, False)
+    if(pair_mode):
+        pair_1_gene2read_map, pair_1_mapped_reads, pair_1_mapped_list, prev_mapping_count = process_bwa(pair_1_fasta, pair_1_sam, remaining_pair_1_out, True)
+        pair_2_gene2read_map, pair_2_mapped_reads, pair_2_mapped_list, prev_mapping_count = process_bwa(pair_2_fasta, pair_2_sam, remaining_pair_2_out, False)
 
 
 
@@ -306,15 +307,6 @@ mapped_reads= set()                                 # tracks BWA-assigned reads
 mapped_list= []
 prev_mapping_count= 0
 
-
-
-#####################################
-
-# check number of readtype sets (file inputs)
-numsets= (len(sys.argv)-4)/3
-
-if numsets not in [2,4]:
-    sys.exit('Incorrect number of readtype sets.')
 
 
 
