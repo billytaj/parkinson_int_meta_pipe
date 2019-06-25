@@ -292,9 +292,10 @@ if __name__ == "__main__":
     
     
     final_df["taxa_id"] = final_df["taxa_id"].apply(lambda x:try_ref_name(x, ref_category_dict))
-    inal_df = final_df.groupby("taxa_id", as_index = False).sum()
+    final_df.to_csv(output_location + "_full.csv", index = False)
+    final_df = final_df.groupby("taxa_id", as_index = False).sum()
     
-    final_df.to_csv(output_location + ".csv", index = False)
+    final_df.to_csv(output_location + "_summary.csv", index = False)
     print(final_df)
     
     #print(mpro_taxa_df)
