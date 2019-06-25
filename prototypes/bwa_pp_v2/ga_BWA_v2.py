@@ -6,6 +6,9 @@ import sys
 from collections import Counter
 from collections import defaultdict
 from Bio import SeqIO
+import pandas as pd
+import time
+from datetime import datetime as dt
 
 # Now with some commenting!
 # CHANGES:
@@ -178,6 +181,26 @@ def gene_map(sam, gene2read_map, mapped_reads, mapped_list):                    
     # return unmapped set:
     return unmapped
 
+def import_fasta(file_name_in):
+    fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
+    fasta_df.columns = ["row"]
+    #There's apparently a possibility for NaNs to be introduced in the raw fasta.  We have to strip it before we process (from DIAMOND proteins.faa)
+    fasta_df.dropna(inplace=True)
+    new_df = pd.DataFrame(fasta_df.loc[fasta_df.row.str.contains('>')])  # grab all the IDs
+    new_df.columns = ["names"]
+    new_data_df = fasta_df.loc[~fasta_df.row.str.contains('>')]  # grab the data
+    new_data_df.columns = ["data"]
+    fasta_df = new_df.join(new_data_df, how='outer')  # join them into a 2-col DF
+    fasta_df["names"] = fasta_df.fillna(method='ffill')  # fill in the blank spaces in the name section
+    fasta_df.dropna(inplace=True)  # remove all rows with no sequences
+    fasta_df.index = fasta_df.groupby('names').cumcount()  # index it for transform
+    temp_columns = fasta_df.index  # save the index names for later
+    fasta_df = fasta_df.pivot(values='data', columns='names')  # pivot
+    fasta_df = fasta_df.T  # transpose
+    fasta_df["sequence"] = fasta_df[fasta_df.columns[:]].apply(lambda x: "".join(x.dropna()), axis=1)  # consolidate all cols into a single sequence
+    fasta_df.drop(temp_columns, axis=1, inplace=True)
+
+    return fasta_df
 
 #import contig reads:
 def import_contig_reads(contig2read_file):
@@ -235,6 +258,7 @@ def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_m
     #output_file= sys.argv[3*x+6]    # OUTPUT: non-BWA-aligned contig/readIDs and seqs (.fasta)
 
     # extraction of "non-BWA-aligned" and "BWA-aligned":
+    unmapped_reads = []
     if pair_mode:                                        # Only do once for unmerged paired end (same .sam file).
         unmapped_reads = gene_map(BWA_sam_file, gene2read_map, mapped_reads, mapped_list)      # Store BWA-aligned contigs/reads in gene2read_map
                                                     #  (aligned geneID<->readID(s) dict),
@@ -251,7 +275,7 @@ def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_m
     return gene2read_map, mapped_reads, mapped_list, prev_mapping_count
 
 
-def export_gene_map (gene2read_file, final_gene2read_map):
+def export_gene_map (gene2read_file, final_gene2read_map, DNA_DB):
 
 # WRITE OUTPUT: write gene<->read mapfile of BWA-aligned:
 # [BWA-aligned geneID, length, #reads, readIDs ...]
@@ -273,6 +297,8 @@ def export_gene_map (gene2read_file, final_gene2read_map):
     # print BWA stats:
     print (str(reads_count) + ' reads were mapped with BWA.')
     print ('Reads mapped to ' + str(len(genes)) + ' genes.')
+    
+
 
 
 if __name__ == "__main__":
@@ -302,10 +328,15 @@ if __name__ == "__main__":
         pair_2_fasta = sys.argv[13]
         pair_2_sam = sys.argv[14]
         remaining_pair_2_out = sys.argv[15]
+        
+        print("RUNNING IN PAIRED-MODE")
+    else:
+        print("RUNNING IN SINGLE-MODE")
     
     
 
 # make initial dict of contigID<->readsID(s):
+    
     contig2read_map, contig_reads = import_contig_reads(contig2read_file)
 
 # make new dict only of contigs with unique reads:
@@ -315,11 +346,11 @@ if __name__ == "__main__":
     contig2read_map_uniq, contig_unique_reads = get_unique_contigs(contig2read_map, contig_reads)
     
     prev_mapping_count = 0
-    contig_gene2read_map, contig_mapped_reads, contig_mapped_list, prev_mapping_count = process_bwa(contig_fasta, contig_sam, remaining_contig_out, True)
-    singleton_gene2read_map, singleton_mapped_reads, singleton_mapped_list, prev_mapping_count = process_bwa(singleton_fasta, singleton_sam, remaining_singleton_out, True)
+    contig_gene2read_map, contig_mapped_reads, contig_mapped_list, prev_mapping_count = process_bwa(contig_fasta, contig_sam, remaining_contig_out, prev_mapping_count, True)
+    singleton_gene2read_map, singleton_mapped_reads, singleton_mapped_list, prev_mapping_count = process_bwa(singleton_fasta, singleton_sam, remaining_singleton_out, prev_mapping_count, True)
     if(pair_mode):
-        pair_1_gene2read_map, pair_1_mapped_reads, pair_1_mapped_list, prev_mapping_count = process_bwa(pair_1_fasta, pair_1_sam, remaining_pair_1_out, True)
-        pair_2_gene2read_map, pair_2_mapped_reads, pair_2_mapped_list, prev_mapping_count = process_bwa(pair_2_fasta, pair_2_sam, remaining_pair_2_out, False)
+        pair_1_gene2read_map, pair_1_mapped_reads, pair_1_mapped_list, prev_mapping_count = process_bwa(pair_1_fasta, pair_1_sam, remaining_pair_1_out, prev_mapping_count, True)
+        pair_2_gene2read_map, pair_2_mapped_reads, pair_2_mapped_list, prev_mapping_count = process_bwa(pair_2_fasta, pair_2_sam, remaining_pair_2_out, prev_mapping_count, False)
 
 
     final_gene2read_map = contig_gene2read_map
@@ -329,5 +360,5 @@ if __name__ == "__main__":
         final_gene2read_map.update(pair_2_gene2read_map)
     
     
-    export_gene_map(gene2read_file, final_gene2read_map)
+    export_gene_map(gene2read_file, final_gene2read_map, DNA_DB)
     
