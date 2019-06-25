@@ -57,8 +57,8 @@ def construct_tree_name(names_df, nodes_df, name):
         taxa_id = selected_df["taxa"].iloc[0]
         taxa_category = selected_nodes["level"].iloc[0]
         #taxa_category_list.append(selected_nodes["level"].iloc[0])
-        taxa_list.append(taxa_id)
-        taxa_dict[taxa_id] = taxa_category
+        #taxa_list.append(taxa_id)
+        #taxa_dict[taxa_id] = taxa_category
         #count = 0
         #print("taxa id:", taxa_id)
         #while (~selected_nodes.empty):
@@ -69,13 +69,14 @@ def construct_tree_name(names_df, nodes_df, name):
             
             
             taxa_category = selected_nodes["level"].iloc[0]
-            if(taxa_id == 131567):
-                taxa_category = "Life on Earth"
+            #if(taxa_id == 131567):
+            #    taxa_category = "Life on Earth"
             if not(taxa_category == "no rank"):
                 taxa_dict[taxa_id] = taxa_category
                 taxa_list.append(taxa_id)
             
             taxa_id = selected_nodes["parent"].iloc[0]
+        
         #print("-=-=-=-=-=-=-=-=-=-=-=-=-=")
         #print("taxa list")
         #print(taxa_list)
@@ -85,9 +86,7 @@ def construct_tree_name(names_df, nodes_df, name):
         #print(taxa_category_list)
     taxa_list.reverse()
     return taxa_list, taxa_dict    
-    #return taxa_list, taxa_category_list
-
-#def check_common_ancestry(ref_dict, sample_list)
+    #return taxa_list, taxa_category_list    
     
 
 def call_me(names_df, nodes_df, name):
@@ -133,6 +132,8 @@ def make_sample_tree_dict(names_df, nodes_df, sample_name, tree_dict):
 
 def find_common_ancestry(sample_name, ref_dict, sample_list, return_dict):
     #This will search through all of ASF, and figure out which matching is the highest, and return that.`
+    #june 24, this needs to be redesigned to allow subspecies.  it'll throw off the matching if subspecies is a part of the ref list
+    #because then everything will be offset
     prior_depth = 0
     for ref_key in ref_dict:
         
@@ -145,20 +146,22 @@ def find_common_ancestry(sample_name, ref_dict, sample_list, return_dict):
         else:
             range_of_loop = ref_size
         
-        common_ancestor = -1
+        common_ancestor = 1
         search_depth = 0
         for i in range(0, range_of_loop):
-            search_depth += 1
+            search_depth = i
             if(ref_list[i] == sample_list[i]):
                 common_ancestor = sample_list[i]
             else:
+                search_depth -= 1
                 break
         #print(sample_name, "last ancestor against", ref_key, "->", )
         
         if(search_depth > prior_depth):        
             return_dict[sample_name] = common_ancestor
             prior_depth = search_depth
-        
+            
+            
 def export_from_dict(final_dict, ref_category_dict):
     if not final_dict:
         print("return dict is empty.  something's wrong")
