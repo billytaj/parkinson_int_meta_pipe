@@ -298,7 +298,10 @@ def export_gene_map (gene2read_file, final_gene2read_map, DNA_DB):
     print (str(reads_count) + ' reads were mapped with BWA.')
     print ('Reads mapped to ' + str(len(genes)) + ' genes.')
     
-
+def export_gene_map_v2 (gene2read_file, final_gene2read_map, DNA_DB):
+    dna_df = import_fasta(DNA_DB)
+    print(dna_df)
+    return dna_df
 
 
 if __name__ == "__main__":
@@ -333,10 +336,10 @@ if __name__ == "__main__":
     else:
         print("RUNNING IN SINGLE-MODE")
     
-    
+    dna_db_df = export_gene_map_v2("nothing", "here", DNA_DB)
 
 # make initial dict of contigID<->readsID(s):
-    
+    """
     contig2read_map, contig_reads = import_contig_reads(contig2read_file)
 
 # make new dict only of contigs with unique reads:
@@ -361,4 +364,4 @@ if __name__ == "__main__":
     
     
     export_gene_map(gene2read_file, final_gene2read_map, DNA_DB)
-    
+    """
