@@ -149,12 +149,13 @@ def find_common_ancestry(sample_name, ref_dict, sample_list, return_dict):
         
         common_ancestor = -1
         search_depth = 0
-        print("RANGE OF LOOP for", ref_key, ":", range_of_loop)
+        #print("RANGE OF LOOP for", ref_key, ":", range_of_loop)
         for i in range(0, range_of_loop):
-            search_depth += 1
+            search_depth = i
             if(ref_list[i] == sample_list[i]):
                 common_ancestor = sample_list[i]
             else:
+                search_depth -= 1
                 break
         #print(sample_name, "last ancestor against", ref_key, "->", )
         
@@ -283,6 +284,8 @@ if __name__ == "__main__":
     
     
     final_df = pd.Series(final_dict).to_frame("taxa_id")
+    ref_category_dict[-1] = "not found"
+    final_df["category"] = final_df["taxa_id"].apply(lambda x: ref_category_dict[x])
     print(final_df)
     #samsa_df.index = samsa_df["name"]
     #final_df["name"] = final_df.index
