@@ -181,7 +181,7 @@ def gene_map(sam, gene2read_map, mapped_reads, mapped_list):                    
     # return unmapped set:
     return unmapped
 
-def import_fasta(file_name_in):
+def import_fasta_chunked(file_name_in):
     fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
     fasta_df.columns = ["row"]
     #There's apparently a possibility for NaNs to be introduced in the raw fasta.  We have to strip it before we process (from DIAMOND proteins.faa)
@@ -202,6 +202,54 @@ def import_fasta(file_name_in):
 
     return fasta_df
 
+
+def import_fasta_headers(file_name_in):
+    #it turns ouf we don't really need the sequences out of this database
+    dna_db_headers = list()
+    
+    with open(file_name_in, "r") as dna_db:
+        for line in dna_db:
+            if(line.startswith(">")):
+                dna_db_headers.append(line[1:].strip("\n"))
+    return dna_db_headers
+
+def import_fasta_dumb(file_name_in):
+    #this is the dumb, mem-efficient way
+    dna_db_dict = dict()
+    with open(file_name_in, "r") as dna_db:
+        #count = 0
+        current_seq = None
+        current_header = None
+        for line in dna_db:
+            #print(dt.today(), "working:", line)
+            if(current_seq is None and current_header is None):
+                if(line.startswith(">")):
+                    #print(dt.today(), "new header:", line)
+                    #count += 1
+                    current_header = line[1:]
+                    current_seq = None
+            elif(current_seq is None and current_header is not None):
+                if(not line.startswith(">")):
+                    current_seq = line
+                else:
+                    print("This shouldn't happen.  2 headers in a row")
+                    break
+            elif(current_seq is not None and current_header is None):
+                print("This shouldn't happen: seq without header.")
+                break
+            elif(current_seq is not None and current_header is not None):
+                if(line.startswith(">")):
+                    dna_db_dict[current_header] = current_seq
+                    current_header = line[1:]
+                    current_seq = None
+                    #print(dt.today(), "new header:", line)
+                    #count += 1
+                else:
+                    current_seq += line
+            #if(count > 1000):
+            #    break
+    
+    return dna_db_dict
 #import contig reads:
 def import_contig_reads(contig2read_file):
     contig2read_map= {}
@@ -298,10 +346,24 @@ def export_gene_map (gene2read_file, final_gene2read_map, DNA_DB):
     print (str(reads_count) + ' reads were mapped with BWA.')
     print ('Reads mapped to ' + str(len(genes)) + ' genes.')
     
-def export_gene_map_v2 (gene2read_file, final_gene2read_map, DNA_DB):
-    dna_df = import_fasta(DNA_DB)
-    print(dna_df)
-    return dna_df
+def export_gene_map_v2(gene2read_file, final_gene2read_map, DNA_DB):
+    dna_db_headers_list = import_fasta_headers(DNA_DB)
+    #dna_db_df = pd.DataFrame.from_dict(dna_db_dict, orient = "index")
+    #print(final_gene2read_map)
+    genemap_df = pd.DataFrame.from_dict(final_gene2read_map, orient = "index")
+    temp_cols = genemap_df.columns.tolist()
+    cols = ["names", "reads"] + temp_cols
+    genemap_df["names"] = genemap_df.index
+    genemap_df["reads"] = genemap_df["names"].apply(lambda x: len(final_gene2read_map[x]))
+    genemap_df = genemap_df[cols]
+    final_genemap_df = genemap_df[genemap_df["names"].isin(dna_db_headers_list)]
+    #print(dna_db_headers_list)
+    final_genemap_df.to_csv(gene2read_file, sep = "\t", index = False, header = None)
+    #print(final_genemap_df)
+    
+    
+    #db_df = import_fasta_chunked(DNA_DB)
+    #print(db_df)    
 
 
 if __name__ == "__main__":
@@ -336,15 +398,16 @@ if __name__ == "__main__":
     else:
         print("RUNNING IN SINGLE-MODE")
     
-    dna_db_df = export_gene_map_v2("nothing", "here", DNA_DB)
-
-# make initial dict of contigID<->readsID(s):
-    """
+    
+    #dna_db_df = export_gene_map_v2("dummy", "dummy", DNA_DB)
+    #print(dna_db_df)
+    # make initial dict of contigID<->readsID(s):
+    
     contig2read_map, contig_reads = import_contig_reads(contig2read_file)
 
-# make new dict only of contigs with unique reads:
-# (hard to tell w BWA what contigs match better, so for reads associated
-# w multiple matched contigs, avoid choosing btw contigs for now.)
+    # make new dict only of contigs with unique reads:
+    # (hard to tell w BWA what contigs match better, so for reads associated
+    # w multiple matched contigs, avoid choosing btw contigs for now.)
     
     contig2read_map_uniq, contig_unique_reads = get_unique_contigs(contig2read_map, contig_reads)
     
@@ -362,6 +425,7 @@ if __name__ == "__main__":
         final_gene2read_map.update(pair_1_gene2read_map)
         final_gene2read_map.update(pair_2_gene2read_map)
     
+    dna_db_df = export_gene_map_v2(gene2read_file, final_gene2read_map, DNA_DB)
+    #export_gene_map(gene2read_file, final_gene2read_map, DNA_DB)
     
-    export_gene_map(gene2read_file, final_gene2read_map, DNA_DB)
-    """
+    
