@@ -9,6 +9,7 @@ from Bio import SeqIO
 import pandas as pd
 import time
 from datetime import datetime as dt
+import multiprocessing as mp
 
 # Now with some commenting!
 # CHANGES:
@@ -53,67 +54,72 @@ from datetime import datetime as dt
 # =	Read Match; the nucleotide is present in the reference.
 # X	Read Mismatch; the nucleotide is present in the reference.
 
-def gene_map(sam, gene2read_map, mapped_reads, mapped_list):                                      # Set of unmapped contig/readIDs=
+def gene_map(process_id, samfile, gene2read_map, mapped_reads, mapped_list, return_dict):                                      # Set of unmapped contig/readIDs=
                                                         #  gene_map(BWA .sam file)
     # tracking BWA-assigned & unassigned:
     query2gene_map= defaultdict(set)                    # Dict of BWA-aligned contig/readID<->geneID(s).
     queryIScontig= {}                                   # Dict of BWA-aligned contig/readID<->contig? (True/False).
     unmapped= set()                                     # Set of unmapped contig/readIDs.
+    
+    # tracking BWA-assigned:
+    gene2read_map= defaultdict(list)                    # dict of BWA-aligned geneID<->readID(s)
+    mapped_reads= set()                                 # tracks BWA-assigned reads
+    mapped_list= []
 
     len_chars= ["M","I","S","=","X"]                    # These particular CIGAR operations cause the
                                                         #  alignment to step along the query sequence.
                                                         # Sum of lengths of these ops=length of seq.
 
     # first, process .sam file, one contig/read (query) at a time:
-    with open(sam,"r") as samfile:
-        for line in samfile:
+    #with open(sam,"r") as samfile:
+    for line in samfile:
+    
+        # "ON-THE-FLY" filter:
+    
+        # extract & store data:
+        if line.startswith("@") or len(line)<=1:    # If length of line <=1 or line is a header (@...)
+            continue                                #  go to the next query (restart for).
+        line_parts= line.strip("\n").split("\t")    # Otherwise, split into tab-delimited fields and store:
+        query= line_parts[0]                        #  queryID= contig/readID,
+        db_match= line_parts[2]                     #  geneID, and a
+        flag= bin(int(line_parts[1]))[2:].zfill(11) #  flag---after conversion into 11-digit binary format
+                                                    #  where each bit is a flag for a specific descriptor.
+
+        # is query BWA-aligned?:
+        if flag[8]=="1":                            # If contig/read is NOT BWA-ALIGNED (9th digit=1),
+            unmapped.add(query)                     # add it to the unmapped set and
+            continue                                # skip to the next query.
         
-            # "ON-THE-FLY" filter:
+        # is query a contig made of unique reads?:
+        if query in contig2read_map:                # If query is a contig (searches through keys)
+            if query in contig2read_map_uniq:       #  and it's made of contig-unique reads,
+                contig= True                        #  then mark as contig and move on.
+            else:                                   # Otherwise, contig contains non-unique reads,
+                unmapped.add(query)                 #  therefore add it to the unmapped set and
+                continue                            #  skip to the next query.
+        else:
+            contig= False                           # If query isn't a contig, just move on.
         
-            # extract & store data:
-            if line.startswith("@") or len(line)<=1:    # If length of line <=1 or line is a header (@...)
-                continue                                #  go to the next query (restart for).
-            line_parts= line.strip("\n").split("\t")    # Otherwise, split into tab-delimited fields and store:
-            query= line_parts[0]                        #  queryID= contig/readID,
-            db_match= line_parts[2]                     #  geneID, and a
-            flag= bin(int(line_parts[1]))[2:].zfill(11) #  flag---after conversion into 11-digit binary format
-                                                        #  where each bit is a flag for a specific descriptor.
+        # does query alignment meet threshold?:
+        length= 0
+        matched= 0
+        CIGAR= re.split("([MIDNSHPX=])", line_parts[5]) # Split CIGAR string into list, placing
+                                                        #  all chars w/in [...] into own field
+                                                        #  (e.g., 9S41M50S->['9','S','41','M','50','S','']).
+        for index in range(len(CIGAR))[:-1]:            # Loop CIGAR elements (last element=''),
+            if CIGAR[index+1] in len_chars:             # Use CIGAR operations that step along the query seq,
+                length+= int(CIGAR[index])              #  to determine length of query.
+            if CIGAR[index+1]=="M":                     # Use CIGAR match operation to
+                matched+= int(CIGAR[index])             #  determine no. nuclotides matched.
+        if matched<length*0.9:                          # If alignment is <90% matched:
+            unmapped.add(query)                         # add it to the unmapped set and
+            continue                                    # skip to the next query.
 
-            # is query BWA-aligned?:
-            if flag[8]=="1":                            # If contig/read is NOT BWA-ALIGNED (9th digit=1),
-                unmapped.add(query)                     # add it to the unmapped set and
-                continue                                # skip to the next query.
-            
-            # is query a contig made of unique reads?:
-            if query in contig2read_map:                # If query is a contig (searches through keys)
-                if query in contig2read_map_uniq:       #  and it's made of contig-unique reads,
-                    contig= True                        #  then mark as contig and move on.
-                else:                                   # Otherwise, contig contains non-unique reads,
-                    unmapped.add(query)                 #  therefore add it to the unmapped set and
-                    continue                            #  skip to the next query.
-            else:
-                contig= False                           # If query isn't a contig, just move on.
-            
-            # does query alignment meet threshold?:
-            length= 0
-            matched= 0
-            CIGAR= re.split("([MIDNSHPX=])", line_parts[5]) # Split CIGAR string into list, placing
-                                                            #  all chars w/in [...] into own field
-                                                            #  (e.g., 9S41M50S->['9','S','41','M','50','S','']).
-            for index in range(len(CIGAR))[:-1]:            # Loop CIGAR elements (last element=''),
-                if CIGAR[index+1] in len_chars:             # Use CIGAR operations that step along the query seq,
-                    length+= int(CIGAR[index])              #  to determine length of query.
-                if CIGAR[index+1]=="M":                     # Use CIGAR match operation to
-                    matched+= int(CIGAR[index])             #  determine no. nuclotides matched.
-            if matched<length*0.9:                          # If alignment is <90% matched:
-                unmapped.add(query)                         # add it to the unmapped set and
-                continue                                    # skip to the next query.
+        # store info for queries that remain:
+        query2gene_map[query].add(db_match)             # Collect all aligned genes for contig/read.
+        queryIScontig[query]= contig                    # Store contig (T/F) info.
 
-            # store info for queries that remain:
-            query2gene_map[query].add(db_match)             # Collect all aligned genes for contig/read.
-            queryIScontig[query]= contig                    # Store contig (T/F) info.
-
-    print ('Reading ' + str(os.path.basename(sam)) + '.')
+    #print ('Reading ' + str(os.path.basename(sam)) + '.')
     print ('no. queries (that meet initial threshold)= ' + str(len(query2gene_map)))
     
     # remove read queries that are part of contigs:
@@ -179,7 +185,10 @@ def gene_map(sam, gene2read_map, mapped_reads, mapped_list):                    
         print ('no reads in the set= ' + str(len(mapped_reads)))
 
     # return unmapped set:
-    return unmapped
+    unmapped_key = str(process_id) + "_unmapped_set"
+    mapped_reads_key = str(process_id) + "_mapped_reads"
+    mapped_list_key = str(process_id) + "_mapped_list"
+    #return unmapped
 
 def import_fasta_chunked(file_name_in):
     fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
@@ -290,10 +299,7 @@ def write_unmapped_sequences(read_seqs, unmapped_reads, output_file):
 
 def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_mode):
 
-    # tracking BWA-assigned:
-    gene2read_map= defaultdict(list)                    # dict of BWA-aligned geneID<->readID(s)
-    mapped_reads= set()                                 # tracks BWA-assigned reads
-    mapped_list= []
+
     #prev_mapping_count= 0
 # process BWA output:
 # readtype sets: contigs, merged, unmerged1, unmerged2
