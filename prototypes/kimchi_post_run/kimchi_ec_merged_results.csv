@@ -1,0 +1,156 @@
+Pathway,both,humann2,mpro,num_Ecs,sample
+Acarbose and validamycin biosynthesis,2.0,0.0,0.0,14,kimchi_ec
+Aflatoxin biosynthesis,1.0,0.0,0.0,13,kimchi_ec
+"Alanine, aspartate and glutamate metabolism",22.0,2.0,10.0,50,kimchi_ec
+Amino sugar and nucleotide sugar metabolism,24.0,4.0,29.0,119,kimchi_ec
+Aminoacyl-tRNA biosynthesis,22.0,0.0,2.0,31,kimchi_ec
+Aminobenzoate degradation,2.0,2.0,9.0,51,kimchi_ec
+Anthocyanin biosynthesis,0.0,0.0,1.0,16,kimchi_ec
+Arachidonic acid metabolism,0.0,0.0,4.0,26,kimchi_ec
+Arginine and proline metabolism,12.0,1.0,24.0,86,kimchi_ec
+Arginine biosynthesis,14.0,1.0,9.0,28,kimchi_ec
+Ascorbate and aldarate metabolism,8.0,3.0,14.0,46,kimchi_ec
+Atrazine degradation,1.0,1.0,1.0,10,kimchi_ec
+Benzoate degradation,8.0,2.0,9.0,69,kimchi_ec
+Betalain biosynthesis,0.0,0.0,1.0,3,kimchi_ec
+Biosynthesis of ansamycins,1.0,0.0,0.0,4,kimchi_ec
+Biosynthesis of antibiotics,138.0,8.0,49.0,496,kimchi_ec
+Biosynthesis of secondary metabolites,199.0,11.0,130.0,778,kimchi_ec
+Biosynthesis of siderophore group nonribosomal peptides,2.0,0.0,1.0,6,kimchi_ec
+Biosynthesis of terpenoids and steroids,1.0,0.0,0.0,1,kimchi_ec
+Biosynthesis of unsaturated fatty acids,5.0,1.0,4.0,16,kimchi_ec
+Biosynthesis of vancomycin group antibiotics,1.0,0.0,0.0,10,kimchi_ec
+Biotin metabolism,8.0,0.0,3.0,20,kimchi_ec
+Bisphenol degradation,0.0,1.0,0.0,3,kimchi_ec
+Brassinosteroid biosynthesis,0.0,0.0,1.0,2,kimchi_ec
+Butanoate metabolism,14.0,4.0,11.0,55,kimchi_ec
+C5-Branched dibasic acid metabolism,5.0,0.0,2.0,22,kimchi_ec
+Caffeine metabolism,1.0,0.0,1.0,12,kimchi_ec
+Caprolactam degradation,3.0,1.0,1.0,21,kimchi_ec
+Carbapenem biosynthesis,2.0,0.0,0.0,5,kimchi_ec
+Carbon fixation in photosynthetic organisms,15.0,0.0,6.0,25,kimchi_ec
+Carbon fixation pathways in prokaryotes,19.0,0.0,10.0,50,kimchi_ec
+Carotenoid biosynthesis,2.0,1.0,9.0,36,kimchi_ec
+Chloroalkane and chloroalkene degradation,3.0,0.0,3.0,17,kimchi_ec
+Chlorocyclohexane and chlorobenzene degradation,1.0,0.0,4.0,21,kimchi_ec
+Citrate cycle (TCA cycle),12.0,0.0,7.0,26,kimchi_ec
+"Cutin, suberine and wax biosynthesis",0.0,0.0,3.0,8,kimchi_ec
+Cyanoamino acid metabolism,5.0,0.0,5.0,30,kimchi_ec
+Cysteine and methionine metabolism,32.0,2.0,15.0,76,kimchi_ec
+D-Alanine metabolism,2.0,1.0,1.0,6,kimchi_ec
+D-Arginine and D-ornithine metabolism,0.0,0.0,1.0,11,kimchi_ec
+D-Glutamine and D-glutamate metabolism,3.0,0.0,3.0,12,kimchi_ec
+Dioxin degradation,1.0,0.0,1.0,13,kimchi_ec
+Diterpenoid biosynthesis,0.0,0.0,2.0,60,kimchi_ec
+Drug metabolism - cytochrome P450,2.0,0.0,1.0,8,kimchi_ec
+Drug metabolism - other enzymes,16.0,0.0,4.0,25,kimchi_ec
+Ether lipid metabolism,1.0,0.0,5.0,23,kimchi_ec
+Ethylbenzene degradation,1.0,0.0,0.0,6,kimchi_ec
+Fatty acid biosynthesis,11.0,0.0,1.0,17,kimchi_ec
+Fatty acid degradation,7.0,1.0,7.0,29,kimchi_ec
+Fatty acid elongation,3.0,1.0,2.0,13,kimchi_ec
+Flavone and flavonol biosynthesis,0.0,0.0,2.0,32,kimchi_ec
+Flavonoid biosynthesis,1.0,0.0,5.0,22,kimchi_ec
+Fluorobenzoate degradation,0.0,0.0,6.0,14,kimchi_ec
+Folate biosynthesis,12.0,0.0,12.0,51,kimchi_ec
+Fructose and mannose metabolism,15.0,3.0,24.0,75,kimchi_ec
+Galactose metabolism,16.0,3.0,8.0,48,kimchi_ec
+Geraniol degradation,4.0,0.0,0.0,10,kimchi_ec
+Glucosinolate biosynthesis,1.0,0.0,0.0,15,kimchi_ec
+Glutathione metabolism,16.0,0.0,3.0,39,kimchi_ec
+Glycerolipid metabolism,10.0,0.0,10.0,40,kimchi_ec
+Glycerophospholipid metabolism,13.0,0.0,19.0,61,kimchi_ec
+"Glycine, serine and threonine metabolism",23.0,1.0,13.0,68,kimchi_ec
+Glycolysis / Gluconeogenesis,25.0,0.0,7.0,48,kimchi_ec
+Glycosaminoglycan degradation,2.0,0.0,1.0,15,kimchi_ec
+Glycosphingolipid biosynthesis - ganglio series,2.0,0.0,0.0,8,kimchi_ec
+Glycosphingolipid biosynthesis - globo and isoglobo series,2.0,0.0,0.0,13,kimchi_ec
+Glycosylphosphatidylinositol (GPI)-anchor biosynthesis,0.0,0.0,1.0,3,kimchi_ec
+Glyoxylate and dicarboxylate metabolism,17.0,1.0,9.0,73,kimchi_ec
+Histidine metabolism,11.0,0.0,6.0,38,kimchi_ec
+Human cytomegalovirus infection,1.0,0.0,0.0,2,kimchi_ec
+Human papillomavirus infection,1.0,0.0,0.0,2,kimchi_ec
+Indole alkaloid biosynthesis,0.0,0.0,1.0,22,kimchi_ec
+Inositol phosphate metabolism,3.0,0.0,22.0,48,kimchi_ec
+Insect hormone biosynthesis,1.0,0.0,0.0,9,kimchi_ec
+Isoquinoline alkaloid biosynthesis,2.0,1.0,5.0,57,kimchi_ec
+Limonene and pinene degradation,2.0,0.0,0.0,16,kimchi_ec
+Linoleic acid metabolism,0.0,0.0,4.0,13,kimchi_ec
+Lipoic acid metabolism,2.0,0.0,1.0,3,kimchi_ec
+Lipopolysaccharide biosynthesis,10.0,0.0,10.0,27,kimchi_ec
+Lysine biosynthesis,12.0,3.0,5.0,28,kimchi_ec
+Lysine degradation,7.0,1.0,5.0,53,kimchi_ec
+Mannose type O-glycan biosynthesis,0.0,0.0,2.0,8,kimchi_ec
+Metabolic pathways,440.0,33.0,365.0,1650,kimchi_ec
+Metabolism of xenobiotics by cytochrome P450,2.0,0.0,1.0,10,kimchi_ec
+Methane metabolism,17.0,0.0,10.0,87,kimchi_ec
+Microbial metabolism in diverse environments,115.0,13.0,118.0,668,kimchi_ec
+Monobactam biosynthesis,3.0,2.0,0.0,10,kimchi_ec
+Monoterpenoid biosynthesis,1.0,0.0,0.0,43,kimchi_ec
+N-Glycan biosynthesis,0.0,0.0,14.0,34,kimchi_ec
+Naphthalene degradation,1.0,0.0,0.0,9,kimchi_ec
+"Neomycin, kanamycin and gentamicin biosynthesis",1.0,0.0,1.0,28,kimchi_ec
+Nicotinate and nicotinamide metabolism,12.0,2.0,7.0,59,kimchi_ec
+Nitrogen metabolism,8.0,0.0,14.0,37,kimchi_ec
+Nitrotoluene degradation,0.0,0.0,1.0,7,kimchi_ec
+Novobiocin biosynthesis,4.0,0.0,1.0,16,kimchi_ec
+One carbon pool by folate,12.0,0.0,3.0,24,kimchi_ec
+Other glycan degradation,4.0,3.0,1.0,9,kimchi_ec
+Other types of O-glycan biosynthesis,0.0,0.0,3.0,9,kimchi_ec
+Oxidative phosphorylation,9.0,0.0,1.0,11,kimchi_ec
+PI3K-Akt signaling pathway,1.0,0.0,0.0,2,kimchi_ec
+Pantothenate and CoA biosynthesis,13.0,0.0,5.0,31,kimchi_ec
+Penicillin and cephalosporin biosynthesis,1.0,1.0,1.0,14,kimchi_ec
+Pentose and glucuronate interconversions,15.0,2.0,18.0,67,kimchi_ec
+Pentose phosphate pathway,22.0,1.0,6.0,55,kimchi_ec
+Peptidoglycan biosynthesis,12.0,0.0,1.0,19,kimchi_ec
+Phenazine biosynthesis,1.0,0.0,0.0,13,kimchi_ec
+Phenylalanine metabolism,9.0,1.0,16.0,67,kimchi_ec
+"Phenylalanine, tyrosine and tryptophan biosynthesis",17.0,1.0,6.0,39,kimchi_ec
+Phenylpropanoid biosynthesis,5.0,0.0,6.0,30,kimchi_ec
+Phosphatidylinositol signaling system,3.0,0.0,15.0,29,kimchi_ec
+Phosphonate and phosphinate metabolism,0.0,0.0,6.0,29,kimchi_ec
+Photosynthesis,2.0,0.0,1.0,3,kimchi_ec
+Polycyclic aromatic hydrocarbon degradation,1.0,1.0,0.0,19,kimchi_ec
+Polyketide sugar unit biosynthesis,4.0,0.0,0.0,27,kimchi_ec
+Porphyrin and chlorophyll metabolism,11.0,1.0,32.0,106,kimchi_ec
+Primary bile acid biosynthesis,2.0,0.0,0.0,19,kimchi_ec
+Propanoate metabolism,17.0,2.0,11.0,55,kimchi_ec
+Purine metabolism,44.0,5.0,24.0,110,kimchi_ec
+Pyrimidine metabolism,27.0,4.0,15.0,65,kimchi_ec
+Pyruvate metabolism,27.0,3.0,12.0,67,kimchi_ec
+Relaxin signaling pathway,1.0,0.0,0.0,1,kimchi_ec
+Retinol metabolism,1.0,0.0,1.0,14,kimchi_ec
+Riboflavin metabolism,7.0,0.0,6.0,28,kimchi_ec
+Selenocompound metabolism,7.0,0.0,3.0,18,kimchi_ec
+Sesquiterpenoid and triterpenoid biosynthesis,0.0,0.0,5.0,80,kimchi_ec
+Sphingolipid metabolism,4.0,1.0,8.0,27,kimchi_ec
+Starch and sucrose metabolism,27.0,2.0,17.0,76,kimchi_ec
+Steroid biosynthesis,0.0,0.0,7.0,25,kimchi_ec
+Steroid hormone biosynthesis,2.0,0.0,2.0,36,kimchi_ec
+"Stilbenoid, diarylheptanoid and gingerol biosynthesis",1.0,0.0,1.0,12,kimchi_ec
+Streptomycin biosynthesis,7.0,0.0,3.0,18,kimchi_ec
+Styrene degradation,1.0,1.0,5.0,19,kimchi_ec
+Sulfur metabolism,10.0,1.0,8.0,50,kimchi_ec
+Synthesis and degradation of ketone bodies,4.0,0.0,1.0,6,kimchi_ec
+T cell receptor signaling pathway,2.0,0.0,0.0,2,kimchi_ec
+Taurine and hypotaurine metabolism,4.0,1.0,3.0,19,kimchi_ec
+Terpenoid backbone biosynthesis,14.0,1.0,8.0,51,kimchi_ec
+Th1 and Th2 cell differentiation,1.0,0.0,0.0,1,kimchi_ec
+Thermogenesis,1.0,0.0,0.0,1,kimchi_ec
+Thiamine metabolism,10.0,1.0,4.0,26,kimchi_ec
+Toluene degradation,1.0,0.0,6.0,26,kimchi_ec
+"Tropane, piperidine and pyridine alkaloid biosynthesis",3.0,0.0,3.0,27,kimchi_ec
+Tryptophan metabolism,12.0,1.0,8.0,60,kimchi_ec
+Tyrosine metabolism,6.0,2.0,13.0,64,kimchi_ec
+Ubiquinone and other terpenoid-quinone biosynthesis,13.0,1.0,5.0,40,kimchi_ec
+"Valine, leucine and isoleucine biosynthesis",8.0,1.0,1.0,14,kimchi_ec
+"Valine, leucine and isoleucine degradation",13.0,3.0,8.0,36,kimchi_ec
+Various types of N-glycan biosynthesis,1.0,0.0,10.0,23,kimchi_ec
+Vitamin B6 metabolism,8.0,1.0,1.0,26,kimchi_ec
+Xylene degradation,1.0,0.0,2.0,21,kimchi_ec
+Zeatin biosynthesis,1.0,0.0,2.0,10,kimchi_ec
+alpha-Linolenic acid metabolism,4.0,0.0,5.0,12,kimchi_ec
+beta-Alanine metabolism,7.0,1.0,6.0,37,kimchi_ec
+beta-Lactam resistance,1.0,0.0,0.0,1,kimchi_ec
+mTOR signaling pathway,1.0,0.0,1.0,5,kimchi_ec
