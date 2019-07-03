@@ -54,7 +54,7 @@ import multiprocessing as mp
 # =	Read Match; the nucleotide is present in the reference.
 # X	Read Mismatch; the nucleotide is present in the reference.
 
-def gene_map(process_id, samfile, gene2read_map, mapped_reads, mapped_list, return_dict):                                      # Set of unmapped contig/readIDs=
+def gene_map(process_id, samfile, contig2read_map, contig2read_map_uniq, contig_reads, return_dict):                                      # Set of unmapped contig/readIDs=
                                                         #  gene_map(BWA .sam file)
     # tracking BWA-assigned & unassigned:
     query2gene_map= defaultdict(set)                    # Dict of BWA-aligned contig/readID<->geneID(s).
@@ -120,7 +120,7 @@ def gene_map(process_id, samfile, gene2read_map, mapped_reads, mapped_list, retu
         queryIScontig[query]= contig                    # Store contig (T/F) info.
 
     #print ('Reading ' + str(os.path.basename(sam)) + '.')
-    print ('no. queries (that meet initial threshold)= ' + str(len(query2gene_map)))
+    #print ('no. queries (that meet initial threshold)= ' + str(len(query2gene_map)))
     
     # remove read queries that are part of contigs:
     # THOUGH THIS SHOULDN'T HAPPEN (and it doesn't).
@@ -131,7 +131,7 @@ def gene_map(process_id, samfile, gene2read_map, mapped_reads, mapped_list, retu
                 del queryIScontig[query]                # Don't add it to the unmapped set, as it shouldn't be
                                                         #  annotated as a stand-alone read.
 
-    print ('no. (after removal of read queries in contigs)= ' + str(len(query2gene_map)))
+    #print ('no. (after removal of read queries in contigs)= ' + str(len(query2gene_map)))
 
     # remove queries aligning to multiple genes:
     for query, genes in list(query2gene_map.items()):   # Check all queries to see
@@ -140,7 +140,7 @@ def gene_map(process_id, samfile, gene2read_map, mapped_reads, mapped_list, retu
             del query2gene_map[query]                   #  delete it from the query list.
             del queryIScontig[query]
 
-    print ('no. (after removal of queries aligning to multiple genes)= ' + str(len(query2gene_map)))
+    #print ('no. (after removal of queries aligning to multiple genes)= ' + str(len(query2gene_map)))
 
     # FINAL remaining BWA-aligned queries:
     for query in query2gene_map:                        # contig/readID
@@ -166,61 +166,37 @@ def gene_map(process_id, samfile, gene2read_map, mapped_reads, mapped_list, retu
     # Such queries end up in the unmapped set when they BWA-aligned to multiple genes, where one
     # alignment is recorded, while the other alignments fail the "on-the-fly" filter; or
     # when one end of an unmerged paired read aligns and the other end doesnt.
-    print ('umapped no. (before double-checking mapped set)= ' + str(len(unmapped)))
+    #print ('umapped no. (before double-checking mapped set)= ' + str(len(unmapped)))
     for query in query2gene_map:                        # Take all contigs/reads to be mapped and
         try:                                            #  if they exist in the unmapped set, then
             unmapped.remove(query)                      #  remove them from the unmapped set.
         except:
             pass
-    print ('umapped no. (after double-checking mapped set)= ' + str(len(unmapped)))
+    #print ('umapped no. (after double-checking mapped set)= ' + str(len(unmapped)))
 
 
     # DEBUG (check so far):
-    if len(set(mapped_list))==len(mapped_list):
-        print ('So far, BWA-aligned reads are all unique.')
-    else:
-        print ('Repeating BWA-aligned reads thus far:')
-        print ('no. unique reads= ' + str(len(set(mapped_list))))
-        print ('no. total reads= ' + str(len(mapped_list)))
-        print ('no reads in the set= ' + str(len(mapped_reads)))
+#    if len(set(mapped_list))==len(mapped_list):
+#        print ('So far, BWA-aligned reads are all unique.')
+#    else:
+#        print ('Repeating BWA-aligned reads thus far:')
+#        print ('no. unique reads= ' + str(len(set(mapped_list))))
+#        print ('no. total reads= ' + str(len(mapped_list)))
+#        print ('no reads in the set= ' + str(len(mapped_reads)))
 
     # return unmapped set:
     unmapped_key = str(process_id) + "_unmapped_set"
     mapped_reads_key = str(process_id) + "_mapped_reads"
     mapped_list_key = str(process_id) + "_mapped_list"
+    gene2read_map_key = str(process_id) + "_gene2read_map"
     #return unmapped
-
-def import_fasta_chunked(file_name_in):
-    fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
-    fasta_df.columns = ["row"]
-    #There's apparently a possibility for NaNs to be introduced in the raw fasta.  We have to strip it before we process (from DIAMOND proteins.faa)
-    fasta_df.dropna(inplace=True)
-    new_df = pd.DataFrame(fasta_df.loc[fasta_df.row.str.contains('>')])  # grab all the IDs
-    new_df.columns = ["names"]
-    new_data_df = fasta_df.loc[~fasta_df.row.str.contains('>')]  # grab the data
-    new_data_df.columns = ["data"]
-    fasta_df = new_df.join(new_data_df, how='outer')  # join them into a 2-col DF
-    fasta_df["names"] = fasta_df.fillna(method='ffill')  # fill in the blank spaces in the name section
-    fasta_df.dropna(inplace=True)  # remove all rows with no sequences
-    fasta_df.index = fasta_df.groupby('names').cumcount()  # index it for transform
-    temp_columns = fasta_df.index  # save the index names for later
-    fasta_df = fasta_df.pivot(values='data', columns='names')  # pivot
-    fasta_df = fasta_df.T  # transpose
-    fasta_df["sequence"] = fasta_df[fasta_df.columns[:]].apply(lambda x: "".join(x.dropna()), axis=1)  # consolidate all cols into a single sequence
-    fasta_df.drop(temp_columns, axis=1, inplace=True)
-
-    return fasta_df
-
-
-def import_fasta_headers(file_name_in):
-    #it turns ouf we don't really need the sequences out of this database
-    dna_db_headers = list()
     
-    with open(file_name_in, "r") as dna_db:
-        for line in dna_db:
-            if(line.startswith(">")):
-                dna_db_headers.append(line[1:].strip("\n"))
-    return dna_db_headers
+    return_dict[unmapped_key] = list(unmapped)
+    return_dict[mapped_list_key] = mapped_list
+    return_dict[mapped_reads_key] = mapped_reads
+    return_dict[gene2read_map_key] = gene2read_map
+
+
 
 def import_fasta_dumb(file_name_in):
     #this is the dumb, mem-efficient way
@@ -248,7 +224,7 @@ def import_fasta_dumb(file_name_in):
                 break
             elif(current_seq is not None and current_header is not None):
                 if(line.startswith(">")):
-                    dna_db_dict[current_header] = current_seq
+                    dna_db_dict[current_header] = len(current_seq)
                     current_header = line[1:]
                     current_seq = None
                     #print(dt.today(), "new header:", line)
@@ -297,28 +273,53 @@ def write_unmapped_sequences(read_seqs, unmapped_reads, output_file):
     with open(output_file,"w") as out:
         SeqIO.write(unmapped_seqs, out, "fasta")    #  and write it to file.
 
-def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_mode):
-
-
-    #prev_mapping_count= 0
-# process BWA output:
-# readtype sets: contigs, merged, unmerged1, unmerged2
-#for x in range(int((len(sys.argv)-4)/3)):
-    #read_file= sys.argv[3*x+4]      # INPUT: all contig/readIDs and seqs (.fasta)
+def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_mode, contig2read_map, contig2read_map_uniq, contig_reads):
+    manager = mp.Manager()
+    return_dict = manager.dict()
+    arbitrary_chunk_size = 500000
+    arbitrary_process_limit = 40
+    
+    # tracking BWA-assigned:
+    gene2read_map= defaultdict(list)                    # dict of BWA-aligned geneID<->readID(s)
+    mapped_reads= set()                                 # tracks BWA-assigned reads
+    mapped_list= []
+    
     read_seqs= SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
-                                    # dict of all read SeqRecords: key=contig/readID
-                                    #  (second argument specifies filetype, e.g., "fasta")
-    #BWA_sam_file= sys.argv[3*x+5]   # INPUT: BWA-aligned&unaligned contig/readIDs (.sam)
-    #output_file= sys.argv[3*x+6]    # OUTPUT: non-BWA-aligned contig/readIDs and seqs (.fasta)
-
-    # extraction of "non-BWA-aligned" and "BWA-aligned":
     unmapped_reads = []
     if pair_mode:                                        # Only do once for unmerged paired end (same .sam file).
-        unmapped_reads = gene_map(BWA_sam_file, gene2read_map, mapped_reads, mapped_list)      # Store BWA-aligned contigs/reads in gene2read_map
-                                                    #  (aligned geneID<->readID(s) dict),
-                                                    #  and return a set of unmapped readIDs
-    # WRITE OUTPUT: non-BWA-aligned contig/readIDs:
-    # and seqs (.fasta):
+        sam_file = open(BWA_sam_file, "r")
+        sam_chunk = sam_file.readlines(arbitrary_chunk_size)
+        process_id = 0
+        process_list = []
+        while(sam_chunk):
+            bwa_process = mp.Process(target = gene_map, args = (process_id, sam_chunk, contig2read_map, contig2read_map_uniq, contig_reads, return_dict))
+            bwa_process.start()
+            process_list.append(bwa_process)
+            sam_chunk = sam_file.readlines(arbitrary_chunk_size)
+            process_id += 1
+            
+            if(len(process_list) >= arbitrary_process_limit):
+                for item in process_list:
+                    item.join()
+                process_list[:] = []
+        for item in process_list:
+            item.join()
+        process_list[:] = []
+        
+        
+        for p_id in range(0, process_id):
+            unmapped_key = str(p_id) + "_unmapped_set"
+            mapped_reads_key = str(p_id) + "_mapped_reads"
+            mapped_list_key = str(p_id) + "_mapped_list"
+            gene2read_map_key = str(p_id) + "_gene2read_map"
+            
+            unmapped_reads += (return_dict[unmapped_key])
+            mapped_reads.update(return_dict[mapped_reads_key])
+            gene2read_map.update(return_dict[gene2read_map_key])
+            mapped_list += (return_dict[mapped_list_key])
+            
+    #print(unmapped_reads)
+        
     write_unmapped_sequences(read_seqs, unmapped_reads, output_file)
 
     # print no. aligned reads from current readtype set:
@@ -351,18 +352,26 @@ def export_gene_map (gene2read_file, final_gene2read_map, DNA_DB):
     # print BWA stats:
     print (str(reads_count) + ' reads were mapped with BWA.')
     print ('Reads mapped to ' + str(len(genes)) + ' genes.')
+def get_length(name, db):
+    if(name in db):
+        return db[name]
+    else:
+        return -1
     
 def export_gene_map_v2(gene2read_file, final_gene2read_map, DNA_DB):
-    dna_db_headers_list = import_fasta_headers(DNA_DB)
+    dna_db_dict = import_fasta_dumb(DNA_DB)
+    #for item in dna_db_dict.keys():
+    #    print(item)
     #dna_db_df = pd.DataFrame.from_dict(dna_db_dict, orient = "index")
     #print(final_gene2read_map)
     genemap_df = pd.DataFrame.from_dict(final_gene2read_map, orient = "index")
     temp_cols = genemap_df.columns.tolist()
-    cols = ["names", "reads"] + temp_cols
+    cols = ["names", "reads", "length"] + temp_cols
     genemap_df["names"] = genemap_df.index
     genemap_df["reads"] = genemap_df["names"].apply(lambda x: len(final_gene2read_map[x]))
+    genemap_df["length"] = genemap_df["names"].apply(lambda x: get_length(x, dna_db_dict))
     genemap_df = genemap_df[cols]
-    final_genemap_df = genemap_df[genemap_df["names"].isin(dna_db_headers_list)]
+    final_genemap_df = genemap_df[genemap_df["names"].isin(dna_db_dict.keys())]
     #print(dna_db_headers_list)
     final_genemap_df.to_csv(gene2read_file, sep = "\t", index = False, header = None)
     #print(final_genemap_df)
@@ -408,22 +417,39 @@ if __name__ == "__main__":
     #dna_db_df = export_gene_map_v2("dummy", "dummy", DNA_DB)
     #print(dna_db_df)
     # make initial dict of contigID<->readsID(s):
-    
+    a_start = time.time()
     contig2read_map, contig_reads = import_contig_reads(contig2read_file)
-
+    a_end = time.time()
+    print("import contigs:", "%1.1f" % (a_end - a_start), "s")
     # make new dict only of contigs with unique reads:
     # (hard to tell w BWA what contigs match better, so for reads associated
     # w multiple matched contigs, avoid choosing btw contigs for now.)
-    
+    a_start = time.time()
     contig2read_map_uniq, contig_unique_reads = get_unique_contigs(contig2read_map, contig_reads)
+    a_end = time.time()
+    print("get unique contigs:", "%1.1f" % (a_end - a_start), "s")
     
     prev_mapping_count = 0
-    contig_gene2read_map, contig_mapped_reads, contig_mapped_list, prev_mapping_count = process_bwa(contig_fasta, contig_sam, remaining_contig_out, prev_mapping_count, True)
-    singleton_gene2read_map, singleton_mapped_reads, singleton_mapped_list, prev_mapping_count = process_bwa(singleton_fasta, singleton_sam, remaining_singleton_out, prev_mapping_count, True)
+    a_start = time.time()
+    contig_gene2read_map, contig_mapped_reads, contig_mapped_list, prev_mapping_count = process_bwa(contig_fasta, contig_sam, remaining_contig_out, prev_mapping_count, True, contig2read_map, contig2read_map_uniq, contig_reads)
+    a_end = time.time()
+    print("contigs process BWA:", "%1.1f" % (a_end - a_start), "s")
+    
+    a_start = time.time()
+    singleton_gene2read_map, singleton_mapped_reads, singleton_mapped_list, prev_mapping_count = process_bwa(singleton_fasta, singleton_sam, remaining_singleton_out, prev_mapping_count, True, contig2read_map, contig2read_map_uniq, contig_reads)
+    a_end = time.time()
+    print("singletons process BWA:", "%1.1f" % (a_end - a_start), "s")
+    
     if(pair_mode):
-        pair_1_gene2read_map, pair_1_mapped_reads, pair_1_mapped_list, prev_mapping_count = process_bwa(pair_1_fasta, pair_1_sam, remaining_pair_1_out, prev_mapping_count, True)
-        pair_2_gene2read_map, pair_2_mapped_reads, pair_2_mapped_list, prev_mapping_count = process_bwa(pair_2_fasta, pair_2_sam, remaining_pair_2_out, prev_mapping_count, False)
-
+        a_start = time.time()
+        pair_1_gene2read_map, pair_1_mapped_reads, pair_1_mapped_list, prev_mapping_count = process_bwa(pair_1_fasta, pair_1_sam, remaining_pair_1_out, prev_mapping_count, True, contig2read_map, contig2read_map_uniq, contig_reads)
+        a_end = time.time()
+        print("pair 1 process BWA:", "%1.1f" % (a_end - a_start), "s")
+        
+        a_start = time.time()
+        pair_2_gene2read_map, pair_2_mapped_reads, pair_2_mapped_list, prev_mapping_count = process_bwa(pair_2_fasta, pair_2_sam, remaining_pair_2_out, prev_mapping_count, False, contig2read_map, contig2read_map_uniq, contig_reads)
+        a_end = time.time()
+        print("pair 2 process BWA:", "%1.1f" % (a_end - a_start), "s")
 
     final_gene2read_map = contig_gene2read_map
     final_gene2read_map.update(singleton_gene2read_map)
@@ -431,7 +457,10 @@ if __name__ == "__main__":
         final_gene2read_map.update(pair_1_gene2read_map)
         final_gene2read_map.update(pair_2_gene2read_map)
     
+    a_start = time.time()
     dna_db_df = export_gene_map_v2(gene2read_file, final_gene2read_map, DNA_DB)
+    a_end = time.time()
+    print("final export:", "%1.1f" % (a_end - a_start), "s")
     #export_gene_map(gene2read_file, final_gene2read_map, DNA_DB)
     
     
