@@ -211,7 +211,7 @@ def import_fasta_dumb(file_name_in):
                 if(line.startswith(">")):
                     #print(dt.today(), "new header:", line)
                     #count += 1
-                    current_header = line[1:]
+                    current_header = line[1:].strip("\n")
                     current_seq = None
             elif(current_seq is None and current_header is not None):
                 if(not line.startswith(">")):
@@ -225,7 +225,7 @@ def import_fasta_dumb(file_name_in):
             elif(current_seq is not None and current_header is not None):
                 if(line.startswith(">")):
                     dna_db_dict[current_header] = len(current_seq)
-                    current_header = line[1:]
+                    current_header = line[1:].strip("\n")
                     current_seq = None
                     #print(dt.today(), "new header:", line)
                     #count += 1
@@ -360,26 +360,18 @@ def get_length(name, db):
     
 def export_gene_map_v2(gene2read_file, final_gene2read_map, DNA_DB):
     dna_db_dict = import_fasta_dumb(DNA_DB)
-    #for item in dna_db_dict.keys():
-    #    print(item)
-    #dna_db_df = pd.DataFrame.from_dict(dna_db_dict, orient = "index")
-    #print(final_gene2read_map)
     genemap_df = pd.DataFrame.from_dict(final_gene2read_map, orient = "index")
     temp_cols = genemap_df.columns.tolist()
-    cols = ["names", "reads", "length"] + temp_cols
+    cols = ["names", "length", "reads"] + temp_cols
     genemap_df["names"] = genemap_df.index
+    genemap_df["names"] = genemap_df["names"].apply(lambda x: str(x).strip("\n"))
     genemap_df["reads"] = genemap_df["names"].apply(lambda x: len(final_gene2read_map[x]))
     genemap_df["length"] = genemap_df["names"].apply(lambda x: get_length(x, dna_db_dict))
     genemap_df = genemap_df[cols]
-    final_genemap_df = genemap_df[genemap_df["names"].isin(dna_db_dict.keys())]
-    #print(dna_db_headers_list)
+        
+    final_genemap_df = genemap_df[genemap_df["names"].isin(list(dna_db_dict.keys()))]
     final_genemap_df.to_csv(gene2read_file, sep = "\t", index = False, header = None)
-    #print(final_genemap_df)
     
-    
-    #db_df = import_fasta_chunked(DNA_DB)
-    #print(db_df)    
-
 
 if __name__ == "__main__":
     
