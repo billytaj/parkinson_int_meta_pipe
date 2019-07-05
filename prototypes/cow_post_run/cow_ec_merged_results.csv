@@ -1,0 +1,138 @@
+Pathway,both,humann2,mpro,num_Ecs,sample
+Acarbose and validamycin biosynthesis,2.0,0.0,0.0,14,cow_ec
+Aflatoxin biosynthesis,1.0,0.0,0.0,13,cow_ec
+"Alanine, aspartate and glutamate metabolism",21.0,2.0,1.0,50,cow_ec
+Amino sugar and nucleotide sugar metabolism,27.0,1.0,9.0,119,cow_ec
+Aminoacyl-tRNA biosynthesis,22.0,1.0,1.0,31,cow_ec
+Aminobenzoate degradation,2.0,1.0,1.0,51,cow_ec
+Arachidonic acid metabolism,0.0,1.0,0.0,26,cow_ec
+Arginine and proline metabolism,15.0,4.0,8.0,86,cow_ec
+Arginine biosynthesis,15.0,2.0,3.0,28,cow_ec
+Ascorbate and aldarate metabolism,4.0,2.0,5.0,46,cow_ec
+Atrazine degradation,1.0,1.0,0.0,10,cow_ec
+Benzoate degradation,4.0,5.0,4.0,69,cow_ec
+Biosynthesis of ansamycins,1.0,0.0,0.0,4,cow_ec
+Biosynthesis of antibiotics,128.0,17.0,18.0,496,cow_ec
+Biosynthesis of secondary metabolites,193.0,24.0,25.0,778,cow_ec
+Biosynthesis of siderophore group nonribosomal peptides,1.0,0.0,2.0,6,cow_ec
+Biosynthesis of unsaturated fatty acids,2.0,0.0,0.0,16,cow_ec
+Biosynthesis of vancomycin group antibiotics,1.0,0.0,0.0,10,cow_ec
+Biotin metabolism,11.0,0.0,1.0,20,cow_ec
+Butanoate metabolism,12.0,6.0,2.0,55,cow_ec
+C5-Branched dibasic acid metabolism,6.0,0.0,0.0,22,cow_ec
+Caprolactam degradation,0.0,1.0,2.0,21,cow_ec
+Carbapenem biosynthesis,2.0,0.0,0.0,5,cow_ec
+Carbon fixation in photosynthetic organisms,16.0,0.0,1.0,25,cow_ec
+Carbon fixation pathways in prokaryotes,20.0,1.0,5.0,50,cow_ec
+Chloroalkane and chloroalkene degradation,1.0,1.0,1.0,17,cow_ec
+Chlorocyclohexane and chlorobenzene degradation,0.0,1.0,2.0,21,cow_ec
+Citrate cycle (TCA cycle),15.0,2.0,1.0,26,cow_ec
+Cyanoamino acid metabolism,4.0,0.0,1.0,30,cow_ec
+Cysteine and methionine metabolism,30.0,5.0,2.0,76,cow_ec
+D-Alanine metabolism,3.0,0.0,0.0,6,cow_ec
+D-Glutamine and D-glutamate metabolism,4.0,0.0,0.0,12,cow_ec
+Dioxin degradation,1.0,0.0,0.0,13,cow_ec
+Drug metabolism - cytochrome P450,2.0,0.0,0.0,8,cow_ec
+Drug metabolism - other enzymes,13.0,4.0,1.0,25,cow_ec
+Ether lipid metabolism,0.0,2.0,0.0,23,cow_ec
+Ethylbenzene degradation,1.0,0.0,0.0,6,cow_ec
+Fatty acid biosynthesis,8.0,1.0,2.0,17,cow_ec
+Fatty acid degradation,4.0,0.0,4.0,29,cow_ec
+Fatty acid elongation,1.0,0.0,1.0,13,cow_ec
+Flavone and flavonol biosynthesis,0.0,1.0,0.0,32,cow_ec
+Fluorobenzoate degradation,0.0,0.0,2.0,14,cow_ec
+Folate biosynthesis,16.0,0.0,5.0,51,cow_ec
+Fructose and mannose metabolism,19.0,2.0,5.0,75,cow_ec
+Galactose metabolism,17.0,2.0,1.0,48,cow_ec
+Geraniol degradation,1.0,0.0,1.0,10,cow_ec
+Glucosinolate biosynthesis,1.0,0.0,0.0,15,cow_ec
+Glutathione metabolism,12.0,1.0,3.0,39,cow_ec
+Glycerolipid metabolism,10.0,2.0,4.0,40,cow_ec
+Glycerophospholipid metabolism,14.0,4.0,3.0,61,cow_ec
+"Glycine, serine and threonine metabolism",21.0,3.0,4.0,68,cow_ec
+Glycolysis / Gluconeogenesis,26.0,0.0,4.0,48,cow_ec
+Glycosaminoglycan degradation,2.0,1.0,0.0,15,cow_ec
+Glycosphingolipid biosynthesis - ganglio series,2.0,0.0,0.0,8,cow_ec
+Glycosphingolipid biosynthesis - globo and isoglobo series,2.0,0.0,0.0,13,cow_ec
+Glyoxylate and dicarboxylate metabolism,15.0,8.0,4.0,73,cow_ec
+Histidine metabolism,14.0,1.0,1.0,38,cow_ec
+Human cytomegalovirus infection,1.0,0.0,0.0,2,cow_ec
+Human papillomavirus infection,1.0,0.0,0.0,2,cow_ec
+Inositol phosphate metabolism,4.0,1.0,3.0,48,cow_ec
+Insect hormone biosynthesis,0.0,0.0,1.0,9,cow_ec
+Isoquinoline alkaloid biosynthesis,1.0,1.0,0.0,57,cow_ec
+Limonene and pinene degradation,0.0,0.0,1.0,16,cow_ec
+Linoleic acid metabolism,0.0,1.0,0.0,13,cow_ec
+Lipoic acid metabolism,2.0,0.0,0.0,3,cow_ec
+Lipopolysaccharide biosynthesis,14.0,0.0,4.0,27,cow_ec
+Lysine biosynthesis,15.0,2.0,0.0,28,cow_ec
+Lysine degradation,4.0,4.0,4.0,53,cow_ec
+Mannose type O-glycan biosynthesis,0.0,1.0,0.0,8,cow_ec
+Metabolic pathways,432.0,81.0,89.0,1650,cow_ec
+Metabolism of xenobiotics by cytochrome P450,2.0,0.0,0.0,10,cow_ec
+Methane metabolism,17.0,2.0,1.0,87,cow_ec
+Microbial metabolism in diverse environments,120.0,22.0,34.0,668,cow_ec
+Monobactam biosynthesis,5.0,0.0,0.0,10,cow_ec
+Mucin type O-glycan biosynthesis,0.0,1.0,0.0,7,cow_ec
+N-Glycan biosynthesis,0.0,1.0,0.0,34,cow_ec
+Naphthalene degradation,1.0,0.0,0.0,9,cow_ec
+"Neomycin, kanamycin and gentamicin biosynthesis",1.0,0.0,0.0,28,cow_ec
+Nicotinate and nicotinamide metabolism,10.0,5.0,3.0,59,cow_ec
+Nitrogen metabolism,7.0,0.0,2.0,37,cow_ec
+Nitrotoluene degradation,1.0,0.0,0.0,7,cow_ec
+Novobiocin biosynthesis,3.0,2.0,0.0,16,cow_ec
+One carbon pool by folate,13.0,1.0,2.0,24,cow_ec
+Other glycan degradation,4.0,1.0,0.0,9,cow_ec
+Other types of O-glycan biosynthesis,0.0,1.0,0.0,9,cow_ec
+Oxidative phosphorylation,8.0,0.0,0.0,11,cow_ec
+PI3K-Akt signaling pathway,1.0,0.0,0.0,2,cow_ec
+Pantothenate and CoA biosynthesis,15.0,2.0,0.0,31,cow_ec
+Penicillin and cephalosporin biosynthesis,1.0,1.0,0.0,14,cow_ec
+Pentose and glucuronate interconversions,14.0,5.0,5.0,67,cow_ec
+Pentose phosphate pathway,21.0,1.0,4.0,55,cow_ec
+Peptidoglycan biosynthesis,13.0,1.0,0.0,19,cow_ec
+Phenazine biosynthesis,1.0,0.0,0.0,13,cow_ec
+Phenylalanine metabolism,5.0,2.0,2.0,67,cow_ec
+"Phenylalanine, tyrosine and tryptophan biosynthesis",16.0,5.0,0.0,39,cow_ec
+Phenylpropanoid biosynthesis,2.0,0.0,0.0,30,cow_ec
+Phosphatidylinositol signaling system,3.0,0.0,0.0,29,cow_ec
+Phosphonate and phosphinate metabolism,0.0,1.0,2.0,29,cow_ec
+Photosynthesis,2.0,0.0,0.0,3,cow_ec
+Polyketide sugar unit biosynthesis,4.0,0.0,0.0,27,cow_ec
+Porphyrin and chlorophyll metabolism,19.0,7.0,7.0,106,cow_ec
+Primary bile acid biosynthesis,0.0,0.0,1.0,19,cow_ec
+Propanoate metabolism,17.0,5.0,2.0,55,cow_ec
+Purine metabolism,44.0,8.0,6.0,110,cow_ec
+Pyrimidine metabolism,31.0,9.0,5.0,65,cow_ec
+Pyruvate metabolism,30.0,4.0,5.0,67,cow_ec
+Relaxin signaling pathway,1.0,0.0,0.0,1,cow_ec
+Retinol metabolism,1.0,0.0,0.0,14,cow_ec
+Riboflavin metabolism,5.0,1.0,5.0,28,cow_ec
+Selenocompound metabolism,9.0,1.0,0.0,18,cow_ec
+Sphingolipid metabolism,3.0,1.0,0.0,27,cow_ec
+Starch and sucrose metabolism,20.0,3.0,3.0,76,cow_ec
+Streptomycin biosynthesis,8.0,0.0,0.0,18,cow_ec
+Styrene degradation,0.0,2.0,1.0,19,cow_ec
+Sulfur metabolism,13.0,0.0,1.0,50,cow_ec
+Synthesis and degradation of ketone bodies,2.0,0.0,0.0,6,cow_ec
+T cell receptor signaling pathway,2.0,0.0,0.0,2,cow_ec
+Taurine and hypotaurine metabolism,3.0,1.0,1.0,19,cow_ec
+Terpenoid backbone biosynthesis,11.0,4.0,2.0,51,cow_ec
+Th1 and Th2 cell differentiation,1.0,0.0,0.0,1,cow_ec
+Thermogenesis,1.0,0.0,0.0,1,cow_ec
+Thiamine metabolism,9.0,4.0,2.0,26,cow_ec
+Toluene degradation,0.0,0.0,3.0,26,cow_ec
+"Tropane, piperidine and pyridine alkaloid biosynthesis",3.0,1.0,0.0,27,cow_ec
+Tryptophan metabolism,4.0,1.0,4.0,60,cow_ec
+Tyrosine metabolism,4.0,2.0,1.0,64,cow_ec
+Ubiquinone and other terpenoid-quinone biosynthesis,12.0,2.0,1.0,40,cow_ec
+"Valine, leucine and isoleucine biosynthesis",8.0,1.0,0.0,14,cow_ec
+"Valine, leucine and isoleucine degradation",7.0,3.0,3.0,36,cow_ec
+Various types of N-glycan biosynthesis,1.0,0.0,0.0,23,cow_ec
+Vitamin B6 metabolism,8.0,0.0,1.0,26,cow_ec
+Xylene degradation,1.0,1.0,0.0,21,cow_ec
+Zeatin biosynthesis,1.0,0.0,0.0,10,cow_ec
+alpha-Linolenic acid metabolism,2.0,1.0,1.0,12,cow_ec
+beta-Alanine metabolism,7.0,2.0,1.0,37,cow_ec
+beta-Lactam resistance,1.0,0.0,0.0,1,cow_ec
+mTOR signaling pathway,1.0,0.0,0.0,5,cow_ec
