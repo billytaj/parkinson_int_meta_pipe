@@ -131,7 +131,7 @@ class tool_path_obj:
         self.rRNA_filter                = os.path.join(script_path, "read_rRNA_infernal.py")
         self.map_contig                 = os.path.join(script_path, "assembly_map.py")
         self.contig_duplicate_remover   = os.path.join(script_path, "assembly_deduplicate.py")
-        self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA.py")
+        self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA_v2.py")
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT.py")
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond_v2.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine.py")
