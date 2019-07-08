@@ -1,2 +1,8 @@
-Lactobacillus reuteri
+Alloscardovia omnicolens
+Atopobium parvulum
+Citrobacter freundii
+Fusobacterium periodonticum
+Klebsiella pneumoniae
+Solobacterium moorei
+Stomatobaculum longum
 Lactobacillus fermentum
