@@ -36,7 +36,7 @@ gene2read_file= sys.argv[3]         # INPUT: [BWA-aligned geneID, length, #reads
                                     # ->OUTPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
 gene_file= sys.argv[4]              # OUTPUT: BWA&BLAT-aligned geneIDs and aa seqs (.fna; fasta-format)
 new_gene2read_file = sys.argv[5]    # OUTPUT: new gene2read_file instead of overwriting the old map
-new_gene_file = sys.argv[6]         # OUTPUT new gene.fna 
+new_gene_file = sys.argv[6]         # OUTPUT new gene.fna -> not used.  get rid of it
 # make dict of contigID<->readsID(s):
 contig2read_map= {}
 with open(contig2read_file,"r") as mapping:

@@ -1,0 +1,21 @@
+>&2 echo BLAT post-processing | python3 /pipeline/Scripts/ga_BLAT.py 
+/project/j/jparkin/Lab_Databases/ChocoPhlAn/ChocoPhlAn.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BWA/final_results/contig_map.tsv 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BWA/final_results/gene_map.tsv 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/genes.fna 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/gene_map.tsv 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/genes.fna 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BWA/final_results/contigs.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/data/1_blat_merge/contigs.blatout 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/contigs.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BWA/final_results/singletons.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/data/1_blat_merge/singletons.blatout 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/singletons.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BWA/final_results/pair_1.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/data/1_blat_merge/pair_1.blatout 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/pair_1.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BWA/final_results/pair_2.fasta 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/data/1_blat_merge/pair_2.blatout 
+/scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/pair_2.fasta
+
+>&2 echo copy contig map | cp /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BWA/final_results/contig_map.tsv /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/501_CecQ_n/gene_annotation_BLAT/final_results/contig_map.tsv

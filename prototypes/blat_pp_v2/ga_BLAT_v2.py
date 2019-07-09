@@ -244,9 +244,32 @@ def process_blat(read_file, BLAT_tab_file, output_file, prev_mapping_count):
     # print no. aligned reads from current readtype set:
     print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
     prev_mapping_count= len(mapped_reads)
+    
+    return gene2read_map
 
 
-
+def export_gene_map(gene2read_map, gene_file, new_gene2read_file):
+    # WRITE OUTPUT: rewrite gene<->read mapfile to include BLAT-aligned:
+    # [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
+    reads_count= 0
+    genes= []
+    with open(new_gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
+        for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
+                                                            #  (DNA db is needed to get the sequence.)
+            if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
+                genes.append(record)                        #  append the SeqRec to genes list (for next file), and
+                out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
+                                                            #  write [aligned geneID, length, #reads, ...],
+                for read in gene2read_map[record.id]:
+                    out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
+                    reads_count+= 1
+                else:
+                    out_map.write("\n")                     #  and a new line character.
+    
+    # WRITE OUTPUT: BWA&BLAT-aligned geneIDs and seqs (.fna; fasta-format):
+    # (this wasn't done in BWA post-processing)
+    with open(gene_file,"w") as outfile:
+        SeqIO.write(genes, outfile, "fasta")
 #####################################
 
 
@@ -254,33 +277,33 @@ def process_blat(read_file, BLAT_tab_file, output_file, prev_mapping_count):
 
 if __name__ == "__main__":
     
-    DNA_DB= sys.argv[1]                 # INPUT: DNA db used for BLAT alignement
-    contig2read_file= sys.argv[2]       # INPUT: [contigID, #reads, readIDs ...]
-    gene2read_file= sys.argv[3]         # INPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
+    DNA_DB = sys.argv[1]                # INPUT: DNA db used for BLAT alignement
+    contig2read_file = sys.argv[2]      # INPUT: [contigID, #reads, readIDs ...]
+    gene2read_file = sys.argv[3]        # INPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
                                         # ->OUTPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
-    gene_file= sys.argv[4]              # OUTPUT: BWA&BLAT-aligned geneIDs and aa seqs (.fna; fasta-format)
+    gene_file = sys.argv[4]             # OUTPUT: BWA&BLAT-aligned geneIDs and aa seqs (.fna; fasta-format)
     new_gene2read_file = sys.argv[5]    # OUTPUT: new gene2read_file instead of overwriting the old map
-    new_gene_file = sys.argv[6]         # OUTPUT new gene.fna 
+    #new_gene_file = sys.argv[6]         # OUTPUT new gene.fna 
     
-    contig_reads_file = sys.argv[7]
-    contig_blat_file = sys.argv[8]
-    contig_out_file = sys.argv[9]
+    contig_reads_file = sys.argv[6]
+    contig_blat_file = sys.argv[7]
+    contig_out_file = sys.argv[8]
     
-    singletons_reads_file = sys.argv[10]
-    singletons_blat_file = sys.argv[11]
-    singletons_out_file = sys.argv[12]
+    singletons_reads_file = sys.argv[9]
+    singletons_blat_file = sys.argv[10]
+    singletons_out_file = sys.argv[11]
 
     pair_mode = False
-    if(len(sys.argv) ==  19):
+    if(len(sys.argv) ==  18):
         pair_mode = True
         print(dt.today(), "OPERATING IN PAIRED-MODE")
-        pair_1_reads_file = sys.argv[13]
-        pair_1_blat_file = sys.argv[14]
-        pair_1_out_file = sys.argv[15]
+        pair_1_reads_file = sys.argv[12]
+        pair_1_blat_file = sys.argv[13]
+        pair_1_out_file = sys.argv[14]
         
-        pair_2_reads_file = sys.argv[16]
-        pair_2_blat_file = sys.argv[17]
-        pair_2_out_file = sys.argv[18]
+        pair_2_reads_file = sys.argv[15]
+        pair_2_blat_file = sys.argv[16]
+        pair_2_out_file = sys.argv[17]
     else:
         print(dt.today(), "OPERATING IN SINGLE-MODE")
         
@@ -301,101 +324,22 @@ if __name__ == "__main__":
     BWAreads_count= Counter(BWAreads)                   # dict of read<->no. of contigs
 
 
+    contig_gene2read_map = process_blat(contig_reads_file, contig_blat_file, contig_out_file, prev_mapping_count)
+    singletons_gene2read_map = process_blat(singletons_reads_file, singletons_blat_file, singletons_out_file, prev_mapping_count)
+    final_gene2read_map = {**contig_gene2read_map, **singletons_gene2read_map}
     
-    process_blat(contig_reads_File, contig_blat_file, contig_out_file, prev_mapping_count)
-    process_blat(singletons_reads_file, singletons_blat_file, singletons_out_file, prev_mapping_count)
     if(pair_mode):
-        process_blat(pair_1_reads_file, pair_1_blat_file, pair_1_out_file, prev_mapping_count)
-        process_blat(pair_2_reads_file, pair_2_blat_file, pair_2_out_file, prev_mapping_count)
+        pair_1_gene2read_map = process_blat(pair_1_reads_file, pair_1_blat_file, pair_1_out_file, prev_mapping_count)
+        pair_2_gene2read_map = process_blat(pair_2_reads_file, pair_2_blat_file, pair_2_out_file, prev_mapping_count)
+        final_gene2read_map.update(pair_1_gene2read_map)
+        final_gene2read_map.update(pair_2_gene2read_map)
+
+
+    export_gene_map(final_gene2read_map, gene_file, new_gene2read_file)
 
 
 
 
-# process BLAT output:
-# readtype sets: contigs, merged:
-for x in range(read_sets):
-    
-'''
-# process BLAT output:
-# readtype sets: unmerged1, unmerged2
-if numsets==4:
-    
-    # unmerged1:
-    x= 2
-    read_file_1= sys.argv[3*x+7]
-    read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
-    BLAT_tab_file_1= sys.argv[3*x+8]
-    output_file_1= sys.argv[3*x+9]
-    BLAT_hits_1= read_aligned(BLAT_tab_file_1, read_seqs_1) # Store info in BLAT_hits_1 (list of lists).
-
-    # unmerged2:
-    x= 3
-    read_file_2= sys.argv[3*x+7]
-    read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
-    BLAT_tab_file_2= sys.argv[3*x+8]
-    output_file_2= sys.argv[3*x+9]
-    BLAT_hits_2= read_aligned(BLAT_tab_file_2, read_seqs_2) # Store info in BLAT_hits_2 (list of lists).
-
-    # process BLAT-aligned reads together:
-    BLAT_hits= BLAT_hits_1+BLAT_hits_2                  # Concatenate BLAT info lists,
-    unmapped_reads= gene_map(BLAT_hits)                 #  add BLAT-aligned contigs/reads to gene2read_map
-                                                        #  and return a set of failed mapping readIDs.
-    # add reads never mapped by BLAT in the
-    # first place to the unmapped set:
-    unmapped_len_before= len(unmapped_reads)
-    for read in read_seqs_1:
-        if read not in mapped_reads:
-            unmapped_reads.add(read)
-    print ('(1st paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before))
-
-    # add reads never mapped by BLAT in the
-    # first place to the unmapped set:
-    unmapped_len_before= len(unmapped_reads)
-    for read in read_seqs_2:
-        if read not in mapped_reads:
-            unmapped_reads.add(read)
-    print ('(2nd paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before) + ' (should be 0)')
-
-    # WRITE unmerged1 OUTPUT: non-BWA&BLAT-aligned:
-    unmapped_seqs= []
-    for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_1[read])
-    with open(output_file_1,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")
-
-    # WRITE unmerged2 OUTPUT: non-BWA&BLAT-aligned:
-    unmapped_seqs= []
-    for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_2[read])
-    with open(output_file_2,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")
-
-    # print no. aligned reads from current readtype set:
-    print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file_1))
-    print ('  and ' + os.path.basename(read_file_2) + '\n')
-    prev_mapping_count= len(mapped_reads)
-'''
-# WRITE OUTPUT: rewrite gene<->read mapfile to include BLAT-aligned:
-# [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
-reads_count= 0
-genes= []
-with open(new_gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
-    for record in SeqIO.parse(DNA_DB, "fasta"):         # Loop through SeqRec of all genes in DNA db:
-                                                        #  (DNA db is needed to get the sequence.)
-        if record.id in gene2read_map:                  #  If DNA db gene is one of the matched genes,
-            genes.append(record)                        #  append the SeqRec to genes list (for next file), and
-            out_map.write(record.id + "\t" + str(len(record.seq)) + "\t" + str(len(gene2read_map[record.id])))
-                                                        #  write [aligned geneID, length, #reads, ...],
-            for read in gene2read_map[record.id]:
-                out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],
-                reads_count+= 1
-            else:
-                out_map.write("\n")                     #  and a new line character.
-
-# WRITE OUTPUT: BWA&BLAT-aligned geneIDs and seqs (.fna; fasta-format):
-# (this wasn't done in BWA post-processing)
-with open(gene_file,"w") as outfile:
-    SeqIO.write(genes, outfile, "fasta")
 
 # print BWA+BLAT stats:
 print (str(reads_count) + ' reads were mapped with BWA and BLAT.')
