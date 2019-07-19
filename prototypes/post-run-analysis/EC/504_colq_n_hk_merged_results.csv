@@ -1,0 +1,121 @@
+Pathway,both,humann2,mpro,num_Ecs,sample
+Acarbose and validamycin biosynthesis,2.0,0.0,0.0,14,504_colq_n_hk
+Aflatoxin biosynthesis,1.0,0.0,0.0,13,504_colq_n_hk
+"Alanine, aspartate and glutamate metabolism",12.0,2.0,7.0,50,504_colq_n_hk
+Amino sugar and nucleotide sugar metabolism,15.0,0.0,11.0,119,504_colq_n_hk
+Aminoacyl-tRNA biosynthesis,22.0,0.0,2.0,31,504_colq_n_hk
+Aminobenzoate degradation,0.0,1.0,1.0,51,504_colq_n_hk
+Arginine and proline metabolism,3.0,1.0,8.0,86,504_colq_n_hk
+Arginine biosynthesis,7.0,2.0,7.0,28,504_colq_n_hk
+Ascorbate and aldarate metabolism,0.0,0.0,4.0,46,504_colq_n_hk
+Atrazine degradation,1.0,0.0,0.0,10,504_colq_n_hk
+Benzoate degradation,0.0,0.0,2.0,69,504_colq_n_hk
+Biosynthesis of ansamycins,1.0,0.0,0.0,4,504_colq_n_hk
+Biosynthesis of antibiotics,82.0,7.0,30.0,496,504_colq_n_hk
+Biosynthesis of secondary metabolites,111.0,13.0,53.0,778,504_colq_n_hk
+Biosynthesis of unsaturated fatty acids,0.0,0.0,3.0,16,504_colq_n_hk
+Biosynthesis of vancomycin group antibiotics,1.0,0.0,0.0,10,504_colq_n_hk
+Biotin metabolism,5.0,1.0,4.0,20,504_colq_n_hk
+Butanoate metabolism,3.0,1.0,5.0,55,504_colq_n_hk
+C5-Branched dibasic acid metabolism,3.0,0.0,3.0,22,504_colq_n_hk
+Caprolactam degradation,0.0,0.0,1.0,21,504_colq_n_hk
+Carbapenem biosynthesis,2.0,0.0,0.0,5,504_colq_n_hk
+Carbon fixation in photosynthetic organisms,9.0,0.0,5.0,25,504_colq_n_hk
+Carbon fixation pathways in prokaryotes,9.0,0.0,12.0,50,504_colq_n_hk
+Chloroalkane and chloroalkene degradation,0.0,0.0,2.0,17,504_colq_n_hk
+Citrate cycle (TCA cycle),7.0,0.0,3.0,26,504_colq_n_hk
+Cyanoamino acid metabolism,2.0,0.0,1.0,30,504_colq_n_hk
+Cysteine and methionine metabolism,12.0,2.0,8.0,76,504_colq_n_hk
+D-Alanine metabolism,2.0,0.0,0.0,6,504_colq_n_hk
+D-Glutamine and D-glutamate metabolism,4.0,0.0,0.0,12,504_colq_n_hk
+Drug metabolism - cytochrome P450,0.0,0.0,1.0,8,504_colq_n_hk
+Drug metabolism - other enzymes,6.0,0.0,5.0,25,504_colq_n_hk
+Fatty acid biosynthesis,4.0,2.0,2.0,17,504_colq_n_hk
+Fatty acid degradation,0.0,0.0,5.0,29,504_colq_n_hk
+Fatty acid elongation,0.0,0.0,2.0,13,504_colq_n_hk
+Folate biosynthesis,4.0,1.0,9.0,51,504_colq_n_hk
+Fructose and mannose metabolism,10.0,0.0,11.0,75,504_colq_n_hk
+Galactose metabolism,8.0,2.0,7.0,48,504_colq_n_hk
+Geraniol degradation,0.0,0.0,1.0,10,504_colq_n_hk
+Glucosinolate biosynthesis,0.0,0.0,1.0,15,504_colq_n_hk
+Glutathione metabolism,3.0,0.0,6.0,39,504_colq_n_hk
+Glycerolipid metabolism,1.0,1.0,4.0,40,504_colq_n_hk
+Glycerophospholipid metabolism,3.0,1.0,6.0,61,504_colq_n_hk
+"Glycine, serine and threonine metabolism",12.0,1.0,8.0,68,504_colq_n_hk
+Glycolysis / Gluconeogenesis,14.0,0.0,8.0,48,504_colq_n_hk
+Glycosaminoglycan degradation,2.0,0.0,0.0,15,504_colq_n_hk
+Glycosphingolipid biosynthesis - ganglio series,2.0,0.0,0.0,8,504_colq_n_hk
+Glycosphingolipid biosynthesis - globo and isoglobo series,1.0,0.0,2.0,13,504_colq_n_hk
+Glyoxylate and dicarboxylate metabolism,3.0,0.0,9.0,73,504_colq_n_hk
+Histidine metabolism,8.0,0.0,4.0,38,504_colq_n_hk
+Human cytomegalovirus infection,0.0,0.0,1.0,2,504_colq_n_hk
+Human papillomavirus infection,0.0,0.0,1.0,2,504_colq_n_hk
+Inositol phosphate metabolism,3.0,1.0,3.0,48,504_colq_n_hk
+Insect hormone biosynthesis,0.0,0.0,1.0,9,504_colq_n_hk
+Isoquinoline alkaloid biosynthesis,0.0,0.0,2.0,57,504_colq_n_hk
+Limonene and pinene degradation,0.0,0.0,2.0,16,504_colq_n_hk
+Lipoic acid metabolism,2.0,0.0,0.0,3,504_colq_n_hk
+Lipopolysaccharide biosynthesis,5.0,0.0,6.0,27,504_colq_n_hk
+Lysine biosynthesis,8.0,2.0,2.0,28,504_colq_n_hk
+Lysine degradation,0.0,0.0,4.0,53,504_colq_n_hk
+Metabolic pathways,221.0,25.0,148.0,1650,504_colq_n_hk
+Metabolism of xenobiotics by cytochrome P450,0.0,0.0,1.0,10,504_colq_n_hk
+Methane metabolism,10.0,0.0,7.0,87,504_colq_n_hk
+Microbial metabolism in diverse environments,54.0,5.0,50.0,668,504_colq_n_hk
+Monobactam biosynthesis,3.0,2.0,0.0,10,504_colq_n_hk
+Naphthalene degradation,0.0,0.0,1.0,9,504_colq_n_hk
+Nicotinate and nicotinamide metabolism,6.0,1.0,5.0,59,504_colq_n_hk
+Nitrogen metabolism,3.0,0.0,4.0,37,504_colq_n_hk
+Nitrotoluene degradation,0.0,0.0,1.0,7,504_colq_n_hk
+Novobiocin biosynthesis,1.0,0.0,1.0,16,504_colq_n_hk
+One carbon pool by folate,9.0,1.0,6.0,24,504_colq_n_hk
+Other glycan degradation,2.0,0.0,1.0,9,504_colq_n_hk
+Other types of O-glycan biosynthesis,0.0,0.0,1.0,9,504_colq_n_hk
+Oxidative phosphorylation,3.0,0.0,3.0,11,504_colq_n_hk
+PI3K-Akt signaling pathway,0.0,0.0,1.0,2,504_colq_n_hk
+Pantothenate and CoA biosynthesis,10.0,1.0,2.0,31,504_colq_n_hk
+Penicillin and cephalosporin biosynthesis,0.0,1.0,0.0,14,504_colq_n_hk
+Pentose and glucuronate interconversions,8.0,0.0,6.0,67,504_colq_n_hk
+Pentose phosphate pathway,13.0,0.0,4.0,55,504_colq_n_hk
+Peptidoglycan biosynthesis,9.0,0.0,3.0,19,504_colq_n_hk
+Phenazine biosynthesis,0.0,0.0,1.0,13,504_colq_n_hk
+Phenylalanine metabolism,1.0,1.0,4.0,67,504_colq_n_hk
+"Phenylalanine, tyrosine and tryptophan biosynthesis",11.0,0.0,4.0,39,504_colq_n_hk
+Phenylpropanoid biosynthesis,0.0,0.0,2.0,30,504_colq_n_hk
+Phosphatidylinositol signaling system,1.0,0.0,1.0,29,504_colq_n_hk
+Phosphonate and phosphinate metabolism,2.0,0.0,1.0,29,504_colq_n_hk
+Photosynthesis,1.0,0.0,0.0,3,504_colq_n_hk
+Polyketide sugar unit biosynthesis,2.0,0.0,1.0,27,504_colq_n_hk
+Porphyrin and chlorophyll metabolism,10.0,2.0,11.0,106,504_colq_n_hk
+Propanoate metabolism,6.0,1.0,8.0,55,504_colq_n_hk
+Purine metabolism,26.0,2.0,10.0,110,504_colq_n_hk
+Pyrimidine metabolism,21.0,0.0,5.0,65,504_colq_n_hk
+Pyruvate metabolism,8.0,0.0,16.0,67,504_colq_n_hk
+Relaxin signaling pathway,0.0,0.0,1.0,1,504_colq_n_hk
+Retinol metabolism,0.0,0.0,1.0,14,504_colq_n_hk
+Riboflavin metabolism,2.0,1.0,6.0,28,504_colq_n_hk
+Selenocompound metabolism,3.0,0.0,4.0,18,504_colq_n_hk
+Sphingolipid metabolism,1.0,0.0,3.0,27,504_colq_n_hk
+Starch and sucrose metabolism,6.0,2.0,8.0,76,504_colq_n_hk
+Streptomycin biosynthesis,3.0,0.0,3.0,18,504_colq_n_hk
+Sulfur metabolism,4.0,1.0,3.0,50,504_colq_n_hk
+Synthesis and degradation of ketone bodies,0.0,0.0,1.0,6,504_colq_n_hk
+T cell receptor signaling pathway,0.0,0.0,2.0,2,504_colq_n_hk
+Taurine and hypotaurine metabolism,3.0,0.0,1.0,19,504_colq_n_hk
+Terpenoid backbone biosynthesis,7.0,0.0,4.0,51,504_colq_n_hk
+Th1 and Th2 cell differentiation,0.0,0.0,1.0,1,504_colq_n_hk
+Thermogenesis,0.0,0.0,1.0,1,504_colq_n_hk
+Thiamine metabolism,8.0,0.0,3.0,26,504_colq_n_hk
+"Tropane, piperidine and pyridine alkaloid biosynthesis",1.0,0.0,2.0,27,504_colq_n_hk
+Tryptophan metabolism,1.0,0.0,4.0,60,504_colq_n_hk
+Tyrosine metabolism,1.0,0.0,3.0,64,504_colq_n_hk
+Ubiquinone and other terpenoid-quinone biosynthesis,3.0,3.0,2.0,40,504_colq_n_hk
+"Valine, leucine and isoleucine biosynthesis",6.0,0.0,3.0,14,504_colq_n_hk
+"Valine, leucine and isoleucine degradation",1.0,0.0,6.0,36,504_colq_n_hk
+Various types of N-glycan biosynthesis,1.0,0.0,0.0,23,504_colq_n_hk
+Vitamin B6 metabolism,3.0,2.0,1.0,26,504_colq_n_hk
+Zeatin biosynthesis,1.0,0.0,0.0,10,504_colq_n_hk
+alpha-Linolenic acid metabolism,0.0,0.0,2.0,12,504_colq_n_hk
+beta-Alanine metabolism,3.0,0.0,3.0,37,504_colq_n_hk
+beta-Lactam resistance,0.0,1.0,0.0,1,504_colq_n_hk
+mTOR signaling pathway,0.0,0.0,1.0,5,504_colq_n_hk

@@ -1,0 +1,123 @@
+Pathway,both,humann2,mpro,num_Ecs,sample
+Acarbose and validamycin biosynthesis,2,0,0,14,504_cecm_n_hk
+Aflatoxin biosynthesis,1,0,0,13,504_cecm_n_hk
+"Alanine, aspartate and glutamate metabolism",13,1,5,50,504_cecm_n_hk
+Amino sugar and nucleotide sugar metabolism,13,1,10,119,504_cecm_n_hk
+Aminoacyl-tRNA biosynthesis,21,0,2,31,504_cecm_n_hk
+Aminobenzoate degradation,0,1,2,51,504_cecm_n_hk
+Arginine and proline metabolism,3,1,4,86,504_cecm_n_hk
+Arginine biosynthesis,6,2,7,28,504_cecm_n_hk
+Ascorbate and aldarate metabolism,0,0,6,46,504_cecm_n_hk
+Benzoate degradation,0,0,3,69,504_cecm_n_hk
+Biosynthesis of ansamycins,1,0,0,4,504_cecm_n_hk
+Biosynthesis of antibiotics,80,11,27,496,504_cecm_n_hk
+Biosynthesis of secondary metabolites,109,17,37,778,504_cecm_n_hk
+Biosynthesis of unsaturated fatty acids,0,0,2,16,504_cecm_n_hk
+Biosynthesis of vancomycin group antibiotics,1,0,0,10,504_cecm_n_hk
+Biotin metabolism,6,0,3,20,504_cecm_n_hk
+Butanoate metabolism,3,1,6,55,504_cecm_n_hk
+C5-Branched dibasic acid metabolism,3,0,3,22,504_cecm_n_hk
+Caprolactam degradation,0,0,1,21,504_cecm_n_hk
+Carbapenem biosynthesis,2,0,0,5,504_cecm_n_hk
+Carbon fixation in photosynthetic organisms,9,0,4,25,504_cecm_n_hk
+Carbon fixation pathways in prokaryotes,9,0,10,50,504_cecm_n_hk
+Chloroalkane and chloroalkene degradation,0,0,3,17,504_cecm_n_hk
+Citrate cycle (TCA cycle),6,1,3,26,504_cecm_n_hk
+Cyanoamino acid metabolism,2,0,1,30,504_cecm_n_hk
+Cysteine and methionine metabolism,13,2,6,76,504_cecm_n_hk
+D-Alanine metabolism,2,0,0,6,504_cecm_n_hk
+D-Glutamine and D-glutamate metabolism,4,0,0,12,504_cecm_n_hk
+Dioxin degradation,0,0,1,13,504_cecm_n_hk
+Drug metabolism - cytochrome P450,0,0,2,8,504_cecm_n_hk
+Drug metabolism - other enzymes,5,0,6,25,504_cecm_n_hk
+Ether lipid metabolism,0,0,1,23,504_cecm_n_hk
+Fatty acid biosynthesis,6,0,1,17,504_cecm_n_hk
+Fatty acid degradation,0,0,4,29,504_cecm_n_hk
+Fatty acid elongation,0,0,1,13,504_cecm_n_hk
+Folate biosynthesis,4,1,10,51,504_cecm_n_hk
+Fructose and mannose metabolism,10,0,7,75,504_cecm_n_hk
+Galactose metabolism,6,2,4,48,504_cecm_n_hk
+Geraniol degradation,0,0,1,10,504_cecm_n_hk
+Glucosinolate biosynthesis,0,0,1,15,504_cecm_n_hk
+Glutathione metabolism,3,0,5,39,504_cecm_n_hk
+Glycerolipid metabolism,1,1,4,40,504_cecm_n_hk
+Glycerophospholipid metabolism,3,1,5,61,504_cecm_n_hk
+"Glycine, serine and threonine metabolism",11,2,6,68,504_cecm_n_hk
+Glycolysis / Gluconeogenesis,13,1,6,48,504_cecm_n_hk
+Glycosaminoglycan degradation,2,0,0,15,504_cecm_n_hk
+Glycosphingolipid biosynthesis - ganglio series,2,0,0,8,504_cecm_n_hk
+Glycosphingolipid biosynthesis - globo and isoglobo series,1,0,2,13,504_cecm_n_hk
+Glyoxylate and dicarboxylate metabolism,3,0,6,73,504_cecm_n_hk
+Histidine metabolism,9,0,3,38,504_cecm_n_hk
+Human cytomegalovirus infection,0,0,1,2,504_cecm_n_hk
+Human papillomavirus infection,0,0,1,2,504_cecm_n_hk
+Inositol phosphate metabolism,3,1,3,48,504_cecm_n_hk
+Insect hormone biosynthesis,0,0,1,9,504_cecm_n_hk
+Isoquinoline alkaloid biosynthesis,0,0,1,57,504_cecm_n_hk
+Limonene and pinene degradation,0,0,2,16,504_cecm_n_hk
+Lipoic acid metabolism,2,0,0,3,504_cecm_n_hk
+Lipopolysaccharide biosynthesis,6,0,4,27,504_cecm_n_hk
+Lysine biosynthesis,6,3,3,28,504_cecm_n_hk
+Lysine degradation,0,0,5,53,504_cecm_n_hk
+Metabolic pathways,220,25,122,1650,504_cecm_n_hk
+Metabolism of xenobiotics by cytochrome P450,0,0,2,10,504_cecm_n_hk
+Methane metabolism,10,0,3,87,504_cecm_n_hk
+Microbial metabolism in diverse environments,52,6,44,668,504_cecm_n_hk
+Monobactam biosynthesis,3,2,0,10,504_cecm_n_hk
+Naphthalene degradation,0,0,1,9,504_cecm_n_hk
+Nicotinate and nicotinamide metabolism,6,1,4,59,504_cecm_n_hk
+Nitrogen metabolism,3,0,5,37,504_cecm_n_hk
+Nitrotoluene degradation,0,0,1,7,504_cecm_n_hk
+Novobiocin biosynthesis,1,0,1,16,504_cecm_n_hk
+One carbon pool by folate,9,1,4,24,504_cecm_n_hk
+Other glycan degradation,2,0,1,9,504_cecm_n_hk
+Other types of O-glycan biosynthesis,0,0,1,9,504_cecm_n_hk
+Oxidative phosphorylation,3,0,3,11,504_cecm_n_hk
+PI3K-Akt signaling pathway,0,0,1,2,504_cecm_n_hk
+Pantothenate and CoA biosynthesis,10,1,2,31,504_cecm_n_hk
+Penicillin and cephalosporin biosynthesis,0,1,0,14,504_cecm_n_hk
+Pentose and glucuronate interconversions,8,0,8,67,504_cecm_n_hk
+Pentose phosphate pathway,13,0,4,55,504_cecm_n_hk
+Peptidoglycan biosynthesis,8,1,3,19,504_cecm_n_hk
+Phenazine biosynthesis,0,0,1,13,504_cecm_n_hk
+Phenylalanine metabolism,1,1,6,67,504_cecm_n_hk
+"Phenylalanine, tyrosine and tryptophan biosynthesis",11,1,4,39,504_cecm_n_hk
+Phenylpropanoid biosynthesis,0,0,2,30,504_cecm_n_hk
+Phosphatidylinositol signaling system,1,0,2,29,504_cecm_n_hk
+Phosphonate and phosphinate metabolism,2,0,0,29,504_cecm_n_hk
+Photosynthesis,1,0,0,3,504_cecm_n_hk
+Polyketide sugar unit biosynthesis,2,0,1,27,504_cecm_n_hk
+Porphyrin and chlorophyll metabolism,10,1,6,106,504_cecm_n_hk
+Propanoate metabolism,5,2,7,55,504_cecm_n_hk
+Purine metabolism,26,2,10,110,504_cecm_n_hk
+Pyrimidine metabolism,20,0,4,65,504_cecm_n_hk
+Pyruvate metabolism,7,1,12,67,504_cecm_n_hk
+Relaxin signaling pathway,0,0,1,1,504_cecm_n_hk
+Retinol metabolism,0,0,1,14,504_cecm_n_hk
+Riboflavin metabolism,2,1,4,28,504_cecm_n_hk
+Selenocompound metabolism,3,0,2,18,504_cecm_n_hk
+Sphingolipid metabolism,1,0,3,27,504_cecm_n_hk
+Starch and sucrose metabolism,7,1,6,76,504_cecm_n_hk
+Streptomycin biosynthesis,3,0,3,18,504_cecm_n_hk
+Sulfur metabolism,4,1,1,50,504_cecm_n_hk
+Synthesis and degradation of ketone bodies,0,0,2,6,504_cecm_n_hk
+T cell receptor signaling pathway,0,0,1,2,504_cecm_n_hk
+Taurine and hypotaurine metabolism,3,0,1,19,504_cecm_n_hk
+Terpenoid backbone biosynthesis,7,1,3,51,504_cecm_n_hk
+Th1 and Th2 cell differentiation,0,0,1,1,504_cecm_n_hk
+Thermogenesis,0,0,1,1,504_cecm_n_hk
+Thiamine metabolism,9,0,1,26,504_cecm_n_hk
+"Tropane, piperidine and pyridine alkaloid biosynthesis",1,0,1,27,504_cecm_n_hk
+Tryptophan metabolism,1,0,5,60,504_cecm_n_hk
+Tyrosine metabolism,1,0,2,64,504_cecm_n_hk
+Ubiquinone and other terpenoid-quinone biosynthesis,3,4,1,40,504_cecm_n_hk
+"Valine, leucine and isoleucine biosynthesis",6,0,3,14,504_cecm_n_hk
+"Valine, leucine and isoleucine degradation",0,1,7,36,504_cecm_n_hk
+Various types of N-glycan biosynthesis,1,0,0,23,504_cecm_n_hk
+Vitamin B6 metabolism,3,2,1,26,504_cecm_n_hk
+Xylene degradation,0,0,1,21,504_cecm_n_hk
+Zeatin biosynthesis,1,0,0,10,504_cecm_n_hk
+alpha-Linolenic acid metabolism,0,0,2,12,504_cecm_n_hk
+beta-Alanine metabolism,3,0,2,37,504_cecm_n_hk
+beta-Lactam resistance,0,1,0,1,504_cecm_n_hk
+mTOR signaling pathway,0,0,2,5,504_cecm_n_hk

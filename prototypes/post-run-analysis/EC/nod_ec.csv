@@ -1,0 +1,93 @@
+501 cecq n,,,,,,,,501 cecq y,,,,,,,501 colq n,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,both,humann2,metapro,remaining,,,,,both,humann2,metapro,remaining,,,,both,humann2,metapro,remaining,
+Arginine biosynthesis,0,1,4,28,501_cecq_n_hk,,,Arginine biosynthesis,9,2,6,28,501_cecq_y_hk,,Arginine biosynthesis,2,1,4,28,501_colq_n_hk
+Citrate cycle (TCA cycle),3,0,6,26,501_cecq_n_hk,,,Citrate cycle (TCA cycle),7,1,9,26,501_cecq_y_hk,,Citrate cycle (TCA cycle),5,1,2,26,501_colq_n_hk
+Fatty acid degradation,0,0,2,29,501_cecq_n_hk,,,Fatty acid degradation,2,0,7,29,501_cecq_y_hk,,Fatty acid degradation,0,0,1,29,501_colq_n_hk
+Glycerolipid metabolism,1,0,1,40,501_cecq_n_hk,,,Glycerolipid metabolism,1,2,5,40,501_cecq_y_hk,,Glycerolipid metabolism,1,0,1,40,501_colq_n_hk
+Glycolysis / Gluconeogenesis,7,0,11,48,501_cecq_n_hk,,,Glycolysis / Gluconeogenesis,20,1,5,48,501_cecq_y_hk,,Glycolysis / Gluconeogenesis,10,1,7,48,501_colq_n_hk
+Oxidative phosphorylation,1,0,6,11,501_cecq_n_hk,,,Oxidative phosphorylation,4,0,4,11,501_cecq_y_hk,,Oxidative phosphorylation,2,0,2,11,501_colq_n_hk
+Pentose phosphate pathway,3,0,10,55,501_cecq_n_hk,,,Pentose phosphate pathway,17,1,5,55,501_cecq_y_hk,,Pentose phosphate pathway,6,0,8,55,501_colq_n_hk
+Starch and sucrose metabolism,1,0,8,76,501_cecq_n_hk,,,Starch and sucrose metabolism,11,3,10,76,501_cecq_y_hk,,Starch and sucrose metabolism,1,0,12,76,501_colq_n_hk
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+502 cecq n,,,,,,,,502 cecq y,,,,,,,502 colq n,,,,,
+,both,humann2,metapro,remaining,,,,,both,humann2,metapro,remaining,,,,both,humann2,metapro,remaining,
+Arginine biosynthesis,8,1,7,28,502_cecq_n_hk,,,Arginine biosynthesis,4,2,11,28,502_cecq_y_hk,,Arginine biosynthesis,3,1,9,28,502_colq_n_hk
+Citrate cycle (TCA cycle),8,0,4,26,502_cecq_n_hk,,,Citrate cycle (TCA cycle),7,0,8,26,502_cecq_y_hk,,Citrate cycle (TCA cycle),6,1,4,26,502_colq_n_hk
+Fatty acid degradation,3,1,2,29,502_cecq_n_hk,,,Fatty acid degradation,1,0,7,29,502_cecq_y_hk,,Fatty acid degradation,0,0,3,29,502_colq_n_hk
+Glycerolipid metabolism,1,0,4,40,502_cecq_n_hk,,,Glycerolipid metabolism,1,0,5,40,502_cecq_y_hk,,Glycerolipid metabolism,1,0,1,40,502_colq_n_hk
+Glycolysis / Gluconeogenesis,13,1,9,48,502_cecq_n_hk,,,Glycolysis / Gluconeogenesis,12,0,13,48,502_cecq_y_hk,,Glycolysis / Gluconeogenesis,12,1,8,48,502_colq_n_hk
+Oxidative phosphorylation,4,0,1,11,502_cecq_n_hk,,,Oxidative phosphorylation,4,0,4,11,502_cecq_y_hk,,Oxidative phosphorylation,2,0,5,11,502_colq_n_hk
+Pentose phosphate pathway,11,0,6,55,502_cecq_n_hk,,,Pentose phosphate pathway,8,0,12,55,502_cecq_y_hk,,Pentose phosphate pathway,9,0,7,55,502_colq_n_hk
+Starch and sucrose metabolism,9,0,4,76,502_cecq_n_hk,,,Starch and sucrose metabolism,3,0,16,76,502_cecq_y_hk,,Starch and sucrose metabolism,2,0,10,76,502_colq_n_hk
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+503 cecm n,,,,,,,,503 cecq n,,,,,,,504 cecm n,,,,,
+,both,humann2,metapro,remaining,,,,,both,humann2,metapro,remaining,,,,both,humann2,metapro,remaining,
+Arginine biosynthesis,7,2,6,28,503_cecm_n_hk,,,Arginine biosynthesis,1,1,8,28,503_cecq_n_hk,,Arginine biosynthesis,6,2,7,28,504_cecm_n_hk
+Citrate cycle (TCA cycle),7,0,3,26,503_cecm_n_hk,,,Citrate cycle (TCA cycle),6,1,5,26,503_cecq_n_hk,,Citrate cycle (TCA cycle),6,1,3,26,504_cecm_n_hk
+Fatty acid degradation,2,0,4,29,503_cecm_n_hk,,,Fatty acid degradation,0,0,3,29,503_cecq_n_hk,,Fatty acid degradation,0,0,4,29,504_cecm_n_hk
+Glycerolipid metabolism,1,1,2,40,503_cecm_n_hk,,,Glycerolipid metabolism,1,0,3,40,503_cecq_n_hk,,Glycerolipid metabolism,1,1,4,40,504_cecm_n_hk
+Glycolysis / Gluconeogenesis,14,0,8,48,503_cecm_n_hk,,,Glycolysis / Gluconeogenesis,10,1,13,48,503_cecq_n_hk,,Glycolysis / Gluconeogenesis,13,1,6,48,504_cecm_n_hk
+Oxidative phosphorylation,3,0,3,11,503_cecm_n_hk,,,Oxidative phosphorylation,3,0,4,11,503_cecq_n_hk,,Oxidative phosphorylation,3,0,3,11,504_cecm_n_hk
+Pentose phosphate pathway,13,0,6,55,503_cecm_n_hk,,,Pentose phosphate pathway,2,0,15,55,503_cecq_n_hk,,Pentose phosphate pathway,13,0,4,55,504_cecm_n_hk
+Starch and sucrose metabolism,9,3,5,76,503_cecm_n_hk,,,Starch and sucrose metabolism,3,0,10,76,503_cecq_n_hk,,Starch and sucrose metabolism,7,1,6,76,504_cecm_n_hk
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+504 cecq n,,,,,,,,504 cecq y,,,,,,,504 colq n,,,,,
+,both,humann2,metapro,remaining,,,,,both,humann2,metapro,remaining,,,,both,humann2,metapro,remaining,
+Arginine biosynthesis,5,1,6,28,504_cecq_n_hk,,,Arginine biosynthesis,7,3,6,28,504_cecq_y_hk,,Arginine biosynthesis,7,2,7,28,504_colq_n_hk
+Citrate cycle (TCA cycle),8,0,8,26,504_cecq_n_hk,,,Citrate cycle (TCA cycle),8,0,4,26,504_cecq_y_hk,,Citrate cycle (TCA cycle),7,0,3,26,504_colq_n_hk
+Fatty acid degradation,2,0,3,29,504_cecq_n_hk,,,Fatty acid degradation,3,1,3,29,504_cecq_y_hk,,Fatty acid degradation,0,0,5,29,504_colq_n_hk
+Glycerolipid metabolism,3,0,3,40,504_cecq_n_hk,,,Glycerolipid metabolism,4,1,4,40,504_cecq_y_hk,,Glycerolipid metabolism,1,1,4,40,504_colq_n_hk
+Glycolysis / Gluconeogenesis,13,0,10,48,504_cecq_n_hk,,,Glycolysis / Gluconeogenesis,18,0,6,48,504_cecq_y_hk,,Glycolysis / Gluconeogenesis,14,0,8,48,504_colq_n_hk
+Oxidative phosphorylation,1,0,5,11,504_cecq_n_hk,,,Oxidative phosphorylation,5,0,2,11,504_cecq_y_hk,,Oxidative phosphorylation,3,0,3,11,504_colq_n_hk
+Pentose phosphate pathway,13,0,5,55,504_cecq_n_hk,,,Pentose phosphate pathway,16,1,5,55,504_cecq_y_hk,,Pentose phosphate pathway,13,0,4,55,504_colq_n_hk
+Starch and sucrose metabolism,5,1,11,76,504_cecq_n_hk,,,Starch and sucrose metabolism,11,2,9,76,504_cecq_y_hk,,Starch and sucrose metabolism,6,2,8,76,504_colq_n_hk
