@@ -54,8 +54,10 @@ import multiprocessing as mp
 # =	Read Match; the nucleotide is present in the reference.
 # X	Read Mismatch; the nucleotide is present in the reference.
 
-def gene_map(process_id, samfile, contig2read_map, contig2read_map_uniq, contig_reads, return_dict):                                      # Set of unmapped contig/readIDs=
+def gene_map(process_id, samfile, contig2read_map, contig2read_map_uniq, contig_reads, read_to_genes_dict, return_dict):                                      
+# Set of unmapped contig/readIDs=
                                                         #  gene_map(BWA .sam file)
+    #read-to-genes-dict writes it for every process.  The key needs to be tagged with the p-id in order for it to be returned safely
     # tracking BWA-assigned & unassigned:
     query2gene_map= defaultdict(set)                    # Dict of BWA-aligned contig/readID<->geneID(s).
     queryIScontig= {}                                   # Dict of BWA-aligned contig/readID<->contig? (True/False).
@@ -140,6 +142,9 @@ def gene_map(process_id, samfile, contig2read_map, contig2read_map_uniq, contig_
             del query2gene_map[query]                   #  delete it from the query list.
             del queryIScontig[query]
 
+
+
+
     #print ('no. (after removal of queries aligning to multiple genes)= ' + str(len(query2gene_map)))
 
     # FINAL remaining BWA-aligned queries:
@@ -149,13 +154,15 @@ def gene_map(process_id, samfile, contig2read_map, contig2read_map_uniq, contig_
         contig= queryIScontig[query]                    # contig?
     
         # RECORD alignments:
+        #if contig, add all its constituent reads to the list
         if contig:                                      # If query is a contig, then
             gene2read_map[db_match].extend(contig2read_map_uniq[query])
-                                                        #  add the readIDs of all the reads making up
-                                                        #  that contig to the aligned gene<->read dict,
-            for read in contig2read_map_uniq[query]:    #  and mark all those reads
+            for read in contig2read_map_uniq[query]:    
                 mapped_reads.add(read)                  #  as assigned by BWA.
                 mapped_list.append(read)                # DEBUG (not a set so will double w paired reads)
+                
+        
+        #
         else:                                           # If query is a read,
             gene2read_map[db_match].append(query)       #  append its readID to aligned gene<->read dict,
             mapped_reads.add(query)                     #  and mark it as assigned by BWA.
@@ -276,6 +283,7 @@ def write_unmapped_sequences(read_seqs, unmapped_reads, output_file):
 def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_mode, contig2read_map, contig2read_map_uniq, contig_reads):
     manager = mp.Manager()
     return_dict = manager.dict()
+    read_to_genes_dict = manager.dict()
     arbitrary_chunk_size = 500000
     arbitrary_process_limit = 40
     
@@ -292,7 +300,7 @@ def process_bwa(read_file, BWA_sam_file, output_file, prev_mapping_count, pair_m
         process_id = 0
         process_list = []
         while(sam_chunk):
-            bwa_process = mp.Process(target = gene_map, args = (process_id, sam_chunk, contig2read_map, contig2read_map_uniq, contig_reads, return_dict))
+            bwa_process = mp.Process(target = gene_map, args = (process_id, sam_chunk, contig2read_map, contig2read_map_uniq, contig_reads, read_to_genes_dict, return_dict))
             bwa_process.start()
             process_list.append(bwa_process)
             sam_chunk = sam_file.readlines(arbitrary_chunk_size)
