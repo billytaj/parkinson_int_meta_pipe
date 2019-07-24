@@ -80,6 +80,259 @@ class mt_pipe_commands:
         else:
             print("not running job.  run_job set to False")
 
+    def create_quality_control_command_trimmomatic(self, stage_name):
+        subfolder                   = os.path.join(self.Output_Path, stage_name)
+        data_folder                 = os.path.join(subfolder, "data")
+        sorted_read_folder          = os.path.join(data_folder, "0_sorted_raw_input")
+        adapter_folder              = os.path.join(data_folder, "1_trimmomatic")
+        tag_remove_folder           = os.path.join(data_folder, "2_tag_remove")
+        vsearch_merge_folder        = os.path.join(data_folder, "3_vsearch_pair_merge")
+        vsearch_filter_folder       = os.path.join(data_folder, "4_quality_filter")
+        orphan_read_filter_folder   = os.path.join(data_folder, "5_orphan_read_filter")
+        cdhit_folder                = os.path.join(data_folder, "6_remove_duplicates")
+        final_folder                = os.path.join(subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(sorted_read_folder)
+        self.make_folder(adapter_folder)
+        self.make_folder(tag_remove_folder)
+        self.make_folder(vsearch_merge_folder)
+        self.make_folder(vsearch_filter_folder)
+        self.make_folder(orphan_read_filter_folder)
+        self.make_folder(cdhit_folder)
+        self.make_folder(final_folder)
+        
+        sort_pair_1 = ">&2 echo Sorting pair 1 | "
+        sort_pair_1 += self.tool_path_obj.Python + " "
+        sort_pair_1 += self.tool_path_obj.sort_reads + " "
+        sort_pair_1 += self.sequence_path_1 + " "
+        sort_pair_1 += os.path.join(sorted_read_folder, "pair_1_sorted.fastq") + " "
+        sort_pair_1 += "forward"
+
+        sort_pair_2 = ">&2 echo Sorting pair 2 | "
+        sort_pair_2 += self.tool_path_obj.Python + " "
+        sort_pair_2 += self.tool_path_obj.sort_reads + " "
+        sort_pair_2 += self.sequence_path_2 + " "
+        sort_pair_2 += os.path.join(sorted_read_folder, "pair_2_sorted.fastq") + " "
+        sort_pair_2 += "reverse"
+
+        trimmomatic_line = ">&2 echo Removing adapters | "
+        trimmomatic_line += self.tool_path_obj.Java + " "
+        trimmomatic_line += self.tool_path_obj.Trimmomatic + " "
+        if(self.read_mode == "single"):
+            trimmomatic_line += "SE" + " "
+        elif self.read_mode == "paired":
+            trimmomatic_line += "PE" + " "
+        trimmomatic_line += "-threads " + str(self.Threads_str) + " "
+        if(self.Qual_str == "33"):
+            trimmomatic_line += "-phred33" + " "
+        else:
+            trimmomatic_line += "-phred64" + " "
+            
+        if self.read_mode == "single":
+            trimmomatic_line += self.sequence_single + " "
+            trimmomatic_line += os.path.join(adapter_folder, "singletons_adptr_rem.fastq")
+        
+        elif self.read_mode == "paired":
+            trimmomatic_line += os.path.join(sorted_read_folder, "pair_1_sorted.fastq") + " "
+            trimmomatic_line += os.path.join(sorted_read_folder, "pair_2_sorted.fastq") + " "
+            trimmomatic_line += os.path.join(adapter_folder, "pair_1_adptr_rem.fastq") + " "
+            trimmomatic_line += os.path.join(adapter_folder, "unpaired_1.fastq") + " "
+            trimmomatic_line += os.path.join(adapter_folder, "pair_2_adptr_rem.fastq") + " "
+            trimmomatic_line += os.path.join(adapter_folder, "unpaired_2.fastq") + " "
+
+        cat_trimmomatic = ">&2 echo Combining singletons from Trimmomatic | "
+        cat_trimmomatic += "cat" + " "
+        cat_trimmomatic += os.path.join(adapter_folder, "unpaired_1.fastq") + " "
+        cat_trimmomatic += os.path.join(adapter_folder, "unpaired_2.fastq") + " "
+        cat_trimmomatic += ">" + " "
+        cat_trimmomatic += os.path.join(adapter_folder, "singletons_adptr_rem.fastq")
+
+        #Sort-reads introduces tags at the read-level of the 
+        tag_remove_pair_1 = ">&2 echo Remove tags pair 1 | "
+        tag_remove_pair_1 += self.tool_path_obj.Python + " "
+        tag_remove_pair_1 += self.tool_path_obj.remove_tag + " "
+        tag_remove_pair_1 += os.path.join(adapter_folder, "pair_1_adptr_rem.fastq") + " "
+        tag_remove_pair_1 += os.path.join(tag_remove_folder, "pair_1_no_tags.fastq")
+        
+        tag_remove_pair_2 = ">&2 echo Remove tags pair 2 | "
+        tag_remove_pair_2 += self.tool_path_obj.Python + " "
+        tag_remove_pair_2 += self.tool_path_obj.remove_tag + " "
+        tag_remove_pair_2 += os.path.join(adapter_folder, "pair_2_adptr_rem.fastq") + " "
+        tag_remove_pair_2 += os.path.join(tag_remove_folder, "pair_2_no_tags.fastq")
+
+        tag_remove_singletons =  ">&2 echo Remove tags singletons | " 
+        tag_remove_singletons += self.tool_path_obj.Python + " "
+        tag_remove_singletons += self.tool_path_obj.remove_tag + " "
+        tag_remove_singletons += os.path.join(adapter_folder, "singletons_adptr_rem.fastq") + " "
+        tag_remove_singletons += os.path.join(tag_remove_folder, "singletons_no_tags.fastq")
+        # tries to merge the cleaned pairs
+        # rejects get sent out
+        vsearch_merge = ">&2 echo " + "Vsearch Merge pairs | "
+        vsearch_merge += self.tool_path_obj.vsearch
+        vsearch_merge += " --fastq_mergepairs " + os.path.join(tag_remove_folder, "pair_1_no_tags.fastq")
+        vsearch_merge += " --reverse " + os.path.join(tag_remove_folder, "pair_2_no_tags.fastq")
+        vsearch_merge += " --fastq_ascii " + str(self.Qual_str)
+        vsearch_merge += " --fastqout " + os.path.join(vsearch_merge_folder, "merge_success.fastq")
+        vsearch_merge += " --fastqout_notmerged_fwd " + os.path.join(vsearch_merge_folder, "pair_1_merge_reject.fastq")
+        vsearch_merge += " --fastqout_notmerged_rev " + os.path.join(vsearch_merge_folder, "pair_2_merge_reject.fastq")
+
+        # concatenate the merge overlaps with the singletons
+        cat_glue = ">&2 echo concatenating singletons | "
+        cat_glue += "cat "
+        cat_glue += os.path.join(vsearch_merge_folder, "merge_success.fastq") + " "
+        cat_glue += os.path.join(tag_remove_folder, "singletons_no_tags.fastq")
+        cat_glue += " > " + os.path.join(vsearch_merge_folder, "singletons.fastq")
+
+        # Filter out low-quality reads
+        # start with the singles / merged sections
+        
+        vsearch_filter_0 = ">&2 echo low-quality filter on singletons | "
+        vsearch_filter_0 += self.tool_path_obj.vsearch
+        if self.read_mode == "single":
+            vsearch_filter_0 += " --fastq_filter " + os.path.join(adapter_folder, "singletons_adptr_rem.fastq")
+        elif self.read_mode == "paired":
+            vsearch_filter_0 += " --fastq_filter " + os.path.join(vsearch_merge_folder, "singletons.fastq")
+        vsearch_filter_0 += " --fastq_ascii " + self.Qual_str
+        vsearch_filter_0 += " --fastq_maxee " + "2.0"
+        vsearch_filter_0 += " --fastqout " + os.path.join(vsearch_filter_folder, "singletons_hq.fastq")
+
+        # then move onto the standalones in pair 1
+        vsearch_filter_1 = ">&2 echo low-quality filter on pair 1 | "
+        vsearch_filter_1 += self.tool_path_obj.vsearch
+        vsearch_filter_1 += " --fastq_filter " + os.path.join(vsearch_merge_folder, "pair_1_merge_reject.fastq")
+        vsearch_filter_1 += " --fastq_ascii " + self.Qual_str
+        vsearch_filter_1 += " --fastq_maxee " + "2.0"
+        vsearch_filter_1 += " --fastqout " + os.path.join(vsearch_filter_folder, "pair_1_hq.fastq")
+
+        vsearch_filter_2 = ">&2 echo low-quality filter on pair 2 | "
+        vsearch_filter_2 += self.tool_path_obj.vsearch
+        vsearch_filter_2 += " --fastq_filter " + os.path.join(vsearch_merge_folder, "pair_2_merge_reject.fastq")
+        vsearch_filter_2 += " --fastq_ascii " + self.Qual_str
+        vsearch_filter_2 += " --fastq_maxee " + "2.0"
+        vsearch_filter_2 += " --fastqout " + os.path.join(vsearch_filter_folder, "pair_2_hq.fastq")
+
+        # redistribute data into singletons, or paired-reads
+        orphan_read_filter = ">&2 echo moving newly orphaned reads | "
+        orphan_read_filter += self.tool_path_obj.Python + " "
+        orphan_read_filter += self.tool_path_obj.orphaned_read_filter + " "
+        orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_1_hq.fastq") + " "
+        orphan_read_filter += os.path.join(vsearch_filter_folder, "pair_2_hq.fastq") + " "
+        orphan_read_filter += os.path.join(vsearch_filter_folder, "singletons_hq.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
+        orphan_read_filter += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
+
+        # remove duplicates (to shrink the data size)
+        cdhit_singletons = ">&2 echo removing singleton duplicates | "
+        cdhit_singletons += self.tool_path_obj.cdhit_dup + " -i "
+        if self.read_mode == "single":
+            cdhit_singletons += os.path.join(vsearch_filter_folder, "singletons_hq.fastq")
+        elif self.read_mode == "paired":
+            cdhit_singletons += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq")
+        cdhit_singletons += " -o " + os.path.join(cdhit_folder, "singletons_unique.fastq")
+
+        # remove duplicates in the pairs
+        cdhit_pair_1 = ">&2 echo remove duplicates from pair 1 | "
+        cdhit_pair_1 += self.tool_path_obj.cdhit_dup
+        cdhit_pair_1 += " -i " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq")
+        cdhit_pair_1 += " -o " + os.path.join(cdhit_folder, "pair_1_unique.fastq")
+
+        cdhit_pair_2 = ">&2 echo remove duplicates from pair 2 | "
+        cdhit_pair_2 += self.tool_path_obj.cdhit_dup
+        cdhit_pair_2 += " -i " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq")
+        cdhit_pair_2 += " -o " + os.path.join(cdhit_folder, "pair_2_unique.fastq")
+
+        copy_singletons = "cp " + os.path.join(cdhit_folder, "singletons_unique.fastq") + " "
+        copy_singletons += os.path.join(final_folder, "singletons.fastq")
+
+        copy_pair_1 = "cp " + os.path.join(cdhit_folder, "pair_1_unique.fastq") + " "
+        copy_pair_1 += os.path.join(final_folder, "pair_1.fastq")
+
+        copy_pair_2 = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq") + " "
+        copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
+        
+        # move these particular files to final_folder because they'll be needed by another stage.
+        copy_duplicate_singletons = "cp "
+        if(self.read_mode == "single"):
+            copy_duplicate_singletons += os.path.join(vsearch_filter_folder, "singletons_hq.fastq") + " "
+            copy_duplicate_singletons += os.path.join(final_folder, "singletons_hq.fastq")
+        else:
+            copy_duplicate_singletons += os.path.join(orphan_read_filter_folder, "singletons_with_duplicates.fastq") + " "
+            copy_duplicate_singletons += os.path.join(final_folder, "singletons_with_duplicates.fastq")
+
+        copy_pair_1_match = "cp " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
+        copy_pair_1_match += os.path.join(final_folder, "pair_1_match.fastq")
+
+        copy_pair_2_match = "cp " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
+        copy_pair_2_match += os.path.join(final_folder, "pair_2_match.fastq")
+
+        copy_singletons_cluster = "cp " + os.path.join(cdhit_folder, "singletons_unique.fastq.clstr") + " "
+        copy_singletons_cluster += os.path.join(final_folder, "singletons_unique.fastq.clstr")
+
+        copy_pair_1_cluster = "cp " + os.path.join(cdhit_folder, "pair_1_unique.fastq.clstr") + " "
+        copy_pair_1_cluster += os.path.join(final_folder, "pair_1_unique.fastq.clstr")
+
+        copy_pair_2_cluster = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq.clstr") + " "
+        copy_pair_2_cluster += os.path.join(final_folder, "pair_2_unique.fastq.clstr")
+        
+        data_change_qual = ">&2 echo Scanning for relative change between RAW and post-Quality-filter pair 1 only | "
+        data_change_qual += self.tool_path_obj.Python + " "
+        data_change_qual += self.tool_path_obj.data_change_metrics + " " 
+        if(self.read_mode == "single"):
+            data_change_qual += self.sequence_single + " "
+            data_change_qual += os.path.join(final_folder, "singletons.fastq") + " "
+            data_change_qual += os.path.join(final_folder, "raw_to_qual_singletons.tsv")
+        elif(self.read_mode == "paired"):
+            data_change_qual += self.sequence_path_1 + " "
+            data_change_qual += os.path.join(final_folder, "pair_1.fastq")
+            data_change_qual += os.path.join(final_folder, "raw_to_qual_pair_1.tsv")
+        
+            
+
+        if self.read_mode == "single":
+            COMMANDS_qual = [
+                trimmomatic_line,
+                vsearch_filter_0,
+                cdhit_singletons,
+                copy_singletons,
+                copy_duplicate_singletons,
+                copy_singletons_cluster,
+                data_change_qual
+            ]
+        elif self.read_mode == "paired":
+            COMMANDS_qual = [
+                sort_pair_1,
+                sort_pair_2,
+                trimmomatic_line,
+                cat_trimmomatic, 
+                tag_remove_pair_1,
+                tag_remove_pair_2,
+                tag_remove_singletons,
+                vsearch_merge,
+                cat_glue,
+                vsearch_filter_0,
+                vsearch_filter_1,
+                vsearch_filter_2,
+                orphan_read_filter,
+                cdhit_singletons,
+                cdhit_pair_1,
+                cdhit_pair_2,
+                copy_singletons,
+                copy_pair_1,
+                copy_pair_2,
+                copy_duplicate_singletons,
+                copy_singletons_cluster,
+                copy_pair_1_match,
+                copy_pair_1_cluster,
+                copy_pair_2_match,
+                copy_pair_2_cluster,
+                data_change_qual
+            ]
+
+        return COMMANDS_qual
+            
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
         data_folder                 = os.path.join(subfolder, "data")

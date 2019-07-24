@@ -192,7 +192,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             target=commands.create_and_launch,
             args=(
                 quality_filter_label,
-                commands.create_quality_control_command(quality_filter_label),
+                commands.create_quality_control_command_trimmomatic(quality_filter_label),
                 True
             )
         )

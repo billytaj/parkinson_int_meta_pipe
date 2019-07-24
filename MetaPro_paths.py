@@ -95,7 +95,7 @@ class tool_path_obj:
             self.Python         = "python3"
             self.Java           = "java -jar"
             self.cdhit_dup      = os.path.join(tool_path, "cdhit_dup/cd-hit-dup")
-            self.Timmomatic     = os.path.join(tool_path, "Trimmomatic/trimmomatic-0.36.jar")
+            self.Trimmomatic    = os.path.join(tool_path, "Trimmomatic/trimmomatic-0.36.jar")
             self.AdapterRemoval = os.path.join(tool_path, "adapterremoval/AdapterRemoval")
             self.vsearch        = os.path.join(tool_path, "vsearch/vsearch")
             self.Flash          = os.path.join(tool_path, "FLASH/flash")
