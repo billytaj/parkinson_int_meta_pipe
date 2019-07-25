@@ -268,21 +268,6 @@ class mt_pipe_commands:
         copy_pair_2_cluster = "cp " + os.path.join(cdhit_folder, "pair_2_unique.fastq.clstr") + " "
         copy_pair_2_cluster += os.path.join(final_folder, "pair_2_unique.fastq.clstr")
         
-        #not really needed.  It was supposed to display for us a chart of what changed between raw and post-cleaning, but no one cares about this.
-        # data_change_qual = ">&2 echo Scanning for relative change between RAW and post-Quality-filter pair 1 only | "
-        # data_change_qual += self.tool_path_obj.Python + " "
-        # data_change_qual += self.tool_path_obj.data_change_metrics + " " 
-        # if(self.read_mode == "single"):
-            # data_change_qual += self.sequence_single + " "
-            # data_change_qual += os.path.join(final_folder, "singletons.fastq") + " "
-            # data_change_qual += os.path.join(final_folder, "raw_to_qual_singletons.tsv")
-        # elif(self.read_mode == "paired"):
-            # data_change_qual += self.sequence_path_1 + " "
-            # data_change_qual += os.path.join(final_folder, "pair_1.fastq")
-            # data_change_qual += os.path.join(final_folder, "raw_to_qual_pair_1.tsv")
-        
-            
-
         if self.read_mode == "single":
             COMMANDS_qual = [
                 adapter_removal_line,
@@ -290,8 +275,7 @@ class mt_pipe_commands:
                 cdhit_singletons,
                 copy_singletons,
                 copy_duplicate_singletons,
-                copy_singletons_cluster#,
-                #data_change_qual
+                copy_singletons_cluster
             ]
         elif self.read_mode == "paired":
             COMMANDS_qual = [
@@ -318,8 +302,7 @@ class mt_pipe_commands:
                 copy_pair_1_match,
                 copy_pair_1_cluster,
                 copy_pair_2_match,
-                copy_pair_2_cluster#,
-                #data_change_qual
+                copy_pair_2_cluster
             ]
 
         return COMMANDS_qual
