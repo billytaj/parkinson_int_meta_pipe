@@ -40,15 +40,15 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from datetime import datetime as dt
 from shutil import copyfile
-
+import pandas as pd
 
 
 
 #####################################
 # FUNCTIONS:
 def check_file_safety(file_name):
-    if(os.path.exists(DMD_tab_file_1)):
-        if(os.path.getsize(DMD_tab_file_1) == 0):
+    if(os.path.exists(file_name)):
+        if(os.path.getsize(file_name) == 0):
             #copyfile(gene2read_file, new_gene2read_file)
             print(file_name, "is unsafe.  skipping")
             return False
@@ -61,20 +61,22 @@ def check_file_safety(file_name):
         print(file_name, "is missing. skipping")
         return False
 
+
+
 # read .dmdout file and acquire read length:
 def read_aligned(tsv, seqrec):                          # List of lists [dmdout info, read length]=
                                                         #  read_aligned(.dmdout file, dict contig/readID<->SeqRecord)
     # get info from .blatout file:
-    print ('Reading ' + str(os.path.basename(tsv)) + '.')
+    print (dt.today(), 'Reading ' + str(os.path.basename(tsv)) + '.')
     with open(tsv,"r") as tabfile:
         hits= []                                        # List of lists containing .blatout fields.
         for line in tabfile:                            # In the .dmdout file:
             if len(line)>=2:                            # If length of line >= 2,
                 info_list= line.strip("\n").split("\t") #  make a list from .dmdout tab-delimited fields,
-                query = info_list[0]                     #  get the queryID= contig/readID, -> 
-                info_list.append(len(seqrec[query].seq))#  add query length (int) to end of list,
+                read_id = info_list[0]                     #  get the queryID= contig/readID, -> 
+                info_list.append(len(seqrec[read_id].seq))#  add query length (int) to end of list,
                 hits.append(info_list)                  #  and append the list to the hits list.
-
+    print(dt.today(), "finished read-aligning")
     # return info:
     return hits
 
@@ -83,11 +85,18 @@ def read_aligned(tsv, seqrec):                          # List of lists [dmdout 
 def sortbyscore(line):
     return line[11]
 
+
 # add DMD-aligned reads that meet threshold
 # to the aligned gene/protID<->readID(s) dict:
-def prot_map(hits, mapped_reads):                         # fail-mapped contig/readIDs=
-                                            #  prot_map(list of list of dmdout fields)
-                                        
+def prot_map(hits, mapped_reads, contig2read_map, prot2read_map): 
+    #contig2read map is external.  should contain upstream runs' contigs
+    #prot2read map is external.  should contain prior calls' proteins
+    
+    #checking
+    if(len(prot2read_map) == 0):
+        print(dt.today(), "prot2read map is empty")
+    else:
+        print(dt.today(), "prot2read map is not empty")
     # sort alignment list by high score:
     sorted_hits= sorted(hits, key=sortbyscore, reverse=True)
     del hits
@@ -98,45 +107,50 @@ def prot_map(hits, mapped_reads):                         # fail-mapped contig/r
     score_cutoff= 60
     
     # tracking DMD-assigned & unassigned:
-    query2prot_map= defaultdict(set)        # Dict of DMD-aligned contig/readID<->protID(s).
-    queryIScontig= {}                       # Dict of DMD-aligned contig/readID<->contig? (True/False).
+    read_id2prot_map= defaultdict(set)        # Dict of DMD-aligned contig/readID<->protID(s).
+    read_idIScontig= {}                       # Dict of DMD-aligned contig/readID<->contig? (True/False).
     unmapped= set()                         # Set of unmapped contig/readIDs.
-        
+       
     # loop through sorted DMD-aligned reads/contigs:
     for line in sorted_hits:
     
         # "ON-THE-FLY" filter:
         
         # extract & store data:
-        query= line[0]                      # queryID= contig/readID
-        db_match= line[1]                   # proteinID
-        seq_identity= float(line[2])        # sequence identity
-        align_len= 3*int(line[3])           # alignment length (aa->nt)
-        score= float(line[11])              # score
-        seq_len= int(line[12])              # query sequence length
+        read_id = line[0]                      # read_idID= contig/readID
+        db_match = line[1]                   # proteinID
+        seq_identity = float(line[2])        # sequence identity
+        align_len = 3*int(line[3])           # alignment length (aa->nt)
+        score = float(line[11])              # score
+        seq_len = int(line[12])              # read_id sequence length
         
-        # is this alignment the highest-score match for that query?
-        if query in query2prot_map:         # If alignment previously found for this contig/read,
+        # is this alignment the highest-score match for that read_id?
+        print("---------------------------------------------")
+        if read_id in read_id2prot_map:         # If alignment previously found for this contig/read,
+            print(dt.today(), "read ID found:", read_id, "skipping")
             continue                        # skip to next qurey as this alignment will have a lower score,
-                                            # and don't add to unmapped set.
-        # is query a contig?:
-        if query in contig2read_map:        # If query is found in contig list,
-            contig= True                    #  then mark as contig,
-        else:                               #  if not,
-            contig= False                   #  mark as not a contig.
-            
-        # does query alignment meet threshold?:
-        # (identity, length, score):
-        if seq_identity<=identity_cutoff or align_len<=seq_len*length_cutoff or score<=score_cutoff:
-            unmapped.add(query)             # if threshold is failed, add to unmapped set and
-            continue                        # skip to the next query.
-   
-        # store info for queries that remain:
-        queryIScontig[query]= contig        # Store contig (T/F) info.
-        query2prot_map[query].add(db_match) # Collect all aligned prot for contig/read;
-                                            #  query2prot_map[query] is a set, although there should be
-                                            #  no more than one prot alignement getting through filter.
         
+            
+        # is read_id a contig?:
+        contig_flag = False 
+        if read_id in contig2read_map:        # If read_id is found in contig list,
+            contig_flag = True                    #  then mark as contig,
+        
+        # does read_id alignment meet threshold?: # (identity, length, score):
+        if seq_identity<=identity_cutoff or align_len<=seq_len*length_cutoff or score<=score_cutoff:
+            unmapped.add(read_id)             # if threshold is failed, add to unmapped set and
+            continue                        # skip to the next read_id.
+   
+        
+        # store info for queries that remain:
+        read_idIScontig[read_id]= contig_flag        # Store contig (T/F) info.
+        read_id2prot_map[read_id].add(db_match) # Collect all aligned prot for contig/read;
+        
+        print(dt.today(), "new read ID:", read_id, "adding")
+        if(contig_flag):
+            print(dt.today(), "it's also part of a contig")
+        
+       
     # EXPAND HERE to deal with multiple high-score genes for a read.
         
     # DEBUG:
@@ -148,16 +162,14 @@ def prot_map(hits, mapped_reads):                         # fail-mapped contig/r
     read_inprot= 0
  
     # FINAL remaining DMD-aligned queries:
-    for query in query2prot_map:                        # contig/readID
+    for read_id in read_id2prot_map:                        # contig/readID
     
-        db_match= list(query2prot_map[query])[0]        # geneID (pull out of 1-element set)
-        contig= queryIScontig[query]                    # contig?
+        db_match= list(read_id2prot_map[read_id])[0]        # geneID (pull out of 1-element set)
+        contig_flag = read_idIScontig[read_id]                    # contig?
 
         # RECORD alignment:
-        if contig:                                      # If query is a contig, then
-            for read in contig2read_map[query]:         #  take all reads making up that contig and
-            
-                # DEBUG:
+        if contig_flag:                                      # If read_id is a contig, then
+            for read in contig2read_map[read_id]:    
                 if read in mapped_reads:                # (Track how many contig reads have already been
                     contigread_inmapped+= 1             #  mapped by DMD---i.e., through other contigs---
                     if read in prot2read_map[db_match]: #  and how many of those were already assigned to this
@@ -168,18 +180,18 @@ def prot_map(hits, mapped_reads):                         # fail-mapped contig/r
                 if read not in mapped_reads:            #  if not already assigned by DMD to a diff prot***, then
                     prot2read_map[db_match].append(read)#  and append their readIDs to aligned prot<->read dict,
                     mapped_reads.add(read)              #  and mark them as assigned by DMD.
-        elif not contig:                                # If query is a read, and
+        elif not contig_flag:                                # If read_id is a read, and
         
             # DEBUG:
-            if query in mapped_reads:                   # (Check to see if the read has already been mapped
+            if read_id in mapped_reads:                   # (Check to see if the read has already been mapped
                 read_inmapped+= 1                       #  by DMD---it shouldn't be---and
-                if query in prot2read_map[db_match]:    #  and to the same prot, for that matter.
+                if read_id in prot2read_map[db_match]:    #  and to the same prot, for that matter.
                     read_inmapped_inprot+= 1
-            elif query in prot2read_map[db_match]:      # (Check to see if the read is already assigned to this
+            elif read_id in prot2read_map[db_match]:      # (Check to see if the read is already assigned to this
                 read_inprot+= 1                         #  particular prot, but not by DMD---it shouldn't be.)
 
-            prot2read_map[db_match].append(query)       #  append its readID to aligned prot<->read dict,
-            mapped_reads.add(query)                     #  and mark it as assigned by DMD.
+            prot2read_map[db_match].append(read_id)       #  append its readID to aligned prot<->read dict,
+            mapped_reads.add(read_id)                     #  and mark it as assigned by DMD.
                 
         # *** This deals with reads that show up in multiple contigs.
         # Just use the read alignment from the contig that had the best alignment score.
@@ -198,9 +210,9 @@ def prot_map(hits, mapped_reads):                         # fail-mapped contig/r
     # Such queries end up in the unmapped set when they DMD-aligned to multiple prots, where one
     # alignment is recorded, while the other alignments fail the "on-the-fly" alignment-threshold filter.
     print ('umapped no. (before double-checking mapped set)= ' + str(len(unmapped)))
-    for query in query2prot_map:                        # Take all contigs/reads to be mapped and
+    for read_id in read_id2prot_map:                        # Take all contigs/reads to be mapped and
         try:                                            #  if they exist in the unmapped set, then
-            unmapped.remove(query)                      #  remove them from the unmapped set.
+            unmapped.remove(read_id)                      #  remove them from the unmapped set.
         except:
             pass
     print ('umapped no. (after double-checking mapped set)= ' + str(len(unmapped)))
@@ -210,7 +222,7 @@ def prot_map(hits, mapped_reads):                         # fail-mapped contig/r
 
 # WRITE OUTPUT: rewrite gene<->read map file to include DMD-aligned:
 # [BWA&BLAT&DMD-aligned geneID, length, #reads, readIDs ...]
-def write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file):
+def write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file):
     reads_count= 0
     proteins= []
     with open(new_gene2read_file,"w") as out_map:               # Delete old gene2read_file and write a new one.
@@ -246,43 +258,40 @@ def write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot
                                                             #  and translate its SeqRecord sequence to aa.
         except:
             pass
-    with open(prot_file,"w") as out_prot:
-        SeqIO.write(genes_trans, out_prot, "fasta")         # Write aligned gene aa seqs
-        SeqIO.write(proteins, out_prot, "fasta")            #  and aligned proteins aa seqs.
+    no_write = False
+    if(~no_write):
+        with open(prot_file,"w") as out_prot:
+            SeqIO.write(genes_trans, out_prot, "fasta")         # Write aligned gene aa seqs
+            SeqIO.write(proteins, out_prot, "fasta")            #  and aligned proteins aa seqs.
     
+    else:
+        print(dt.today(), "IN TRIAGE-MODE: not writing FASTAs")
     # print DMD stats:
     print (str(reads_count) + ' reads were mapped with Diamond.')
     print ('Reads mapped to ' + str(len(proteins)) + ' proteins.')
     
     
-def filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, prev_mapping_count):    
+def filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, prev_mapping_count, contig2read_map, prot2read_map):    
     # check number of readtype sets (file inputs)
     read_sets = int((len(sys.argv)-7)/3) 
     if (len(sys.argv)-7) % 3 != 0:
         sys.exit('Incorrect number of readtype sets: ' + str(len(sys.argv)))
     
-    # process DIAMOND output:
-    # readtype sets: contigs, merged:
-    #for x in range(0,2):
-        #read_file= sys.argv[3*x+7]      # INPUT: non-BWA&BLAT-aligned contig/readIDs and seqs (.fasta)
+    # process DIAMOND output: # readtype sets: contigs, merged:
     read_seqs= SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
                                     # dict of non-BWA&BLAT-aligned read SeqRecords: key=contig/readID
                                     #  (second argument specifies filetype, e.g., "fasta")
-    #DMD_tab_file= sys.argv[3*x+8]  # INPUT: DMD-aligned contig/readIDs (.dmdout)
-    if(os.path.exists(DMD_tab_file)):            
-        if(os.path.getsize(DMD_tab_file) == 0):
-            print(dt.today(), "missing file in reading DIAMOND outputs.  likely it wasn't enough data for diamond.")
-            #copyfile(gene2read_file, new_gene2read_file)
-            sys.exit(DMD_tab_file + " is empty, exiting")
+    if(check_file_safety(DMD_tab_file)):
+        print(dt.today(), DMD_tab_file, "is ok")
     else:
-        sys.exit(DMD_tab_file + " is missing, exiting")
-    #output_file= sys.argv[3*x+9]    # OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs and seqs (.fasta)
+        print(dt.today(), DMD_tab_file, "is not ok.  killing program")
+        sys.exit()
 
     # read DMD output & get read/contig lengths:
     DMD_hits= read_aligned(DMD_tab_file, read_seqs)     # Store info in DMD_hits (list of lists).
 
     # process DMD-aligned reads:
-    unmapped_reads= prot_map(DMD_hits, mapped_reads)    # Store DMD-aligned contigs/reads in prot2read_map
+    unmapped_reads= prot_map(DMD_hits, mapped_reads, contig2read_map, prot2read_map)    # Store DMD-aligned contigs/reads in prot2read_map
                                                         #  (aligned protID<->readID(s) dict),
                                                         #  and return a set of failed mapping readIDs.
     # add reads never mapped by DMD in the
@@ -296,12 +305,15 @@ def filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, pr
 
     # WRITE OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs:
     # and seqs (.fasta)
-    unmapped_seqs= []                                   # Initialize list of SeqRecords.
-    for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
-        unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
-    with open(output_file,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
-
+    no_write = True
+    if(~no_write):
+        unmapped_seqs= []                                   # Initialize list of SeqRecords.
+        for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
+            unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
+        with open(output_file,"w") as outfile:
+            SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
+    else:
+        print(dt.today(), "IN TRIAGE-MODE: skipping the leftover seq writing.")
     # print no. aligned reads from current readtype set:
     print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
     prev_mapping_count= len(mapped_reads)
@@ -317,9 +329,37 @@ if __name__ == "__main__":
     gene_file           = sys.argv[5]   # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
     prot_file           = sys.argv[6]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
     
+    contigs_reads_in    = sys.argv[7]
+    contigs_dmd_out     = sys.argv[8]
+    contigs_reads_out   = sys.argv[9]
+    
+    singletons_reads_in = sys.argv[10]
+    singletons_dmd_out  = sys.argv[11]
+    singletons_reads_out= sys.argv[12]
+    
+    operating_mode = "single"
+    if(len(sys.argv) == 19):
+        operating_mode = "paired"
+        pair_1_reads_in = sys.argv[13]
+        pair_1_dmd_out  = sys.argv[14]
+        pair_1_reads_out= sys.argv[15]
+        
+        pair_2_reads_in = sys.argv[16]
+        pair_2_dmd_out  = sys.argv[17]
+        pair_2_reads_out= sys.argv[18]
+    
+    
+    
+    #"global" vars
+    contig2read_map= {}                                 #Input: key->contig | val->reads
+    BWABLATreads= []                                    
+    gene2read_map= {}                                   #Input: key->geneID | val->reads
+    gene_len= {}
+    mapped_reads= set()                                 # tracks DMD-assigned reads
+    prot2read_map= defaultdict(list)                    # dict of DMD-aligned protID<->readID(s) #  key=protID, value=list of readID(s)
+    prev_mapping_count= 0
     
     # make dict of contigID<->readsID(s):
-    contig2read_map= {}
     with open(contig2read_file,"r") as mapping:
         for line in mapping:
             if len(line)>5:                             # line starts with 'NODE_'
@@ -327,9 +367,6 @@ if __name__ == "__main__":
                 contig2read_map[entry[0]]= entry[2:]    # key=contigID, value=list of readID(s)
     
     # make dict of BWA&BLAT-aligned geneID<->readID(s):
-    BWABLATreads= []                                    # DEBUG
-    gene2read_map= {}
-    gene_len= {}
     with open(gene2read_file,"r") as mapping:
         for line in mapping:
             if len(line)>5:                             # line at least 5 characeters?
@@ -342,13 +379,7 @@ if __name__ == "__main__":
     # make dict of BWA&BLAT-aligned geneID<->seq:
     gene_seqs= SeqIO.index(gene_file,"fasta")           # key=geneID, value=SeqRecord
     
-    # tracking DMD-assigned:
-    mapped_reads= set()                                 # tracks DMD-assigned reads
-    prot2read_map= defaultdict(list)                    # dict of DMD-aligned protID<->readID(s)
-                                                        #  key=protID, value=list of readID(s)
-    prev_mapping_count= 0
     
-    # DEBUG:
     if len(set(BWABLATreads))==len(BWABLATreads):
         print ('BWA&/orBLAT-aligned reads are all unique.\n')
     else:
@@ -358,20 +389,23 @@ if __name__ == "__main__":
     BWABLATreads_count= Counter(BWABLATreads)           # dict of read<->no. of contigs
     # Write the outputs that don't actually need the dmdout crap
     
+#    for x in range (0, 2):
+#        read_file = sys.argv[3*x+7]
+#        DMD_tab_file = sys.argv[3*x+8]
+#        output_file = sys.argv[3*x+9]
+#        
+#        filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, prev_mapping_count, contig2read_map, prot2read_map)
+    filter_consumed_reads(contigs_reads_in, contigs_dmd_out, contigs_reads_out, mapped_reads, prev_mapping_count, contig2read_map, prot2read_map)
+    filter_consumed_reads(singletons_reads_in, singletons_dmd_out, singletons_reads_out, mapped_reads, prev_mapping_count, contig2read_map, prot2read_map)
+    if(operating_mode == "paired"):
+        filter_consumed_reads(pair_1_reads_in, pair_1_dmd_out, pair_1_reads_out, mapped_reads, prev_mapping_count, contig2read_map, prot2read_map)
+        filter_consumed_reads(pair_2_reads_in, pair_2_dmd_out, pair_2_reads_out, mapped_reads, prev_mapping_count, contig2read_map, prot2read_map)
     
-    
-    for x in range (0, 2):
-        read_file = sys.argv[3*x+7]
-        DMD_tab_file = sys.argv[3*x+8]
-        output_file = sys.argv[3*x+9]
-        
-        filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, prev_mapping_count)
-        
     # check number of readtype sets (file inputs)
     read_sets = int((len(sys.argv)-7)/3) 
     if (len(sys.argv)-7) % 3 != 0:
         print(dt.today(), "incorrect number of read sets, but we'll still write the gene map")
-        write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
+        write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
         sys.exit('Incorrect number of readtype sets: ' + str(len(sys.argv)))
 
     # process DMD output:
@@ -449,16 +483,16 @@ if __name__ == "__main__":
                 prev_mapping_count= len(mapped_reads)
                 
                 print(dt.today(), "everything is fine.  writing gene map")
-                write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
+                write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
             
             else:
                 print(dt.today(), "dmdout 2 file is missing or has an error.  we'll skip to writing the gene map")
-                write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
+                write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
                 
         else:
             print(dt.today(), "dmdout 1 file is missing or has an error. we'll skip to writing the gene map")
-            write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
+            write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
     else:
         print(dt.today(), "not enough read sets.  likely this sample doesn't contain pair 1 or pair 1 data.")  
         print(dt.today(), "we'll write the map anyway, but it'll be a straight copy of the old one")
-        write_proteins_genemap(gene_seqs, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
+        write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file)
