@@ -266,7 +266,7 @@ def write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map
     reads_count= 0
     proteins= []
     unique_reads_set = set()
-    print(dt.today(), "starting to write new gene map")
+    print(dt.today(), "starting to append to new gene map")
     
     #with open(new_gene2read_file,"a") as out_map:               
     with open(new_gene2read_file,"a") as out_map:               
@@ -298,7 +298,7 @@ def write_proteins_genemap(gene_seqs, gene2read_map, mapped_reads, prot2read_map
     # WRITE OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs
     # (.faa; fasta-format):
     
-    no_write = True
+    no_write = False
     if(not no_write):
         genes_trans= []
         for gene in gene_seqs:                                  # Take each BWA&BLAT-aligned genes
@@ -405,7 +405,7 @@ def import_old_gene_map(gene2read_file):
             new_line = line.rstrip("\n")
             broken_line = new_line.split("\t")
             reads = broken_line[3:]
-            unique_reads_Set.update(reads)
+            unique_reads_set.update(reads)
             
 #####################################
 if __name__ == "__main__":
