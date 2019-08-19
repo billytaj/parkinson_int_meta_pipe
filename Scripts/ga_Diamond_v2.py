@@ -488,8 +488,8 @@ if __name__ == "__main__":
         print ('BWA&/orBLAT-aligned reads are all unique.\n')
     else:
         print('There are repeating BWA&/orBLAT-aligned reads:')
-        print('no. unique reads= ' + str(len(set(BWABLATreads))))
-        print('no. total reads= ' + str(len(BWABLATreads)) + '\n')
+        print('no. unique reads= ' + str(len(mapped_reads)))
+        print('no. total reads= ' + str(old_gene_map_reads_count) + '\n')
         print(dt.today(), "there are errors in the gene map.  stop everything")
         sys.exit()
     # Write the outputs that don't actually need the dmdout crap

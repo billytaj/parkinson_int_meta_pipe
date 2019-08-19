@@ -534,7 +534,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_DIAMOND_start = time.time()
     gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
     GA_DIAMOND_tool_output_path = os.path.join(gene_annotation_DIAMOND_path, "data", "0_diamond")
-    if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path):
+    if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path, file_check_bypass = True):
 
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
