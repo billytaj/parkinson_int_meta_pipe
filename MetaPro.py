@@ -92,8 +92,11 @@ def check_where_kill(dep_job_label=None, dep_path=None):
 # dep: for checking if the job's dependencies are satisfied-> meant to point to the last stage's "final_results"
 # logic is: if the full_path has no files (or the job label shortcut to final_results)
 #           and the dependencies are ok, start the stage
-def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
-    check_where_kill(dep_job_path)
+#Aug 19, 2019: There's a tweak to this:  DIAMOND will generate zero-size files, due to no-matches
+#it's allowable.
+def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_check_bypass = False):
+    if(not file_check_bypass):
+        check_where_kill(dep_job_path)
     if job_label:
         job_path = os.path.join(job_label, "final_results")
     else:
@@ -112,7 +115,7 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None):
             print("bypassing!")
             return True
         else:
-            print("running")
+            print("no files: running")
             return False
     else:
         print("doesn't exist: running")
@@ -554,7 +557,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         mp_store[:] = []
         
         
-    if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path):
+    if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
         inner_name = "diamond_pp"
         process = mp.Process(
             target=commands.create_and_launch,
