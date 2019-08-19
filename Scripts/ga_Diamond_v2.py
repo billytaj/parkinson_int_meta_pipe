@@ -372,9 +372,9 @@ def filter_consumed_reads(read_file, DMD_tab_file, output_file, mapped_reads, pr
 
     # WRITE OUTPUT: non-BWA&BLAT&DMD-aligned contig/readIDs:
     # and seqs (.fasta)
-    no_write = True
+    no_write = False
     if(not no_write):
-        print(dt.today(), "writing fasta")
+        print(dt.today(), "writing fasta.  This will take a while")
         unmapped_seqs= []                                   # Initialize list of SeqRecords.
         for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
             unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
@@ -437,6 +437,7 @@ if __name__ == "__main__":
     operating_mode = "single"
     if(len(sys.argv) == 19):
         operating_mode = "paired"
+        print(dt.today(), "OPERATING MODE:", operating_mode)
         pair_1_reads_in = sys.argv[13]
         pair_1_dmd_out  = sys.argv[14]
         pair_1_reads_out= sys.argv[15]
@@ -447,8 +448,14 @@ if __name__ == "__main__":
         
         pair_1_safe = check_file_safety(pair_1_reads_in) and check_file_safety(pair_1_dmd_out) and check_file_safety(pair_1_reads_out)
         pair_2_safe = check_file_safety(pair_2_reads_in) and check_file_safety(pair_2_dmd_out) and check_file_safety(pair_2_reads_out)
+    elif(len(sys.argv) == 13):
+        #do something.  we don't care.  
+        print(dt.today(), "OPERATING MODE:", operating_mode)
+    else:
+        print(dt.today(), "incorrect number of args.  Something is wrong in the MetaPro_Commands.  Dying")
+        sys.exit()
         
-    print(dt.today(), "OPERATING MODE:", operating_mode)
+    
     
     #"global" vars
     contig2read_map = construct_contig2read_map(contig2read_file)   #Input: key->contig | val->reads
@@ -526,6 +533,8 @@ if __name__ == "__main__":
 
     # process DMD output:
     # readtype sets: unmerged1, unmerged2
+    
+    
     if read_sets==4:
         
         # unmerged1:
