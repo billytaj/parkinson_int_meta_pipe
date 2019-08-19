@@ -530,7 +530,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Diamond gene annotation
     GA_DIAMOND_start = time.time()
     gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
-    if not check_where_resume(gene_annotation_DIAMOND_path, None, gene_annotation_BLAT_path):
+    GA_DIAMOND_tool_output_path = os.path.join(gene_annotation_DIAMOND_path, "data", "0_diamond")
+    if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path):
 
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
@@ -551,7 +552,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-
+        
+        
+    if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path):
         inner_name = "diamond_pp"
         process = mp.Process(
             target=commands.create_and_launch,
