@@ -311,10 +311,12 @@ if __name__ == "__main__":
         pair_1_unmapped_reads = gene_map(pair_1_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
         #pair_2_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
     
-    print(dt.today(), "GA BWA pp started writing gene map")
-    write_gene_map(gene2read_file, gene2read_map)
-    print(dt.today(), "GA BWA pp finished writing gene map")
     process_store = []
+    
+    gene_map_export_process = mp.Process(target = write_gene_map, args = (gene2read_file, gene2read_map))
+    gene_map_export_process.start()
+    print(dt.today(), "GA BWA pp export gene map launched")
+    process_store.append(gene_map_export_process)
     
     contig_write_process = mp.Process(target = write_unmapped_reads, args = (contig_unmapped_reads, contig_reads_in, contig_reads_out))
     contig_write_process.start()
