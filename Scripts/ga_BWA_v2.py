@@ -126,7 +126,7 @@ def gene_map(sam, mapped_reads, gene2read_map, contig2read_map, contig2read_map_
             # does query alignment meet threshold?:
             length = 0
             matched = 0
-            CIGAR= re.split("([MIDNSHPX=])", line_parts[5]) # Split CIGAR string into list, placing
+            CIGAR = re.split("([MIDNSHPX=])", line_parts[5]) # Split CIGAR string into list, placing
                                                             #  all chars w/in [...] into own field
                                                             #  (e.g., 9S41M50S->['9','S','41','M','50','S','']).
             for index in range(len(CIGAR))[:-1]:            # Loop CIGAR elements (last element=''),
