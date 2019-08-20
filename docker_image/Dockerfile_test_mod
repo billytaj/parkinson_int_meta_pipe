@@ -186,7 +186,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/m
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/assembly_map.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/ea_combine.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/ga_BLAT.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/ga_BLAT_v2.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/ga_BWA_v2.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/ga_Diamond_v2.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/more_overcounting/Scripts/output_contig_stats.py /pipeline/Scripts
