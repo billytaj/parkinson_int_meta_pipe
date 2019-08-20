@@ -47,6 +47,7 @@ def import_gene_map(gene2read_file):
     # make dict of BWA-aligned geneID<->readID(s):
     BWAreads = []                                        # DEBUG
     gene2read_map = defaultdict(list)                    # Dict of BWA&BLAT-aligned geneID<->readID(s)
+    mapped_reads = set()
     with open(gene2read_file,"r") as mapping:           #  initialized w BWA-alignments.
         for line in mapping:
             if len(line)>5:                             # line at least 5 characeters?
@@ -62,11 +63,12 @@ def import_gene_map(gene2read_file):
 # FUNCTIONS:
 
 # read .blatout file and acquire read length:
-def read_aligned(tsv, seqrec):                          # List of lists [blatout info, read length]=
+def get_blat_details(blat_in, reads_in):                          # List of lists [blatout info, read length]=
                                                         #  read_aligned(.blatout file, dict contig/readID<->SeqRecord)
+    seqrec = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
     # get info from .blatout file:
-    print ('Reading ' + str(os.path.basename(tsv)) + '.')
-    with open(tsv,"r") as tabfile:
+    print ('Reading ' + str(os.path.basename(blat_in)) + '.')
+    with open(blat_in,"r") as tabfile:
         hits= []                                        # List of lists containing .blatout fields.
         for line in tabfile:                            # In the .blatout file:
             if len(line)>=2:                            # If length of line >= 2,
@@ -116,7 +118,7 @@ def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):               
         seq_len = int(line[12])              # query sequence length
         
         # is this alignment the highest-score match for that query?
-        if query in query2gene_map:         # If alignment previously found for this contig/read,
+        if query in query_details_dict: #query2gene_map:         # If alignment previously found for this contig/read,
             continue                        # skip to next qurey as this alignment will have a lower score,
                                             # and don't add to unmapped set.
         # is query a contig?:
@@ -200,7 +202,7 @@ def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):               
     # Such queries end up in the unmapped set when they BLAT-aligned to multiple genes, where one
     # alignment is recorded, while the other alignments fail the "on-the-fly" alignment-threshold filter.
     print ('umapped no. (before double-checking mapped set)= ' + str(len(unmapped)))
-    for query in query2gene_map:                        # Take all contigs/reads to be mapped and
+    for query in query_details_dict: #query2gene_map:                        # Take all contigs/reads to be mapped and
         try:                                            #  if they exist in the unmapped set, then
             unmapped.remove(query)                      #  remove them from the unmapped set.
         except:
@@ -285,9 +287,6 @@ if __name__ == "__main__":
 
     gene2read_map, mapped_reads, BWAreads = import_gene_map(gene2read_file)
 
-
-
-
     # DEBUG:
     if len(set(BWAreads))==len(BWAreads):
         print ('BWA-aligned reads are all unique.\n')
@@ -298,21 +297,18 @@ if __name__ == "__main__":
         print(dt.today(), "THIS IS A PROBLEM. shutting down")
         sys.exit()
 
-    contigs_blat_hits = read_aligned(contigs_blat_in, contigs_reads_in)
+    contigs_blat_hits = get_blat_details(contigs_blat_in, contigs_reads_in)
     contigs_unmapped_reads = gene_map(contigs_blat_hits, mapped_reads, gene2read_map, contig2read_map)
 
-    singletons_blat_hits = read_aligned(singletons_blat_in, singletons_reads_in)
+    singletons_blat_hits = get_blat_details(singletons_blat_in, singletons_reads_in)
     singletons_unmapped_reads = gene_map(singletons_blat_hits, mapped_reads, gene2read_map, contig2read_map)
 
     if(operating_mode == "paired"):
-        pair_1_blat_hits = read_aligned(pair_1_blat_in, pair_1_reads_in)
+        pair_1_blat_hits = get_blat_details(pair_1_blat_in, pair_1_reads_in)
         pair_1_unmapped_reads = gene_map(pair_1_blat_hits, mapped_reads, gene2read_map, contig2read_map)
         
-        pair_2_blat_hits = read_aligned(pair_2_blat_in, pair_2_reads_in)
+        pair_2_blat_hits = get_blat_details(pair_2_blat_in, pair_2_reads_in)
         pair_2_unmapped_reads = gene_map(pair_2_blat_hits, mapped_reads, gene2read_map, contig2read_map)
-        
-
-    
 
     process_store = []  
 
@@ -453,6 +449,6 @@ if numsets==4:
 '''
 
 
-# print BWA+BLAT stats:
-print (str(reads_count) + ' reads were mapped with BWA and BLAT.')
-print ('Reads mapped to ' + str(len(genes)) + ' genes.')
+# # print BWA+BLAT stats:
+# print (str(reads_count) + ' reads were mapped with BWA and BLAT.')
+# print ('Reads mapped to ' + str(len(genes)) + ' genes.')
