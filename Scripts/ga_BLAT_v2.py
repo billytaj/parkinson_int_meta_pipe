@@ -136,6 +136,7 @@ def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):               
         # store info for queries that remain:
         inner_details_dict["is_contig"] = contig
         inner_details_dict["gene"] = db_match
+        query_details_dict[query] = inner_details_dict
         #queryIScontig[query] = contig        # Store contig (T/F) info.
         #query2gene_map[query].add(db_match) # Collect all aligned genes for contig/read;
                                             #  query2gene_map[query] is a set, although there should be
