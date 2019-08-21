@@ -1,6 +1,7 @@
 FROM continuumio/anaconda3
+FROM java:8
 MAINTAINER Billy Taj
-RUN apt-get update
+#RUN apt-get update
 RUN apt-get install wget
 RUN apt-get install unzip
 RUN apt-get -y install g++
@@ -16,8 +17,8 @@ RUN apt-get -y install cmake
 RUN apt-get -y install libncurses5-dev
 RUN apt-get -y install liblzma-dev
 RUN apt-get -y install perl
-RUN apt-get -y install openjdk-8-jre
-RUN apt-get -y install openjdk-8-jdk
+#RUN apt-get -y install openjdk-8-jre
+#RUN apt-get -y install openjdk-8-jdk
 RUN conda update -n base conda -y
 RUN conda install Biopython -y 
 RUN conda install Pandas -y
