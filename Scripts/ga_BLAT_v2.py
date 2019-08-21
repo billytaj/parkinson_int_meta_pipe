@@ -78,6 +78,7 @@ def get_blat_details(blat_in, reads_in):                          # List of list
                 hits.append(info_list)                  #  and append the list to the hits list.
 
     # return info:
+    print(dt.today(), "hits in blatout:", len(hits))
     return hits
 
 # sort by score:
@@ -89,6 +90,8 @@ def sortbyscore(line):
 # to the aligned geneID<->readID(s) dict:
 def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):                         # fail-mapped contig/readIDs=
                                             #  gene_map(list of list of blatout fields)
+    print(dt.today(), "number of keys in gene map [prior]:", len(gene2read_map.keys())) 
+    print(dt.today(), "number of mapped reads [prior]:", len(mapped_reads))
     # sort alignment list by high score:
     sorted_hits= sorted(hits, key=sortbyscore, reverse=True)
     del hits
@@ -154,9 +157,9 @@ def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):               
     
     # FINAL remaining BLAT-aligned queries:
     for query in query_details_dict:#query2gene_map:                        # contig/readID
-        inner_details_dict = query_details_dict[query]
-        db_match = inner_details_dict["gene"] #list(query2gene_map[query])[0]        # geneID (pull out of 1-element set)
-        contig = inner_details_dict["is_contig"] #queryIScontig[query]                    # contig?
+        inner_dict = query_details_dict[query]
+        db_match = inner_dict["gene"] #list(query2gene_map[query])[0]        # geneID (pull out of 1-element set)
+        contig = inner_dict["is_contig"] #queryIScontig[query]                    # contig?
         
         # RECORD alignment:
         if contig:                                      # If query is a contig, then
@@ -183,26 +186,27 @@ def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):               
             elif query in gene2read_map[db_match]:      # (Check to see if the read is already assigned to this
                 read_ingene+= 1                         #  particular gene, but not by BLAT---it shouldn't be.)
             
-            gene2read_map[db_match].append(query)       #  append its readID to aligned gene<->read dict,
-            mapped_reads.add(query)                     #  and mark it as assigned by BLAT.
+            if query not in mapped_reads:
+                gene2read_map[db_match].append(query)       #  append its readID to aligned gene<->read dict,
+                mapped_reads.add(query)                     #  and mark it as assigned by BLAT.
 
         # *** This deals with reads that show up in multiple contigs.
         # Just use the read alignment from the contig that had the best alignment score.
         # This could result in "broken" contigs...
 
     # DEBUG (for this datatype):
-    print ('no. contig reads already mapped by BLAT= ' + str(contigread_inmapped))
-    print ('no. contig reads mapped by BLAT to same gene= ' + str(contigread_inmapped_ingene))
-    print ('no. contig reads mapped by NOT BLAT to same gene= ' + str(contigread_ingene) + ' (should be 0)')
-    print ('no. reads already mapped by BLAT= ' + str(read_inmapped) + ' (should be 0)')
-    print ('no. reads already mapped by BLAT to same gene= ' + str(read_inmapped_ingene) + ' (should be 0)')
-    print ('no. reads already mapped by NOT BLAT to same gene= ' + str(read_ingene) + ' (should be 0)')
+    print ('no. contig reads already mapped by BLAT = ' + str(contigread_inmapped))
+    print ('no. contig reads mapped by BLAT to same gene = ' + str(contigread_inmapped_ingene))
+    print ('no. contig reads mapped by NOT BLAT to same gene = ' + str(contigread_ingene) + ' (should be 0)')
+    print ('no. reads already mapped by BLAT = ' + str(read_inmapped) + ' (should be 0)')
+    print ('no. reads already mapped by BLAT to same gene = ' + str(read_inmapped_ingene) + ' (should be 0)')
+    print ('no. reads already mapped by NOT BLAT to same gene = ' + str(read_ingene) + ' (should be 0)')
 
     # Remove contigs/reads previously added to the unmapped set but later found to have a mapping:
     # This prevents re-annotation by a later program.
     # Such queries end up in the unmapped set when they BLAT-aligned to multiple genes, where one
     # alignment is recorded, while the other alignments fail the "on-the-fly" alignment-threshold filter.
-    print ('umapped no. (before double-checking mapped set)= ' + str(len(unmapped)))
+    print ('umapped no. (before double-checking mapped set) = ' + str(len(unmapped)))
     for query in query_details_dict: #query2gene_map:                        # Take all contigs/reads to be mapped and
         try:                                            #  if they exist in the unmapped set, then
             unmapped.remove(query)                      #  remove them from the unmapped set.
@@ -211,6 +215,10 @@ def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):               
     print ('umapped no. (after double-checking mapped set)= ' + str(len(unmapped)))
 
     # return unmapped set:
+    print(dt.today(), "number of keys in gene map [post]:", len(gene2read_map.keys())) 
+    print(dt.today(), "number of mapped reads [post]:", len(mapped_reads))
+    
+    
     return unmapped    
 def write_unmapped_seqs(unmapped_reads, reads_in, reads_out):
     read_seqs = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
@@ -285,7 +293,6 @@ if __name__ == "__main__":
     contig2read_map = import_contig_map(contig2read_file)
     # tracking BLAT-assigned:
     prev_mapping_count= 0
-
     gene2read_map, mapped_reads, BWAreads = import_gene_map(gene2read_file)
 
     # DEBUG:
@@ -297,6 +304,8 @@ if __name__ == "__main__":
         print ('no. total reads= ' + str(len(BWAreads)) + '\n')
         print(dt.today(), "THIS IS A PROBLEM. shutting down")
         sys.exit()
+
+    
 
     contigs_blat_hits = get_blat_details(contigs_blat_in, contigs_reads_in)
     contigs_unmapped_reads = gene_map(contigs_blat_hits, mapped_reads, gene2read_map, contig2read_map)
