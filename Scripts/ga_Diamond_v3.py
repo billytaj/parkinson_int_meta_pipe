@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#!/usr/bin/env python
 
 # Now with some commenting!
 # CHANGES:
@@ -431,9 +432,15 @@ if __name__ == "__main__":
         
         pair_1_safe = check_file_safety(pair_1_reads_in) and check_file_safety(pair_1_dmd_in) and check_file_safety(pair_1_reads_out)
         pair_2_safe = check_file_safety(pair_2_reads_in) and check_file_safety(pair_2_dmd_in) and check_file_safety(pair_2_reads_out)
+        print(dt.today(), "contigs file safe to use:", contigs_safe)
+        print(dt.today(), "singletons file safe to use:", singletons_safe)
+        print(dt.today(), "pair 1 file safe to use:", pair_1_safe)
+        print(dt.today(), "pair 2 file safe to use:", pair_2_safe)
     elif(len(sys.argv) == 13):
         #do something.  we don't care.  
         print(dt.today(), "OPERATING MODE:", operating_mode)
+        print(dt.today(), "contigs file safe to use:", contigs_safe)
+        print(dt.today(), "singletons file safe to use:", singletons_safe)
     else:
         print(dt.today(), "incorrect number of args.  Something is wrong in the MetaPro_Commands.  Dying")
         sys.exit()
@@ -488,27 +495,29 @@ if __name__ == "__main__":
     write_prot_map_process.start()
     print(dt.today(), "GA DIAMOND PP write prot map process launched")
     process_store.append(write_prot_map_process)
-    
-    write_unmapped_contigs_process = mp.Process(target = write_unmapped_seqs, args = (contigs_unmapped_reads, contigs_reads_in, contigs_reads_out))
-    write_unmapped_contigs_process.start()
-    print(dt.today(), "GA DIAMOND PP write unmapped contigs process launched")
-    process_store.append(write_unmapped_contigs_process)
-    
-    write_unmapped_singletons_process = mp.Process(target = write_unmapped_seqs, args = (singletons_unmapped_reads, singletons_reads_in, singletons_reads_out))
-    write_unmapped_singletons_process.start()
-    print(dt.today(), "GA DIAMOND PP write unmapped singletons process launched")
-    process_store.append(write_unmapped_singletons_process)
+    if(contigs_safe):
+        write_unmapped_contigs_process = mp.Process(target = write_unmapped_seqs, args = (contigs_unmapped_reads, contigs_reads_in, contigs_reads_out))
+        write_unmapped_contigs_process.start()
+        print(dt.today(), "GA DIAMOND PP write unmapped contigs process launched")
+        process_store.append(write_unmapped_contigs_process)
+
+    if(singletons_safe):
+        write_unmapped_singletons_process = mp.Process(target = write_unmapped_seqs, args = (singletons_unmapped_reads, singletons_reads_in, singletons_reads_out))
+        write_unmapped_singletons_process.start()
+        print(dt.today(), "GA DIAMOND PP write unmapped singletons process launched")
+        process_store.append(write_unmapped_singletons_process)
     
     if(operating_mode == "paired"):
-        write_unmapped_pair_1_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_1_reads_in, pair_1_reads_out))
-        write_unmapped_pair_1_process.start()
-        print(dt.today(), "GA DIAMOND PP write unmapped pair 1 process launched")
-        process_store.append(write_unmapped_pair_1_process)
-        
-        write_unmapped_pair_2_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_2_reads_in, pair_2_reads_out))
-        write_unmapped_pair_2_process.start()
-        print(dt.today(), "GA DIAMOND PP write unmapped pair 2 process launched")
-        process_store.append(write_unmapped_pair_2_process)
+        if(pair_1_safe):
+            write_unmapped_pair_1_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_1_reads_in, pair_1_reads_out))
+            write_unmapped_pair_1_process.start()
+            print(dt.today(), "GA DIAMOND PP write unmapped pair 1 process launched")
+            process_store.append(write_unmapped_pair_1_process)
+            if(pair_2_safe)
+                write_unmapped_pair_2_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_2_reads_in, pair_2_reads_out))
+                write_unmapped_pair_2_process.start()
+                print(dt.today(), "GA DIAMOND PP write unmapped pair 2 process launched")
+                process_store.append(write_unmapped_pair_2_process)
     
     for item in process_store:
         item.join()
