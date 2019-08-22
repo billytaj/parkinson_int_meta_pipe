@@ -412,8 +412,8 @@ if __name__ == "__main__":
     copyfile(gene2read_file, new_gene2read_file)
     
     #check file integrity:
-    contigs_safe = check_file_safety(contigs_reads_in) and  check_file_safety(contigs_dmd_out) and check_file_safety(contigs_reads_out)
-    singletons_safe = check_file_safety(singletons_reads_in) and check_file_safety(singletons_dmd_out) and check_file_safety(singletons_reads_out)
+    contigs_safe = check_file_safety(contigs_reads_in) and  check_file_safety(contigs_dmd_in)
+    singletons_safe = check_file_safety(singletons_reads_in) and check_file_safety(singletons_dmd_in)
     
     pair_1_safe = False
     pair_2_safe = False
