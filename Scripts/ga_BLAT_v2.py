@@ -317,8 +317,8 @@ if __name__ == "__main__":
         pair_1_blat_hits = get_blat_details(pair_1_blat_in, pair_1_reads_in)
         pair_1_unmapped_reads = gene_map(pair_1_blat_hits, mapped_reads, gene2read_map, contig2read_map)
         
-        pair_2_blat_hits = get_blat_details(pair_2_blat_in, pair_2_reads_in)
-        pair_2_unmapped_reads = gene_map(pair_2_blat_hits, mapped_reads, gene2read_map, contig2read_map)
+        #pair_2_blat_hits = get_blat_details(pair_2_blat_in, pair_2_reads_in)
+        #pair_2_unmapped_reads = gene_map(pair_2_blat_hits, mapped_reads, gene2read_map, contig2read_map)
 
     process_store = []  
 
