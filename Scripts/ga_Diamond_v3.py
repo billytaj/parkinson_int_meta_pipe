@@ -513,7 +513,7 @@ if __name__ == "__main__":
             write_unmapped_pair_1_process.start()
             print(dt.today(), "GA DIAMOND PP write unmapped pair 1 process launched")
             process_store.append(write_unmapped_pair_1_process)
-            if(pair_2_safe)
+            if(pair_2_safe):
                 write_unmapped_pair_2_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_2_reads_in, pair_2_reads_out))
                 write_unmapped_pair_2_process.start()
                 print(dt.today(), "GA DIAMOND PP write unmapped pair 2 process launched")
