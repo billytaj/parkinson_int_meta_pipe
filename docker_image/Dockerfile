@@ -1,9 +1,22 @@
 FROM continuumio/anaconda3
-FROM java:8
 MAINTAINER Billy Taj
-#RUN apt-get update
-RUN apt-get install wget
-RUN apt-get install unzip
+RUN apt-get update
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
+
+RUN conda update -n base conda -y
+RUN conda install Biopython -y 
+RUN conda install pandas -y
+
+RUN sed -i '/jessie-updates/d' /etc/apt/sources.list
+RUN apt-get -o Acquire::Check-Valid-Until=false update
+RUN mkdir /usr/share/man/man1
+RUN apt-get -y install openjdk-11-jre
+RUN apt-get -y install openjdk-11-jdk
+
+
+RUN apt-get -y install wget
+RUN apt-get -y install unzip
 RUN apt-get -y install g++
 RUN apt-get -y install gcc
 RUN apt-get -y install make
@@ -17,14 +30,12 @@ RUN apt-get -y install cmake
 RUN apt-get -y install libncurses5-dev
 RUN apt-get -y install liblzma-dev
 RUN apt-get -y install perl
-#RUN apt-get -y install openjdk-8-jre
-#RUN apt-get -y install openjdk-8-jdk
-RUN conda update -n base conda -y
-RUN conda install Biopython -y 
-RUN conda install Pandas -y
+#RUN apt-get update && apt-get -y install default-jre-headless
+
+
 #needed for Needle
 RUN ln -s /bin/sed /usr/bin/sed   
-RUN apt-get install libgd-dev -y
+RUN apt-get update && apt-get install libgd-dev -y && apt-get clean
 
 WORKDIR /pipeline_tools
 #----------------------------------------------------
@@ -44,17 +55,18 @@ ENV PATH="${PATH}:/pipeline_tools/Barrnap/bin"
 #------------------------------------
 # Install BLAST+
 # compiling from source takes a much longer time than downloading the executables
-RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz
+RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz
 RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.1+
 
 #---------------------------------------------------
 # Install BLAT (pblat)
-RUN wget https://github.com/icebert/pblat/tarball/master -O PBLAT.tar.gz | mkdir PBLAT
+RUN apt-get -y install libssl-dev
+RUN wget https://github.com/icebert/pblat/archive/2.0.tar.gz -O PBLAT.tar.gz | mkdir PBLAT
 RUN tar --remove-files -xzvf PBLAT.tar.gz && rm PBLAT.tar.gz
-WORKDIR /pipeline_tools/icebert-pblat-e05e284
+WORKDIR /pipeline_tools/pblat-2.0
 RUN make && mv pblat /pipeline_tools/PBLAT/
 WORKDIR /pipeline_tools
-RUN rm -r icebert-pblat-e05e284
+RUN rm -r pblat-2.0
 
 #------------------------------------------------------
 # Install BWA
@@ -77,11 +89,11 @@ RUN rm -r cd-hit-v4.6.8-2017-1208
 
 #----------------------------------------------------
 # Install Centrifuge
-RUN wget https://github.com/infphilo/centrifuge/archive/v1.0.3.tar.gz -O centrifuge.tar.gz && tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz 
-WORKDIR centrifuge-1.0.3
+RUN wget https://github.com/infphilo/centrifuge/archive/master.tar.gz -O centrifuge.tar.gz && tar --remove-files -xzvf centrifuge.tar.gz && rm centrifuge.tar.gz 
+WORKDIR centrifuge-master
 RUN make 
 WORKDIR /pipeline_tools
-RUN mv centrifuge-1.0.3 centrifuge
+RUN mv centrifuge-master centrifuge
 
 
 #-----------------------------------------------------
@@ -187,9 +199,9 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/assembly_map.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ea_combine.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BLAT.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BWA.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_Diamond_v2.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BLAT_v2.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BWA_v2.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_Diamond_v3.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_contig_stats.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_data_change_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_EC_metrics.py /pipeline/Scripts
