@@ -221,12 +221,15 @@ def gene_map(hits, mapped_reads, gene2read_map, contig2read_map):               
     
     return unmapped    
 def write_unmapped_seqs(unmapped_reads, reads_in, reads_out):
-    read_seqs = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
-    unmapped_seqs= []                                   # Initialize list of SeqRecords.
-    for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
-        unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
-    with open(reads_out,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
+    if(len(unmapped_reads) == 0):
+        print(dt.today(), "no unmapped reads found.  skipping the write")
+    else:
+        read_seqs = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
+        unmapped_seqs= []                                   # Initialize list of SeqRecords.
+        for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
+            unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
+        with open(reads_out,"w") as outfile:
+            SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
 
     # print no. aligned reads from current readtype set:
     #print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
@@ -352,113 +355,4 @@ if __name__ == "__main__":
         item.join()
     process_store[:] = []
     print(dt.today(), "GA BLAT finished")
-    
-# #####################################
 
-# # check number of readtype sets (file inputs)
-# read_sets = int((len(sys.argv)-7)/3)
-# if (len(sys.argv)-7) % 3 != 0:
-    # sys.exit('Incorrect number of readtype sets.')
-
-# # process BLAT output:
-# # readtype sets: contigs, merged:
-# for x in range(read_sets):
-    # read_file= sys.argv[3*x+7]      # INPUT: non-BWA-aligned contig/readIDs and seqs (.fasta)
-    # read_seqs= SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
-                                    # # dict of non-BWA-aligned read SeqRecords: key=contig/readID
-                                    # #  (second argument specifies filetype, e.g., "fasta")
-    # BLAT_tab_file= sys.argv[3*x+8]  # INPUT: BLAT-aligned contig/readIDs (.blatout)
-    # output_file= sys.argv[3*x+9]    # OUTPUT: non-BWA&BLAT-aligned contig/readIDs and seqs (.fasta)
-
-    # # read BLAT output & get read/contig lengths:
-    # BLAT_hits = read_aligned(BLAT_tab_file, read_seqs)   # Store info in BLAT_hits (list of lists).
-
-    # # process BLAT-aligned reads:
-    # unmapped_reads = gene_map(BLAT_hits)                 # Add BLAT-aligned contigs/reads to gene2read_map
-                                                        # #  (aligned geneID<->readID(s) dict),
-                                                        # #  and return a set of failed mapping readIDs.
-    # # add reads never mapped by BLAT in the
-    # # first place to the unmapped set:
-    # unmapped_len_before= len(unmapped_reads)            # DEBUG
-    # for read in read_seqs:                              # Take all non-BWA-aligned contigs/reads (input to BLAT)
-        # if read not in mapped_reads:                    #  that are still unmapped and
-            # unmapped_reads.add(read)                    #  add them to the unmapped_reads set (won't add duplicates).
-
-    # print ('no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before))
-
-    # # WRITE OUTPUT: non-BWA&BLAT-aligned contig/readIDs:
-    # # and seqs (.fasta):
-    # unmapped_seqs= []                                   # Initialize list of SeqRecords.
-    # for read in unmapped_reads:                         # Put corresponding SeqRecords for unmapped_reads
-        # unmapped_seqs.append(read_seqs[read])           #  into unmapped_seqs
-    # with open(output_file,"w") as outfile:
-        # SeqIO.write(unmapped_seqs, outfile, "fasta")    #  and write it to file.
-
-    # # print no. aligned reads from current readtype set:
-    # print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file) + '\n')
-    # prev_mapping_count= len(mapped_reads)
-'''
-# process BLAT output:
-# readtype sets: unmerged1, unmerged2
-if numsets==4:
-    
-    # unmerged1:
-    x= 2
-    read_file_1= sys.argv[3*x+7]
-    read_seqs_1= SeqIO.index(read_file_1, os.path.splitext(read_file_1)[1][1:])
-    BLAT_tab_file_1= sys.argv[3*x+8]
-    output_file_1= sys.argv[3*x+9]
-    BLAT_hits_1= read_aligned(BLAT_tab_file_1, read_seqs_1) # Store info in BLAT_hits_1 (list of lists).
-
-    # unmerged2:
-    x= 3
-    read_file_2= sys.argv[3*x+7]
-    read_seqs_2= SeqIO.index(read_file_2, os.path.splitext(read_file_2)[1][1:])
-    BLAT_tab_file_2= sys.argv[3*x+8]
-    output_file_2= sys.argv[3*x+9]
-    BLAT_hits_2= read_aligned(BLAT_tab_file_2, read_seqs_2) # Store info in BLAT_hits_2 (list of lists).
-
-    # process BLAT-aligned reads together:
-    BLAT_hits= BLAT_hits_1+BLAT_hits_2                  # Concatenate BLAT info lists,
-    unmapped_reads= gene_map(BLAT_hits)                 #  add BLAT-aligned contigs/reads to gene2read_map
-                                                        #  and return a set of failed mapping readIDs.
-    # add reads never mapped by BLAT in the
-    # first place to the unmapped set:
-    unmapped_len_before= len(unmapped_reads)
-    for read in read_seqs_1:
-        if read not in mapped_reads:
-            unmapped_reads.add(read)
-    print ('(1st paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before))
-
-    # add reads never mapped by BLAT in the
-    # first place to the unmapped set:
-    unmapped_len_before= len(unmapped_reads)
-    for read in read_seqs_2:
-        if read not in mapped_reads:
-            unmapped_reads.add(read)
-    print ('(2nd paired end) no. additional contigs/reads completely unmapped by BLAT= ' + str(len(unmapped_reads)-unmapped_len_before) + ' (should be 0)')
-
-    # WRITE unmerged1 OUTPUT: non-BWA&BLAT-aligned:
-    unmapped_seqs= []
-    for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_1[read])
-    with open(output_file_1,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")
-
-    # WRITE unmerged2 OUTPUT: non-BWA&BLAT-aligned:
-    unmapped_seqs= []
-    for read in unmapped_reads:
-        unmapped_seqs.append(read_seqs_2[read])
-    with open(output_file_2,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")
-
-    # print no. aligned reads from current readtype set:
-    print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file_1))
-    print ('  and ' + os.path.basename(read_file_2) + '\n')
-    prev_mapping_count= len(mapped_reads)
-'''
-
-
-# # print BWA+BLAT stats:
-# print (str(reads_count) + ' reads were mapped with BWA and BLAT.')
-# print ('Reads mapped to ' + str(len(genes)) + ' genes.')
