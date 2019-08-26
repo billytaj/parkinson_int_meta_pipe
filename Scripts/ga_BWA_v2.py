@@ -223,22 +223,25 @@ def gene_map(sam, mapped_reads, gene2read_map, contig2read_map, contig2read_map_
 
 
 def write_unmapped_reads(unmapped_reads, reads_in, output_file):
-    read_seqs = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
-# WRITE OUTPUT: non-BWA-aligned contig/readIDs:
-    # and seqs (.fasta):
-    unmapped_seqs = []                               # Inintialize list of SeqRecords.
-    for read in unmapped_reads:                     # Put corresponding SeqRecords for unmapped_reads
-        if(read in read_seqs):
-            unmapped_seqs.append(read_seqs[read])       #  into unmapped_seqs
-        else:
-            print("ignoring:", read, "can't find in read_seqs")
-    with open(output_file,"w") as out:
-        SeqIO.write(unmapped_seqs, out, "fasta")    #  and write it to file.
+    if(len(unmapped_reads) == 0):
+        print(dt.today(), "no unmapped reads found.  skipping")
+    else:
+        read_seqs = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
+        # WRITE OUTPUT: non-BWA-aligned contig/readIDs:
+        # and seqs (.fasta):
+        unmapped_seqs = []                               # Inintialize list of SeqRecords.
+        for read in unmapped_reads:                     # Put corresponding SeqRecords for unmapped_reads
+            if(read in read_seqs):
+                unmapped_seqs.append(read_seqs[read])       #  into unmapped_seqs
+            else:
+                print("ignoring:", read, "can't find in read_seqs")
+        with open(output_file,"w") as out:
+            SeqIO.write(unmapped_seqs, out, "fasta")    #  and write it to file.
 
-    # print no. aligned reads from current readtype set:
-    #print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(reads_in))
-    #if x!=2: print ('')
-    #prev_mapping_count= len(mapped_reads)
+        # print no. aligned reads from current readtype set:
+        #print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(reads_in))
+        #if x!=2: print ('')
+        #prev_mapping_count= len(mapped_reads)
 
 
 def write_gene_map(gene2read_file, gene2read_map):
