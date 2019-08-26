@@ -27,6 +27,20 @@ from Bio import SeqIO
 from datetime import datetime as dt
 import multiprocessing as mp
 
+def check_file_safety(file_name):
+    if(os.path.exists(file_name)):
+        if(os.path.getsize(file_name) == 0):
+            #copyfile(gene2read_file, new_gene2read_file)
+            print(file_name, "is unsafe.  skipping")
+            return False
+            #sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is empty.  aborting")
+        else:
+            print(file_name, "exists and is safe")
+            return True
+    else:
+        #sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is missing.  aborting")
+        print(file_name, "is missing. skipping")
+        return False
 
 
 def import_contig2read(contig2read_file):
@@ -305,13 +319,30 @@ if __name__ == "__main__":
     prev_mapping_count = 0
 
 
+    contigs_safe = check_file_safety(contig_reads_in) and check_file_safety(contig_bwa_in)
+    singletons_safe = check_file_safety(singletons_reads_in) and check_file_safety(singletons_bwa_in)
+
+    print(dt.today(), "contigs are safe:", contigs_safe)
+    print(dt.today(), "singletons are safe:", singletons_safe)
+    
+    pair_1_safe = False
+    pair_2_safe = False
+    if(operating_mode == "paired"):
+        pair_1_safe = check_file_safety(pair_1_reads_in) and check_file_safety(pair_1_bwa_in)
+        pair_2_safe = check_file_safety(pair_2_reads_in) and check_file_safety(pair_2_bwa_in)
+        print(dt.today(), "pair 1 is safe:", pair_1_safe)
+        print(dt.today(), "pair 2 is safe:", pair_2_safe)
+
     #####################################
 
-
-    contig_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
-    singletons_unmapped_reads = gene_map(singletons_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+    if(contigs_safe):
+        contig_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+    if(singletons_safe):
+        singletons_unmapped_reads = gene_map(singletons_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+    
     if(operating_mode == "paired"):
-        pair_1_unmapped_reads = gene_map(pair_1_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+        if(pair_1_safe):
+            pair_1_unmapped_reads = gene_map(pair_1_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
         #pair_2_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
     
     process_store = []
@@ -321,26 +352,30 @@ if __name__ == "__main__":
     print(dt.today(), "GA BWA pp export gene map launched")
     process_store.append(gene_map_export_process)
     
-    contig_write_process = mp.Process(target = write_unmapped_reads, args = (contig_unmapped_reads, contig_reads_in, contig_reads_out))
-    contig_write_process.start()
-    print(dt.today(), "GA BWA pp writing unmapped contigs process launched")
-    process_store.append(contig_write_process)
-    
-    singleton_write_process = mp.Process(target = write_unmapped_reads, args = (singletons_unmapped_reads, singletons_reads_in, singletons_reads_out))
-    singleton_write_process.start()
-    print(dt.today(), "GA BWA pp writing unmapped singletons process launched")
-    process_store.append(singleton_write_process)
+    if(contigs_safe):
+        contig_write_process = mp.Process(target = write_unmapped_reads, args = (contig_unmapped_reads, contig_reads_in, contig_reads_out))
+        contig_write_process.start()
+        print(dt.today(), "GA BWA pp writing unmapped contigs process launched")
+        process_store.append(contig_write_process)
+
+    if(singletons_safe):
+        singleton_write_process = mp.Process(target = write_unmapped_reads, args = (singletons_unmapped_reads, singletons_reads_in, singletons_reads_out))
+        singleton_write_process.start()
+        print(dt.today(), "GA BWA pp writing unmapped singletons process launched")
+        process_store.append(singleton_write_process)
     
     if(operating_mode == "paired"):
-        pair_1_write_process = mp.Process(target = write_unmapped_reads, args = (pair_1_unmapped_reads, pair_1_reads_in, pair_1_reads_out))
-        pair_1_write_process.start()
-        print(dt.today(), "GA BWA pp writing unmapped pair 1 process launched")
-        process_store.append(pair_1_write_process)
+        if(pair_1_safe):
+            pair_1_write_process = mp.Process(target = write_unmapped_reads, args = (pair_1_unmapped_reads, pair_1_reads_in, pair_1_reads_out))
+            pair_1_write_process.start()
+            print(dt.today(), "GA BWA pp writing unmapped pair 1 process launched")
+            process_store.append(pair_1_write_process)
         
-        pair_2_write_process = mp.Process(target = write_unmapped_reads, args = (pair_1_unmapped_reads, pair_2_reads_in, pair_2_reads_out))
-        pair_2_write_process.start()
-        print(dt.today(), "GA BWA pp writing unmapped pair 2 process launched")
-        process_store.append(pair_2_write_process)
+        if(pair_2_safe):
+            pair_2_write_process = mp.Process(target = write_unmapped_reads, args = (pair_1_unmapped_reads, pair_2_reads_in, pair_2_reads_out))
+            pair_2_write_process.start()
+            print(dt.today(), "GA BWA pp writing unmapped pair 2 process launched")
+            process_store.append(pair_2_write_process)
         
     
     for item in process_store:

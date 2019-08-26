@@ -62,6 +62,22 @@ def import_gene_map(gene2read_file):
 #####################################
 # FUNCTIONS:
 
+def check_file_safety(file_name):
+    if(os.path.exists(file_name)):
+        if(os.path.getsize(file_name) == 0):
+            #copyfile(gene2read_file, new_gene2read_file)
+            print(file_name, "is unsafe.  skipping")
+            return False
+            #sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is empty.  aborting")
+        else:
+            print(file_name, "exists and is safe")
+            return True
+    else:
+        #sys.exit(DMD_tab_file_1 + " -> DMD tab file 1 is missing.  aborting")
+        print(file_name, "is missing. skipping")
+        return False
+
+
 # read .blatout file and acquire read length:
 def get_blat_details(blat_in, reads_in):                          # List of lists [blatout info, read length]=
                                                         #  read_aligned(.blatout file, dict contig/readID<->SeqRecord)
@@ -308,17 +324,34 @@ if __name__ == "__main__":
         print(dt.today(), "THIS IS A PROBLEM. shutting down")
         sys.exit()
 
+    contigs_safe = check_file_safety(contigs_reads_in) and check_file_safety(contigs_blat_in)
+    singletons_safe = check_file_safety(singletons_reads_in) and check_file_safety(singletons_blat_in)
+    print(dt.today(), "contigs are safe:", contigs_safe)
+    print(dt.today(), "singletons are safe:", singletons_safe)
     
-
-    contigs_blat_hits = get_blat_details(contigs_blat_in, contigs_reads_in)
-    contigs_unmapped_reads = gene_map(contigs_blat_hits, mapped_reads, gene2read_map, contig2read_map)
-
-    singletons_blat_hits = get_blat_details(singletons_blat_in, singletons_reads_in)
-    singletons_unmapped_reads = gene_map(singletons_blat_hits, mapped_reads, gene2read_map, contig2read_map)
-
+    pair_1_safe = False
+    pair_2_safe = False
     if(operating_mode == "paired"):
-        pair_1_blat_hits = get_blat_details(pair_1_blat_in, pair_1_reads_in)
-        pair_1_unmapped_reads = gene_map(pair_1_blat_hits, mapped_reads, gene2read_map, contig2read_map)
+        pair_1_safe = check_file_safety(pair_1_reads_in) and check_file_safety(pair_1_blat_in)
+        pair_2_safe = check_file_safety(pair_2_reads_in) and check_file_safety(pair_2_blat_in)
+        
+        print(dt.today(), "pair 1 is safe:", pair_1_safe)
+        print(dt.today(), "pair 2 is safe:", pair_2_safe)
+    
+    
+    
+    if(contigs_safe):
+        contigs_blat_hits = get_blat_details(contigs_blat_in, contigs_reads_in)
+        contigs_unmapped_reads = gene_map(contigs_blat_hits, mapped_reads, gene2read_map, contig2read_map)
+    
+    if(singletons_safe):
+        singletons_blat_hits = get_blat_details(singletons_blat_in, singletons_reads_in)
+        singletons_unmapped_reads = gene_map(singletons_blat_hits, mapped_reads, gene2read_map, contig2read_map)
+    
+    if(operating_mode == "paired"):
+        if(pair_1_safe):
+            pair_1_blat_hits = get_blat_details(pair_1_blat_in, pair_1_reads_in)
+            pair_1_unmapped_reads = gene_map(pair_1_blat_hits, mapped_reads, gene2read_map, contig2read_map)
         
         #pair_2_blat_hits = get_blat_details(pair_2_blat_in, pair_2_reads_in)
         #pair_2_unmapped_reads = gene_map(pair_2_blat_hits, mapped_reads, gene2read_map, contig2read_map)
@@ -329,27 +362,31 @@ if __name__ == "__main__":
     gene_map_write_process.start()
     print(dt.today(), "GA BLAT gene map export launched")
     process_store.append(gene_map_write_process)
-    
-    contig_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (contigs_unmapped_reads, contigs_reads_in, contigs_reads_out))
-    contig_write_unmapped_process.start()
-    print(dt.today(), "GA BLAT unmapped contigs export launched")
-    process_store.append(contig_write_unmapped_process)
 
-    singletons_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (singletons_unmapped_reads, singletons_reads_in, singletons_reads_out))
-    singletons_write_unmapped_process.start()
-    print(dt.today(), "GA BLAT unmapped singletons export launched")
-    process_store.append(singletons_write_unmapped_process)
+    if(contigs_safe):
+        contig_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (contigs_unmapped_reads, contigs_reads_in, contigs_reads_out))
+        contig_write_unmapped_process.start()
+        print(dt.today(), "GA BLAT unmapped contigs export launched")
+        process_store.append(contig_write_unmapped_process)
+        
+    if(singletons_safe):
+        singletons_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (singletons_unmapped_reads, singletons_reads_in, singletons_reads_out))
+        singletons_write_unmapped_process.start()
+        print(dt.today(), "GA BLAT unmapped singletons export launched")
+        process_store.append(singletons_write_unmapped_process)
 
     if(operating_mode == "paired"):
-        pair_1_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_1_reads_in, pair_1_reads_out))
-        pair_1_write_unmapped_process.start()
-        print(dt.today(), "GA BLAT unmapped pair 1 export launched")
-        process_store.append(pair_1_write_unmapped_process)
-        
-        pair_2_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_2_reads_in, pair_2_reads_out))
-        pair_2_write_unmapped_process.start()
-        print(dt.today(), "GA BLAT unmapped pair 2 export launched")
-        process_store.append(pair_2_write_unmapped_process)
+        if(pair_1_safe):
+            pair_1_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_1_reads_in, pair_1_reads_out))
+            pair_1_write_unmapped_process.start()
+            print(dt.today(), "GA BLAT unmapped pair 1 export launched")
+            process_store.append(pair_1_write_unmapped_process)
+
+        if(pair_2_safe):
+            pair_2_write_unmapped_process = mp.Process(target = write_unmapped_seqs, args = (pair_1_unmapped_reads, pair_2_reads_in, pair_2_reads_out))
+            pair_2_write_unmapped_process.start()
+            print(dt.today(), "GA BLAT unmapped pair 2 export launched")
+            process_store.append(pair_2_write_unmapped_process)
 
     for item in process_store:
         item.join()
