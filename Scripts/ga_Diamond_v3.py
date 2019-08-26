@@ -31,6 +31,8 @@
 
 #OTHER NOTES: Feb 27, 2019
 # - this is a messy Piece-of-shit code that needs to be written without those dumb import loops.
+# Aug 26, 2019:  it's much cleaner now, but there's a possibility for empty-files to be created, which interferes with the error-check of the pipe.
+
 
 import os
 import os.path
@@ -377,19 +379,22 @@ def import_gene_map(gene2read_file):
     
 def write_unmapped_seqs(unmapped_reads, reads_in, reads_out):
     # WRITE unmerged1 OUTPUT: non-BWA&BLAT&DMD-aligned:
-    read_seqs = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
-    unmapped_seqs= []
-    for read in unmapped_reads:
-        read_key = read
-        #if(not read.startswith("@")):
-        #    read_key = "@" + read
-        if(read_key in read_seqs):
-            unmapped_seqs.append(read_seqs[read_key])
-        #else:
-        #    print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
-    with open(reads_out,"w") as outfile:
-        SeqIO.write(unmapped_seqs, outfile, "fasta")
-        
+    if(len(unmapped_reads) == 0):
+        print(dt.today(), "no unmapped reads found.  skipping")
+    else:
+        read_seqs = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
+        unmapped_seqs= []
+        for read in unmapped_reads:
+            read_key = read
+            #if(not read.startswith("@")):
+            #    read_key = "@" + read
+            if(read_key in read_seqs):
+                unmapped_seqs.append(read_seqs[read_key])
+            #else:
+            #    print(read_key,"from",DMD_tab_file_1, DMD_tab_file_2,   "not found in:", read_file_1)
+        with open(reads_out,"w") as outfile:
+            SeqIO.write(unmapped_seqs, outfile, "fasta")
+            
         
 #####################################
 if __name__ == "__main__":
