@@ -1,18 +1,7 @@
-FROM continuumio/anaconda3
+#FROM continuumio/anaconda3
+FROM ubuntu:18.04
 MAINTAINER Billy Taj
 RUN apt-get update
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ENV PATH /opt/conda/bin:$PATH
-
-RUN conda update -n base conda -y
-RUN conda install Biopython -y 
-RUN conda install pandas -y
-
-RUN sed -i '/jessie-updates/d' /etc/apt/sources.list
-RUN apt-get -o Acquire::Check-Valid-Until=false update
-RUN mkdir /usr/share/man/man1
-RUN apt-get -y install openjdk-11-jre
-RUN apt-get -y install openjdk-11-jdk
 
 
 RUN apt-get -y install wget
@@ -30,7 +19,6 @@ RUN apt-get -y install cmake
 RUN apt-get -y install libncurses5-dev
 RUN apt-get -y install liblzma-dev
 RUN apt-get -y install perl
-#RUN apt-get update && apt-get -y install default-jre-headless
 
 
 #needed for Needle
@@ -52,11 +40,7 @@ RUN rm -r adapterremoval-2.1.7
 RUN wget https://github.com/tseemann/barrnap/archive/0.8.zip -O barrnap.zip && unzip barrnap.zip && rm barrnap.zip | mkdir Barrnap && mv barrnap-0.8/* /pipeline_tools/Barrnap && cd /pipeline_tools && rm -r barrnap-0.8
 ENV PATH="${PATH}:/pipeline_tools/Barrnap/bin"
 
-#------------------------------------
-# Install BLAST+
-# compiling from source takes a much longer time than downloading the executables
-RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz
-RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.1+
+
 
 #---------------------------------------------------
 # Install BLAT (pblat)
@@ -145,10 +129,7 @@ RUN make -C build && mv build/SLAM /pipeline_tools/k-SLAM/
 WORKDIR /pipeline_tools
 RUN rm -r k-SLAM-master
 
-#--------------------------------------------
-# Install PRIAM
-RUN mkdir PRIAM_search && wget http://priam.prabi.fr/utilities/PRIAM_search.jar && mv PRIAM_search.jar PRIAM_search
-WORKDIR /pipeline_tools
+
 
 
 #------------------------------------------------------
@@ -236,6 +217,44 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 
 
 RUN chmod -R 555 /pipeline
+
+
+
+
+#post-build annoyances with java
+## JAVA INSTALLATION
+RUN apt-get install -y openjdk-8-jre
+RUN apt-get install -y openjdk-8-jdk
+
+
+#--------------------------------------------
+# Install PRIAM
+WORKDIR /pipeline_tools
+RUN mkdir PRIAM_search && wget http://priam.prabi.fr/utilities/PRIAM_search.jar && mv PRIAM_search.jar PRIAM_search
+
+
+#------------------------------------
+# Install BLAST+
+RUN apt-get install -y libidn11-dev
+RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz
+RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.1+
+
+
+
+#RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+-src/c++/* BLAST_p && rm -r ncbi-blast-2.7.1+-src
+#WORKDIR BLAST_p
+#RUN ./configure --without-boost && make 
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+RUN apt-get autoclean && apt-get autoremove && apt-get clean
+RUN apt-get install -y python3
+RUN apt-get install -y python3-pip
+
+RUN pip3 install biopython
+RUN pip3 install pandas 
+RUN pip3 install matplotlib
+RUN pip3 install seaborn
+RUN pip3 install pillow
 
 WORKDIR /
 CMD ["bash"]
