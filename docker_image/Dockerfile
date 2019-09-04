@@ -218,13 +218,9 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 
 RUN chmod -R 555 /pipeline
 
-
-
-
 #post-build annoyances with java
 ## JAVA INSTALLATION
-RUN apt-get install -y openjdk-8-jre
-RUN apt-get install -y openjdk-8-jdk
+RUN apt-get install -y openjdk-8-jre && apt-get install -y openjdk-8-jdk
 
 
 #--------------------------------------------
@@ -235,9 +231,7 @@ RUN mkdir PRIAM_search && wget http://priam.prabi.fr/utilities/PRIAM_search.jar 
 
 #------------------------------------
 # Install BLAST+
-RUN apt-get install -y libidn11-dev
-RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz
-RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.1+
+RUN apt-get install -y libidn11-dev && wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz && mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.1+
 
 
 
@@ -246,16 +240,23 @@ RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.
 #RUN ./configure --without-boost && make 
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-RUN apt-get autoclean && apt-get autoremove && apt-get clean
-RUN apt-get install -y python3
-RUN apt-get install -y python3-pip
+RUN apt-get autoclean && apt-get autoremove && apt-get clean && apt-get install -y python3 && apt-get install -y python3-pip
 
-RUN pip3 install biopython
-RUN pip3 install pandas 
-RUN pip3 install matplotlib
-RUN pip3 install seaborn
-RUN pip3 install pillow
-RUN pip3 install psutil
+RUN pip3 install biopython && pip3 install pandas  && pip3 install matplotlib && pip3 install seaborn && pip3 install pillow && pip3 install psutil
+
+#-----------------------------------
+# Add MetaGeneMark
+WORKDIR /pipeline_tools
+RUN mkdir MetaGeneMark
+ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/MetaGeneMark_v1.mod /pipeline_tools/MetaGeneMark
+ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/gm_key_64 /pipeline_tools/MetaGeneMark
+ADD https://github.com/billytaj/parkinson_int_meta_pipe/blob/develop/mgm/gmhmmp /pipeline_tools/MetaGeneMark
+ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/LICENSE /pipeline_tools/MetaGeneMark
+ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/INSTALL /pipeline_tools/MetaGeneMark
+
+RUN cp MetaGeneMark/gm_key_64 ~/.gm_key && chmod 755 MetaGeneMark/gmhmmp
+
+
 
 WORKDIR /
 CMD ["bash"]
