@@ -1196,9 +1196,10 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         spades_folder       = os.path.join(data_folder, "0_spades")
-        bwa_folder          = os.path.join(data_folder, "1_bwa_align")
-        sam_trimmer_folder  = os.path.join(data_folder, "2_clean_sam")
-        mapped_reads_folder = os.path.join(data_folder, "3_mapped_reads")
+        mgm_folder          = os.path.join(data_folder, "1_mgm")
+        bwa_folder          = os.path.join(data_folder, "2_bwa_align")
+        sam_trimmer_folder  = os.path.join(data_folder, "3_clean_sam")
+        mapped_reads_folder = os.path.join(data_folder, "4_mapped_reads")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
@@ -1207,6 +1208,7 @@ class mt_pipe_commands:
         self.make_folder(bwa_folder)
         self.make_folder(sam_trimmer_folder)
         self.make_folder(mapped_reads_folder)
+        self.make_folder(mgm_folder)
         self.make_folder(final_folder)
 
         # this assembles contigs
@@ -1221,25 +1223,43 @@ class mt_pipe_commands:
 
         #if there is no output, bypass contigs. -> But this is a v2 upgrade.  
         spades_rename = "cp " + os.path.join(spades_folder, "transcripts.fasta") + " " + os.path.join(spades_folder, "contigs.fasta")  # rename output
+        
+        post_mgm_contig = os.path.join(mgm_folder, "disassembled_contigs.fasta")
+        mgm_report      = os.path.join(mgm_folder, "gene_report.txt")
+        final_contigs   = os.path.join(mgm_folder, "contigs.fasta")
+        
+        #-------------------------------------------------------
+        #spades does too good of a job sometimes.  Disassemble it into genes.
+        disassemble_contigs = ">&2 echo Disassembling contigs | "
+        disassemble_contigs += self.tool_path_obj.MetaGeneMark + " -o " + mgm_report + " "
+        disassemble_contigs += "-D " + post_mgm_contig + " "
+        disassemble_contigs += "-m " + self.tool_path_obj.mgm_model + " "
+        disassemble_contigs += os.path.join(spades_folder, "contigs.fasta")
+        
+        remove_whitespace = ">&2 echo Removing whitespace from fasta | " 
+        remove_whitespace += self.tool_path_obj.remove_gaps_in_fasta + " "
+        remove_whitespace += post_mgm_contig + " "
+        remove_whitespace += final_contigs
+        
 
         bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + os.path.join(spades_folder, "contigs.fasta")
 
-        # calls BWA, then uses SAMTools to get a report
+        # Build a report of what was consumed by contig transmutation (assemble/disassemble)
         bwa_pair_1_contigs = ">&2 echo BWA pair contigs | "
         bwa_pair_1_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_pair_1_contigs += os.path.join(spades_folder, "contigs.fasta") + " "
+        bwa_pair_1_contigs += final_contigs + " "
         bwa_pair_1_contigs += os.path.join(dep_loc, "pair_1.fastq")
         bwa_pair_1_contigs += " > " + os.path.join(bwa_folder, "pair_1.sam")
 
         bwa_pair_2_contigs = ">&2 echo BWA pair contigs | "
         bwa_pair_2_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_pair_2_contigs += os.path.join(spades_folder, "contigs.fasta") + " "
+        bwa_pair_2_contigs += final_contigs + " "
         bwa_pair_2_contigs += os.path.join(dep_loc, "pair_2.fastq")
         bwa_pair_2_contigs += " > " + os.path.join(bwa_folder, "pair_2.sam")
 
         bwa_singletons_contigs = ">&2 echo BWA singleton contigs | "
         bwa_singletons_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_singletons_contigs += os.path.join(spades_folder, "contigs.fasta") + " "
+        bwa_singletons_contigs += final_contigs + " "
         bwa_singletons_contigs += os.path.join(dep_loc, "singletons.fastq")
         bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons.sam")
 
@@ -1325,6 +1345,8 @@ class mt_pipe_commands:
             COMMANDS_Assemble = [
                 spades,
                 spades_rename,
+                disassemble_contigs,
+                remove_whitespace,
                 bwa_index,
                 bwa_singletons_contigs,
                 sam_trimmer_singletons,
@@ -1338,6 +1360,8 @@ class mt_pipe_commands:
             COMMANDS_Assemble = [
                 spades,
                 spades_rename,
+                disassemble_contigs,
+                remove_whitespace,
                 bwa_index,
                 bwa_pair_1_contigs,
                 bwa_pair_2_contigs,
