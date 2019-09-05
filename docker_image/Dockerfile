@@ -204,6 +204,8 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_constrain_taxonomy_v2.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_taxid.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ta_wevote_parser.py /pipeline/Scripts
+DD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/remove_gaps_in_fasta.py /pipeline/Scripts
+
 
 #--------------------------------------------
 # get reference files
@@ -247,15 +249,8 @@ RUN pip3 install biopython && pip3 install pandas  && pip3 install matplotlib &&
 #-----------------------------------
 # Add MetaGeneMark
 WORKDIR /pipeline_tools
-RUN mkdir MetaGeneMark
-ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/MetaGeneMark_v1.mod /pipeline_tools/MetaGeneMark
-ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/gm_key_64 /pipeline_tools/MetaGeneMark
-ADD https://github.com/billytaj/parkinson_int_meta_pipe/blob/develop/mgm/gmhmmp /pipeline_tools/MetaGeneMark
-ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/LICENSE /pipeline_tools/MetaGeneMark
-ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm/INSTALL /pipeline_tools/MetaGeneMark
-
-RUN cp MetaGeneMark/gm_key_64 ~/.gm_key && chmod 755 MetaGeneMark/gmhmmp
-
+ADD https://github.com/billytaj/parkinson_int_meta_pipe/blob/develop/mgm/MetaGeneMark_linux_64.tar.gz?raw=true /pipeline_tools
+RUN mkdir mgm && mv MetaGeneMark_linux_64.tar.gz MetaGeneMark.tar && tar -xvf MetaGeneMark.tar && mv MetaGeneMark_linux_64/mgm/* /pipeline_tools/mgm && chmod 755 /pipeline_tools/mgm/gmhmmp
 
 
 WORKDIR /

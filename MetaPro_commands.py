@@ -1357,6 +1357,40 @@ class mt_pipe_commands:
 
         return COMMANDS_Assemble
 
+    def create_disassemble_contigs_command(self, stage_name, dependency_stage_name):
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        mgm_folder          = os.path.join(data_folder, "0_mgm")
+        final_folder        = os.path.join(subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(mgm_folder)
+        self.make_folder(final_folder)
+        
+        post_mgm_contig = os.path.join(mgm_folder, "disassembled_contigs.fasta")
+        mgm_report      = os.path.join(mgm_folder, "gene_report.txt")
+        final_contigs   = os.path.join(final_folder, "contigs.fasta")
+        
+        disassemble_contigs = ">&2 echo Disassembling contigs | "
+        disassemble_contigs += self.tool_path_obj.MetaGeneMark + " -o " + mgm_report + " "
+        disassemble_contigs += "-D " + post_mgm_contig + " "
+        disassemble_contigs += "-m " + self.tool_path_obj.mgm_model + " "
+        disassemble_contigs += os.path.join(dep_loc, "contigs.fasta")
+        
+        remove_whitespace = ">&2 echo Removing whitespace from fasta | " 
+        remove_whitespace += self.tool_path_obj.remove_gaps_in_fasta + " "
+        remove_whitespace += post_mgm_contig + " "
+        remove_whitespace += final_contigs
+        
+        COMMANDS_disassemble_contigs = [
+            disassemble_contigs,
+            remove_whitespace
+        ]
+
+
+
     def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
         # meant to be called multiple times: section -> contigs, singletons, pair_1, pair_2
         subfolder       = os.path.join(self.Output_Path, stage_name)

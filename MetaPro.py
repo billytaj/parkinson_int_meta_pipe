@@ -151,6 +151,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     rRNA_filter_start       = rRNA_filter_end       = cleanup_rRNA_filter_start         = cleanup_rRNA_filter_end       = 0
     repop_start             = repop_end             = cleanup_repop_start               = cleanup_repop_end             = 0
     assemble_contigs_start  = assemble_contigs_end  = cleanup_assemble_contigs_start    = cleanup_assemble_contigs_end  = 0
+    destroy_contigs_start   = destroy_contigs_end   = cleanup_destroy_contigs_start     = cleanup_destroy_contigs_end   = 0
     GA_BWA_start            = GA_BWA_end            = cleanup_GA_BWA_start              = cleanup_GA_BWA_end            = 0
     GA_BLAT_start           = GA_BLAT_end           = cleanup_GA_BLAT_start             = cleanup_GA_BLAT_end           = 0
     GA_DIAMOND_start        = GA_DIAMOND_end        = cleanup_GA_DIAMOND_start          = cleanup_GA_DIAMOND_end        = 0
@@ -168,6 +169,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     rRNA_filter_label = "rRNA_filter"
     repop_job_label = "duplicate_repopulation"
     assemble_contigs_label = "assemble_contigs"
+    destroy_contigs_label = "destroy_contigs"
     gene_annotation_BWA_label = "gene_annotation_BWA"
     gene_annotation_BLAT_label = "gene_annotation_BLAT"
     gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
@@ -412,11 +414,37 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
     print("assemble contigs cleanup:", '%1.1f' % (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start), "s")
     
+    #--------------------------------------------------------------
+    # Destroy contigs
+    destroy_contigs_start = time.time()
+    destroy_contigs_path = os.path.join(output_folder_path, destroy_contigs_label)
+    if not(check_where_resume(destroy_contigs_path, None, assemble_contigs_path)):
+        process = mp.Process(
+            target = commands.create_and_launch, 
+            args = (
+                destroy_contigs_label,
+                commands.create_destroy_contigs_command(destroy_contigs_label, assemble_contigs_label),
+                True
+            )
+        )
+        process.start
+        process.join()
+        cleanup_destroy_contigs_start = time.time()
+        if(verbose_mode == "quiet"):
+            delete_folder(destroy_contigs_path)
+        elif(verbose_mode == "compress"):
+            compress_folder(destroy_contigs_path)
+            delete_folder(destroy_contigs_path)
+        cleanup_destroy_contigs_end = time.time()
+    destroy_contigs_end = time.time()
+    print("assemble contigs:", '%1.1f' % (destroy_contigs_end - destroy_contigs_start - (cleanup_destroy_contigs_end - cleanup_destroy_contigs_start)), "s")    
+    print("assemble contigs cleanup:", '%1.1f' % (cleanup_destroy_contigs_end - cleanup_destroy_contigs_start), "s")
+    
     # ----------------------------------------------
     # BWA gene annotation
     GA_BWA_start = time.time()
     gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
-    if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
+    if not check_where_resume(gene_annotation_BWA_path, None, destroy_contigs_path):
 
         sections = ["contigs", "singletons"]
         if read_mode == "paired":

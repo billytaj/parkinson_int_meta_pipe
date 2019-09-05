@@ -41,6 +41,8 @@ class tool_path_obj:
             self.WEVOTEDB           = config["Databases"]["WEVOTEDB"]           if config["Databases"]["WEVOTEDB"]          or config["Databases"]["WEVOTEDB"]          == "" else os.path.join(database_path, "WEVOTE_db/")
             self.EC_pathway         = config["Databases"]["EC_pathway"]         if config["Databases"]["EC_pathway"]        or config["Databases"]["EC_pathway"]        == "" else os.path.join(database_path, "EC_pathway.txt")
             self.path_to_superpath  = config["Databases"]["path_to_superpath"]  if config["Databases"]["path_to_superpath"] or config["Databases"]["path_to_superpath"] == "" else os.path.join(custom_database_path, "pathway_to_superpathway.csv")
+            self.mgm_model          = config["Databases"]["MetaGeneMark_model"] if config["Databases"]["MetaGeneMark_model"]or config["Databases"]["MetaGeneMark_model"]== "" else os.path.join(tool_path, "mgm/MetaGeneMark_v1.mod")
+            
         else:
             self.UniVec_Core        = os.path.join(database_path,           "univec_core/UniVec_Core.fasta")
             self.Adapter            = os.path.join(database_path,           "Trimmomatic_adapters/TruSeq3-PE-2.fa")
@@ -62,6 +64,7 @@ class tool_path_obj:
             self.WEVOTEDB           = os.path.join(database_path,           "WEVOTE_db/")
             self.EC_pathway         = os.path.join(custom_database_path,    "EC_pathway.txt")
             self.path_to_superpath  = os.path.join(custom_database_path,    "pathway_to_superpathway.csv")
+            self.mgm_model          = os.path.join(tool_path,               "mgm/MetaGeneMark_v1.mod")
             
         #----------------------------------------------------------
         # external tools
@@ -91,6 +94,7 @@ class tool_path_obj:
             self.BLAST_dir      = config["Tools"]["BLAST_dir"]      if config["Tools"]["BLAST_dir"]         or config["Tools"]["BLAST_dir"]         == "" else os.path.join(tool_path, "BLAST_p")
             self.WEVOTE         = config["Tools"]["WEVOTE"]         if config["Tools"]["WEVOTE"]            or config["Tools"]["WEVOTE"]            == "" else os.path.join(tool_path, "WEVOTE/WEVOTE")
             self.Spades         = config["Tools"]["Spades"]         if config["Tools"]["Spades"]            or config["Tools"]["Spades"]            == "" else os.path.join(tool_path, "SPAdes/bin/spades.py")
+            self.MetaGeneMark   = config["Tools"]["MetaGeneMark"]   if config["Tools"]["MetaGeneMark"]      or config["Tools"]["MetaGeneMark"]      == "" else os.path.join(tool_path, "mgm/gmhmmp")
         else:
             self.Python         = "python3"
             self.Java           = "java -jar"
@@ -116,6 +120,7 @@ class tool_path_obj:
             self.BLAST_dir      = os.path.join(tool_path, "BLAST_p")
             self.WEVOTE         = os.path.join(tool_path, "WEVOTE/WEVOTE")
             self.Spades         = os.path.join(tool_path, "SPAdes/bin/spades.py")
+            self.MetaGeneMark   = os.path.join(tool_path, "mgm/gmhmmp")
             
         #--------------------------------------------
         # Python scripts
@@ -146,6 +151,7 @@ class tool_path_obj:
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
         self.ec_heatmap                 = os.path.join(script_path, "output_EC_metrics.py")
         self.data_change_metrics        = os.path.join(script_path, "output_data_change_metrics.py")
+        self.remove_gaps_in_fasta       = os.path.join(script_path, "remove_gaps_in_fasta.py")
         
         #--------------------------------------------------
         # miscellaneous values
