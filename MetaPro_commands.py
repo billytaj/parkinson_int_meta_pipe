@@ -1237,7 +1237,7 @@ class mt_pipe_commands:
         disassemble_contigs += os.path.join(spades_folder, "contigs.fasta")
         
         remove_whitespace = ">&2 echo Removing whitespace from fasta | " 
-        remove_whitespace += self.tool_path_obj.remove_gaps_in_fasta + " "
+        remove_whitespace += self.tool_path_obj.Python + " " + self.tool_path_obj.remove_gaps_in_fasta + " "
         remove_whitespace += post_mgm_contig + " "
         remove_whitespace += final_contigs
         
