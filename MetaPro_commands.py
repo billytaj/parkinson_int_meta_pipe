@@ -1242,8 +1242,7 @@ class mt_pipe_commands:
         remove_whitespace += final_contigs
         
 
-        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + os.path.join(spades_folder, "contigs.fasta")
-
+        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + final_contigs
         # Build a report of what was consumed by contig transmutation (assemble/disassemble)
         bwa_pair_1_contigs = ">&2 echo BWA pair contigs | "
         bwa_pair_1_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
