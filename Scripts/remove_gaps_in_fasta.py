@@ -12,7 +12,7 @@ if __name__ == "__main__":
         for line in fasta:
             if(line.strip()):
                 if(line != "\n"):
-                    fasta_store.append(line)
+                    fasta_store.append(line.strip("\t"))  #the name seems to apply a tab.  we want the whole split-contig to be its split + original contig name
         
     with open(fasta_out, "w") as file_out:
         for line in fasta_store:

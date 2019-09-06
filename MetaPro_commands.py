@@ -1307,7 +1307,7 @@ class mt_pipe_commands:
         copy_singletons += "cp " + os.path.join(mapped_reads_folder, "singletons.fastq") + " " + final_folder
 
         copy_contigs = ">&2 echo Copying contigs to final folder | "
-        copy_contigs += "cp " + os.path.join(spades_folder, "contigs.fasta") + " " + final_folder
+        copy_contigs += "cp " + final_contigs + " " + final_folder
 
         singleton_assembly_filter = ">&2 echo filtering paired reads for singletons | "
         singleton_assembly_filter += self.tool_path_obj.Python + " "
