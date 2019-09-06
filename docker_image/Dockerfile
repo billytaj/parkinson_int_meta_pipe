@@ -167,6 +167,39 @@ WORKDIR /pipeline_tools
 RUN rm -r WEVOTE-master
 
 
+
+#post-build annoyances with java
+## JAVA INSTALLATION
+RUN apt-get install -y openjdk-8-jre && apt-get install -y openjdk-8-jdk
+
+
+#--------------------------------------------
+# Install PRIAM
+WORKDIR /pipeline_tools
+RUN mkdir PRIAM_search && wget http://priam.prabi.fr/utilities/PRIAM_search.jar && mv PRIAM_search.jar PRIAM_search
+
+
+#------------------------------------
+# Install BLAST+
+RUN apt-get install -y libidn11-dev && wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz && mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.1+
+
+
+
+#RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+-src/c++/* BLAST_p && rm -r ncbi-blast-2.7.1+-src
+#WORKDIR BLAST_p
+#RUN ./configure --without-boost && make 
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+RUN apt-get autoclean && apt-get autoremove && apt-get clean && apt-get install -y python3 && apt-get install -y python3-pip
+
+RUN pip3 install biopython && pip3 install pandas  && pip3 install matplotlib && pip3 install seaborn && pip3 install pillow && pip3 install psutil
+
+#-----------------------------------
+# Add MetaGeneMark
+WORKDIR /pipeline_tools
+ADD https://github.com/billytaj/parkinson_int_meta_pipe/blob/develop/mgm/MetaGeneMark_linux_64.tar.gz?raw=true /pipeline_tools
+RUN mkdir mgm && mv MetaGeneMark_linux_64.tar.gz MetaGeneMark.tar && tar -xvf MetaGeneMark.tar && mv MetaGeneMark_linux_64/mgm/* /pipeline_tools/mgm && chmod 755 /pipeline_tools/mgm/gmhmmp
+
 #-------------------------------------------
 # add the pipeline code -> prototype form.  need to make it pull from a single location in github for all time (maybe something like "latest" or something)
 WORKDIR /pipeline
@@ -220,37 +253,6 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 
 RUN chmod -R 555 /pipeline
 
-#post-build annoyances with java
-## JAVA INSTALLATION
-RUN apt-get install -y openjdk-8-jre && apt-get install -y openjdk-8-jdk
-
-
-#--------------------------------------------
-# Install PRIAM
-WORKDIR /pipeline_tools
-RUN mkdir PRIAM_search && wget http://priam.prabi.fr/utilities/PRIAM_search.jar && mv PRIAM_search.jar PRIAM_search
-
-
-#------------------------------------
-# Install BLAST+
-RUN apt-get install -y libidn11-dev && wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz -O BLAST_p.tar.gz   && tar --remove-files -xzvf BLAST_p.tar.gz && rm BLAST_p.tar.gz && mkdir BLAST_p && mv ncbi-blast-2.7.1+/bin/* BLAST_p && rm -r ncbi-blast-2.7.1+
-
-
-
-#RUN mkdir BLAST_p && mv ncbi-blast-2.7.1+-src/c++/* BLAST_p && rm -r ncbi-blast-2.7.1+-src
-#WORKDIR BLAST_p
-#RUN ./configure --without-boost && make 
-
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-RUN apt-get autoclean && apt-get autoremove && apt-get clean && apt-get install -y python3 && apt-get install -y python3-pip
-
-RUN pip3 install biopython && pip3 install pandas  && pip3 install matplotlib && pip3 install seaborn && pip3 install pillow && pip3 install psutil
-
-#-----------------------------------
-# Add MetaGeneMark
-WORKDIR /pipeline_tools
-ADD https://github.com/billytaj/parkinson_int_meta_pipe/blob/develop/mgm/MetaGeneMark_linux_64.tar.gz?raw=true /pipeline_tools
-RUN mkdir mgm && mv MetaGeneMark_linux_64.tar.gz MetaGeneMark.tar && tar -xvf MetaGeneMark.tar && mv MetaGeneMark_linux_64/mgm/* /pipeline_tools/mgm && chmod 755 /pipeline_tools/mgm/gmhmmp
 
 
 WORKDIR /
