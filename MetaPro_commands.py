@@ -1021,9 +1021,9 @@ class mt_pipe_commands:
         if self.read_mode == "single":
             COMMANDS_rRNA_post = [
                 cat_singletons_mRNA,
-                cat_singletons_rRNA,
-                data_change_mRNA,
-                data_change_rRNA
+                cat_singletons_rRNA#,
+                #data_change_mRNA,
+                #data_change_rRNA
             ]
         elif self.read_mode == "paired":
             COMMANDS_rRNA_post = [
@@ -1034,9 +1034,9 @@ class mt_pipe_commands:
                 cat_pair_2_mRNA,
                 cat_pair_2_rRNA,
                 singleton_mRNA_filter,
-                singleton_rRNA_filter,
-                data_change_mRNA,
-                data_change_rRNA
+                singleton_rRNA_filter#,
+                #data_change_mRNA,
+                #data_change_rRNA
             ]
 
         return COMMANDS_rRNA_post
@@ -1839,7 +1839,7 @@ class mt_pipe_commands:
 
         return COMMANDS_DETECT
 
-    def create_EC_PRIAM_DIAMOND_command(self, current_stage_name, diamond_stage):
+    def create_EC_PRIAM_command(self, current_stage_name, diamond_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")

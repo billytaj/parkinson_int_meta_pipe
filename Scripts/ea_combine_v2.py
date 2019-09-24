@@ -4,6 +4,7 @@
 import os.path
 import sys
 from datetime import datetime as dt
+import multiprocessing as mp
 
 def create_swissprot_map(SWISS_PROT_MAP):
     mapping_dict = {}
@@ -55,7 +56,7 @@ def filter_and_export_diamond_predictions(diamond_file, diamond_ECs):
                         ecout.write("\t".join([line_as_list[0], EC + "\n"]))
 
 
-def import_detect_ec(detect_fbeta_file):
+def import_detect_ec(detect_fbeta_file, gene_ec_dict):
     #DETECT-2's fbeta file gets left as-is.
     gene_ec_dict = dict()
     with open(detect_fbeta_file, "r") as detect_fbeta:
@@ -70,24 +71,35 @@ def import_detect_ec(detect_fbeta_file):
                     gene_ec_dict[key].append(EC_val)
                 else:
                     gene_ec_dict[key] = [EC_val]
-    return gene_ec_dict
+    #return gene_ec_dict
     
-def import_priam_ec(priam_sequence_ec):
+def import_priam_ec(priam_sequence_ec, gene_ec_dict):
     gene_ec_dict = dict():
     query_name = "None"
+    ec_list = []
     with open(priam_sequence_ec, "r") as priam_ec:
         for line in priam_ec:
             if(line.startswith(">")):
-                query_name = line
+                #new line
+                if(len(ec_list) > 0):
+                    if(query_name is "None"):
+                        print(dt.today(), "This shouldn't happen.  full EC list.  no query")
+                    else:
+                        gene_ec_dict[query_name] = ec_list
+                query_name = line.strip(">")
             else:
                 if not(line.startswith("#")):
                     list_line = line.split("\t")
                     ec = list_line[0]
-                    probability = list_line[1]
+                    probability = float(list_line[1])
+                    if(probability >= 0.5):
+                        ec_list.append(ec)
+                        
             if(query_name is "None"):
                 print(dt.today(), "This shouldn't be happening.  a line was skipped")
-            
-def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict):
+    #return gene_ec_dict
+    
+def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_ec_dict):
     gene_ec_dict = dict()
     with open(diamond_proteins_blastout, "r") as diamond_ec:
         for item in diamond_ec:
@@ -95,9 +107,34 @@ def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict):
             list_line = item.split("\t")
             query_name = list_line[0]
             swissprot_name = list_line[1]
-            e_value = list_line[6]
-            bitscore = list_line[7]
-            identity_score = list_line[10]
+            query_start = int(list_line[2])
+            query_end = int(list_line[3])
+            query_length = query_end - query_start
+            bitscore = int(list_line[7])
+            coverage_percent = float(list_line[8])
+            identity_percent = float(list_line[10])
+            
+            if(query_length >= 100):
+                if(bitscore >= 60):
+                    #take this hit
+                    EC_value = swissprot_map_dict[swissprot_name]
+                    if(query_name in gene_ec_dict):
+                        gene_ec_dict[query_name].append(EC_val)
+                    else:
+                        gene_ec_dict[query_name] = EC_val
+            else:
+                if((identity_percent >= 85) and (coverage_percent >= 65)):
+                    #take this hit
+                    EC_value = swissprot_map_dict[swissprot_name]
+                    if(query_name in gene_ec_dict):
+                        gene_ec_dict[query_name].append(EC_val)
+                    else:
+                        gene_ec_dict[query_name] = EC_val
+        #return gene_ec_dict
+                    
+            
+            
+            
             
         
 
@@ -118,7 +155,75 @@ if __name__ == "__main__":
     priam_ECs = os.path.join(priam_dir, Input_Name + ".ECs")
     diamond_ECs = os.path.join(diamond_dir, Input_Name + ".ECs")
     
-    
+    ec_process_list = []
+    #-----------------------------------------
+    # import the EC annotations
+    manager = mp.Manager()
+    diamond_ec_manager_dict = manager.dict()
     swissprot_map_dict = create_swissprot_map(SWISS_PROT_MAP)
+    diamond_ec_process = mp.Process(
+        target = import_diamond_ec, 
+        args = (diamond_file, swissprot_map_dict, diamond_ec_manager_dict)
+    )
+    diamond_ec_process.start()
+    ec_process_list.append(diamond_ec_process)
+    
+    priam_ec_manager_dict = manager.dict()
+    priam_ec_process = mp.Process(
+        target = import_priam_ec, 
+        args = (priam_file, priam_ec_manager_dict)
+    )
+    priam_ec_process.start()
+    ec_process_list.append(priam_ec_process)
+    
+    detect_ec_manager_dict = manager.dict()
+    detect_ec_process = mp.Process(
+        target = import_detect_ec,
+        args = (detect_file, detect_ec_manager_dict)
+    )
+    detect_ec_process.start()
+    ec_process_list.append(detect_ec_process)
+    
+    for item in ec_process_list:
+        item.join()
+    ec_process_list[:] = []
+    
+    
+    diamond_ec_dict = dict(diamond_ec_manager_dict)
+    priam_ec_dict = dict(priam_ec_manager_dict)
+    detect_ec_dict = dict(detect_ec_manager_dict)
+    
+    #--------------------------------------------------
+    # merge the results
+    diamond_keys = set(diamond_ec_dict.keys())
+    priam_keys = set(priam_ec_dict.keys())
+    common_keys = diamond_keys & priam_keys
+    
+    common_dict = dict()
+    for item in common_keys:
+        inner_ec_list = []
+        for priam_ec in priam_ec_dict[item]:
+            inner_ec_list.append(priam_ec)
+        for diamond_ec in diamond_ec_dict[item]:
+            inner_ec_list.append(diamond_ec)
+        common_dict[item]= inner_ec_list
+    
+    for key in detect_ec_dict.keys():
+        if(key in common_dict):
+            for detect_ec in detect_ec_dict[key]:
+                common_dict[key].append(detect_ec)
+        else:
+            common_dict[key] = detect_ec_dict[key]
+            
+    common_dict = sorted(common_dict)        
+    #----------------------------------------------
+    #export the final ec list
+    with open(os.path.join(Output_Dir, Input_Name + ".ECs_All"), "w") as ec_out:
+    ec_out.writelines(sorted(All_preds))
+    #export the final ec list
+        
+    
+    
+    
     
     
