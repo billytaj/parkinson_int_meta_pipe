@@ -994,36 +994,36 @@ class mt_pipe_commands:
         singleton_rRNA_filter += os.path.join(final_rRNA_folder, "pair_2.fastq") + " "
         singleton_rRNA_filter += os.path.join(final_rRNA_folder, "singletons.fastq")
         
-        data_change_rRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal rRNA | "
-        data_change_rRNA += self.tool_path_obj.Python + " "
-        data_change_rRNA += self.tool_path_obj.data_change_metrics + " "
-        if(self.read_mode == "single"):
-            data_change_rRNA += os.path.join(dep_folder, "singletons.fastq") + " "
-            data_change_rRNA += os.path.join(final_rRNA_folder, "singletons.fastq") + " "
-            data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_singletons.tsv")
-        elif(self.read_mode == "paired"):
-            data_change_rRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
-            data_change_rRNA += os.path.join(final_rRNA_folder, "pair_1.fastq") + " "
-            data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_pair_1.tsv")
+        # data_change_rRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal rRNA | "
+        # data_change_rRNA += self.tool_path_obj.Python + " "
+        # data_change_rRNA += self.tool_path_obj.data_change_metrics + " "
+        # if(self.read_mode == "single"):
+            # data_change_rRNA += os.path.join(dep_folder, "singletons.fastq") + " "
+            # data_change_rRNA += os.path.join(final_rRNA_folder, "singletons.fastq") + " "
+            # data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_singletons.tsv")
+        # elif(self.read_mode == "paired"):
+            # data_change_rRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
+            # data_change_rRNA += os.path.join(final_rRNA_folder, "pair_1.fastq") + " "
+            # data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_pair_1.tsv")
         
-        data_change_mRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal mRNA | "
-        data_change_mRNA += self.tool_path_obj.Python + " "
-        data_change_mRNA += self.tool_path_obj.data_change_metrics + " "
-        if(self.read_mode == "single"):
-            data_change_mRNA += os.path.join(dep_folder, "singletons.fastq") + " "
-            data_change_mRNA += os.path.join(final_mRNA_folder, "singletons.fastq") + " "
-            data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_singletons.tsv")
-        elif(self.read_mode == "paired"):
-            data_change_mRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
-            data_change_mRNA += os.path.join(final_mRNA_folder, "pair_1.fastq") + " "
-            data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_pair_1.tsv")
+        # data_change_mRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal mRNA | "
+        # data_change_mRNA += self.tool_path_obj.Python + " "
+        # data_change_mRNA += self.tool_path_obj.data_change_metrics + " "
+        # if(self.read_mode == "single"):
+            # data_change_mRNA += os.path.join(dep_folder, "singletons.fastq") + " "
+            # data_change_mRNA += os.path.join(final_mRNA_folder, "singletons.fastq") + " "
+            # data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_singletons.tsv")
+        # elif(self.read_mode == "paired"):
+            # data_change_mRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
+            # data_change_mRNA += os.path.join(final_mRNA_folder, "pair_1.fastq") + " "
+            # data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_pair_1.tsv")
         
         if self.read_mode == "single":
             COMMANDS_rRNA_post = [
                 cat_singletons_mRNA,
                 cat_singletons_rRNA,
-                data_change_mRNA,
-                data_change_rRNA
+                #data_change_mRNA,
+                #data_change_rRNA
             ]
         elif self.read_mode == "paired":
             COMMANDS_rRNA_post = [
@@ -1035,8 +1035,8 @@ class mt_pipe_commands:
                 cat_pair_2_rRNA,
                 singleton_mRNA_filter,
                 singleton_rRNA_filter,
-                data_change_mRNA,
-                data_change_rRNA
+                #data_change_mRNA,
+                #data_change_rRNA
             ]
 
         return COMMANDS_rRNA_post
