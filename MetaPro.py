@@ -614,7 +614,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # ------------------------------------------------------
     # Detect EC annotation
-    #EC_process_list = []
+    EC_process_list = []
     
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
@@ -634,7 +634,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()
             EC_process_list.append(process)
-            process.join()
+            #process.join()
             
         #EC_DETECT_end = time.time()
         print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
