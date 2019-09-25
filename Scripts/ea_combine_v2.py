@@ -176,14 +176,21 @@ def import_gene_map(gene_map_file):
         
 
 if __name__ == "__main__":
-    detect_file     = sys.argv[0]
-    priam_file      = sys.argv[1]
-    diamond_file    = sys.argv[2]
-    SWISS_PROT      = sys.argv[3]
-    SWISS_PROT_MAP  = sys.argv[4]
-    gene_map_file   = sys.argv[5]
-    Output_file     = sys.argv[6]
+    detect_file     = sys.argv[1]
+    priam_file      = sys.argv[2]
+    diamond_file    = sys.argv[3]
+    SWISS_PROT      = sys.argv[4]
+    SWISS_PROT_MAP  = sys.argv[5]
+    gene_map_file   = sys.argv[6]
+    Output_file     = sys.argv[7]
     
+    # print(detect_file)
+    # print(priam_file)
+    # print(diamond_file)
+    # print(SWISS_PROT)
+    # print(SWISS_PROT_MAP)
+    # print(gene_map_file)
+    # print(Output_file)
     
     #Input_Name = os.path.splitext(os.path.basename(Input_File))[0]
     # detect_dir = os.path.dirname(detect_file)
