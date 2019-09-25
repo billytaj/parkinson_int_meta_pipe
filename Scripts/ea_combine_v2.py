@@ -185,7 +185,7 @@ if __name__ == "__main__":
     Output_file     = sys.argv[6]
     
     
-    Input_Name = os.path.splitext(os.path.basename(Input_File))[0]
+    #Input_Name = os.path.splitext(os.path.basename(Input_File))[0]
     # detect_dir = os.path.dirname(detect_file)
     # priam_dir = os.path.dirname(priam_file)
     # diamond_dir = os.path.dirname(diamond_file)
