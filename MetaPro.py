@@ -156,6 +156,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_BLAT_start           = GA_BLAT_end           = cleanup_GA_BLAT_start             = cleanup_GA_BLAT_end           = 0
     GA_DIAMOND_start        = GA_DIAMOND_end        = cleanup_GA_DIAMOND_start          = cleanup_GA_DIAMOND_end        = 0
     TA_start                = TA_end                = cleanup_TA_start                  = cleanup_TA_end                = 0
+    EC_start                = EC_end                                                                                    = 0
     EC_DETECT_start         = EC_DETECT_end                                                                             = 0
     EC_PRIAM_start          = EC_PRIAM_end                                                                              = 0
     EC_DIAMOND_start        = EC_DIAMOND_end                                                                            = 0
@@ -617,6 +618,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     EC_process_list = []
     
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
+    EC_start = time.time()
     #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
         EC_DETECT_start = time.time()
@@ -707,7 +709,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 compress_folder(ec_annotation_path)
                 delete_folder(ec_annotation_path)
             cleanup_EC_end = time.time()
-        
+        EC_post_end = time.time()
         
     else:
         #EC bypassed
@@ -722,9 +724,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         cleanup_EC_start = time.time()
         cleanup_EC_end = time.time()
         
-        print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+        #print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
     #EC_PRIAM_DIAMOND_end = time.time()
-    print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
+    #print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
+    print(
     print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
     
     # ------------------------------------------------------
