@@ -1940,6 +1940,11 @@ class mt_pipe_commands:
         self.make_folder(mpl_folder)
         self.make_folder(final_folder)
         
+        copy_gene_map = ">&2 echo copying gene map | "
+        copy_gene_map += "cp " + os.path.join(diamond_folder, "gene_map.tsv") + " "
+        copy_gene_map += final_folder
+        
+        
         taxa_table_generation = ">&2 echo generating taxonomy table | "
         taxa_table_generation += self.tool_path_obj.Python + " "
         taxa_table_generation += self.tool_path_obj.taxa_table + " "
@@ -2019,6 +2024,7 @@ class mt_pipe_commands:
             
     
         COMMANDS_Outputs = [
+            copy_gene_map,
             taxa_table_generation,
             network_generation,
             read_counts,
