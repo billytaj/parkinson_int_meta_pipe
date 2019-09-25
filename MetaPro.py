@@ -638,7 +638,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             EC_process_list.append(process)
             #process.join()
             
-        #EC_DETECT_end = time.time()
+        EC_DETECT_end = time.time()
         print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
         
         # --------------------------------------------------------------

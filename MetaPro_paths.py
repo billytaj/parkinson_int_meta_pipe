@@ -139,7 +139,7 @@ class tool_path_obj:
         self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA_v2.py")
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT_v2.py")
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond_v3.py")
-        self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine.py")
+        self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine_v2.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine_v2.py")
