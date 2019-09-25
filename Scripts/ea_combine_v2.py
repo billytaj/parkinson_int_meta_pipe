@@ -176,17 +176,16 @@ def import_gene_map(gene_map_file):
         
 
 if __name__ == "__main__":
-    Input_File      = sys.argv[1]
-    detect_file     = sys.argv[2]
-    priam_file      = sys.argv[3]
-    diamond_file    = sys.argv[4]
-    SWISS_PROT      = sys.argv[5]
-    SWISS_PROT_MAP  = sys.argv[6]
-    gene_map_file   = sys.argv[7]
-    Output_Dir      = sys.argv[8]
+    detect_file     = sys.argv[0]
+    priam_file      = sys.argv[1]
+    diamond_file    = sys.argv[2]
+    SWISS_PROT      = sys.argv[3]
+    SWISS_PROT_MAP  = sys.argv[4]
+    gene_map_file   = sys.argv[5]
+    Output_file     = sys.argv[6]
     
     
-    # Input_Name = os.path.splitext(os.path.basename(Input_File))[0]
+    Input_Name = os.path.splitext(os.path.basename(Input_File))[0]
     # detect_dir = os.path.dirname(detect_file)
     # priam_dir = os.path.dirname(priam_file)
     # diamond_dir = os.path.dirname(diamond_file)
@@ -285,7 +284,7 @@ if __name__ == "__main__":
     
     #----------------------------------------------
     #export the final ec list
-    with open(os.path.join(Output_Dir, Input_Name + ".ECs_All"), "w") as ec_out:
+    with open(Output_file, "w") as ec_out:
         for item in sorted(common_dict.keys()):
             
             ec_list = common_dict[item]

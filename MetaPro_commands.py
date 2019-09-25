@@ -1907,14 +1907,13 @@ class mt_pipe_commands:
         postprocess_command = ">&2 echo combining enzyme annotation output | "
         postprocess_command += self.tool_path_obj.Python + " "
         postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
-        postprocess_command += os.path.join(diamond_folder, "proteins.faa") + " "
         postprocess_command += os.path.join(detect_folder, "proteins.fbeta") + " "
         postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
         postprocess_command += os.path.join(diamond_folder, "gene_map.tsv")
-        postprocess_command += final_folder
+        postprocess_command += os.path.join(final_folder, "proteins.ECs.All")
 
         COMMANDS_EC_Postprocess = [
             #combine_detect,
