@@ -727,7 +727,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
     #EC_PRIAM_DIAMOND_end = time.time()
     #print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
-    print(
+    EC_end = time.time()
+    print("EC run:", '%1.1f' % (EC_end - EC_start), "s")
     print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
     
     # ------------------------------------------------------
