@@ -1880,7 +1880,7 @@ class mt_pipe_commands:
         diamond_ea_command += " -p " + self.Threads_str
         diamond_ea_command += " --query " + os.path.join(diamond_folder, "proteins.faa")
         diamond_ea_command += " --db " + self.tool_path_obj.SWISS_PROT
-        diamond_ea_command += " --outfmt " + "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident"
+        diamond_ea_command += " --outfmt " + "6 qseqid sseqid length qstart qend sstart send evalue bitscore qcovhsp slen pident"
         diamond_ea_command += " --out " + os.path.join(diamond_ea_folder, "proteins.blastout")
         diamond_ea_command += " --evalue 0.0000000001"
         #diamond_ea_command += " --max-target-seqs 1"
@@ -1913,6 +1913,7 @@ class mt_pipe_commands:
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
+        postprocess_command += os.path.join(diamond_folder, "gene_map.tsv")
         postprocess_command += final_folder
 
         COMMANDS_EC_Postprocess = [
