@@ -196,7 +196,7 @@ if __name__ == "__main__":
     # diamond_ECs = os.path.join(diamond_dir, Input_Name + ".ECs")
     
     
-    gene_length_dict = import_gene_map(gene
+    gene_length_dict = import_gene_map(gene_map_file)
     
     ec_process_list = []
     #-----------------------------------------
