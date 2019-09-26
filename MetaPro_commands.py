@@ -1965,6 +1965,13 @@ class mt_pipe_commands:
         network_generation += self.tool_path_obj.show_unclassified + " "
         network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
         network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
+        
+        flatten_rpkm = ">&2 echo Reformat RPKM for EC heatmap | "
+        flatten_rpkm += self.tool_path_obj.Python + " "
+        flatten_rpkm += self.tool_path_obj.reformat_rpkm + " "
+        flatten_rpkm += os.path.join(final_folder, "RPKM_table.tsv") + " "
+        flatten_rpkm += os.path.join(final_folder, "EC_heatmap_RPKM.tsv")
+        
 
         read_counts = ">&2 echo generating read count table | "
         read_counts += self.tool_path_obj.Python + " "
@@ -2015,7 +2022,7 @@ class mt_pipe_commands:
         EC_heatmap += self.tool_path_obj.Python + " "
         EC_heatmap += self.tool_path_obj.ec_heatmap + " "
         EC_heatmap += self.tool_path_obj.EC_pathway + " "
-        EC_heatmap += os.path.join(final_folder, "RPKM_table.tsv") + " "
+        EC_heatmap += os.path.join(final_folder, "EC_heatmap_RPKM.tsv") + " "
         EC_heatmap += self.tool_path_obj.path_to_superpath + " "
         EC_heatmap += final_folder
         
@@ -2025,6 +2032,7 @@ class mt_pipe_commands:
             copy_gene_map,
             taxa_table_generation,
             network_generation,
+            flatten_rpkm, 
             read_counts,
             per_read_scores,
             contig_stats,
