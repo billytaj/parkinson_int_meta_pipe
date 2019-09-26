@@ -227,13 +227,15 @@ for gene in gene2read_dict:
     #raw_count_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
     RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
     RPKM_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
-    EC_string = "0.0.0.0|"
+    EC_string = ""
     for EC in EC2genes_dict:
         if gene in EC2genes_dict[EC]:
             EC_string += EC + "|"
             #raw_count_dict[gene].append(EC)
             #RPKM_dict[gene].append(EC)
             #break
+        else:
+            EC_string = "0.0.0.0|"
     #else:
         #raw_count_dict[gene].append("0.0.0.0")
         #RPKM_dict[gene].append("0.0.0.0")

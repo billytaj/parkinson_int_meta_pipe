@@ -147,7 +147,7 @@ def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_length
                         else:
                             gene_ec_dict[query_name] = EC_val
                 else:
-                    EC_val = [0]
+                    EC_val = ["0.0.0.0"]
             else:
                 if((identity_percent >= 85) and (coverage_percent >= 65)):
                     #take this hit
