@@ -234,8 +234,7 @@ for gene in gene2read_dict:
             #raw_count_dict[gene].append(EC)
             #RPKM_dict[gene].append(EC)
             #break
-        else:
-            EC_string = "0.0.0.0|"
+       
     #else:
         #raw_count_dict[gene].append("0.0.0.0")
         #RPKM_dict[gene].append("0.0.0.0")
