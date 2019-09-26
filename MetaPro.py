@@ -106,17 +106,21 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
 
     if os.path.exists(job_path):
         file_list = os.listdir(job_path)
-        if len(file_list) > 0:
-            for item in file_list:
-                file_check_path = os.path.join(job_path, item)
-                if (os.path.getsize(file_check_path)) == 0:
-                    print("empty file detected: rerunning stage")
-                    return False
-            print("bypassing!")
-            return True
+        if(not file_check_bypass):
+            if len(file_list) > 0:
+                for item in file_list:
+                    file_check_path = os.path.join(job_path, item)
+                    if (os.path.getsize(file_check_path)) == 0:
+                        print("empty file detected: rerunning stage")
+                        return False
+                print("bypassing!")
+                return True
+            else:
+                print("no files detected: running")
+                return False
         else:
-            print("no files detected: running")
-            return False
+            print("bypassing for special reasons")
+            return True
     else:
         print("doesn't exist: running")
         return False

@@ -128,7 +128,7 @@ def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_length
             query_name = list_line[0].strip("\n")
             query_name = query_name.strip(">")
             swissprot_name = list_line[1]
-            alignment_length = list_line[2]
+            alignment_length = int(list_line[2])
             query_length = 0
             if(query_name in gene_length_dict):
                 query_length = gene_length_dict[query_name]
@@ -158,7 +158,7 @@ def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_length
                         else:
                             gene_ec_dict[query_name] = EC_val
                 else:
-                    EC_val = [0]
+                    EC_val = ["0.0.0.0"]
         #return gene_ec_dict
                     
             
@@ -210,9 +210,12 @@ if __name__ == "__main__":
     manager = mp.Manager()
     diamond_ec_manager_dict = manager.dict()
     swissprot_map_dict = create_swissprot_map(SWISS_PROT_MAP)
+    
+    for item in swissprot_map_dict:
+        print(item, swissprot_map_dict[item])
     diamond_ec_process = mp.Process(
         target = import_diamond_ec, 
-        args = (diamond_file, swissprot_map_dict, diamond_ec_manager_dict)
+        args = (diamond_file, swissprot_map_dict, gene_length_dict, diamond_ec_manager_dict)
     )
     diamond_ec_process.start()
     ec_process_list.append(diamond_ec_process)
@@ -250,12 +253,12 @@ if __name__ == "__main__":
     priam_keys = set(priam_ec_dict.keys())
     common_keys = diamond_keys & priam_keys
     
-    for item in diamond_keys:
-        print(item)
+    #for item in diamond_keys:
+    #    print(item)
         
-    print("========================")
-    for item in priam_keys:
-        print(item)
+    #print("========================")
+    #for item in priam_keys:
+    #    print(item)
     # for item in priam_keys:
         # print(item, priam_ec_dict[item])
         
@@ -272,21 +275,21 @@ if __name__ == "__main__":
         common_intersection_set = diamond_ec_set.intersection(priam_ec_set)
         
         common_dict[item]= list(common_intersection_set)
-        print("priam:", len(priam_ec_set), "diamond:", len(diamond_ec_set), "intersection:", len(common_intersection_set))
+        #print("priam:", len(priam_ec_set), "diamond:", len(diamond_ec_set), "intersection:", len(common_intersection_set))
     
     for key in detect_ec_dict.keys():
     
         
         if(key in common_dict):
             detect_ec_list = detect_ec_dict[key]
-            print("before:", len(common_dict[key]))
+            #print("before:", len(common_dict[key]))
             common_dict[key] += detect_ec_list
             common_dict[key] = list(set(common_dict[key])) #gets rid of dupes, and turns it back into a list
-            print("after:", len(common_dict[key]))
-            print("=-=========-=-=-=-=-==========")
+            #print("after:", len(common_dict[key]))
+            #print("=-=========-=-=-=-=-==========")
         else:
             common_dict[key] = detect_ec_dict[key]
-            print("new:", len(common_dict[key]))
+            #print("new:", len(common_dict[key]))
     #common_dict = sorted(common_dict)      
     
     #----------------------------------------------

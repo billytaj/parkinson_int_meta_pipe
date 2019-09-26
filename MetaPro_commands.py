@@ -1913,7 +1913,7 @@ class mt_pipe_commands:
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
         postprocess_command += os.path.join(diamond_folder, "gene_map.tsv") + " "
-        postprocess_command += os.path.join(final_folder, "proteins.ECs.All")
+        postprocess_command += os.path.join(final_folder, "proteins.ECs_All")
 
         COMMANDS_EC_Postprocess = [
             #combine_detect,
