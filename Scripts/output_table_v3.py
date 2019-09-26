@@ -210,13 +210,15 @@ with open(gene2read, "r") as infile:
 EC2genes_dict = {}
 with open(gene2EC, "r") as infile:
     for line in infile:
-        cols = line.split("\t")
-        gene = cols[0]
-        EC = cols[1].strip("\n")
-        if EC in EC2genes_dict:
-            EC2genes_dict[EC].append(gene)
-        else:
-            EC2genes_dict[EC] = [gene]
+        if(len(line) > 1):
+            cols = line.split("\t")
+            gene = cols[0]
+            EC = cols[2].strip("\n")
+            if(len(EC) > 1):
+                if EC in EC2genes_dict:
+                    EC2genes_dict[EC].append(gene)
+                else:
+                    EC2genes_dict[EC] = [gene]
 
 # Read count and RPKM Tables
 #raw_count_dict = {}
@@ -264,7 +266,7 @@ with open(RPKM, "w") as RPKM_out:
     RPKM_out.write("GeneID\tLength\tReads\tEC#\tRPKM\t" + "\t".join(str(x) for x in rank_name) + "\n")
     for entry in RPKM_dict:
         RPKM_out.write(entry + "\t" + "\t".join(str(x) for x in RPKM_dict[entry]) + "\n")
-        print("RPKM key:", entry)
+        #print("RPKM key:", entry)
     #raw_count_out.write(",".join(str(x) for x in rank_taxid))
     #RPKM_out.write(",".join(str(x) for x in rank_taxid))
     
@@ -284,6 +286,7 @@ for i in range(cs.N):
 
 Cytoscape_dict = {}
 for EC in EC2genes_dict:
+    #print("EC:", EC)
     for entry in RPKM_dict:
         #if RPKM_dict[entry][2] == EC:
         ec_list = RPKM_dict[entry][2].split("|")
@@ -313,8 +316,9 @@ for EC in EC2genes_dict:
         # Cytoscape_dict[EC].append("piechart: attributelist=\"" + ",".join(str(x) for x in rank_name) + "\" colorlist=\"" + ",".join(str(x) for x in rank_colour) + ",#000000" + "\" showlabels=false\"")
     # except:
         # pass
-        
-        
+# print("=============================================")        
+# for item in Cytoscape_dict:
+    # print(item, len(item))
         
         
 with open(cytoscape, "w") as Cytoscape_out:
