@@ -1968,7 +1968,7 @@ class mt_pipe_commands:
         
         flatten_rpkm = ">&2 echo Reformat RPKM for EC heatmap | "
         flatten_rpkm += self.tool_path_obj.Python + " "
-        flatten_rpkm += self.tool_path_obj.reformat_rpkm + " "
+        flatten_rpkm += self.tool_path_obj.format_RPKM + " "
         flatten_rpkm += os.path.join(final_folder, "RPKM_table.tsv") + " "
         flatten_rpkm += os.path.join(final_folder, "EC_heatmap_RPKM.tsv")
         
