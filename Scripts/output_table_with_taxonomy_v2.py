@@ -78,8 +78,13 @@ for gene in gene2read_dict:
     
     if(gene in gene2EC_dict):
         gene_EC_val = gene2EC_dict[gene]
+        if(gene_EC_val == ""):
+            gene_EC_val = "0.0.0.0"
+        print("gene_EC_val from list:", gene_EC_val)
+
     else:
         gene_EC_val = "0.0.0.0"
+        
     taxon2read_dict = {} 
     for read in gene2read_dict[gene][1]:
         taxon = read2taxonomy_dict[read]

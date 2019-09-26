@@ -1963,7 +1963,6 @@ class mt_pipe_commands:
         network_generation += os.path.join(ta_folder, "taxonomic_classifications.tsv") + " "
         network_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
         network_generation += self.tool_path_obj.show_unclassified + " "
-        network_generation += os.path.join(final_folder, "Count_table.tsv") + " "
         network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
         network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
 
