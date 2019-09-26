@@ -239,7 +239,8 @@ for gene in gene2read_dict:
     #else:
         #raw_count_dict[gene].append("0.0.0.0")
         #RPKM_dict[gene].append("0.0.0.0")
-        
+    if(EC_string == ""):
+        EC_string = "0.0.0.0|"
     EC_string = EC_string[:-1]
     RPKM_dict[gene].append(EC_string)    
     RPKM_dict[gene].append(len(gene2read_dict[gene][1])/RPKM_div)
