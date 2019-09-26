@@ -106,17 +106,21 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
 
     if os.path.exists(job_path):
         file_list = os.listdir(job_path)
-        if len(file_list) > 0:
-            for item in file_list:
-                file_check_path = os.path.join(job_path, item)
-                if (os.path.getsize(file_check_path)) == 0:
-                    print("empty file detected: rerunning stage")
-                    return False
-            print("bypassing!")
-            return True
+        if(not file_check_bypass):
+            if len(file_list) > 0:
+                for item in file_list:
+                    file_check_path = os.path.join(job_path, item)
+                    if (os.path.getsize(file_check_path)) == 0:
+                        print("empty file detected: rerunning stage")
+                        return False
+                print("bypassing!")
+                return True
+            else:
+                print("no files detected: running")
+                return False
         else:
-            print("no files: running")
-            return False
+            print("bypassing for special reasons")
+            return True
     else:
         print("doesn't exist: running")
         return False
@@ -156,7 +160,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_BLAT_start           = GA_BLAT_end           = cleanup_GA_BLAT_start             = cleanup_GA_BLAT_end           = 0
     GA_DIAMOND_start        = GA_DIAMOND_end        = cleanup_GA_DIAMOND_start          = cleanup_GA_DIAMOND_end        = 0
     TA_start                = TA_end                = cleanup_TA_start                  = cleanup_TA_end                = 0
-    EC_DETECT_start         = EC_DETECT_end         = EC_PRIAM_DIAMOND_start            = EC_PRIAM_DIAMOND_end          = 0
+    EC_start                = EC_end                                                                                    = 0
+    EC_DETECT_start         = EC_DETECT_end                                                                             = 0
+    EC_PRIAM_start          = EC_PRIAM_end                                                                              = 0
+    EC_DIAMOND_start        = EC_DIAMOND_end                                                                            = 0
     cleanup_EC_start        = cleanup_EC_end                                                                            = 0
     Cytoscape_start         = Cytoscape_end         = cleanup_cytoscape_start           = cleanup_cytoscape_end         = 0
     
@@ -612,10 +619,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # ------------------------------------------------------
     # Detect EC annotation
-    EC_DETECT_start = time.time()
+    EC_process_list = []
+    
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
+    EC_start = time.time()
     #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
     if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
+        EC_DETECT_start = time.time()
         ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
         if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
             inner_name = "ec_detect"
@@ -629,28 +639,60 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 )
             )
             process.start()
-            process.join()
+            EC_process_list.append(process)
+            #process.join()
             
         EC_DETECT_end = time.time()
         print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
         
         # --------------------------------------------------------------
-        # Priam and Diamond EC annotation
-        EC_PRIAM_DIAMOND_start = time.time()
-        if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-            inner_name = "ec_priam_diamond"
+        # Priam EC annotation.  Why isn't it parallel? computing restraints.  Not enough mem
+        EC_PRIAM_start = time.time()
+        
+        ec_priam_path = os.path.join(ec_annotation_path, "data", "1_priam")
+        if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = gene_annotation_DIAMOND_path):
+            inner_name = "ec_priam"
             process = mp.Process(
                 target=commands.create_and_launch,
                 args=(
                     ec_annotation_label,
-                    commands.create_EC_PRIAM_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                    commands.create_EC_PRIAM_command(ec_annotation_label, gene_annotation_DIAMOND_label),
                     True,
                     inner_name
                 )
             )
             process.start()
-            process.join()
-
+            EC_process_list.append(process)
+            #process.join()
+        EC_PRIAM_end = time.time()
+        print("EC PRIAM:", '%1.1f' % (EC_PRIAM_end - EC_PRIAM_start), "s")
+        # --------------------------------------------------------------
+        # DIAMOND EC annotation 
+        EC_DIAMOND_start = time.time()
+        ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
+        if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = gene_annotation_DIAMOND_path):
+            inner_name = "ec_diamond"
+            process = mp.Process(
+                target = commands.create_and_launch, 
+                args = (
+                    ec_annotation_label,
+                    commands.create_EC_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            EC_process_list.append(process)
+            #process.join()
+        EC_DIAMOND_end = time.time()
+        for item in EC_process_list:
+            item.join()
+        EC_process_list[:] = []
+        
+        #----------------------------------------------------------------------
+        # EC post process
+        EC_post_start = time.time()
+        if not (check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path)):
             inner_name = "ec_post"
             process = mp.Process(
                 target=commands.create_and_launch,
@@ -671,17 +713,26 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 compress_folder(ec_annotation_path)
                 delete_folder(ec_annotation_path)
             cleanup_EC_end = time.time()
+        EC_post_end = time.time()
+        
     else:
         #EC bypassed
-        EC_PRIAM_DIAMOND_start = time.time()
+        EC_PRIAM_start = time.time()
+        EC_PRIAM_end = time.time()
+        EC_DIAMOND_start = time.time()
+        EC_DIAMOND_end = time.time()
         EC_DETECT_start = time.time()
         EC_DETECT_end = time.time()
+        EC_post_start = time.time()
+        EC_post_end = time.time()
         cleanup_EC_start = time.time()
         cleanup_EC_end = time.time()
         
-        print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
-    EC_PRIAM_DIAMOND_end = time.time()
-    print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
+        #print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+    #EC_PRIAM_DIAMOND_end = time.time()
+    #print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
+    EC_end = time.time()
+    print("EC run:", '%1.1f' % (EC_end - EC_start), "s")
     print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
     
     # ------------------------------------------------------
@@ -737,9 +788,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
     print("TA:", '%1.1f' % (TA_end - TA_start - (cleanup_TA_end - cleanup_TA_start)), "s")
     print("TA cleanup:", '%1.1f' % (cleanup_TA_end - cleanup_TA_start), "s")
-    print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
-    print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
-    print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
+    print("EC:", '%1.1f' % (EC_end - EC_start), "s")
+    #print("---------------------------------------------")
+    #print("Note: EC is in cloud-mode.  ignore individual timing")
+    #print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+    #print("EC PRIAM:", '%1.1f' % (EC_PRIAM_end - EC_PRIAM_start), "s")
+    #print("EC DIAMOND:", '%1.1f' % (EC_DIAMOND_end - EC_DIAMOND_start), "s")
+    #print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
+    #print("-------------------------------------------------")
     print("Outputs:", '%1.1f' % (Cytoscape_end - Cytoscape_start - (cleanup_cytoscape_end - cleanup_cytoscape_start)), "s")
     print("Outputs cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
     

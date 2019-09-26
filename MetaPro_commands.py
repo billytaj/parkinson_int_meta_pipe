@@ -1021,7 +1021,7 @@ class mt_pipe_commands:
         if self.read_mode == "single":
             COMMANDS_rRNA_post = [
                 cat_singletons_mRNA,
-                cat_singletons_rRNA,
+                cat_singletons_rRNA#,
                 #data_change_mRNA,
                 #data_change_rRNA
             ]
@@ -1034,7 +1034,7 @@ class mt_pipe_commands:
                 cat_pair_2_mRNA,
                 cat_pair_2_rRNA,
                 singleton_mRNA_filter,
-                singleton_rRNA_filter,
+                singleton_rRNA_filter#,
                 #data_change_mRNA,
                 #data_change_rRNA
             ]
@@ -1839,15 +1839,15 @@ class mt_pipe_commands:
 
         return COMMANDS_DETECT
 
-    def create_EC_PRIAM_DIAMOND_command(self, current_stage_name, diamond_stage):
+    def create_EC_PRIAM_command(self, current_stage_name, diamond_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
-        diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
+        
 
         self.make_folder(PRIAM_folder)
-        self.make_folder(diamond_ea_folder)
+        
 
         PRIAM_command = ">&2 echo running PRIAM | "
         PRIAM_command += self.tool_path_obj.Java + " "
@@ -1860,22 +1860,37 @@ class mt_pipe_commands:
         PRIAM_command += " --bh --cc --cg --bp --bd "
         PRIAM_command += self.tool_path_obj.BLAST_dir
 
+        COMMANDS_PRIAM = [
+            PRIAM_command
+        ]
+
+        return COMMANDS_PRIAM
+        
+        
+    def create_EC_DIAMOND_command(self, current_stage_name, diamond_stage):
+        subfolder           = os.path.join(self.Output_Path, current_stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
+        
+        self.make_folder(diamond_ea_folder)
+        
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
         diamond_ea_command += self.tool_path_obj.DIAMOND + " blastp"
         diamond_ea_command += " -p " + self.Threads_str
         diamond_ea_command += " --query " + os.path.join(diamond_folder, "proteins.faa")
         diamond_ea_command += " --db " + self.tool_path_obj.SWISS_PROT
-        diamond_ea_command += " --outfmt " + "6 qseqid sseqid qstart qend sstart send evalue bitscore qcovhsp slen pident"
+        diamond_ea_command += " --outfmt " + "6 qseqid sseqid length qstart qend sstart send evalue bitscore qcovhsp slen pident"
         diamond_ea_command += " --out " + os.path.join(diamond_ea_folder, "proteins.blastout")
-        diamond_ea_command += " --evalue 0.0000000001 --max-target-seqs 1"
-
-        COMMANDS_PRIAM_DIAMOND = [
-            PRIAM_command,
+        diamond_ea_command += " --evalue 0.0000000001"
+        #diamond_ea_command += " --max-target-seqs 1"
+        
+        COMMANDS_DIAMOND_EC = [
             diamond_ea_command
         ]
-
-        return COMMANDS_PRIAM_DIAMOND
-
+        
+        return COMMANDS_DIAMOND_EC
+        
     def create_EC_postprocess_command(self, current_stage_name, diamond_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -1892,13 +1907,13 @@ class mt_pipe_commands:
         postprocess_command = ">&2 echo combining enzyme annotation output | "
         postprocess_command += self.tool_path_obj.Python + " "
         postprocess_command += self.tool_path_obj.EC_Annotation_Post + " "
-        postprocess_command += os.path.join(diamond_folder, "proteins.faa") + " "
         postprocess_command += os.path.join(detect_folder, "proteins.fbeta") + " "
         postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
-        postprocess_command += final_folder
+        postprocess_command += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        postprocess_command += os.path.join(final_folder, "proteins.ECs_All")
 
         COMMANDS_EC_Postprocess = [
             #combine_detect,
@@ -1923,6 +1938,11 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(mpl_folder)
         self.make_folder(final_folder)
+        
+        copy_gene_map = ">&2 echo copying gene map | "
+        copy_gene_map += "cp " + os.path.join(diamond_folder, "gene_map.tsv") + " "
+        copy_gene_map += final_folder
+        
         
         taxa_table_generation = ">&2 echo generating taxonomy table | "
         taxa_table_generation += self.tool_path_obj.Python + " "
@@ -2003,6 +2023,7 @@ class mt_pipe_commands:
             
     
         COMMANDS_Outputs = [
+            copy_gene_map,
             taxa_table_generation,
             network_generation,
             read_counts,
