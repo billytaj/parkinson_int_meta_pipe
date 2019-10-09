@@ -252,6 +252,9 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/c
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Setup_scripts/Download_EC_Annotated_SwissProt.py /pipeline/setup_scripts
 
 
+# get mgm license
+ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/mgm_license/gm_key /pipeline
+
 RUN chmod -R 555 /pipeline
 
 
