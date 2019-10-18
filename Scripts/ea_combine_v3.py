@@ -209,7 +209,7 @@ if __name__ == "__main__":
     SWISS_PROT_MAP  = sys.argv[5]
     gene_map_file   = sys.argv[6]
     Output_file     = sys.argv[7]
-    tester_file     = sys.argv[8]
+    #tester_file     = sys.argv[8]
     
     # priam_ec_dict = dict()
     # import_priam_ec(priam_file, priam_ec_dict)
