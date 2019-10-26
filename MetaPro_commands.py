@@ -1088,7 +1088,7 @@ class mt_pipe_commands:
         if self.read_mode == "single":
             repop_singletons_rRNA += os.path.join(singleton_path, "singletons_hq.fastq") + " "
         elif self.read_mode == "paired":
-            repop_singletons_rRNA += os.path.join(hq_path, "singletons.fastq") + " "
+            repop_singletons_rRNA += os.path.join(hq_path, "singletons_with_duplicates.fastq") + " "
         repop_singletons_rRNA += os.path.join(dep_loc, "rRNA", "singletons.fastq") + " "  # in -> rRNA filtration output
         repop_singletons_rRNA += os.path.join(cluster_path, "singletons_unique.fastq.clstr") + " "  # in -> duplicates filter output
         if self.read_mode == "single":
