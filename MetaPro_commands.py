@@ -860,38 +860,42 @@ class mt_pipe_commands:
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
 
-        convert_fastq_to_fasta = ">&2 echo converting " + category + " file to fasta | "
+        convert_fastq_to_fasta = ">&2 echo " + " converting " + category + " file to fasta | "
         convert_fastq_to_fasta += self.tool_path_obj.vsearch
         convert_fastq_to_fasta += " --fastq_filter " + fastq_seqs
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str
         convert_fastq_to_fasta += " --fastaout " + fasta_seqs
 
-        Barrnap_archaea = ">&2 echo running Barrnap on " + category + " file | "
+        Barrnap_archaea = ">&2 echo running Barrnap on " + category + " file: arc | "
         Barrnap_archaea += self.tool_path_obj.Barrnap
         Barrnap_archaea += " --quiet --reject 0.01 --kingdom " + "arc"
         Barrnap_archaea += " --threads " + self.Threads_str
         Barrnap_archaea += " " + fasta_seqs
         Barrnap_archaea += " >> " + Barrnap_out
 
-        Barrnap_bacteria = self.tool_path_obj.Barrnap
+        Barrnap_bacteria = ">&2 echo Running Barrnap on " + category + " file:  bac | "
+        Barrnap_bacteria += self.tool_path_obj.Barrnap
         Barrnap_bacteria += " --quiet --reject 0.01 --kingdom " + "bac"
         Barrnap_bacteria += " --threads " + self.Threads_str
         Barrnap_bacteria += " " + fasta_seqs
         Barrnap_bacteria += " >> " + Barrnap_out
 
-        Barrnap_eukaryote = self.tool_path_obj.Barrnap
+        Barrnap_eukaryote = ">&2 echo Running Barrnap on " + category + " file: euk | "
+        Barrnap_eukaryote += self.tool_path_obj.Barrnap
         Barrnap_eukaryote += " --quiet --reject 0.01 --kingdom " + "euk"
         Barrnap_eukaryote += " --threads " + self.Threads_str
         Barrnap_eukaryote += " " + fasta_seqs
         Barrnap_eukaryote += " >> " + Barrnap_out
 
-        Barrnap_mitochondria = self.tool_path_obj.Barrnap
+        Barrnap_mitochondria = ">&2 echo Running Barrnap on " + category + "file: mito | " 
+        Barrnap_mitochondria += self.tool_path_obj.Barrnap
         Barrnap_mitochondria += " --quiet --reject 0.01 --kingdom " + "mito"
         Barrnap_mitochondria += " --threads " + self.Threads_str
         Barrnap_mitochondria += " " + fasta_seqs
         Barrnap_mitochondria += " >> " + Barrnap_out
 
-        Barrnap_pp = self.tool_path_obj.Python + " "
+        Barrnap_pp = ">&2 echo Running Barrnap pp scripts | "
+        Barrnap_pp += self.tool_path_obj.Python + " "
         Barrnap_pp += self.tool_path_obj.barrnap_post + " "
         Barrnap_pp += Barrnap_out + " "
         Barrnap_pp += fastq_seqs + " "
@@ -899,12 +903,54 @@ class mt_pipe_commands:
         Barrnap_pp += rRNA_folder + " "
         Barrnap_pp += file_name + "_barrnap"
         
-        convert_fastq_to_fasta_barrnap = self.tool_path_obj.vsearch
+        
+
+        
+        
+        
+        COMMANDS_barrnap = [
+            convert_fastq_to_fasta,
+            Barrnap_archaea,
+            Barrnap_bacteria,
+            Barrnap_eukaryote,
+            Barrnap_mitochondria,
+            Barrnap_pp#,
+            #convert_fastq_to_fasta_barrnap#,
+            #infernal_command,
+            #rRNA_filtration
+        ]
+        return COMMANDS_barrnap
+
+    def create_rRNA_filter_infernal_command(self, stage_name, category, fastq_name, dependency_name):
+    
+        dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data", category)
+        fasta_folder        = os.path.join(data_folder, category + "_fasta")
+        fastq_folder        = os.path.join(data_folder, category + "_fastq")
+        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
+        infernal_out_folder = os.path.join(data_folder, category + "_infernal")
+        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
+        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
+        file_name           = fastq_name.split(".")[0]
+        Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
+        infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
+        
+        fastq_seqs          = os.path.join(fastq_folder, fastq_name)
+        
+        fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
+
+        self.make_folder(infernal_out_folder)
+        self.make_folder(mRNA_folder)
+        self.make_folder(rRNA_folder)
+        
+        convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta | "
+        convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
         convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fastq")
         convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
         convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, file_name + "_barrnap.fasta")
 
-        infernal_command = ">&2 echo running infernal on " + file_name + " file | "
+        infernal_command = ">&2 echo " + str(dt.today()) + " running infernal on " + file_name + " file | "
         infernal_command += self.tool_path_obj.Infernal
         infernal_command += " -o /dev/null --tblout "
         infernal_command += infernal_out
@@ -913,7 +959,8 @@ class mt_pipe_commands:
         infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += os.path.join(Barrnap_out_folder, file_name + "_barrnap.fasta")
 
-        rRNA_filtration = self.tool_path_obj.Python + " "
+        rRNA_filtration = ">&2 echo " + str(dt.today()) + "Getting the actual reads out of Infernal | "
+        rRNA_filtration += self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
         rRNA_filtration += os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fastq") + " "
@@ -921,19 +968,13 @@ class mt_pipe_commands:
         rRNA_filtration += rRNA_folder + " "
         rRNA_filtration += file_name + "_infernal"
         
-        
         COMMANDS_infernal = [
-            convert_fastq_to_fasta,
-            Barrnap_archaea,
-            Barrnap_bacteria,
-            Barrnap_eukaryote,
-            Barrnap_mitochondria,
-            Barrnap_pp,
             convert_fastq_to_fasta_barrnap,
             infernal_command,
             rRNA_filtration
         ]
         return COMMANDS_infernal
+
 
     def create_rRNA_filter_post_command(self, dependency_stage_name, stage_name):
         # rRNA filtration orphaned some reads in the pairs.  We need to refilter the singletons.
@@ -974,7 +1015,7 @@ class mt_pipe_commands:
         cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
         cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
 
-        singleton_mRNA_filter = ">&2 echo filtering mRNA for singletons | "
+        singleton_mRNA_filter = ">&2 echo " + str(dt.today()) + " filtering mRNA for singletons | "
         singleton_mRNA_filter += self.tool_path_obj.Python + " "
         singleton_mRNA_filter += self.tool_path_obj.orphaned_read_filter + " "
         singleton_mRNA_filter += os.path.join(pre_filter_mRNA_folder, "pair_1.fastq") + " "
@@ -984,7 +1025,7 @@ class mt_pipe_commands:
         singleton_mRNA_filter += os.path.join(final_mRNA_folder, "pair_2.fastq") + " "
         singleton_mRNA_filter += os.path.join(final_mRNA_folder, "singletons.fastq")
 
-        singleton_rRNA_filter = ">&2 echo filtering rRNA for singletons | "
+        singleton_rRNA_filter = ">&2 echo " + str(dt.today()) + " filtering rRNA for singletons | "
         singleton_rRNA_filter += self.tool_path_obj.Python + " "
         singleton_rRNA_filter += self.tool_path_obj.orphaned_read_filter + " "
         singleton_rRNA_filter += os.path.join(pre_filter_rRNA_folder, "pair_1.fastq") + " "
@@ -1070,7 +1111,7 @@ class mt_pipe_commands:
         self.make_folder(repop_folder)
         self.make_folder(final_folder)
 
-        repop_singletons = ">&2 echo Duplication repopulation singletons mRNA| "
+        repop_singletons = ">&2 echo " + str(dt.today()) + " Duplication repopulation singletons mRNA| "
         repop_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         if self.read_mode == "single":
             repop_singletons += os.path.join(singleton_path, "singletons_hq.fastq") + " "
@@ -1083,7 +1124,7 @@ class mt_pipe_commands:
         elif self.read_mode == "paired":
             repop_singletons += os.path.join(repop_folder, "singletons.fastq")  # out
 
-        repop_singletons_rRNA = ">&2 echo Duplication repopulations singletons rRNA | "
+        repop_singletons_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulations singletons rRNA | "
         repop_singletons_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         if self.read_mode == "single":
             repop_singletons_rRNA += os.path.join(singleton_path, "singletons_hq.fastq") + " "
@@ -1096,28 +1137,29 @@ class mt_pipe_commands:
         elif self.read_mode == "paired":
             repop_singletons_rRNA += os.path.join(repop_folder, "singletons_rRNA.fastq")  # out
 
-        repop_pair_1 = ">&2 echo Duplication repopulation pair 1 mRNA | "
+        repop_pair_1 = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 1 mRNA | "
         repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_1 += os.path.join(hq_path, "pair_1_match.fastq") + " "
         repop_pair_1 += os.path.join(dep_loc, "mRNA", "pair_1.fastq") + " "
         repop_pair_1 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1 += os.path.join(repop_folder, "pair_1.fastq")
 
-        repop_pair_1_rRNA = ">&2 echo Duplication repopulation pair 1 rRNA | "
+        repop_pair_1_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 1 rRNA | "
         repop_pair_1_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_1_rRNA += os.path.join(hq_path, "pair_1_match.fastq") + " "
         repop_pair_1_rRNA += os.path.join(dep_loc, "rRNA", "pair_1.fastq") + " "
         repop_pair_1_rRNA += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq")
 
-        repop_pair_2 = ">&2 echo Duplication repopulation pair 2 | "
+        repop_pair_2 = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
         repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_2 += os.path.join(hq_path, "pair_2_match.fastq") + " "
         repop_pair_2 += os.path.join(dep_loc, "mRNA", "pair_2.fastq") + " "
         repop_pair_2 += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
         repop_pair_2 += os.path.join(repop_folder, "pair_2.fastq")
 
-        repop_pair_2_rRNA = ">&2 echo Duplication repopulation pair 2 | "
+        repop_pair_2_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
+        repop_pair_2_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
         repop_pair_2_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_2_rRNA += os.path.join(hq_path, "pair_2_match.fastq") + " "
         repop_pair_2_rRNA += os.path.join(dep_loc, "rRNA", "pair_2.fastq") + " "

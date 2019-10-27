@@ -325,13 +325,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for section in sections:
             folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
             for item in os.listdir(folder_name):
-                inner_name = "rRNA_filter_" + item.split(".")[0]
+                inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
                	print("rRNA filter inner name:", inner_name)
                 
                 process = mp.Process(
                     target=commands.create_and_launch,
                     args=(
-                        "rRNA_filter",
+                        rRNA_filter_label,
                         commands.create_rRNA_filter_barrnap_command("rRNA_filter", section, item, vector_filter_label),
                         True,
                         inner_name
@@ -342,6 +342,25 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             for p_item in mp_store:
                 p_item.join()
             mp_store[:] = []  # clear the list    
+            
+            for item in os.listdir(folder_name):
+                inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
+               	print("rRNA filter inner name:", inner_name)
+                
+                process = mp.Process(
+                    target=commands.create_and_launch,
+                    args=(
+                        rRNA_filter_label,
+                        commands.create_rRNA_filter_infernal_command("rRNA_filter", section, item, vector_filter_label),
+                        True,
+                        inner_name
+                    )
+                )
+                mp_store.append(process)
+                process.start()
+            for p_item in mp_store:
+                p_item.join()
+            mp_store[:] = []  # clear the list
             
         
         inner_name = "rRNA_filter_post"
