@@ -44,7 +44,7 @@ class mt_pipe_commands:
         if not (os.path.exists(folder_path)):
             os.makedirs(folder_path)
 
-    def create_and_launch(self, job_name, command_list, run_job=False, inner_name=None, work_in_background=False):
+    def create_and_launch(self, job_name, command_list, run_job=False, inner_name=None):#, work_in_background=False):
         # create the pbs job, and launch items
         # job name: string tag for export file name
         # command list:  list of command statements for writing
@@ -56,28 +56,34 @@ class mt_pipe_commands:
         # no ID, no sbatch.  just run the command
 
         shell_script_full_path = os.path.join(self.Output_Path, job_name, job_name + ".sh")
+        tool_output_path = os.path.join(self.Ouput_path, job_name, job_name + "_tool_output.txt")
         if inner_name is not None:
             shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
+            tool_output_path = os.path.join(self.Ouput_path, job_name, inner_name + "_tool_output.txt")
         with open(shell_script_full_path, "w+") as PBS_script_out:
             for item in command_list:
                 PBS_script_out.write(item + "\n")
             PBS_script_out.close()
         if run_job:
-            if not work_in_background:
-                try:
-                    sp.check_output(["sh", shell_script_full_path])
-                except sp.CalledProcessError as e:
-                    return_code = e.returncode
-                    if return_code != 1:
-                        raise
-            else:
-                try:
-                    process_id = sp.Popen(["sh", shell_script_full_path])
-                    return process_id
-                except sp.CalledProcessError as e:
-                    return_code = e.returncode
-                    if return_code != 1:
-                        raise
+            #if not work_in_background:
+            output = ""
+            try:
+                output = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT)
+            except sp.CalledProcessError as e:
+                return_code = e.returncode
+                if return_code != 1:
+                    raise
+            with open(tool_output_path, "w") as tool_output:
+                for line in output:
+                    tool_output.write(line + "\n")
+            # else:
+                # try:
+                    # process_id = sp.Popen(["sh", shell_script_full_path], stderr = sp.STDOUT)
+                    # return process_id
+                # except sp.CalledProcessError as e:
+                    # return_code = e.returncode
+                    # if return_code != 1:
+                        # raise
         else:
             print("not running job.  run_job set to False")
 
