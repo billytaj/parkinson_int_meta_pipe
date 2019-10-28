@@ -322,26 +322,51 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         sections = ["singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
-        for section in sections:
+            
+            
+        for section in reversed(sections):  #we go backwards due to a request by Ana.  pairs first, if applicable, then singletons
+            barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
             folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
-            for item in os.listdir(folder_name):
-                inner_name = "rRNA_filter_" + item.split(".")[0]
-               	print("rRNA filter inner name:", inner_name)
-                
-                process = mp.Process(
-                    target=commands.create_and_launch,
-                    args=(
-                        "rRNA_filter",
-                        commands.create_rRNA_filter_barrnap_command("rRNA_filter", section, item, vector_filter_label),
-                        True,
-                        inner_name
+            if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
+                for item in os.listdir(folder_name):
+                    inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
+                    print("rRNA filter inner name:", inner_name)
+                    
+                    process = mp.Process(
+                        target=commands.create_and_launch,
+                        args=(
+                            rRNA_filter_label,
+                            commands.create_rRNA_filter_barrnap_command("rRNA_filter", section, item, vector_filter_label),
+                            True,
+                            inner_name
+                        )
                     )
-                )
-                mp_store.append(process)
-                process.start()
-            for p_item in mp_store:
-                p_item.join()
-            mp_store[:] = []  # clear the list    
+                    mp_store.append(process)
+                    process.start()
+                for p_item in mp_store:
+                    p_item.join()
+                mp_store[:] = []  # clear the list    
+                
+            infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
+            if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
+                for item in os.listdir(folder_name):
+                    inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
+                    print("rRNA filter inner name:", inner_name)
+                    
+                    process = mp.Process(
+                        target=commands.create_and_launch,
+                        args=(
+                            rRNA_filter_label,
+                            commands.create_rRNA_filter_infernal_command("rRNA_filter", section, item, vector_filter_label),
+                            True,
+                            inner_name
+                        )
+                    )
+                    mp_store.append(process)
+                    process.start()
+                for p_item in mp_store:
+                    p_item.join()
+                mp_store[:] = []  # clear the list
             
         
         inner_name = "rRNA_filter_post"

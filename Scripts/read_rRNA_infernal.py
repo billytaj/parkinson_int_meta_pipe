@@ -15,7 +15,9 @@ def extract_rRNA_ID(inf_file):
     for item in inf_list:
         if(not item.startswith("#")):
             # needs the @ at the start, for a match with the FASTQ's IDs
-            ID_list.add("@" + item.split()[0])
+            fastq_id = item.split()[2]
+            print("FASTQ ID located:", fastq_id)
+            ID_list.add("@" + fastq_id)
         elif(len(item) == 2):
             break
     #pandas can't deal with sets, but we only need unique elements        
