@@ -56,10 +56,10 @@ class mt_pipe_commands:
         # no ID, no sbatch.  just run the command
 
         shell_script_full_path = os.path.join(self.Output_Path, job_name, job_name + ".sh")
-        tool_output_path = os.path.join(self.Ouput_path, job_name, job_name + "_tool_output.txt")
+        tool_output_path = os.path.join(self.Output_Path, job_name, job_name + "_tool_output.txt")
         if inner_name is not None:
             shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
-            tool_output_path = os.path.join(self.Ouput_path, job_name, inner_name + "_tool_output.txt")
+            tool_output_path = os.path.join(self.Output_Path, job_name, inner_name + "_tool_output.txt")
         with open(shell_script_full_path, "w+") as PBS_script_out:
             for item in command_list:
                 PBS_script_out.write(item + "\n")
@@ -68,14 +68,15 @@ class mt_pipe_commands:
             #if not work_in_background:
             output = ""
             try:
-                output = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT)
+                #output = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT)
+                sp.check_output(["sh", shell_script_full_path])#, stderr = sp.STDOUT)
             except sp.CalledProcessError as e:
                 return_code = e.returncode
                 if return_code != 1:
                     raise
-            with open(tool_output_path, "w") as tool_output:
-                for line in output:
-                    tool_output.write(line + "\n")
+            #with open(tool_output_path, "w") as tool_output:
+            #    for line in output:
+            #        tool_output.write(line + "\n")
             # else:
                 # try:
                     # process_id = sp.Popen(["sh", shell_script_full_path], stderr = sp.STDOUT)

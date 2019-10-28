@@ -327,8 +327,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for section in reversed(sections):  #we go backwards due to a request by Ana.  pairs first, if applicable, then singletons
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
             folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
-            if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path)
-            
+            if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
                 for item in os.listdir(folder_name):
                     inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
                     print("rRNA filter inner name:", inner_name)
@@ -349,7 +348,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 mp_store[:] = []  # clear the list    
                 
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
-            if not(check_where_resume(job_label = None, full_path = infernal_path, dep_job_path = barrnap_path)
+            if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
                 for item in os.listdir(folder_name):
                     inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
                     print("rRNA filter inner name:", inner_name)
