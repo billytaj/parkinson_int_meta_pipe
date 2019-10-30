@@ -1971,21 +1971,28 @@ class mt_pipe_commands:
 
         return COMMANDS_EC_Postprocess
 
-    def create_output_generation_command(self, current_stage_name, quality_stage, contig_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         mpl_folder          = os.path.join(data_folder, "0_MPL")
         quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
+        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
         contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
         repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
         diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
+        data_folder         = os.path.join(subfolder, "data")
+        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
+        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(mpl_folder)
+        self.make_folder(data_folder)
+        self.make_folder(unique_hosts_folder)
+        self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
         
         copy_gene_map = ">&2 echo copying gene map | "
@@ -2021,6 +2028,64 @@ class mt_pipe_commands:
         flatten_rpkm += os.path.join(final_folder, "RPKM_table.tsv") + " "
         flatten_rpkm += os.path.join(final_folder, "EC_heatmap_RPKM.tsv")
         
+        
+        get_unique_host_reads_singletons = ">&2 echo get singleton host reads for stats | "
+        get_unique_host_reads_singletons += self.tool_path_obj.Python + " "
+        get_unique_host_reads_singletons += self.tool_path_obj.get_unique_host_reads + " "
+        get_unique_host_reads_singletons += os.path.join(host_folder, "singletons.fastq") + " "
+        get_unique_host_reads_singletons += os.path.join(quality_folder, "singletons.fastq") + " "
+        get_unique_host_reads_singletons += os.path.join(unique_hosts_folder, "singleton_hosts.fastq")
+        
+        get_unique_host_reads_pair_1 = ">&2 echo get pair 1 host reads for stats | " 
+        get_unique_host_reads_pair_1 += self.tool_path_obj.Python + " "
+        get_unique_host_reads_pair_1 += self.tool_path_obj.get_unique_host_reads + " "
+        get_unique_host_reads_pair_1 += os.path.join(host_folder, "pair_1.fastq") + " "
+        get_unique_host_reads_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " "
+        get_unique_host_reads_pair_1 += os.path.join(unique_hosts_folder, "pair_1_hosts.fastq")
+        
+        get_unique_host_reads_pair_2 = ">&2 echo get pair 2 host reads for stats | " 
+        get_unique_host_reads_pair_2 += self.tool_path_obj.Python + " "
+        get_unique_host_reads_pair_2 += self.tool_path_obj.get_unique_host_reads + " "
+        get_unique_host_reads_pair_2 += os.path.join(host_folder, "pair_2.fastq") + " "
+        get_unique_host_reads_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " "
+        get_unique_host_reads_pair_2 += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq")
+        
+        repop_singletons_hosts = ">&2 echo repopulating singletons hosts | " 
+        repop_singletons_hosts += self.tool_path_obj.Python + " "
+        repop_singletons_hosts += self.tool_path_obj.duplicate_repopulate + " "
+        if(self.read_mode == "single"):
+            repop_singletons_hosts += os.path.join(quality_folder, "singletons_hq.fastq") + " "
+        else:
+            repop_singletons_hosts += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + " "
+        repop_singletons_hosts += os.path.join(unique_hosts_folder, "singleton_hosts.fastq") + " "
+        repop_singletons_hosts += os.path.join(quality_folder, "singletons_unique.fastq.clstr") + " "
+        repop_singletons_hosts += os.path.join(full_hosts_folder, "singletons_full_hosts.fastq")
+        
+        
+        repop_pair_1_hosts = ">&2 echo repopulating pair 1 hosts | " 
+        repop_pair_1_hosts += self.tool_path_obj.Python + " "
+        repop_pair_1_hosts += self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_1_hosts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
+        repop_pair_1_hosts += os.path.join(unique_hosts_folder, "pair_1_hosts.fastq") + " "
+        repop_pair_1_hosts += os.path.join(quality_folder, "pair_1_unique.fastq.clstr") + " "
+        repop_pair_1_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq")
+        
+        repop_pair_2_hosts = ">&2 echo repopulating pair 2 hosts | " 
+        repop_pair_2_hosts += self.tool_path_obj.Python + " "
+        repop_pair_2_hosts += self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_match.fastq") + " "
+        repop_pair_2_hosts += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq") + " "
+        repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_unique.fastq.clstr") + " "
+        repop_pair_2_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq")
+        
+        combine_hosts = ">&2 echo combining hosts | " 
+        combine_hosts += "cat" + " "
+        combine_hosts += os.path.join(full_hosts_folder, "singletons_full_hosts.fastq") + " "
+        if(self.read_mode == "paired"):
+            combine_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq") + " "
+            combine_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq") + " "
+        combine_hosts += ">" + " "
+        combine_hosts += os.path.join(full_hosts_folder, "combined_hosts.fastq")
 
         read_counts = ">&2 echo generating read count table | "
         read_counts += self.tool_path_obj.Python + " "
@@ -2040,6 +2105,7 @@ class mt_pipe_commands:
             read_counts += os.path.join(repopulation_folder, "pair_1.fastq") + " "
         read_counts += os.path.join(diamond_folder, "gene_map.tsv") + " "
         read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
+        read_counts += os.path.join(full_hosts_folder, "combined_hosts.fastq") + " "
         read_counts += os.path.join(final_folder, "read_count.tsv")
         
         
@@ -2075,18 +2141,39 @@ class mt_pipe_commands:
         EC_heatmap += self.tool_path_obj.path_to_superpath + " "
         EC_heatmap += final_folder
         
-            
     
-        COMMANDS_Outputs = [
-            copy_gene_map,
-            taxa_table_generation,
-            network_generation,
-            flatten_rpkm, 
-            read_counts,
-            per_read_scores,
-            contig_stats,
-            EC_heatmap
-        ]
+        if(self.read_mode == "single"):
+            COMMANDS_Outputs = [
+                copy_gene_map,
+                taxa_table_generation,
+                network_generation,
+                flatten_rpkm, 
+                get_unique_host_reads_singletons,
+                repop_singletons_hosts,
+                combine_hosts,
+                read_counts,
+                per_read_scores,
+                contig_stats,
+                EC_heatmap
+            ]
+        else:
+            COMMANDS_Outputs = [
+                copy_gene_map,
+                taxa_table_generation,
+                network_generation,
+                flatten_rpkm, 
+                get_unique_host_reads_singletons,
+                get_unique_host_reads_pair_1,
+                get_unique_host_reads_pair_2,
+                repop_singletons_hosts,
+                repop_pair_1_hosts,
+                repop_pair_2_hosts,
+                combine_hosts,
+                read_counts,
+                per_read_scores,
+                contig_stats,
+                EC_heatmap
+            ]
        
         
         return COMMANDS_Outputs

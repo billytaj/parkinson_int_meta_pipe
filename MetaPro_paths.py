@@ -152,6 +152,7 @@ class tool_path_obj:
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
         self.ec_heatmap                 = os.path.join(script_path, "output_EC_metrics.py")
         self.data_change_metrics        = os.path.join(script_path, "output_data_change_metrics.py")
+        self.get_unique_host_reads      = os.path.join(script_path, "output_get_host_reads.py")
         self.remove_gaps_in_fasta       = os.path.join(script_path, "remove_gaps_in_fasta.py")
         
         #--------------------------------------------------

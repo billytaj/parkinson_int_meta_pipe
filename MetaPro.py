@@ -769,7 +769,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             target=commands.create_and_launch,
             args=(
                 output_label,
-                commands.create_output_generation_command(output_label, quality_filter_label, assemble_contigs_label, repop_job_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label),
+                commands.create_output_generation_command(output_label, quality_filter_label, host_filter_label, 
+                assemble_contigs_label, repop_job_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label), 
                 True
             )
         )
