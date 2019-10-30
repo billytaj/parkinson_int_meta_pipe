@@ -2082,8 +2082,9 @@ class mt_pipe_commands:
         combine_hosts = ">&2 echo combining hosts | " 
         combine_hosts += "cat" + " "
         combine_hosts += os.path.join(full_hosts_folder, "singletons_full_hosts.fastq") + " "
-        combine_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq") + " "
-        combine_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq") + " "
+        if(self.read_mode == "paired"):
+            combine_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq") + " "
+            combine_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq") + " "
         combine_hosts += ">" + " "
         combine_hosts += os.path.join(full_hosts_folder, "combined_hosts.fastq")
 
@@ -2105,6 +2106,7 @@ class mt_pipe_commands:
             read_counts += os.path.join(repopulation_folder, "pair_1.fastq") + " "
         read_counts += os.path.join(diamond_folder, "gene_map.tsv") + " "
         read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
+        read_counts += os.path.join(full_hosts_folder, "combined_hosts.fastq") + " "
         read_counts += os.path.join(final_folder, "read_count.tsv")
         
         
@@ -2140,18 +2142,39 @@ class mt_pipe_commands:
         EC_heatmap += self.tool_path_obj.path_to_superpath + " "
         EC_heatmap += final_folder
         
-            
     
-        COMMANDS_Outputs = [
-            copy_gene_map,
-            taxa_table_generation,
-            network_generation,
-            flatten_rpkm, 
-            read_counts,
-            per_read_scores,
-            contig_stats,
-            EC_heatmap
-        ]
+        if(self.read_mode == "single"):
+            COMMANDS_Outputs = [
+                copy_gene_map,
+                taxa_table_generation,
+                network_generation,
+                flatten_rpkm, 
+                get_unique_host_reads_singletons,
+                repop_singletons_hosts,
+                combine_hosts,
+                read_counts,
+                per_read_scores,
+                contig_stats,
+                EC_heatmap
+            ]
+        else:
+            COMMANDS_Outputs = [
+                copy_gene_map,
+                taxa_table_generation,
+                network_generation,
+                flatten_rpkm, 
+                get_unique_host_reads_singletons,
+                get_unique_host_reads_pair_1,
+                get_unique_host_reads_pair_2,
+                repop_singletons_hosts,
+                repop_pair_1_hosts,
+                repop_pair_2_hosts,
+                combine_hosts,
+                read_counts,
+                per_read_scores,
+                contig_stats,
+                EC_heatmap
+            ]
        
         
         return COMMANDS_Outputs
