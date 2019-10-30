@@ -1,6 +1,7 @@
 #this code just makes the final stats reports
 #not much logic here
 import sys
+import pandas as pd
 
 def fastq_count(fastq):
     lines = 0
@@ -23,13 +24,15 @@ def annotated_count(map):
 
     return annotated_mRNA, genes
 
+#format's changed.  this needs changing too
 def ec_count(map):
     ecs = set()
     with open(map, "r") as infile:
         for line in infile:
-            ecs.add(line.split("\t")[1].strip())
+            ecs.add(line.split("\t")[2].strip())
 
     return len(ecs)
+
 
 
 
