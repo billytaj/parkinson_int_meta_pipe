@@ -1983,8 +1983,8 @@ class mt_pipe_commands:
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "0_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "1_full_hosts")
+        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
+        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
@@ -2031,21 +2031,21 @@ class mt_pipe_commands:
         
         get_unique_host_reads_singletons = ">&2 echo get singleton host reads for stats | "
         get_unique_host_reads_singletons += self.tool_path_obj.Python + " "
-        get_unique_host_reads_singletons += self.tool_path_obj.get_host_reads + " "
+        get_unique_host_reads_singletons += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_host_reads_singletons += os.path.join(host_folder, "singletons.fastq") + " "
         get_unique_host_reads_singletons += os.path.join(quality_folder, "singletons.fastq") + " "
         get_unique_host_reads_singletons += os.path.join(unique_hosts_folder, "singleton_hosts.fastq")
         
         get_unique_host_reads_pair_1 = ">&2 echo get pair 1 host reads for stats | " 
         get_unique_host_reads_pair_1 += self.tool_path_obj.Python + " "
-        get_unique_host_reads_pair_1 += self.tool_path_obj.get_host_reads + " "
+        get_unique_host_reads_pair_1 += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_host_reads_pair_1 += os.path.join(host_folder, "pair_1.fastq") + " "
         get_unique_host_reads_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " "
         get_unique_host_reads_pair_1 += os.path.join(unique_hosts_folder, "pair_1_hosts.fastq")
         
         get_unique_host_reads_pair_2 = ">&2 echo get pair 2 host reads for stats | " 
         get_unique_host_reads_pair_2 += self.tool_path_obj.Python + " "
-        get_unique_host_reads_pair_2 += self.tool_path_obj.get_host_reads + " "
+        get_unique_host_reads_pair_2 += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_host_reads_pair_2 += os.path.join(host_folder, "pair_2.fastq") + " "
         get_unique_host_reads_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " "
         get_unique_host_reads_pair_2 += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq")
