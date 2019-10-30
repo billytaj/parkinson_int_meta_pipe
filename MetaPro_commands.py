@@ -1972,7 +1972,6 @@ class mt_pipe_commands:
         return COMMANDS_EC_Postprocess
 
     def create_output_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
-    def create_output_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         mpl_folder          = os.path.join(data_folder, "0_MPL")
