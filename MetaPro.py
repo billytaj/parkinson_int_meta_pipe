@@ -330,20 +330,21 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for section in reversed(sections):  #we go backwards due to a request by Ana.  pairs first, if applicable, then singletons
             #split the data, if necessary.
             split_path = os.path.join(rRNA_filter_path, "data", section, section + "_fastq")
-            if not check_where_resume(job_path = None, full_path = split_path, dep_job_label = vector_path):
-                print(dt.today(), "splitting:", category, " for rRNA filtration")
-                inner_name = "rRNA_filter_prep_" + category
+            if not check_where_resume(job_label = None, full_path = split_path, dep_job_path = vector_path):
+                print(dt.today(), "splitting:", section, " for rRNA filtration")
+                inner_name = "rRNA_filter_prep_" + section
                 process = mp.Process(
                     target = commands.create_and_launch,
                     args = (
                         rRNA_filter_label,
-                        commands.create_rRNA_filter_prep_command_v2(rRNA_filter_label, category, vector_filter_label),
+                        commands.create_rRNA_filter_prep_command_v2(rRNA_filter_label, section, vector_filter_label),
                         True,
                         inner_name
                     )
                 )
         
-        
+                process.start()
+                process.join()
         
         
         

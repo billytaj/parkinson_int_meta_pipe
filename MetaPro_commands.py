@@ -853,11 +853,13 @@ class mt_pipe_commands:
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
         split_fastq += "--additional-suffix .fastq" + " "
         split_fastq += "-d" + " "
-        split_fastq += category + "_" + " "
+        split_fastq += os.path.join(split_folder, category + "_")
         
         COMMANDS_rRNA_prep = [
             split_fastq
         ]
+        
+        return COMMANDS_rRNA_prep
     
     def create_rRNA_filter_barrnap_command(self, stage_name, category, fastq_name, dependency_name):
         # converts the fastq segments to fasta for infernal,
