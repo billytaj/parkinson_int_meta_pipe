@@ -788,54 +788,77 @@ class mt_pipe_commands:
 
         return COMMANDS_vector
 
-    def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name, operating_mode = "single"):
-        # split data into mRNA and rRNA so we can focus on the mRNA for the remainder of the analysis steps
+    #oct 31, 2019: dep'd function.  we now split on constant chunksize, not constant chunks
+    # def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name, operating_mode = "single"):
+        # # split data into mRNA and rRNA so we can focus on the mRNA for the remainder of the analysis steps
+        # dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
+        # subfolder               = os.path.join(self.Output_Path, stage_name)
+        # data_folder             = os.path.join(subfolder, "data")
+        # singleton_split_folder  = os.path.join(data_folder, "singletons", "singletons_fastq")
+        
+        # self.make_folder(subfolder)
+        # self.make_folder(data_folder)
+        # self.make_folder(singleton_split_folder)
+                
+        # file_splitter_singletons = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+        # file_splitter_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
+        # file_splitter_singletons += os.path.join(singleton_split_folder, "singletons") + " "
+        # file_splitter_singletons += str(file_split_count)
+        
+        # file_splitter_pair_1 = None
+        # file_splitter_pair_2 = None
+        
+        # if(operating_mode == "paired"):
+            # pair_1_split_folder     = os.path.join(data_folder, "pair_1", "pair_1_fastq")
+            # pair_2_split_folder     = os.path.join(data_folder, "pair_2", "pair_2_fastq")
+            # self.make_folder(pair_1_split_folder)
+            # self.make_folder(pair_2_split_folder)        
+
+            # file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+            # file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
+            # file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
+            # file_splitter_pair_1 += str(file_split_count)
+
+            # file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
+            # file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
+            # file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
+            # file_splitter_pair_2 += str(file_split_count)
+            
+        # if self.read_mode == "single":
+            # COMMANDS_rRNA_prep = [
+                # file_splitter_singletons
+            # ]
+        # elif self.read_mode == "paired":
+            # COMMANDS_rRNA_prep = [
+                # file_splitter_singletons,
+                # file_splitter_pair_1,
+                # file_splitter_pair_2
+            # ]
+        # #print(dt.today(), COMMANDS_rRNA_prep)
+        # return COMMANDS_rRNA_prep
+        
+    def create_rRNA_filter_prep_command_v2(self, stage_name, category, dependency_name):
         dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
-        singleton_split_folder  = os.path.join(data_folder, "singletons", "singletons_fastq")
+        split_folder  = os.path.join(data_folder, category, category + "_fastq")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(singleton_split_folder)
-                
-        file_splitter_singletons = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        file_splitter_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
-        file_splitter_singletons += os.path.join(singleton_split_folder, "singletons") + " "
-        file_splitter_singletons += str(file_split_count)
+        self.make_folder(split_folder)
+        #arbitrary limit of 80000 lines  Infernal has an upper bound on what it can handle.  it's not 100k
         
-        file_splitter_pair_1 = None
-        file_splitter_pair_2 = None
+        split_fastq = ">&2 echo splitting fastq for " + category " | "
+        split_fastq += "split -l 80000" + " "        
+        split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
+        split_fastq += "--additional-suffix .fastq" + " "
+        split_fastq += "-d" + " "
+        split_fastq += category + "_" + " "
         
-        if(operating_mode == "paired"):
-            pair_1_split_folder     = os.path.join(data_folder, "pair_1", "pair_1_fastq")
-            pair_2_split_folder     = os.path.join(data_folder, "pair_2", "pair_2_fastq")
-            self.make_folder(pair_1_split_folder)
-            self.make_folder(pair_2_split_folder)        
-
-            file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-            file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
-            file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
-            file_splitter_pair_1 += str(file_split_count)
-
-            file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-            file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
-            file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
-            file_splitter_pair_2 += str(file_split_count)
-            
-        if self.read_mode == "single":
-            COMMANDS_rRNA_prep = [
-                file_splitter_singletons
-            ]
-        elif self.read_mode == "paired":
-            COMMANDS_rRNA_prep = [
-                file_splitter_singletons,
-                file_splitter_pair_1,
-                file_splitter_pair_2
-            ]
-        #print(dt.today(), COMMANDS_rRNA_prep)
-        return COMMANDS_rRNA_prep
-
+        COMMANDS_rRNA_prep = [
+            split_fastq
+        ]
+    
     def create_rRNA_filter_barrnap_command(self, stage_name, category, fastq_name, dependency_name):
         # converts the fastq segments to fasta for infernal,
         # then takes the fasta segments, filters out the rRNA
@@ -951,7 +974,7 @@ class mt_pipe_commands:
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
         
-        convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta | "
+        convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + category + " | "
         convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
         convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fastq")
         convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
@@ -961,12 +984,13 @@ class mt_pipe_commands:
         infernal_command += self.tool_path_obj.Infernal
         infernal_command += " -o /dev/null --tblout "
         infernal_command += infernal_out
-        infernal_command += " --cpu " + self.Threads_str
+        #infernal_command += " --cpu " + self.Threads_str -> lined nerf'd because infernal's parallelism is not good
+        infernal_command += " --cpu 1"
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += os.path.join(Barrnap_out_folder, file_name + "_barrnap.fasta")
 
-        rRNA_filtration = ">&2 echo " + str(dt.today()) + "Getting the actual reads out of Infernal | "
+        rRNA_filtration = ">&2 echo " + str(dt.today()) + " Getting the actual reads out of Infernal: " + category + " | "
         rRNA_filtration += self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "

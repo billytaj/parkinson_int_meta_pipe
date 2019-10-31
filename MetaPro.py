@@ -303,21 +303,24 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
     if not check_where_resume(rRNA_filter_path, None, vector_path):
     
-        #split the data
-        print(dt.today(), "splitting files")
-        inner_name = "rRNA_filter_prep"
-        process = mp.Process(
-            target = commands.create_and_launch,
-            args=(
-                "rRNA_filter",
-                commands.create_rRNA_filter_prep_command(rRNA_filter_label, int(mp.cpu_count()/2), vector_filter_label, read_mode),
-                True,
-                inner_name
-            )
-        )
-        process.start()
-        process.join()
-        print(dt.today(), "done splitting files")
+        # split_path = os.path.join(rRNA_filter_path, "data", "singletons", "singletons_fastq")
+        # #split the data:  We're only checking the singletons data.  If it's run, it'll be singletons.
+        # if not check_where_resume(job_label = None, full_path = split_path, dep_job_label = vector_path):
+            # print(dt.today(), "splitting files")
+            # inner_name = "rRNA_filter_prep"
+            # process = mp.Process(
+                # target = commands.create_and_launch,
+                # args=(
+                    # "rRNA_filter",
+                    # commands.create_rRNA_filter_prep_command(rRNA_filter_label, int(mp.cpu_count()/2), vector_filter_label, read_mode),
+                    # True,
+                    # inner_name
+                # )
+            # )
+            # process.start()
+            # process.join()
+            # print(dt.today(), "done splitting files")
+            
         
         sections = ["singletons"]
         if read_mode == "paired":
@@ -325,6 +328,25 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             
             
         for section in reversed(sections):  #we go backwards due to a request by Ana.  pairs first, if applicable, then singletons
+            #split the data, if necessary.
+            split_path = os.path.join(rRNA_filter_path, "data", section, section + "_fastq")
+            if not check_where_resume(job_path = None, full_path = split_path, dep_job_label = vector_path):
+                print(dt.today(), "splitting:", category, " for rRNA filtration")
+                inner_name = "rRNA_filter_prep_" + category
+                process = mp.Process(
+                    target = commands.create_and_launch,
+                    args = (
+                        rRNA_filter_label,
+                        commands.create_rRNA_filter_prep_command_v2(rRNA_filter_label, category, vector_filter_label),
+                        True,
+                        inner_name
+                    )
+                )
+        
+        
+        
+        
+        
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
             folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
             if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
@@ -349,6 +371,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
             if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
+            
+                #these jobs now have to be launched in segments
                 for item in os.listdir(folder_name):
                     inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
                     print("rRNA filter inner name:", inner_name)
