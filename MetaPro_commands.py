@@ -848,7 +848,7 @@ class mt_pipe_commands:
         self.make_folder(split_folder)
         #arbitrary limit of 80000 lines  Infernal has an upper bound on what it can handle.  it's not 100k
         
-        split_fastq = ">&2 echo splitting fastq for " + category " | "
+        split_fastq = ">&2 echo splitting fastq for " + category + " | "
         split_fastq += "split -l 80000" + " "        
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
         split_fastq += "--additional-suffix .fastq" + " "
