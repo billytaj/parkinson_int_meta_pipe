@@ -370,7 +370,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     process.start()
                     
                     concurrent_job_count += 1
-                    if(concurrent_job_count == num_threads): 
+                    if(concurrent_job_count == infernal_limit): 
                         print(dt.today(), "letting a batch job run: barrnap", batch_count)
                         for p_item in mp_store:
                             p_item.join()
@@ -405,7 +405,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     mp_store.append(process)
                     process.start()
                     concurrent_job_count += 1
-                    if(concurrent_job_count == num_threads):
+                    if(concurrent_job_count == infernal_limit):
                         
                         print(dt.today(), "letting small batch of jobs run: infernal", batch_count)
                         for p_item in mp_store:
