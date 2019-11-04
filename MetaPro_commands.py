@@ -1246,9 +1246,9 @@ class mt_pipe_commands:
         if self.read_mode == "single":
             COMMANDS_Repopulate = [
                 repop_singletons,
-                repop_singletons_rRNA,
-                data_change_repop_mRNA,
-                data_change_repop_rRNA
+                repop_singletons_rRNA#,
+                #data_change_repop_mRNA,
+                #data_change_repop_rRNA
             ]
         elif self.read_mode == "paired":
             COMMANDS_Repopulate = [
@@ -1259,9 +1259,9 @@ class mt_pipe_commands:
                 repop_pair_2,
                 repop_pair_2_rRNA,
                 singleton_repop_filter,
-                singleton_repop_filter_rRNA,
-                data_change_repop_mRNA,
-                data_change_repop_rRNA
+                singleton_repop_filter_rRNA#,
+                #data_change_repop_mRNA,
+                #data_change_repop_rRNA
             ]
 
         return COMMANDS_Repopulate
@@ -1427,8 +1427,8 @@ class mt_pipe_commands:
                 contig_duplicate_remover_singletons,
                 map_read_contig,
                 copy_singletons,
-                copy_contigs, 
-                data_change_contig
+                copy_contigs#, 
+                #data_change_contig
             ]
         elif self.read_mode == "paired":
             COMMANDS_Assemble = [
@@ -1449,8 +1449,8 @@ class mt_pipe_commands:
                 map_read_contig,
                 copy_contigs,
                 singleton_assembly_filter,
-                sort_paired,
-                data_change_contig
+                sort_paired#,
+                #data_change_contig
             ]
 
         return COMMANDS_Assemble
