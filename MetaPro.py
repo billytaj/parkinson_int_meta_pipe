@@ -351,6 +351,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
             folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
             if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
+                concurrent_job_count = 0
+                batch_count = 0
                 for item in os.listdir(folder_name):
                     inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
                     print("rRNA filter inner name:", inner_name)
@@ -366,13 +368,26 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     )
                     mp_store.append(process)
                     process.start()
+                    
+                    concurrent_job_count += 1
+                    if(concurrent_job_count == num_threads): 
+                        print(dt.today(), "letting a batch job run: barrnap", batch_count)
+                        for p_item in mp_store:
+                            p_item.join()
+                        mp_store[:] = []  # clear the list    
+                        concurrent_job_count = 0
+                        batch_count += 1
+                print(dt.today(), "final batch: barrnap")
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list    
                 
+                
+                
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
             if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
-            
+                concurrent_job_count = 0
+                batch_count = 0
                 #these jobs now have to be launched in segments
                 for item in os.listdir(folder_name):
                     inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
@@ -389,6 +404,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     )
                     mp_store.append(process)
                     process.start()
+                    concurrent_job_count += 1
+                    if(concurrent_job_count == num_threads):
+                        
+                        print(dt.today(), "letting small batch of jobs run: infernal", batch_count)
+                        for p_item in mp_store:
+                            p_item.join()
+                        mp_store[:] = []  # clear the list
+                        batch_count += 1
+                        
+                print(dt.today(), "final batch: infernal")
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list
@@ -866,7 +891,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--num_threads", type=int, help="Maximum number of threads used by the pipeline")
     parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
     parser.add_argument("--verbose_mode", type=str, help = "Decide how to handle the interim files, Compress them, or leave them alone.  Values are: keep, compress, quiet")
-    
+    parser.add_argument("-it", "--infernal_threads", type = int, help = "number of threads allowed for rRNA")
     args = parser.parse_args()
 
     if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
@@ -876,14 +901,15 @@ if __name__ == "__main__":
         print("You cannot specify both paired-end and single-end reads in a single run.")
         sys.exit()
 
-    config_file = args.config if args.config else ""
-    pair_1 =        args.pair1 if args.pair1 else ""
-    pair_2 =        args.pair2 if args.pair2 else ""
-    single =        args.single if args.single else ""
-    output_folder = args.output_folder
-    num_threads =   args.num_threads if args.num_threads else 0
-    no_host =       args.nhost if args.nhost else False
-    verbose_mode =  args.verbose_mode if args.verbose_mode else "quiet"
+    config_file     = args.config if args.config else ""
+    pair_1          = args.pair1 if args.pair1 else ""
+    pair_2          = args.pair2 if args.pair2 else ""
+    single          = args.single if args.single else ""
+    output_folder   = args.output_folder
+    num_threads     = args.num_threads if args.num_threads else 0
+    no_host         = args.nhost if args.nhost else False
+    verbose_mode    = args.verbose_mode if args.verbose_mode else "quiet"
+    infernal_limit  = args.infernal_threads if args.infernal_threads else 40
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
         os.makedirs(output_folder)
