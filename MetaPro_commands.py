@@ -837,11 +837,42 @@ class mt_pipe_commands:
         # #print(dt.today(), COMMANDS_rRNA_prep)
         # return COMMANDS_rRNA_prep
         
+    def create_rRNA_filter_prep_command_2nd_split(self, stage_name, file_to_split, split_count):
+        #this splits a file into separate-but-equal portions 
+        #dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
+        subfolder               = os.path.join(self.Output_Path, stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        split_folder            = os.path.join(data_folder, category, category + "_second_split_fastq")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(split_folder)
+        
+        #remove_other_file = ">&2 echo removing previous split | "
+        #remove_other_file += "rm" + " "
+        #remove_other_file += split_folder + "*"
+        
+        split_data = ">&2 echo splitting data into chunks: " + category + " | "
+        split_data += self.tool_path_obj.Python + " "
+        split_data += self.tool_path_obj.File_splitter + " "
+        split_data += file_to_split + " "
+        split_data += os.path.join(split_folder, file_to_split) + " "
+        split_data += int(split_count)
+        
+        COMMANDS_2nd_split = [
+            split_data
+        ]
+        
+        return COMMANDS_2nd_split
+        
+        
+        
+        
     def create_rRNA_filter_prep_command_v2(self, stage_name, category, dependency_name):
         dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
-        split_folder  = os.path.join(data_folder, category, category + "_fastq")
+        split_folder            = os.path.join(data_folder, category, category + "_fastq")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)

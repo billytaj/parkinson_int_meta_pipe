@@ -329,6 +329,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             
         for section in reversed(sections):  #we go backwards due to a request by Ana.  pairs first, if applicable, then singletons
             #split the data, if necessary.
+            #initial split -> by lines.  we can do both
             split_path = os.path.join(rRNA_filter_path, "data", section, section + "_fastq")
             if not check_where_resume(job_label = None, full_path = split_path, dep_job_path = vector_path):
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
@@ -345,11 +346,42 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
                 process.start()
                 process.join()
-        
+                
+                
+            #secondary split -> number of files
+                concurrent_job_count = 0
+                batch_count = 0
+                
+                for item in os.listdir(split_path):
+                    second_split_path = os.path.split(
+                    inner_name = "rRNA_filter_prep_2_" + section
+                    process = mp.Process(
+                        target = commands.create_and_launch,
+                        args = (
+                            rRNA_filter_label,
+                            commands.create_rRNA_filter_prep_command_2nd_split(rRNA_filter_label, item,  40),
+                            True,
+                            inner_name
+                        )
+                    )
+                    mp_store.append(process)
+                    process.start()
+                    concurrent_job_count += 1
+                    if(concurrent_job_count >= 10):
+                        for p_item in mp_store:
+                            p_item.join()
+                        mp_store[:] = []
+                        concurrent_job_count = 0
+                        print(dt.today(), "waiting for rRNA second split to finish running.  batch:", batch_count)
+                        batch_count += 1
+                        
+                for p_item in mp_store:
+                    p_item.join()
+                mp_store[:] = []
         
         
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
-            folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_fastq/"
+            folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_second_split_fastq/"
             if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
                 concurrent_job_count = 0
                 batch_count = 0
