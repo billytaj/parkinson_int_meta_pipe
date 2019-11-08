@@ -331,7 +331,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             #split the data, if necessary.
             #initial split -> by lines.  we can do both
             split_path = os.path.join(rRNA_filter_path, "data", section, section + "_fastq")
-            if not check_where_resume(job_label = None, full_path = split_path, dep_job_path = vector_path):
+            second_split_path = os.path.join(rRNA_filter_path, "data", section, section + "_second_split_fastq")
+            if not check_where_resume(job_label = None, full_path = second_split_path, dep_job_path = vector_path):
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
                 inner_name = "rRNA_filter_prep_" + section
                 process = mp.Process(
@@ -353,13 +354,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 batch_count = 0
                 
                 for item in os.listdir(split_path):
-                    second_split_path = os.path.split(
+                    #second_split_path = os.path.split(
                     inner_name = "rRNA_filter_prep_2_" + section
                     process = mp.Process(
                         target = commands.create_and_launch,
                         args = (
                             rRNA_filter_label,
-                            commands.create_rRNA_filter_prep_command_2nd_split(rRNA_filter_label, item,  40),
+                            commands.create_rRNA_filter_prep_command_2nd_split(rRNA_filter_label, section, item,  40),
                             True,
                             inner_name
                         )
@@ -381,11 +382,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
-            folder_name = output_folder + "/" + rRNA_filter_label + "/data/" + section + "/" + section + "_second_split_fastq/"
+            folder_name = output_folder  + rRNA_filter_label + "/data/" + section + "/" + section + "_second_split_fastq/"
             if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
                 concurrent_job_count = 0
                 batch_count = 0
                 for item in os.listdir(folder_name):
+                    print(dt.today(), "barrnap looking at:", item)
                     inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
                     print("rRNA filter inner name:", inner_name)
                     

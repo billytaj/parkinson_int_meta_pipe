@@ -837,7 +837,7 @@ class mt_pipe_commands:
         # #print(dt.today(), COMMANDS_rRNA_prep)
         # return COMMANDS_rRNA_prep
         
-    def create_rRNA_filter_prep_command_2nd_split(self, stage_name, file_to_split, split_count):
+    def create_rRNA_filter_prep_command_2nd_split(self, stage_name, category, file_to_split, split_count):
         #this splits a file into separate-but-equal portions 
         #dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
@@ -856,8 +856,13 @@ class mt_pipe_commands:
         split_data += self.tool_path_obj.Python + " "
         split_data += self.tool_path_obj.File_splitter + " "
         split_data += file_to_split + " "
-        split_data += os.path.join(split_folder, file_to_split) + " "
-        split_data += int(split_count)
+        #split_data += file_to_split.split(".")[0] + " "
+        split_data += os.path.join(split_folder, file_to_split.split(".")[0]) + " "
+        split_data += str(split_count)
+        
+        print("-----------------")
+        print(dt.today(), file_to_split)
+        print(dt.today(), file_to_split.split(".")[0])
         
         COMMANDS_2nd_split = [
             split_data
@@ -904,7 +909,7 @@ class mt_pipe_commands:
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data", category)
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
-        fastq_folder        = os.path.join(data_folder, category + "_fastq")
+        fastq_folder        = os.path.join(data_folder, category + "_second_split_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
         mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
