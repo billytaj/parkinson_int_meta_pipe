@@ -842,28 +842,33 @@ class mt_pipe_commands:
         #dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
-        split_folder            = os.path.join(data_folder, category, category + "_second_split_fastq")
+        second_split_folder     = os.path.join(data_folder, category, category + "_second_split_fastq")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(split_folder)
+        self.make_folder(second_split_folder)
         
         #remove_other_file = ">&2 echo removing previous split | "
         #remove_other_file += "rm" + " "
         #remove_other_file += split_folder + "*"
+        
+        
+        base_name = os.path.basename(file_to_split)
+        real_base = os.path.splitext(base_name)[0]
+        second_output_path = os.path.join(second_split_folder, real_base)
         
         split_data = ">&2 echo splitting data into chunks: " + category + " | "
         split_data += self.tool_path_obj.Python + " "
         split_data += self.tool_path_obj.File_splitter + " "
         split_data += file_to_split + " "
         #split_data += file_to_split.split(".")[0] + " "
-        split_data += os.path.join(split_folder, file_to_split.split(".")[0]) + " "
+        split_data += second_output_path + " "
         split_data += str(split_count)
         
         print("-----------------")
         print(dt.today(), file_to_split)
         print(dt.today(), file_to_split.split(".")[0])
-        
+        print(dt.today(), "output path FROM COMMANDS second split:", second_output_path)
         COMMANDS_2nd_split = [
             split_data
         ]
