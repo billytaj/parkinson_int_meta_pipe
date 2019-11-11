@@ -351,10 +351,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 
             #secondary split -> number of files
                 concurrent_job_count = 0
+                cumulative_job_count = 0
                 batch_count = 0
                 
                 for item in os.listdir(split_path):
-                    inner_name = "rRNA_filter_prep_2_" + section
+                    #second_split_path = os.path.split(
+                    inner_name = "rRNA_filter_prep_2_" + section + "_" + str(cumulative_job_count)
+                    cumulative_job_count += 1
                     process = mp.Process(
                         target = commands.create_and_launch,
                         args = (
