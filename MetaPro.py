@@ -357,12 +357,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for item in os.listdir(split_path):
                     #second_split_path = os.path.split(
                     inner_name = "rRNA_filter_prep_2_" + section + "_" + str(cumulative_job_count)
+                    full_item_path = os.path.join(split_path, item)
+                    print(dt.today(), "full item path:", full_item_path)
                     cumulative_job_count += 1
                     process = mp.Process(
                         target = commands.create_and_launch,
                         args = (
                             rRNA_filter_label,
-                            commands.create_rRNA_filter_prep_command_2nd_split(rRNA_filter_label, section, str(item),  40),
+                            commands.create_rRNA_filter_prep_command_2nd_split(rRNA_filter_label, section, full_item_path,  40),
                             True,
                             inner_name
                         )
@@ -370,13 +372,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     mp_store.append(process)
                     process.start()
                     concurrent_job_count += 1
-                    if(concurrent_job_count >= 10):
+                    if(concurrent_job_count >= 20):
                         for p_item in mp_store:
                             p_item.join()
                         mp_store[:] = []
                         concurrent_job_count = 0
                         print(dt.today(), "waiting for rRNA second split to finish running.  batch:", batch_count)
                         batch_count += 1
+                        print(dt.today(), "pausing for 5 seconds to let things settle")
+                        time.sleep(5)
+                        print(dt.today(), "pause over.  resuming")
                         
                 for p_item in mp_store:
                     p_item.join()
@@ -391,6 +396,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for item in os.listdir(folder_name):
                     print(dt.today(), "barrnap looking at:", item)
                     inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
+                    print(dt.today(), "barrnap job script name", inner_name)
                     print("rRNA filter inner name:", inner_name)
                     
                     process = mp.Process(
@@ -413,6 +419,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         mp_store[:] = []  # clear the list    
                         concurrent_job_count = 0
                         batch_count += 1
+                        
+                        print(dt.today(), "pausing barrnap for 5 seconds to let things settle")
+                        time.sleep(5)
+                        print(dt.today(), "brakes off.  continue barrnap")
+                        
                 print(dt.today(), "final batch: barrnap")
                 for p_item in mp_store:
                     p_item.join()
@@ -945,7 +956,7 @@ if __name__ == "__main__":
     num_threads     = args.num_threads if args.num_threads else 0
     no_host         = args.nhost if args.nhost else False
     verbose_mode    = args.verbose_mode if args.verbose_mode else "quiet"
-    infernal_limit  = args.infernal_threads if args.infernal_threads else 40
+    infernal_limit  = args.infernal_threads if args.infernal_threads else 30
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
         os.makedirs(output_folder)
