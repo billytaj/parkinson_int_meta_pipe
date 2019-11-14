@@ -372,15 +372,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     mp_store.append(process)
                     process.start()
                     concurrent_job_count += 1
-                    if(concurrent_job_count >= 20):
+                    if(concurrent_job_count >= infernal_limit):
                         for p_item in mp_store:
                             p_item.join()
                         mp_store[:] = []
                         concurrent_job_count = 0
                         print(dt.today(), "waiting for rRNA second split to finish running.  batch:", batch_count)
                         batch_count += 1
-                        print(dt.today(), "pausing for 5 seconds to let things settle")
-                        time.sleep(5)
+                        print(dt.today(), "pausing for 2 seconds to let things settle")
+                        time.sleep(2)
                         print(dt.today(), "pause over.  resuming")
                         
                 for p_item in mp_store:
@@ -420,8 +420,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         concurrent_job_count = 0
                         batch_count += 1
                         
-                        print(dt.today(), "pausing barrnap for 5 seconds to let things settle")
-                        time.sleep(5)
+                        print(dt.today(), "pausing barrnap for 2 seconds to let things settle")
+                        time.sleep(2)
                         print(dt.today(), "brakes off.  continue barrnap")
                         
                 print(dt.today(), "final batch: barrnap")
@@ -956,7 +956,7 @@ if __name__ == "__main__":
     num_threads     = args.num_threads if args.num_threads else 0
     no_host         = args.nhost if args.nhost else False
     verbose_mode    = args.verbose_mode if args.verbose_mode else "quiet"
-    infernal_limit  = args.infernal_threads if args.infernal_threads else 30
+    infernal_limit  = args.infernal_threads if args.infernal_threads else 40
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
         os.makedirs(output_folder)
