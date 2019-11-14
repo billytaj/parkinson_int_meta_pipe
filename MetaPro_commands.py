@@ -1077,17 +1077,69 @@ class mt_pipe_commands:
         self.make_folder(final_rRNA_folder)
 
         if self.read_mode == "single":
-            cat_singletons_mRNA = "cat " + singletons_mRNA_folder + "/* 1>>" + os.path.join(final_mRNA_folder, "singletons.fastq")
-            cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(final_rRNA_folder, "singletons.fastq")
+            cat_singletons_mRNA = "for f in" + " "
+            cat_singletons_mRNA += singletons_mRNA_folder 
+            cat_singletons_mRNA += "/*; do cat \"$f\" >>" + " " 
+            cat_singletons_mRNA += os.path.join(final_mRNA_folder, "singletons.fastq") 
+            cat_singletons_mRNA += "; done"
+            
+            
+            #cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(final_rRNA_folder, "singletons.fastq")
+            cat_singletons_rRNA = "for f in" + " "
+            cat_singletons_rRNA += singletons_rRNA_folder
+            cat_singletons_rRNA += "/*; do cat \"$f\" >>" + " "
+            cat_singletons_rRNA += os.path.join(final_rRNA_folder, "singletons.fastq")
+            cat_singletons_rRNA += "; done"
+            
+            
         elif self.read_mode == "paired":
-            cat_singletons_mRNA = "cat " + singletons_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
-            cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
+            #cat_singletons_mRNA = "cat " + singletons_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
+            #cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
+            cat_singletons_mRNA = "for f in" + " "
+            cat_singletons_mRNA += singletons_mRNA_folder
+            cat_singletons_mRNA += "/*; do cat \"$f\" >>" + " "
+            cat_singletons_mRNA += os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
+            cat_singletons_mRNA += "; done"
+            
+            cat_singletons_rRNA = "for f in" + " "
+            cat_singletons_rRNA += singletons_rRNA_folder
+            cat_singletons_rRNA += "/*; do cat \"$f\" >>" + " "
+            cat_singletons_rRNA += os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
+            cat_singletons_rRNA += "; done"
+            
+            
 
-        cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
-        cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
+        #cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
+        #cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
+        cat_pair_1_mRNA = "for f in" + " "
+        cat_pair_1_mRNA += pair_1_mRNA_folder 
+        cat_pair_1_mRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_1_mRNA += os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
+        cat_pair_1_mRNA += "; done"
+        
+        cat_pair_1_rRNA = "for f in" + " "
+        cat_pair_1_rRNA += pair_1_rRNA_folder 
+        cat_pair_1_rRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_1_rRNA += os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
+        cat_pair_1_rRNA += "; done"
+        
+        #cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
+        #cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
 
-        cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
-        cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
+        cat_pair_2_mRNA = "for f in" + " "
+        cat_pair_2_mRNA += pair_2_mRNA_folder 
+        cat_pair_2_mRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_2_mRNA += os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
+        cat_pair_2_mRNA += "; done"
+        
+        cat_pair_2_rRNA = "for f in" + " "
+        cat_pair_2_rRNA += pair_2_rRNA_folder 
+        cat_pair_2_rRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_2_rRNA += os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
+        cat_pair_2_rRNA += "; done"
+        
+        
+
 
         singleton_mRNA_filter = ">&2 echo " + str(dt.today()) + " filtering mRNA for singletons | "
         singleton_mRNA_filter += self.tool_path_obj.Python + " "
