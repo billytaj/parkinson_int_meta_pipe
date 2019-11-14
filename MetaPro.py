@@ -465,7 +465,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     p_item.join()
                 mp_store[:] = []  # clear the list
             
-        
+        print(dt.today(), "now running rRNA filter post")
         inner_name = "rRNA_filter_post"
         process = mp.Process(
             target=commands.create_and_launch,
