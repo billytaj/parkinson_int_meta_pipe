@@ -332,6 +332,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             #initial split -> by lines.  we can do both
             split_path = os.path.join(rRNA_filter_path, "data", section, section + "_fastq")
             second_split_path = os.path.join(rRNA_filter_path, "data", section, section + "_second_split_fastq")
+            barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
+            infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
+            
             if not check_where_resume(job_label = None, full_path = second_split_path, dep_job_path = vector_path):
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
                 inner_name = "rRNA_filter_prep_" + section
@@ -388,12 +391,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 mp_store[:] = []
         
         
-            barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
-            folder_name = output_folder  + rRNA_filter_label + "/data/" + section + "/" + section + "_second_split_fastq/"
             if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
                 concurrent_job_count = 0
                 batch_count = 0
-                for item in os.listdir(folder_name):
+                for item in os.listdir(second_split_path):
                     print(dt.today(), "barrnap looking at:", item)
                     inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
                     print(dt.today(), "barrnap job script name", inner_name)
@@ -431,7 +432,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 
                 
                 
-            infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
             if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
                 concurrent_job_count = 0
                 batch_count = 0
