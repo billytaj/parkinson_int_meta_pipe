@@ -436,7 +436,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 concurrent_job_count = 0
                 batch_count = 0
                 #these jobs now have to be launched in segments
-                for item in os.listdir(folder_name):
+                for item in os.listdir(second_split_path):
                     inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
                     print("rRNA filter inner name:", inner_name)
                     
