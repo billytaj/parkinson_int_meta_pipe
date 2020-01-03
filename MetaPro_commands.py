@@ -2266,7 +2266,24 @@ class mt_pipe_commands:
         
     
         if(self.read_mode == "single"):
-            COMMANDS_Outputs = [
+            
+            
+            if(self.no_host_flag):
+                COMMANDS_Outputs = [
+                copy_gene_map,
+                taxa_table_generation,
+                network_generation,
+                flatten_rpkm, 
+                #get_unique_host_reads_singletons,
+                #repop_singletons_hosts,
+                #combine_hosts,
+                read_counts,
+                per_read_scores,
+                contig_stats,
+                EC_heatmap
+                ]
+            else:
+                COMMANDS_Outputs = [
                 copy_gene_map,
                 taxa_table_generation,
                 network_generation,
@@ -2278,25 +2295,44 @@ class mt_pipe_commands:
                 per_read_scores,
                 contig_stats,
                 EC_heatmap
-            ]
+                ]
         else:
-            COMMANDS_Outputs = [
-                copy_gene_map,
-                taxa_table_generation,
-                network_generation,
-                flatten_rpkm, 
-                get_unique_host_reads_singletons,
-                get_unique_host_reads_pair_1,
-                get_unique_host_reads_pair_2,
-                repop_singletons_hosts,
-                repop_pair_1_hosts,
-                repop_pair_2_hosts,
-                combine_hosts,
-                read_counts,
-                per_read_scores,
-                contig_stats,
-                EC_heatmap
-            ]
+            if(self.no_host_flag):
+                COMMANDS_Outputs = [
+                    copy_gene_map,
+                    taxa_table_generation,
+                    network_generation,
+                    flatten_rpkm, 
+                    #get_unique_host_reads_singletons,
+                    #get_unique_host_reads_pair_1,
+                    #get_unique_host_reads_pair_2,
+                    #repop_singletons_hosts,
+                    #repop_pair_1_hosts,
+                    #repop_pair_2_hosts,
+                    #combine_hosts,
+                    read_counts,
+                    per_read_scores,
+                    contig_stats,
+                    EC_heatmap
+                ]
+            else:
+                COMMANDS_Outputs = [
+                    copy_gene_map,
+                    taxa_table_generation,
+                    network_generation,
+                    flatten_rpkm, 
+                    get_unique_host_reads_singletons,
+                    get_unique_host_reads_pair_1,
+                    get_unique_host_reads_pair_2,
+                    repop_singletons_hosts,
+                    repop_pair_1_hosts,
+                    repop_pair_2_hosts,
+                    combine_hosts,
+                    read_counts,
+                    per_read_scores,
+                    contig_stats,
+                    EC_heatmap
+                ]
        
         
         return COMMANDS_Outputs
