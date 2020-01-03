@@ -64,8 +64,11 @@ if __name__ == "__main__":
     data.append("%.2f" % (quality_sequence_pct*100))
     
     headings.append("host reads found in sample")
-    host_read_counts = fastq_count(combined_host)
-    data.append(str(int(host_read_counts)))
+    if(combined_host == "no_host"):
+        data.append("0")
+    else:
+        host_read_counts = fastq_count(combined_host)
+        data.append(str(int(host_read_counts)))
     
     headings.append("% host reads in sample")
     host_pct = host_read_counts / raw_sequence_count
