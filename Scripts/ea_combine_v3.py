@@ -128,7 +128,8 @@ def import_priam_ec(priam_sequence_ec, gene_ec_dict):
                     #if(query_name == "BAH62832.1"):
                     #    print("line is valid:", line)
                     list_line = line.split("\t")
-                    ec = list_line[0]
+                    ec = list_line[0].strip("\n")
+                    ec = ec.strip(" ")
                     probability = float(list_line[1])
                     if(probability >= 0.5):
                         ec_list.append(ec)
@@ -137,9 +138,9 @@ def import_priam_ec(priam_sequence_ec, gene_ec_dict):
                     else:
                         #if(query_name == "BAH62832.1"):
                         print("line valid but not inserted")
-                else:
+                #else:
                     #if(query_name == "BAH62832.1"):
-                    print("this line is skipped:", line)
+                    #print("this line is skipped:", line)
             if(query_name is "None"):
                 print(dt.today(), "This shouldn't be happening.  a line was skipped")
     #return gene_ec_dict
@@ -199,7 +200,16 @@ def import_gene_map(gene_map_file):
     return gene_length_dict          
             
             
-        
+def debug_export(ec_dict, file_name):
+    #used specifically to debug.  exports the dictionary
+    with open(file_name, "w") as debug_out:
+        for key in ec_dict:
+            line_to_write = str(key)
+            ec_list = ec_dict[key]
+            for item in ec_list:
+                line_to_write += "\t" + str(item)
+            line_to_write += "\n"
+            debug_out.write(line_to_write)
 
 if __name__ == "__main__":
     detect_file     = sys.argv[1]
@@ -227,8 +237,8 @@ if __name__ == "__main__":
     diamond_ec_manager_dict = manager.dict()
     swissprot_map_dict = create_swissprot_map(SWISS_PROT_MAP)
     
-    for item in swissprot_map_dict:
-       print(item, swissprot_map_dict[item])
+    #for item in swissprot_map_dict:
+    #   print(item, swissprot_map_dict[item])
     diamond_ec_process = mp.Process(
         target = import_diamond_ec, 
         args = (diamond_file, swissprot_map_dict, gene_length_dict, diamond_ec_manager_dict)
@@ -266,14 +276,6 @@ if __name__ == "__main__":
     detect_ec_dict = dict(detect_ec_manager_dict)   #key: gene.  value: list of ECs
     print(dt.today(), "finished converting dicts")
     
-    #detect_ec_other_dict = dict()
-    #import_detect_ec(detect_file, detect_ec_other_dict)
-    
-    #print(dt.today(), "DETECT:", "BAH62832.1", detect_ec_dict["BAH62832.1"])
-    #print(dt.today(), "DETECT OTHER:", "BAH62832.1", detect_ec_other_dict["BAH62832.1"])
-
-    
-    #print(priam_ec_dict)
     
     #--------------------------------------------------
     # merge the results.  get the genes for which both tools came back with an EC
@@ -281,67 +283,32 @@ if __name__ == "__main__":
     priam_keys = set(priam_ec_dict.keys())
     common_keys = diamond_keys & priam_keys
     
-    #DEBUG
-    # print(dt.today(), "finished getting unique dict keys")
-    # for item in diamond_keys:
-       # print("DIAMOND:", item, diamond_ec_dict[item])
-        
-    # print("========================")
-    # for item in priam_keys:
-       # print("PRIAM:", item, priam_ec_dict[item])
-        
-    # print("======================================================")
-    # for item in detect_ec_dict.keys():
-        # print("DETECT:", item, detect_ec_dict[item])
-        
-    #     
     print(dt.today(), "finished getting common genes")
     #take the intersection of the ECs found for each gene between priam and diamond
     common_dict = dict()
     for item in common_keys:
         priam_ec_set = set(priam_ec_dict[item])
         diamond_ec_set = set(diamond_ec_dict[item])
-        
-        common_intersection_set = diamond_ec_set.intersection(priam_ec_set)
-        
-        common_dict[item]= list(common_intersection_set)
-        #print("priam:", len(priam_ec_set), "diamond:", len(diamond_ec_set), "intersection:", len(common_intersection_set))
-    #print(dt.today(), "finished assembling PRIAM + DIAMOND common ECs")
-    #print(dt.today(), "common dict:", "BAH62832.1", common_dict["BAH62832.1"])
-    
-    #DEBUG
-    # sys.exit("premature")
-    
-    # with open(tester_file, "w") as tester:
-        # for item in common_dict:
-            # print("diamond and priam intersected ECs:", item, common_dict[item])
-            # export_line = str(item) + "\t" + str(common_dict[item]) + "\n"
-            # tester.write(export_line)
+        combined_ec = list(diamond_ec_set.intersection(priam_ec_set))
+        common_dict[item] = combined_ec
     
     
     
     for key in detect_ec_dict.keys():
-    
-        
+    #then take all of DETECT's results
         if(key in common_dict):
             detect_ec_list = detect_ec_dict[key]
-            #print("before:", len(common_dict[key]))
             common_dict[key] += detect_ec_list
             common_dict[key] = list(set(common_dict[key])) #gets rid of dupes, and turns it back into a list
-            #print("after:", len(common_dict[key]))
-            #print("=-=========-=-=-=-=-==========")
         else:
             common_dict[key] = detect_ec_dict[key]
-            #print("new:", len(common_dict[key]))
-    #common_dict = sorted(common_dict)      
-    
+     
     #----------------------------------------------
     #export the final ec list
     with open(Output_file, "w") as ec_out:
         for item in sorted(common_dict.keys()):
             
             ec_list = common_dict[item]
-            #print("EC list:", ec_list)
             ec_string = ""
             for ec in ec_list:
                 actual_ec = ec.strip(" ")
