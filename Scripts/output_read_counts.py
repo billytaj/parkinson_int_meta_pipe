@@ -64,6 +64,7 @@ if __name__ == "__main__":
     data.append("%.2f" % (quality_sequence_pct*100))
     
     headings.append("host reads found in sample")
+    host_read_counts = 0
     if(combined_host == "no_host"):
         data.append("0")
     else:
