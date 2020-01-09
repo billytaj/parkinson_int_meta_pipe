@@ -29,8 +29,12 @@ def ec_count(map):
     ecs = set()
     with open(map, "r") as infile:
         for line in infile:
-            ecs.add(line.split("\t")[2].strip())
-
+            #ecs.add(line.split("\t")[2].strip())
+            ec_line_list = line.split("\t")
+            ec_portion = ec_line_list[2].strip("\n")
+            ec_list = ec_portion.split("|")
+            for ec in ec_list:
+                ecs.add(ec)
     return len(ecs)
 
 
