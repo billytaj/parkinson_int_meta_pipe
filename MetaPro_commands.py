@@ -1755,7 +1755,7 @@ class mt_pipe_commands:
         diamond_annotate += " -q " + os.path.join(dep_loc, section + ".fasta")
         diamond_annotate += " -o " + os.path.join(diamond_folder, section + ".dmdout")
         diamond_annotate += " -f 6 -t " + section_temp_folder
-        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
 
         return [diamond_annotate]
 
