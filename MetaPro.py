@@ -36,6 +36,25 @@ def compress_folder(folder_path):
             z.write(os.path.join(root, file))
     z.close()
         
+def write_to_bypass_log(folder_path, message):
+    bypass_log_path = os.path.join(folder_path, "bypass_log.txt")
+    with open(bypass_log_path, "a") as bypass_log:
+        bypass_log.write(message + "\n")
+
+def check_bypass_log(folder_path, message):
+    bypass_keys_list = list()
+    bypass_log_path = os.path.join(folder_path, "bypass_log.txt")
+    with open(bypass_log_path, "r") as bypass_log:
+        for line in bypass_log:
+            bypass_key = line.strip("\n")
+            bypass_keys_list.append(bypass_key)
+    if(message in bypass_keys_list):
+        print(dt.today(), "bypassing:", message)
+        return False
+    else:
+        print(dt.today(), "running:", message) 
+        return True
+        
 # Used to determine quality encoding of fastq sequences.
 # Assumes Phred+64 unless there is a character within the first 10000 reads with encoding in the Phred+33 range.
 def check_code(segment):
@@ -126,7 +145,13 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
         return False
 
 
-def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, no_host, verbose_mode):
+
+
+def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack):
+    no_host = args_pack["no_host"]
+    keep_second_split = args_pack["keep_second_split"]
+    verbose_mode = args_pack["verbose_mode"]
+
     if not single_path == "":
         read_mode = "single"
         quality_encoding = determine_encoding(single_path)
@@ -174,14 +199,25 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     host_filter_label = "host_read_filter"
     vector_filter_label = "vector_read_filter"
     rRNA_filter_label = "rRNA_filter"
+    rRNA_filter_second_split_label = "rRNA_filter_second_split"
+    rRNA_filter_barrnap_label = "rRNA_filter_barrnap"
+    rRNA_filter_infernal_label  = "rRNA_filter_infernal"
+    rRNA_filter_post_label = "rRNA_filter_post"
     repop_job_label = "duplicate_repopulation"
     assemble_contigs_label = "assemble_contigs"
     destroy_contigs_label = "destroy_contigs"
     gene_annotation_BWA_label = "gene_annotation_BWA"
+    gene_annotation_BWA_pp_label = "gene_annotation_BWA_pp"
     gene_annotation_BLAT_label = "gene_annotation_BLAT"
+    gene_annotation_BLAT_pp_label = "gene_annotation_BLAT_pp"
     gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
+    gene_annotation_DIAMOND_pp_label = "gene_annotation_DIAMOND_pp"
     taxon_annotation_label = "taxonomic_annotation"
     ec_annotation_label = "enzyme_annotation"
+    ec_annotation_detect_label = "enzyme_annotation_detect"
+    ec_annotation_priam_label = "enzyme_annotation_priam"
+    ec_annotation_DIAMOND_label = "enzyme_annotation_DIAMOND"
+    ec_annotation_pp_label = "enzyme_annotation_pp"
     output_label = "outputs"
 
     
@@ -199,7 +235,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # The quality filter stage
     quality_start = time.time()
     quality_path = os.path.join(output_folder_path, quality_filter_label)
-    if not check_where_resume(quality_path):
+    #if not check_where_resume(quality_path):
+    if check_bypass_log(output_folder, quality_filter_label):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
@@ -210,6 +247,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()  # start the multiprocess
         process.join()  # wait for it to end
+        write_to_bypass_log(output_folder_path, quality_filter_label)
         cleanup_quality_start = time.time()
         if(verbose_mode == "quiet"):
             delete_folder(quality_path)
@@ -226,7 +264,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     if not no_host:
         host_start = time.time()
         host_path = os.path.join(output_folder_path, host_filter_label)
-        if not check_where_resume(host_path, None, quality_path):
+        #if not check_where_resume(host_path, None, quality_path):
+        if check_bypass_log(output_folder_path, host_filter_label):
             process = mp.Process(
                 target=commands.create_and_launch,
                 args=(
@@ -237,6 +276,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
+            write_to_bypass_log(output_folder_path, host_filter_label)
             cleanup_host_start = time.time()
             if(verbose_mode == "quiet"):
                 delete_folder(host_path)
@@ -254,7 +294,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     vector_start = time.time()
     vector_path = os.path.join(output_folder_path, vector_filter_label)
     if no_host:
-        if not check_where_resume(vector_path, None, quality_path):
+        #get dep args from quality filter
+        #if not check_where_resume(vector_path, None, quality_path):
+        if check_bypass_log(output_folder_path, host_filter_label):
             process = mp.Process(
                 target=commands.create_and_launch,
                 args=(
@@ -265,6 +307,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
+            write_to_bypass_log(output_folder_path, vector_filter_label)
             cleanup_vector_start = time.time()
             if(verbose_mode == "quiet"):
                 delete_folder(vector_path)
@@ -273,7 +316,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 delete_folder(vector_path)
             cleanup_vector_end = time.time()
     else:
-        if not check_where_resume(vector_path, None, host_path):
+        #get the dep args from host filter
+        #if not check_where_resume(vector_path, None, host_path):
+        if check_bypass_log(output_folder_path, vector_filter_label):
             process = mp.Process(
                 target=commands.create_and_launch,
                 args=(
@@ -284,6 +329,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()  # start the multiprocess
             process.join()  # wait for it to end
+            write_to_bypass_log(output_folder_path, vector_filter_label)
             cleanup_vector_start = time.time()
             if(verbose_mode == "quiet"):
                 delete_folder(vector_path)
@@ -301,32 +347,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     rRNA_filter_start = time.time()
 
     rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
-    if not check_where_resume(rRNA_filter_path, None, vector_path):
-    
-        # split_path = os.path.join(rRNA_filter_path, "data", "singletons", "singletons_fastq")
-        # #split the data:  We're only checking the singletons data.  If it's run, it'll be singletons.
-        # if not check_where_resume(job_label = None, full_path = split_path, dep_job_label = vector_path):
-            # print(dt.today(), "splitting files")
-            # inner_name = "rRNA_filter_prep"
-            # process = mp.Process(
-                # target = commands.create_and_launch,
-                # args=(
-                    # "rRNA_filter",
-                    # commands.create_rRNA_filter_prep_command(rRNA_filter_label, int(mp.cpu_count()/2), vector_filter_label, read_mode),
-                    # True,
-                    # inner_name
-                # )
-            # )
-            # process.start()
-            # process.join()
-            # print(dt.today(), "done splitting files")
-            
-        
+    #if not check_where_resume(rRNA_filter_path, None, vector_path):
+    if check_bypass_log(output_folder_path, rRNA_filter_label): 
         sections = ["singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
-            
-            
+        
         for section in reversed(sections):  #we go backwards due to a request by Ana.  pairs first, if applicable, then singletons
             #split the data, if necessary.
             #initial split -> by lines.  we can do both
@@ -335,7 +361,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
             
-            if not check_where_resume(job_label = None, full_path = second_split_path, dep_job_path = vector_path):
+            #if not check_where_resume(job_label = None, full_path = second_split_path, dep_job_path = vector_path):
+            if check_bypass_log(output_folder_path, rRNA_filter_second_split_label):
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
                 inner_name = "rRNA_filter_prep_" + section
                 process = mp.Process(
@@ -350,7 +377,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
                 process.start()
                 process.join()
-                
+                write_to_bypass_log(output_folder_path, rRNA_filter_second_split_label)
                 
             #secondary split -> number of files
                 concurrent_job_count = 0
@@ -391,7 +418,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 mp_store[:] = []
         
         
-            if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
+            #if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
+            if check_bypass_log(output_folder_path, rRNA_filter_barrnap_label):
                 concurrent_job_count = 0
                 batch_count = 0
                 for item in os.listdir(second_split_path):
@@ -429,10 +457,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list    
+                write_to_bypass_log(output_folder_path, rRNA_filter_barrnap_label)
                 
                 
-                
-            if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
+            #if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
+            if check_bypass_log(output_folder_path, rRNA_filter_infernal_label):
                 concurrent_job_count = 0
                 batch_count = 0
                 #these jobs now have to be launched in segments
@@ -464,21 +493,33 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list
+                write_to_bypass_log(output_folder_path, rRNA_filter_infernal_label)
             
-        print(dt.today(), "now running rRNA filter post")
-        inner_name = "rRNA_filter_post"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                rRNA_filter_label,
-                commands.create_rRNA_filter_post_command(vector_filter_label, rRNA_filter_label),
-                True,
-                inner_name
+        if check_bypass_log(output_folder_path, rRNA_filter_post_label):
+            print(dt.today(), "now running rRNA filter post")
+            inner_name = "rRNA_filter_post"
+            process = mp.Process(
+                target=commands.create_and_launch,
+                args=(
+                    rRNA_filter_label,
+                    commands.create_rRNA_filter_post_command(vector_filter_label, rRNA_filter_label),
+                    True,
+                    inner_name
+                )
             )
-        )
-        process.start()
-        process.join()
+            process.start()
+            process.join()
+            write_to_bypass_log(output_folder_path, rRNA_filter_post_label)
         
+        if not (keep_second_split):
+            print("deleting rRNA second split")
+            for item in sections:
+                second_split_path = os.path.join(rRNA_filter_path, "data", section, section + "_second_split_fastq")
+                if(os.path.exists(second_split_path)):
+                    shutil.rmtree(second_split_path)
+                else:
+                    print(dt.today(), "already deleted:", second_split_path)
+        write_to_bypass_log(output_folder_path, rRNA_filter_label)
         cleanup_rRNA_filter_start = time.time()
         if(verbose_mode == "quiet"):
             delete_folder(rRNA_filter_path)
@@ -494,7 +535,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Duplicate repopulation
     repop_start = time.time()
     repop_job_path = os.path.join(output_folder_path, repop_job_label)
-    if not check_where_resume(repop_job_path, None, rRNA_filter_path):
+    #if not check_where_resume(repop_job_path, None, rRNA_filter_path):
+    if check_bypass_log(output_folder_path, repop_job_label):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
@@ -505,13 +547,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
-        cleanup_repop_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(repop_job_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(repop_job_path)
-            delete_folder(repop_job_path)
-        cleanup_repop_end = time.time()
+        write_to_bypass_log(output_folder_path, repop_job_label)
+        
+    cleanup_repop_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(repop_job_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(repop_job_path)
+        delete_folder(repop_job_path)
+    cleanup_repop_end = time.time()
     repop_end = time.time()
     print("repop:", '%1.1f' % (repop_end - repop_start - (cleanup_repop_end - cleanup_repop_start)), "s")
     print("repop cleanup:", '%1.1f' % (cleanup_repop_end - cleanup_repop_start), "s")
@@ -521,7 +565,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Assemble contigs
     assemble_contigs_start = time.time()
     assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
-    if not check_where_resume(assemble_contigs_path, None, repop_job_path):
+    #if not check_where_resume(assemble_contigs_path, None, repop_job_path):
+    if check_bypass_log(output_folder_path, assemble_contigs_label):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
@@ -532,13 +577,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
-        cleanup_assemble_contigs_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(assemble_contigs_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(assemble_contigs_path)
-            delete_folder(assemble_contigs_path)
-        cleanup_assemble_contigs_end = time.time()
+        write_to_bypass_log(output_folder_path, assemble_contigs_label)
+        
+    cleanup_assemble_contigs_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(assemble_contigs_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(assemble_contigs_path)
+        delete_folder(assemble_contigs_path)
+    cleanup_assemble_contigs_end = time.time()
     assemble_contigs_end = time.time()
     print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
     print("assemble contigs cleanup:", '%1.1f' % (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start), "s")
@@ -548,8 +595,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # BWA gene annotation
     GA_BWA_start = time.time()
     gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
-    if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
-
+    #if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
+    if check_bypass_log(output_folder_path, gene_annotation_BWA_label):
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
@@ -570,8 +617,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []  # clear the list
-
+        write_to_bypass_log(output_folder_path, gene_annotation_BWA_label)
         inner_name = "BWA_pp"
+    
+    if check_bypass_log(output_folder_path, gene_annotation_BWA_pp_label):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
@@ -583,14 +632,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
+        write_to_bypass_log(output_folder_path, gene_annotation_BWA_pp_label)
         
-        cleanup_GA_BWA_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(gene_annotation_BWA_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(gene_annotation_BWA_path)
-            delete_folder(gene_annotation_BWA_path)
-        cleanup_GA_BWA_end = time.time()
+    cleanup_GA_BWA_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(gene_annotation_BWA_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(gene_annotation_BWA_path)
+        delete_folder(gene_annotation_BWA_path)
+    cleanup_GA_BWA_end = time.time()
     GA_BWA_end = time.time()
     print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
     print("GA BWA cleanup:", '%1.1f' % (cleanup_GA_BWA_end - cleanup_GA_BWA_start), "s")
@@ -599,8 +649,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # BLAT gene annotation
     GA_BLAT_start = time.time()
     gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
-    if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
-
+    #if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
+    if check_bypass_log(output_folder_path, gene_annotation_BLAT_label):
         BlatPool = mp.Pool(int(thread_count / 2))
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
@@ -636,7 +686,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-
+        write_to_bypass_log(output_folder_path, gene_annotation_BLAT_label)
+    
+    if check_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label):
         inner_name = "BLAT_pp"
         process = mp.Process(
             target=commands.create_and_launch,
@@ -649,14 +701,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
-        
-        cleanup_GA_BLAT_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(gene_annotation_BLAT_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(gene_annotation_BLAT_path)
-            delete_folder(gene_annotation_BLAT_path)
-        cleanup_GA_BLAT_end = time.time()
+        write_to_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label)
+
+    cleanup_GA_BLAT_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(gene_annotation_BLAT_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(gene_annotation_BLAT_path)
+        delete_folder(gene_annotation_BLAT_path)
+    cleanup_GA_BLAT_end = time.time()
     GA_BLAT_end = time.time()
     print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start - (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start)), "s")
     print("GA BLAT cleanup:", '%1.1f' % (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start), "s")
@@ -666,8 +719,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_DIAMOND_start = time.time()
     gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
     GA_DIAMOND_tool_output_path = os.path.join(gene_annotation_DIAMOND_path, "data", "0_diamond")
-    if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path, file_check_bypass = True):
-
+    #if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path, file_check_bypass = True):
+    if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_label):
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
@@ -687,9 +740,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
+        write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_label)
         
-        
-    if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
+    #if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
+    if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label):
         inner_name = "diamond_pp"
         process = mp.Process(
             target=commands.create_and_launch,
@@ -702,13 +756,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
-        cleanup_GA_DIAMOND_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(gene_annotation_DIAMOND_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(gene_annotation_DIAMOND_path)
-            delete_folder(gene_annotation_DIAMOND_path)
-        cleanup_GA_DIAMOND_end = time.time()
+        write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label)
+        
+    cleanup_GA_DIAMOND_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(gene_annotation_DIAMOND_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(gene_annotation_DIAMOND_path)
+        delete_folder(gene_annotation_DIAMOND_path)
+    cleanup_GA_DIAMOND_end = time.time()
     GA_DIAMOND_end = time.time()
     print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
     print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
@@ -717,7 +773,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Taxonomic annotation
     TA_start = time.time()
     taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
-    if not check_where_resume(taxon_annotation_path, None, gene_annotation_DIAMOND_path):
+    #if not check_where_resume(taxon_annotation_path, None, gene_annotation_DIAMOND_path):
+    if check_bypass_log(output_folder_path, taxon_annotation_label):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
@@ -728,13 +785,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
-        cleanup_TA_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(taxon_annotation_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(taxon_annotation_path)
-            delete_folder(taxon_annotation_path)
-        cleanup_TA_end = time.time()
+        write_to_bypass_log(output_folder_path, taxon_annotation_label)
+    cleanup_TA_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(taxon_annotation_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(taxon_annotation_path)
+        delete_folder(taxon_annotation_path)
+    cleanup_TA_end = time.time()
     TA_end = time.time()
     print("TA:", '%1.1f' % (TA_end - TA_start - (cleanup_TA_end - cleanup_TA_start)), "s")
     print("TA cleanup:", '%1.1f' % (cleanup_TA_end - cleanup_TA_start), "s")
@@ -746,109 +804,123 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     EC_start = time.time()
     #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
-    if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
-        EC_DETECT_start = time.time()
-        ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
-        if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
-            inner_name = "ec_detect"
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (
-                    ec_annotation_label, 
-                    commands.create_EC_DETECT_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                    True,
-                    inner_name
-                )
+    #if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
+    #if check_bypass_log(output_folder_path, ec_annotation_label):
+    EC_DETECT_start = time.time()
+    ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
+    #if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
+    if check_bypass_log(output_folder_path, ec_annotation_detect_label):
+        inner_name = "ec_detect"
+        process = mp.Process(
+            target = commands.create_and_launch,
+            args = (
+                ec_annotation_label, 
+                commands.create_EC_DETECT_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                True,
+                inner_name
             )
-            process.start()
-            EC_process_list.append(process)
-            #process.join()
-            
-        EC_DETECT_end = time.time()
-        print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+        )
+        process.start()
+        EC_process_list.append(process)
+        #process.join()
         
-        # --------------------------------------------------------------
-        # Priam EC annotation.  Why isn't it parallel? computing restraints.  Not enough mem
-        EC_PRIAM_start = time.time()
-        
-        ec_priam_path = os.path.join(ec_annotation_path, "data", "1_priam")
-        if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = gene_annotation_DIAMOND_path):
-            inner_name = "ec_priam"
-            process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    ec_annotation_label,
-                    commands.create_EC_PRIAM_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                    True,
-                    inner_name
-                )
+    EC_DETECT_end = time.time()
+    print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+    
+    # --------------------------------------------------------------
+    # Priam EC annotation.  Why isn't it parallel? computing restraints.  Not enough mem
+    EC_PRIAM_start = time.time()
+    
+    ec_priam_path = os.path.join(ec_annotation_path, "data", "1_priam")
+    if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = gene_annotation_DIAMOND_path):
+        inner_name = "ec_priam"
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                ec_annotation_label,
+                commands.create_EC_PRIAM_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                True,
+                inner_name
             )
-            process.start()
-            EC_process_list.append(process)
-            #process.join()
-        EC_PRIAM_end = time.time()
-        print("EC PRIAM:", '%1.1f' % (EC_PRIAM_end - EC_PRIAM_start), "s")
-        # --------------------------------------------------------------
-        # DIAMOND EC annotation 
-        EC_DIAMOND_start = time.time()
-        ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
-        if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = gene_annotation_DIAMOND_path):
-            inner_name = "ec_diamond"
-            process = mp.Process(
-                target = commands.create_and_launch, 
-                args = (
-                    ec_annotation_label,
-                    commands.create_EC_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                    True,
-                    inner_name
-                )
+        )
+        process.start()
+        EC_process_list.append(process)
+        #process.join()
+    EC_PRIAM_end = time.time()
+    print("EC PRIAM:", '%1.1f' % (EC_PRIAM_end - EC_PRIAM_start), "s")
+    # --------------------------------------------------------------
+    # DIAMOND EC annotation 
+    EC_DIAMOND_start = time.time()
+    ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
+    if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = gene_annotation_DIAMOND_path):
+        inner_name = "ec_diamond"
+        process = mp.Process(
+            target = commands.create_and_launch, 
+            args = (
+                ec_annotation_label,
+                commands.create_EC_DIAMOND_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                True,
+                inner_name
             )
-            process.start()
-            EC_process_list.append(process)
-            #process.join()
-        EC_DIAMOND_end = time.time()
-        for item in EC_process_list:
-            item.join()
-        EC_process_list[:] = []
-        
-        #----------------------------------------------------------------------
-        # EC post process
-        EC_post_start = time.time()
-        if not (check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path)):
-            inner_name = "ec_post"
-            process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    ec_annotation_label,
-                    commands.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
-                    True,
-                    inner_name
-                )
+        )
+        process.start()
+        EC_process_list.append(process)
+        #process.join()
+    EC_DIAMOND_end = time.time()
+    for item in EC_process_list:
+        item.join()
+    EC_process_list[:] = []
+    
+    ec_detect_out = os.path.join(ec_detect_path, "proteins.fbeta")
+    ec_priam_out = os.path.join(ec_priam_path, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt")
+    ec_diamond_out = os.path.join(ec_diamond_path, "proteins.blastout")
+    
+    if(os.path.exists(ec_detect_out)):
+        write_to_bypass_log(output_folder_path, ec_annotation_detect_label)
+    if(os.path.exists(ec_priam_out)):
+        write_to_bypass_log(output_folder_path, ec_annotation_priam_label)
+    if(os.path.exists(ec_diamond_out)):
+        write_to_bypass_log(output_folder_path, ec_annotation_DIAMOND_label)
+    
+    #----------------------------------------------------------------------
+    # EC post process
+    EC_post_start = time.time()
+    #if not (check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path)):
+    if check_bypass_log(output_folder_path, ec_annotation_pp_label):
+        inner_name = "ec_post"
+        process = mp.Process(
+            target=commands.create_and_launch,
+            args=(
+                ec_annotation_label,
+                commands.create_EC_postprocess_command(ec_annotation_label, gene_annotation_DIAMOND_label),
+                True,
+                inner_name
             )
-            process.start()
-            process.join()
-            
-            cleanup_EC_start = time.time()
-            if(verbose_mode == "quiet"):
-                delete_folder(ec_annotation_path)
-            elif(verbose_mode == "compress"):
-                compress_folder(ec_annotation_path)
-                delete_folder(ec_annotation_path)
-            cleanup_EC_end = time.time()
-        EC_post_end = time.time()
+        )
+        process.start()
+        process.join()
+        write_to_bypass_log(output_folder_path, ec_annotation_pp_label)
+    cleanup_EC_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(ec_annotation_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(ec_annotation_path)
+        delete_folder(ec_annotation_path)
+    cleanup_EC_end = time.time()
+    EC_post_end = time.time()
         
-    else:
-        #EC bypassed
-        EC_PRIAM_start = time.time()
-        EC_PRIAM_end = time.time()
-        EC_DIAMOND_start = time.time()
-        EC_DIAMOND_end = time.time()
-        EC_DETECT_start = time.time()
-        EC_DETECT_end = time.time()
-        EC_post_start = time.time()
-        EC_post_end = time.time()
-        cleanup_EC_start = time.time()
-        cleanup_EC_end = time.time()
+    #else:
+    #    #EC bypassed
+    #    EC_PRIAM_start = time.time()
+    #    EC_PRIAM_end = time.time()
+    #    EC_DIAMOND_start = time.time()
+    #    EC_DIAMOND_end = time.time()
+    #    EC_DETECT_start = time.time()
+    #    EC_DETECT_end = time.time()
+    #    EC_post_start = time.time()
+    #    EC_post_end = time.time()
+    #    cleanup_EC_start = time.time()
+    #    cleanup_EC_end = time.time()
         
         #print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
     #EC_PRIAM_DIAMOND_end = time.time()
@@ -861,7 +933,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # RPKM Table and Cytoscape Network
     Cytoscape_start = time.time()
     network_path = os.path.join(output_folder_path, output_label)
-    if not check_where_resume(network_path, None, ec_annotation_path):
+    #if not check_where_resume(network_path, None, ec_annotation_path):
+    if check_bypass_log(output_folder_path, output_label):
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
@@ -873,14 +946,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
-        
-        cleanup_cytoscape_start = time.time()
-        if(verbose_mode == "quiet"):
-            delete_folder(network_path)
-        elif(verbose_mode == "compress"):
-            compress_folder(network_path)
-            delete_folder(network_path)
-        cleanup_cytoscape_end = time.time()
+        write_to_bypass_log(output_folder_path, output_label)
+    cleanup_cytoscape_start = time.time()
+    if(verbose_mode == "quiet"):
+        delete_folder(network_path)
+    elif(verbose_mode == "compress"):
+        compress_folder(network_path)
+        delete_folder(network_path)
+    cleanup_cytoscape_end = time.time()
         
     Cytoscape_end = time.time()
     end_time = time.time()
@@ -939,6 +1012,7 @@ if __name__ == "__main__":
     parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
     parser.add_argument("--verbose_mode", type=str, help = "Decide how to handle the interim files, Compress them, or leave them alone.  Values are: keep, compress, quiet")
     parser.add_argument("-it", "--infernal_threads", type = int, help = "number of threads allowed for rRNA")
+    parser.add_argument("-keep_second_split", action = 'store_true', help = "keep the interim second-split rRNA data")
     args = parser.parse_args()
 
     if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
@@ -956,6 +1030,7 @@ if __name__ == "__main__":
     num_threads     = args.num_threads if args.num_threads else 0
     no_host         = args.nhost if args.nhost else False
     verbose_mode    = args.verbose_mode if args.verbose_mode else "quiet"
+    keep_second_split = args.keep_second_split if args.keep_second_split else False
     infernal_limit  = args.infernal_threads if args.infernal_threads else 40
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
@@ -974,4 +1049,9 @@ if __name__ == "__main__":
         print("You must specify paired-end or single-end reads as input for the pipeline.")
         sys.exit()
 
-    main(config_file, pair_1, pair_2, single, output_folder, num_threads, no_host, verbose_mode)
+    args_pack = dict()
+    args_pack["no_host"] = no_host
+    args_pack["verbose_mode"] = verbose_mode
+    args_pack["keep_second_split"] = keep_second_split
+    
+    main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack)
