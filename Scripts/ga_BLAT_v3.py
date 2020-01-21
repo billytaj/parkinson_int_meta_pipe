@@ -85,6 +85,7 @@ def get_blat_details(blat_in, reads_in):                          # List of list
                 info_list= line.strip("\n").split("\t") #  make a list from .blatout tab-delimited fields,
                 query= info_list[0]                     #  get the queryID= contig/readID,
                 #info_list.append(len(seqrec[query].seq))#  add query length (int) to end of list,
+                
                 info_list.append(len(seqrec[query]))#  add query length (int) to end of list,
                 hits.append(info_list)                  #  and append the list to the hits list.
 
@@ -290,18 +291,20 @@ def import_reads(reads_in):
                 if(header == 0):
                     header = line.strip(">")
                     header = header.strip("\n")
-                    print("import header:", header)
+                    #print("import header:", header)
                 else:
                     fasta_dict[header] = seq
                     
                     header = line.strip(">")
                     header = header.strip("\n")
-                    print("import header:", header)
+                    #print("import header:", header)
             else:
                 if(seq == 0):
                     seq = line.strip("\n")
                 else:
                     seq += line.strip("\n")
+        #final line:
+        fasta_dict[header] = seq
     return fasta_dict
 
 def get_full_unmapped_reads(mapped_reads, fasta_keys):
