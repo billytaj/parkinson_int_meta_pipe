@@ -68,8 +68,8 @@ def check_file_safety(file_name):
 def get_blat_details(blat_in, reads_in):                          # List of lists [blatout info, read length]=
                                                         #  read_aligned(.blatout file, dict contig/readID<->SeqRecord)
     
-    seqrec = import_reads(reads_in)
-    #seqrec = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
+    #seqrec = import_reads(reads_in)
+    seqrec = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
     
     #for item in seqrec:
     #    print(item, seqrec[item])
@@ -84,9 +84,9 @@ def get_blat_details(blat_in, reads_in):                          # List of list
             if len(line)>=2:                            # If length of line >= 2,
                 info_list= line.strip("\n").split("\t") #  make a list from .blatout tab-delimited fields,
                 query= info_list[0]                     #  get the queryID= contig/readID,
-                #info_list.append(len(seqrec[query].seq))#  add query length (int) to end of list,
+                info_list.append(len(seqrec[query].seq))#  add query length (int) to end of list,
                 
-                info_list.append(len(seqrec[query]))#  add query length (int) to end of list,
+                #info_list.append(len(seqrec[query]))#  add query length (int) to end of list,
                 hits.append(info_list)                  #  and append the list to the hits list.
 
     # return info:
