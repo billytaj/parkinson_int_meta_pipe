@@ -435,8 +435,8 @@ if __name__ == "__main__":
         pair_2_dmd_in  = sys.argv[17]
         pair_2_reads_out= sys.argv[18]
         
-        pair_1_safe = check_file_safety(pair_1_reads_in) and check_file_safety(pair_1_dmd_in) and check_file_safety(pair_1_reads_out)
-        pair_2_safe = check_file_safety(pair_2_reads_in) and check_file_safety(pair_2_dmd_in) and check_file_safety(pair_2_reads_out)
+        pair_1_safe = check_file_safety(pair_1_reads_in) and check_file_safety(pair_1_dmd_in) 
+        pair_2_safe = check_file_safety(pair_2_reads_in) and check_file_safety(pair_2_dmd_in)
         print(dt.today(), "contigs file safe to use:", contigs_safe)
         print(dt.today(), "singletons file safe to use:", singletons_safe)
         print(dt.today(), "pair 1 file safe to use:", pair_1_safe)
@@ -484,15 +484,22 @@ if __name__ == "__main__":
     if(contigs_safe):
         contigs_dmd_hits = get_dmd_hit_details(contigs_dmd_in, contigs_reads_in)
         contigs_unmapped_reads = form_prot_map(contigs_dmd_hits, mapped_reads, contig2read_map, prot2read_map)
+    else:
+        copyfile(contigs_reads_in, contigs_reads_out)
     
     if(singletons_safe):
         singletons_dmd_hits = get_dmd_hit_details(singletons_dmd_in, singletons_reads_in)
         singletons_unmapped_reads = form_prot_map(singletons_dmd_hits, mapped_reads, contig2read_map, prot2read_map)    
+    else:
+        copyfile(singletons_reads_in, singletons_reads_out)
+        
     if(operating_mode == "paired"):
         if(pair_1_safe):
-            pair_1_dmd_hits = get_dmd_hit_details(pair_1_dmd_hits, pair_1_reads_in)
+            pair_1_dmd_hits = get_dmd_hit_details(pair_1_dmd_in, pair_1_reads_in)
             pair_1_unmapped_reads = form_prot_map(pair_1_dmd_hits, mapped_reads, contig2read_map, prot2read_map)
-            
+        else:
+            copyfile(pair_1_reads_in, pair_1_reads_out)
+            copyfile(pair_2_reads_in, pair_2_reads_out)
 
     process_store = []
 
