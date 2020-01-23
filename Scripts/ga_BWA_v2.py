@@ -26,6 +26,8 @@ from collections import defaultdict
 from Bio import SeqIO
 from datetime import datetime as dt
 import multiprocessing as mp
+from shutil import copyfile
+
 
 def check_file_safety(file_name):
     if(os.path.exists(file_name)):
@@ -337,12 +339,23 @@ if __name__ == "__main__":
 
     if(contigs_safe):
         contig_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+    else:
+        print(dt.today(), "contigs deemed unsafe.  passing files to BLAT")
+        copyfile(contig_reads_in, contig_reads_out)
+        
     if(singletons_safe):
         singletons_unmapped_reads = gene_map(singletons_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+    else:
+        print(dt.today(), "singletons deemed unsafe.  passing files to BLAT")
+        copyfile(singletons_reads_in, singletons_reads_out)
     
     if(operating_mode == "paired"):
         if(pair_1_safe):
             pair_1_unmapped_reads = gene_map(pair_1_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+        else:
+            print(dt.today(), "pairs deemed unsafe.  passing files to BLAT")
+            copyfile(pair_1_reads_in, pair_1_reads_out)
+            copyfile(pair_2_reads_in, pair_2_reads_out)
         #pair_2_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
     
     process_store = []
@@ -383,46 +396,5 @@ if __name__ == "__main__":
     process_store[:] = []
     print(dt.today(), "GA BWA pp done")
     
-    
-    
-    
-# # check number of readtype sets (file inputs)
-# numsets= (len(sys.argv)-4)/3
-
-# if numsets not in [2,4]:
-    # sys.exit('Incorrect number of readtype sets.')
-
-# # process BWA output:
-# # readtype sets: contigs, merged, unmerged1, unmerged2
-# for x in range(int((len(sys.argv)-4)/3)):
-    # read_file= sys.argv[3*x+4]      # INPUT: all contig/readIDs and seqs (.fasta)
-    # read_seqs= SeqIO.index(read_file, os.path.splitext(read_file)[1][1:])
-                                    # # dict of all read SeqRecords: key=contig/readID
-                                    # #  (second argument specifies filetype, e.g., "fasta")
-    # BWA_sam_file= sys.argv[3*x+5]   # INPUT: BWA-aligned&unaligned contig/readIDs (.sam)
-    # output_file= sys.argv[3*x+6]    # OUTPUT: non-BWA-aligned contig/readIDs and seqs (.fasta)
-
-    # # extraction of "non-BWA-aligned" and "BWA-aligned":
-    # if x!=3:                                        # Only do once for unmerged paired end (same .sam file).
-        # unmapped_reads= gene_map(sam, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)      # Store BWA-aligned contigs/reads in gene2read_map
-                                                    # #  (aligned geneID<->readID(s) dict),
-                                                    # #  and return a set of unmapped readIDs
-    # # WRITE OUTPUT: non-BWA-aligned contig/readIDs:
-    # # and seqs (.fasta):
-    # unmapped_seqs = []                               # Inintialize list of SeqRecords.
-    # for read in unmapped_reads:                     # Put corresponding SeqRecords for unmapped_reads
-        # if(read in read_seqs):
-            # unmapped_seqs.append(read_seqs[read])       #  into unmapped_seqs
-        # else:
-            # print("ignoring:", read, "can't find in read_seqs")
-    # with open(output_file,"w") as out:
-        # SeqIO.write(unmapped_seqs, out, "fasta")    #  and write it to file.
-
-    # # print no. aligned reads from current readtype set:
-    # print (str(len(mapped_reads)-prev_mapping_count) + ' additional reads were mapped from ' + os.path.basename(read_file))
-    # if x!=2: print ('')
-    # prev_mapping_count= len(mapped_reads)
-
-
 
 
