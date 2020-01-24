@@ -288,9 +288,9 @@ if __name__ == "__main__":
     contig2read_file = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
     gene2read_file = sys.argv[3]     # OUTPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
     
-    contig_reads_in = sys.argv[4]
-    contig_bwa_in = sys.argv[5]
-    contig_reads_out = sys.argv[6]
+    contigs_reads_in = sys.argv[4]
+    contigs_bwa_in = sys.argv[5]
+    contigs_reads_out = sys.argv[6]
     
     singletons_reads_in = sys.argv[7]
     singletons_bwa_in = sys.argv[8]
@@ -321,7 +321,7 @@ if __name__ == "__main__":
     prev_mapping_count = 0
 
 
-    contigs_safe = check_file_safety(contig_reads_in) and check_file_safety(contig_bwa_in)
+    contigs_safe = check_file_safety(contigs_reads_in) and check_file_safety(contigs_bwa_in)
     singletons_safe = check_file_safety(singletons_reads_in) and check_file_safety(singletons_bwa_in)
 
     print(dt.today(), "contigs are safe:", contigs_safe)
@@ -338,25 +338,38 @@ if __name__ == "__main__":
     #####################################
 
     if(contigs_safe):
-        contig_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+        contig_unmapped_reads = gene_map(contigs_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
     else:
-        print(dt.today(), "contigs deemed unsafe.  passing files to BLAT")
-        copyfile(contig_reads_in, contig_reads_out)
-        
+        if(os.path.exists(contigs_reads_in)):
+            print(dt.today(), "contigs deemed unsafe.  passing files to BLAT")
+            copyfile(contigs_reads_in, contigs_reads_out)
+        else:
+            print(dt.today(), "contigs don't exist.  writing dummy file")
+            open(contigs_reads_out, "a").close()
+            
     if(singletons_safe):
         singletons_unmapped_reads = gene_map(singletons_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
     else:
-        print(dt.today(), "singletons deemed unsafe.  passing files to BLAT")
-        copyfile(singletons_reads_in, singletons_reads_out)
-    
+        if(os.path.exists(singletons_reads_in)):
+            print(dt.today(), "singletons deemed unsafe.  passing files to BLAT")
+            copyfile(singletons_reads_in, singletons_reads_out)
+        else:
+            print(dt.today(), "singletons don't exist.  writing dummy file")
+            open(singletons_reads_out, "a").close()
+            
     if(operating_mode == "paired"):
         if(pair_1_safe):
             pair_1_unmapped_reads = gene_map(pair_1_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
         else:
-            print(dt.today(), "pairs deemed unsafe.  passing files to BLAT")
-            copyfile(pair_1_reads_in, pair_1_reads_out)
-            copyfile(pair_2_reads_in, pair_2_reads_out)
-        #pair_2_unmapped_reads = gene_map(contig_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+            if(os.path.exists(pair_1_reads_in)):
+                print(dt.today(), "pairs deemed unsafe.  passing files to BLAT")
+                copyfile(pair_1_reads_in, pair_1_reads_out)
+                copyfile(pair_2_reads_in, pair_2_reads_out)
+            else:
+                print(dt.today(), "paired files don't exist.  writing dummy file")
+                open(pair_1_reads_out, "a").close()
+                open(pair_2_reads_out, "a").close()
+        #pair_2_unmapped_reads = gene_map(contigs_bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
     
     process_store = []
     
@@ -366,7 +379,7 @@ if __name__ == "__main__":
     process_store.append(gene_map_export_process)
     
     if(contigs_safe):
-        contig_write_process = mp.Process(target = write_unmapped_reads, args = (contig_unmapped_reads, contig_reads_in, contig_reads_out))
+        contig_write_process = mp.Process(target = write_unmapped_reads, args = (contig_unmapped_reads, contigs_reads_in, contigs_reads_out))
         contig_write_process.start()
         print(dt.today(), "GA BWA pp writing unmapped contigs process launched")
         process_store.append(contig_write_process)

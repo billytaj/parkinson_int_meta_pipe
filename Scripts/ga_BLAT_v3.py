@@ -401,8 +401,12 @@ if __name__ == "__main__":
             
         #contigs_unmapped_reads = get_full_unmapped_reads(contigs_mapped_reads, contigs_reads_in)
     else:
-        print("nothing hit for contigs.  copying reads for DIAMOND")
-        copyfile(contigs_reads_in, contigs_reads_out)
+        if(os.path.exists(contigs_reads_in)):
+            print(dt.today(), "contigs deemed unsafe.  passing files to DIAMOND")
+            copyfile(contigs_reads_in, contigs_reads_out)
+        else:
+            print(dt.today(), "contigs don't exist.  writing dummy file")
+            open(contigs_reads_out, "a").close()
     
     #sys.exit("early")
     if(singletons_safe):
@@ -410,8 +414,12 @@ if __name__ == "__main__":
         singletons_mapped_reads = make_gene_map(singletons_blat_hits, mapped_reads, gene2read_map, contig2read_map)
         singletons_unmapped_reads = get_full_unmapped_reads(singletons_mapped_reads, singletons_reads_in_dict)
     else:
-        print("nothing hit for singletons in BLAT.  copying reads for DIAMOND")
-        copyfile(singletons_reads_in, singletons_reads_out)
+        if(os.path.exists(singletons_reads_in)):
+            print(dt.today(), "singletons deemed unsafe.  passing files to DIAMOND")
+            copyfile(singletons_reads_in, singletons_reads_out)
+        else:
+            print(dt.today(), "singletons don't exist.  writing dummy file")
+            open(singletons_reads_out, "a").close()
     
     
     
@@ -422,8 +430,14 @@ if __name__ == "__main__":
             pair_1_mapped_reads = make_gene_map(pair_1_blat_hits, mapped_reads, gene2read_map, contig2read_map)
             pair_1_unmapped_reads = get_full_unmapped_reads(pair_1_mapped_reads, pair_1_reads_in_dict)
         else:
-            print("nothing hit for pair 1.  copying for DIAMOND")
-            copyfile(pair_1_reads_in, pair_1_reads_out)
+            if(os.path.exists(pair_1_reads_in)):
+                print(dt.today(), "pairs deemed unsafe.  passing files to DIAMOND")
+                copyfile(pair_1_reads_in, pair_1_reads_out)
+                copyfile(pair_2_reads_in, pair_2_reads_out)
+            else:
+                print(dt.today(), "paired files don't exist.  writing dummy file")
+                open(pair_1_reads_out, "a").close()
+                open(pair_2_reads_out, "a").close()
             
         #pair_2_blat_hits = get_blat_details(pair_2_blat_in, pair_2_reads_in)
         #pair_2_unmapped_reads = gene_map(pair_2_blat_hits, mapped_reads, gene2read_map, contig2read_map)

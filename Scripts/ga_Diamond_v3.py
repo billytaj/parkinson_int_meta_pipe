@@ -485,21 +485,37 @@ if __name__ == "__main__":
         contigs_dmd_hits = get_dmd_hit_details(contigs_dmd_in, contigs_reads_in)
         contigs_unmapped_reads = form_prot_map(contigs_dmd_hits, mapped_reads, contig2read_map, prot2read_map)
     else:
-        copyfile(contigs_reads_in, contigs_reads_out)
+        if(os.path.exists(contigs_reads_in)):
+            print(dt.today(), "contigs deemed unsafe.  just dump it")
+            copyfile(contigs_reads_in, contigs_reads_out)
+        else:
+            print(dt.today(), "contigs don't exist.  writing dummy file")
+            open(contigs_reads_out, "a").close()
     
     if(singletons_safe):
         singletons_dmd_hits = get_dmd_hit_details(singletons_dmd_in, singletons_reads_in)
         singletons_unmapped_reads = form_prot_map(singletons_dmd_hits, mapped_reads, contig2read_map, prot2read_map)    
     else:
-        copyfile(singletons_reads_in, singletons_reads_out)
+        if(os.path.exists(singletons_reads_in)):
+            print(dt.today(), "singletons deemed unsafe.  just dump it")
+            copyfile(singletons_reads_in, singletons_reads_out)
+        else:
+            print(dt.today(), "singletons don't exist.  writing dummy file")
+            open(singletons_reads_out, "a").close()
         
     if(operating_mode == "paired"):
         if(pair_1_safe):
             pair_1_dmd_hits = get_dmd_hit_details(pair_1_dmd_in, pair_1_reads_in)
             pair_1_unmapped_reads = form_prot_map(pair_1_dmd_hits, mapped_reads, contig2read_map, prot2read_map)
         else:
-            copyfile(pair_1_reads_in, pair_1_reads_out)
-            copyfile(pair_2_reads_in, pair_2_reads_out)
+            if(os.path.exists(pair_1_reads_in)):
+                print(dt.today(), "pairs deemed unsafe.  just dump it")
+                copyfile(pair_1_reads_in, pair_1_reads_out)
+                copyfile(pair_2_reads_in, pair_2_reads_out)
+            else:
+                print(dt.today(), "paired files don't exist.  writing dummy file")
+                open(pair_1_reads_out, "a").close()
+                open(pair_2_reads_out, "a").close()
 
     process_store = []
 
