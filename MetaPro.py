@@ -832,7 +832,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     EC_PRIAM_start = time.time()
     
     ec_priam_path = os.path.join(ec_annotation_path, "data", "1_priam")
-    if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = gene_annotation_DIAMOND_path):
+    #if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = gene_annotation_DIAMOND_path):
+    if check_bypass_log(output_folder_path, ec_annotation_priam_label):
         inner_name = "ec_priam"
         process = mp.Process(
             target=commands.create_and_launch,
@@ -852,7 +853,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # DIAMOND EC annotation 
     EC_DIAMOND_start = time.time()
     ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
-    if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = gene_annotation_DIAMOND_path):
+    #if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = gene_annotation_DIAMOND_path):
+    if check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
         inner_name = "ec_diamond"
         process = mp.Process(
             target = commands.create_and_launch, 
