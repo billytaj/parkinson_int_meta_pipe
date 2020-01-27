@@ -151,6 +151,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     no_host = args_pack["no_host"]
     keep_second_split = args_pack["keep_second_split"]
     verbose_mode = args_pack["verbose_mode"]
+    infernal_limit = args_pack["infernal_limit"]
 
     if not single_path == "":
         read_mode = "single"
@@ -1061,5 +1062,6 @@ if __name__ == "__main__":
     args_pack["no_host"] = no_host
     args_pack["verbose_mode"] = verbose_mode
     args_pack["keep_second_split"] = keep_second_split
+    args_pack["infernal_limit"] = infernal_limit
     
     main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack)
