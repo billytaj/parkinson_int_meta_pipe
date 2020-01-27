@@ -876,13 +876,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     ec_detect_out = os.path.join(ec_detect_path, "proteins.fbeta")
     ec_priam_out = os.path.join(ec_priam_path, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt")
     ec_diamond_out = os.path.join(ec_diamond_path, "proteins.blastout")
-    
-    if(os.path.exists(ec_detect_out)):
-        write_to_bypass_log(output_folder_path, ec_annotation_detect_label)
-    if(os.path.exists(ec_priam_out)):
-        write_to_bypass_log(output_folder_path, ec_annotation_priam_label)
-    if(os.path.exists(ec_diamond_out)):
-        write_to_bypass_log(output_folder_path, ec_annotation_DIAMOND_label)
+    if check_bypass_log(output_folder_path, ec_annotation_detect_label):
+        if(os.path.exists(ec_detect_out)):
+            write_to_bypass_log(output_folder_path, ec_annotation_detect_label)
+    if check_bypass_log(output_folder_path, ec_annotation_priam_label):
+        if(os.path.exists(ec_priam_out)):
+            write_to_bypass_log(output_folder_path, ec_annotation_priam_label)
+    if check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
+        if(os.path.exists(ec_diamond_out)):
+            write_to_bypass_log(output_folder_path, ec_annotation_DIAMOND_label)
     
     #----------------------------------------------------------------------
     # EC post process
