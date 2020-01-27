@@ -362,7 +362,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
             
             #if not check_where_resume(job_label = None, full_path = second_split_path, dep_job_path = vector_path):
-            if check_bypass_log(output_folder_path, rRNA_filter_second_split_label):
+            if check_bypass_log(output_folder_path, rRNA_filter_second_split_label + "_" + section):
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
                 inner_name = "rRNA_filter_prep_" + section
                 process = mp.Process(
@@ -377,7 +377,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
                 process.start()
                 process.join()
-                write_to_bypass_log(output_folder_path, rRNA_filter_second_split_label)
+                write_to_bypass_log(output_folder_path, rRNA_filter_second_split_label + "_" + section)
                 
             #secondary split -> number of files
                 concurrent_job_count = 0
@@ -419,7 +419,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         
             #if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
-            if check_bypass_log(output_folder_path, rRNA_filter_barrnap_label):
+            if check_bypass_log(output_folder_path, rRNA_filter_barrnap_label + "_" + section):
                 concurrent_job_count = 0
                 batch_count = 0
                 for item in os.listdir(second_split_path):
@@ -457,11 +457,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list    
-                write_to_bypass_log(output_folder_path, rRNA_filter_barrnap_label)
+                write_to_bypass_log(output_folder_path, rRNA_filter_barrnap_label + "_" + section)
                 
                 
             #if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
-            if check_bypass_log(output_folder_path, rRNA_filter_infernal_label):
+            if check_bypass_log(output_folder_path, rRNA_filter_infernal_label + "_" + section):
                 concurrent_job_count = 0
                 batch_count = 0
                 #these jobs now have to be launched in segments
@@ -494,7 +494,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list
-                write_to_bypass_log(output_folder_path, rRNA_filter_infernal_label)
+                write_to_bypass_log(output_folder_path, rRNA_filter_infernal_label + "_" + section)
             
         if check_bypass_log(output_folder_path, rRNA_filter_post_label):
             print(dt.today(), "now running rRNA filter post")
@@ -652,7 +652,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
     #if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_label):
-        BlatPool = mp.Pool(int(thread_count / 2))
+        real_thread_count = thread_count
+        if(thread_count == 1):
+            real_thread_count = 2
+        BlatPool = mp.Pool(int(real_thread_count / 2))
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
