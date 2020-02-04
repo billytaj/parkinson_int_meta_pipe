@@ -1557,7 +1557,8 @@ class mt_pipe_commands:
         return COMMANDS_Assemble
 
    
-
+    def split_ga_data_command(self, stage_name, dependency_stage_name, section):
+        return "None"
 
 
     def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
@@ -1584,6 +1585,10 @@ class mt_pipe_commands:
         bwa_job += os.path.join(dep_loc, section_file) + " | "
         bwa_job += self.tool_path_obj.SAMTOOLS + " view "
         bwa_job += "> " + os.path.join(bwa_folder, section + ".sam")
+        
+        
+        
+        
 
         COMMANDS_BWA = [
             bwa_job
