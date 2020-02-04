@@ -1558,7 +1558,15 @@ class mt_pipe_commands:
 
    
     def split_ga_data_command(self, stage_name, dependency_stage_name, section):
-        return "None"
+        subfolder = os.path.join(self.Output_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        split_folder = os.path.join(data_folder, "0_read_split")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(split_folder)
+        
+        split_reads = 
 
 
     def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
