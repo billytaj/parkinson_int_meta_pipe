@@ -595,34 +595,77 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # ----------------------------------------------
     # BWA gene annotation
+    
+    
+    
+    
     GA_BWA_start = time.time()
     gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
     #if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
     if check_bypass_log(output_folder_path, gene_annotation_BWA_label):
-        sections = ["contigs", "singletons"]
-        if read_mode == "paired":
+        process = mp.Process(
+            target = commands.create_and_launch, 
+            args = (
+                gene_annotation_BWA_label, 
+                commands.create_split_fasta_data_command(gene_annotation_BWA_label, assemble_contigs_label, "contigs"),
+                True, 
+                "GA_prep_split_contigs"
+            )
+        )
+        process.start()
+        mp_store.append(process)
+        sections = ["singletons"]
+        if(read_mode == "paired"):
             sections.extend(["pair_1", "pair_2"])
-        for section in sections:
-            inner_name = "BWA_" + section
+        for section in sections:    
             process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    gene_annotation_BWA_label,
-                    commands.create_BWA_annotate_command(gene_annotation_BWA_label, assemble_contigs_label, section),
+                target = commands.create_and_launch, 
+                args = (
+                    gene_annotation_BWA_label, 
+                    commands.create_split_fastq_data_command(gene_annotation_BWA_label, assemble_contigs_label, section),
                     True,
-                    inner_name
+                    "GA_prep_split_" + section
                 )
             )
             process.start()
             mp_store.append(process)
-
+        
         for item in mp_store:
             item.join()
-        mp_store[:] = []  # clear the list
+        mp_store[:] = []
+        
+        #-------------------------------------------------------------------------
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        real_thread_count = thread_count
+        if(thread_count == 1):
+            real_thread_count = 2
+        BWAPool = mp.Pool(int(real_thread_count / 2))
+        for section in sections:
+            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "BWA" + "_" + file_tag
+                BWAPool.apply_async(commands.create_and_launch,
+                                     args=(
+                                         gene_annotation_BWA_label,
+                                         commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, split_sample),
+                                         True,
+                                         job_name
+                                     )
+                                 )
+        BWAPool.close()
+        BWAPool.join()
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_label)
-        inner_name = "BWA_pp"
+        
     
     if check_bypass_log(output_folder_path, gene_annotation_BWA_pp_label):
+        
+        
+        
+        
+        inner_name = "BWA_pp"
         process = mp.Process(
             target=commands.create_and_launch,
             args=(

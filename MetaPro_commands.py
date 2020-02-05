@@ -1557,17 +1557,52 @@ class mt_pipe_commands:
         return COMMANDS_Assemble
 
    
-    def split_ga_data_command(self, stage_name, dependency_stage_name, section):
+    def split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category):
         subfolder = os.path.join(self.Output_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
-        split_folder = os.path.join(data_folder, "0_read_split")
+        split_folder = os.path.join(data_folder, "0_read_split", category)
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
         
-        split_reads = 
+        split_fastq = ">&2 echo splitting fastq for " + category + " | "
+        split_fastq += "split -l 250000" + " "        
+        split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
+        split_fastq += "--additional-suffix .fastq" + " "
+        split_fastq += "-d" + " "
+        split_fastq += os.path.join(split_folder, category + "_")
+        
+        COMMANDS_GA_prep_fastq = [
+            split_fastq
+        ]
+        
+        return COMMANDS_GA_prep_fastq
 
+    def split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        split_folder    = os.path.join(data_folder, "0_read_split", category)
+        dep_folder      = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(split_folder)
+        
+        
+        
+        split_fasta = ">&2 echo splitting fasta for " + category + " | "
+        split_fasta += self.tool_path_obj.Python + " "    
+        split_fasta += self.tool_path_obj.File_splitter + " "
+        split_fasta += os.path.join(dep_folder, category, ".fasta") + " "
+        split_fasta += os.path.join(split_folder, category) + " "
+        split_fasta += self.Threads_str
+        
+        COMMANDS_GA_prep_fasta = [
+            split_fasta
+        ]
+        
+        return COMMANDS_GA_prep_fasta
 
     def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
         # meant to be called multiple times: section -> contigs, singletons, pair_1, pair_2
@@ -1594,8 +1629,33 @@ class mt_pipe_commands:
         bwa_job += self.tool_path_obj.SAMTOOLS + " view "
         bwa_job += "> " + os.path.join(bwa_folder, section + ".sam")
         
+
+        COMMANDS_BWA = [
+            bwa_job
+        ]
+
+        return COMMANDS_BWA
+
+    def create_BWA_annotate_command_v2(self, stage_name, query_file):
+        # meant to be called multiple times: query file is a split file
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        bwa_folder      = os.path.join(data_folder, "1_bwa")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+
+        file_tag = os.path.basename(query_file)
+        file_tag = os.path.splitext(file_tag)[0]
         
-        
+        bwa_job = ">&2 echo BWA on " + file_tag + " | "
+        bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
+        bwa_job += self.tool_path_obj.DNA_DB + " "
+        #bwa_job += os.path.join(dep_loc, section_file) + " | "
+        bwa_job += query_file + " | "
+        bwa_job += self.tool_path_obj.SAMTOOLS + " view "
+        bwa_job += "> " + os.path.join(bwa_folder, file_tag + ".sam")
         
 
         COMMANDS_BWA = [
@@ -1603,6 +1663,7 @@ class mt_pipe_commands:
         ]
 
         return COMMANDS_BWA
+
 
     def create_BWA_pp_command(self, stage_name, dependency_stage_name):
         subfolder       = os.path.join(self.Output_Path, stage_name)
@@ -1636,6 +1697,52 @@ class mt_pipe_commands:
             map_read_bwa += os.path.join(bwa_folder, "pair_2.sam") + " "  # IN
             map_read_bwa += os.path.join(final_folder, "pair_2.fasta")  # OUT
 
+        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+
+        COMMANDS_Annotate_BWA = [
+            map_read_bwa,
+            copy_contig_map
+        ]
+
+        return COMMANDS_Annotate_BWA
+        
+        
+    def create_BWA_pp_command_v2(self, stage_name, query_file, section):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+            
+        
+        #meant to be called on the split-file version.  PP script will not merge gene maps.
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        bwa_folder      = os.path.join(data_folder, "1_bwa")
+        split_folder    = os.path.join(data_folder, "0_read_split")
+        final_folder    = os.path.join(subfolder, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+        self.make_folder(final_folder)
+        
+        reads_in    = query_file
+        bwa_in      = os.path.join(bwa_folder, sample_root_name + ".sam")
+        reads_out   = ""
+        if(sample_root_name.startswith("contig")):
+            reads_out = os.path.join(final_folder, sample_root_name + ".fasta")
+        else:
+            reads_out = os.path.join(final_folder, sample_root_name + ".fastq")
+            
+        map_read_bwa = ">&2 echo GA BWA PP generic | "
+        map_read_bwa += self.tool_path_obj.Python + " "
+        map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
+        map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
+        map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
+        map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
+        map_read_bwa += reads_in + " "
+        map_read_bwa += bwa_in + " "
+        map_read_bwa += reads_out
+        
         copy_contig_map = ">&2 echo copy contig map | "
         copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
 
