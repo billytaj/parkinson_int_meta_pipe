@@ -607,7 +607,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             target = commands.create_and_launch, 
             args = (
                 gene_annotation_BWA_label, 
-                commands.create_split_fasta_data_command(gene_annotation_BWA_label, assemble_contigs_label, "contigs"),
+                commands.create_split_ga_fasta_data_command(gene_annotation_BWA_label, assemble_contigs_label, "contigs"),
                 True, 
                 "GA_prep_split_contigs"
             )
@@ -622,7 +622,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 target = commands.create_and_launch, 
                 args = (
                     gene_annotation_BWA_label, 
-                    commands.create_split_fastq_data_command(gene_annotation_BWA_label, assemble_contigs_label, section),
+                    commands.create_split_ga_fastq_data_command(gene_annotation_BWA_label, assemble_contigs_label, section),
                     True,
                     "GA_prep_split_" + section
                 )

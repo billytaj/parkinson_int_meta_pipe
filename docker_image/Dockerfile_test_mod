@@ -210,41 +210,41 @@ RUN apt-get install -y vim
 WORKDIR /pipeline
 RUN mkdir /pipeline/Scripts && mkdir /pipeline/custom_databases && mkdir /pipeline/setup_scripts
 
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/MetaPro.py /pipeline
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/MetaPro_paths.py /pipeline
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/MetaPro_commands.py /pipeline
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Config.ini /pipeline
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/Detect_2.2.7.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/assembly_deduplicate.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/assembly_map.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ea_combine_v3.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ga_BLAT_v3.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ga_BWA_v2.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ga_Diamond_v3.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_contig_stats.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_data_change_metrics.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_EC_metrics.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_read_counts.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_read_quality_metrics.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_table_with_taxonomy_v2.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_table_v3.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_reformat_rpkm_table.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/output_get_host_reads.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_BLAT_filter.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_orphan.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_remove_tag.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_rRNA_barrnap.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_rRNA_infernal.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_repopulation.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_sam.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_sort.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/read_split.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ta_combine_v2.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ta_constrain.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ta_constrain_taxonomy_v2.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ta_taxid.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/ta_wevote_parser.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/GA_bypass/Scripts/remove_gaps_in_fasta.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/MetaPro.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/MetaPro_paths.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/MetaPro_commands.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Config.ini /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/Detect_2.2.7.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/assembly_deduplicate.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/assembly_map.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ea_combine_v3.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ga_BLAT_generic.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ga_BWA_generic.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ga_Diamond_v3.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_contig_stats.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_data_change_metrics.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_EC_metrics.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_read_counts.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_read_quality_metrics.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_table_with_taxonomy_v2.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_table_v3.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_reformat_rpkm_table.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_get_host_reads.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_BLAT_filter.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_orphan.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_remove_tag.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_rRNA_barrnap.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_rRNA_infernal.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_repopulation.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_sam.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_sort.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/read_split.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ta_combine_v2.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ta_constrain.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ta_constrain_taxonomy_v2.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ta_taxid.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ta_wevote_parser.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/remove_gaps_in_fasta.py /pipeline/Scripts
 
 
 #--------------------------------------------

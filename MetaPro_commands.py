@@ -1557,7 +1557,7 @@ class mt_pipe_commands:
         return COMMANDS_Assemble
 
    
-    def split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category):
+    def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category):
         subfolder = os.path.join(self.Output_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
         split_folder = os.path.join(data_folder, "0_read_split", category)
@@ -1579,7 +1579,7 @@ class mt_pipe_commands:
         
         return COMMANDS_GA_prep_fastq
 
-    def split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category):
+    def create_split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category):
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
