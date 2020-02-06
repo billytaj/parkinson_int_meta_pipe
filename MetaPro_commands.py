@@ -1708,7 +1708,7 @@ class mt_pipe_commands:
         return COMMANDS_Annotate_BWA
         
         
-    def create_BWA_pp_command_v2(self, stage_name, query_file, section):
+    def create_BWA_pp_command_v2(self, stage_name, query_file):
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
             
@@ -1771,6 +1771,31 @@ class mt_pipe_commands:
         blat_command += os.path.join(blat_folder, section + "_" + fasta + ".blatout")
 
         return [blat_command]
+        
+    def create_BLAT_annotate_command_v2(self, stage_name, query_file, fasta_db):
+        #takes in a sample query file (expecting a segment of the whole GA data, after BWA
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        
+        subfolder   = os.path.join(self.Output_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        blat_folder = os.path.join(data_folder, "0_blat")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_folder)
+
+        blat_command = ">&2 echo BLAT annotation for " + sample_root_name + " " + fasta_db + " | "
+        blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
+        blat_command += self.tool_path_obj.DNA_DB_Split + fasta_db + " "
+        blat_command += query_file
+        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
+        blat_command += os.path.join(blat_folder, sample_root_name + "_" + fasta_db + ".blatout")
+
+        return [blat_command]
+        
+        
+        
 
     def create_BLAT_cat_command(self, stage_name, section):
         # this is meant to be called for each section: contigs, singletons, pair_1, pair_2

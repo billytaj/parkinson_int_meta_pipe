@@ -240,6 +240,7 @@ def make_gene_map(hits, mapped_reads, gene2read_map, contig2read_map):          
     return mapped_reads_from_session
 
 def write_unmapped_seqs(unmapped_reads, reads_in, reads_out):
+    #This is specifically made to export the reads as fastas, for the purpose of combining it with BLAT
     if(len(unmapped_reads) == 0):
         print(dt.today(), "no unmapped reads found.  skipping the write")
     else:

@@ -648,35 +648,42 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA" + "_" + file_tag
                 BWAPool.apply_async(commands.create_and_launch,
-                                     args=(
-                                         gene_annotation_BWA_label,
-                                         commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, split_sample),
-                                         True,
-                                         job_name
-                                     )
-                                 )
+                    args = (
+                        gene_annotation_BWA_label,
+                        commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, split_sample),
+                        True,
+                        job_name
+                    )
+                )
         BWAPool.close()
         BWAPool.join()
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_label)
         
     
     if check_bypass_log(output_folder_path, gene_annotation_BWA_pp_label):
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        real_thread_count = thread_count
+        if(thread_count == 1):
+            real_thread_count = 2
+        BWA_pp_Pool = mp.Pool(int(real_thread_count / 2))
+        for section in sections:
+            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "BWA_pp" + "_" + file_tag
+                BWA_pp_Pool.apply_async(commands.create_and_launch,
+                    args = (
+                        gene_annotation_BWA_label, 
+                        commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, split_sample),
+                        True,
+                        job_name
+                    )
+                )
+        BWA_pp_Pool.close()
+        BWA_pp_Pool.join()
         
-        
-        
-        
-        inner_name = "BWA_pp"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                gene_annotation_BWA_label,
-                commands.create_BWA_pp_command(gene_annotation_BWA_label, assemble_contigs_label),
-                True,
-                inner_name
-            )
-        )
-        process.start()
-        process.join()
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_pp_label)
         
     cleanup_GA_BWA_start = time.time()
@@ -704,17 +711,21 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
         for section in sections:
-            for fasta_db in os.listdir(paths.DNA_DB_Split):
-                if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna") or fasta_db.endswith(".ffn"):
-                    inner_name = "BLAT_" + section + "_" + fasta_db
-                    BlatPool.apply_async(commands.create_and_launch,
-                                         args=(
-                                             gene_annotation_BLAT_label,
-                                             commands.create_BLAT_annotate_command(gene_annotation_BLAT_label, gene_annotation_BWA_label, section, fasta_db),
-                                             True,
-                                             inner_name
-                                         )
-                                         )
+            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    for fasta_db in os.listdir(paths.DNA_DB_Split):
+                        if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna") or fasta_db.endswith(".ffn"):
+                            job_name = "BLAT_" + file_tag + "_" + fasta_db
+                            BlatPool.apply_async(commands.create_and_launch,
+                                args=(
+                                    gene_annotation_BLAT_label,
+                                    commands.create_BLAT_annotate_command(gene_annotation_BLAT_label, split_sample, fasta_db),
+                                    True,
+                                    job_name
+                                )
+                            )
         BlatPool.close()
         BlatPool.join()
 
