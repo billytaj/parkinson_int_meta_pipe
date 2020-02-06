@@ -196,30 +196,31 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
     # and to perform the auto-resume/kill features
 
-    quality_filter_label = "quality_filter"
-    host_filter_label = "host_read_filter"
-    vector_filter_label = "vector_read_filter"
-    rRNA_filter_label = "rRNA_filter"
-    rRNA_filter_second_split_label = "rRNA_filter_second_split"
-    rRNA_filter_barrnap_label = "rRNA_filter_barrnap"
-    rRNA_filter_infernal_label  = "rRNA_filter_infernal"
-    rRNA_filter_post_label = "rRNA_filter_post"
-    repop_job_label = "duplicate_repopulation"
-    assemble_contigs_label = "assemble_contigs"
-    destroy_contigs_label = "destroy_contigs"
-    gene_annotation_BWA_label = "gene_annotation_BWA"
-    gene_annotation_BWA_pp_label = "gene_annotation_BWA_pp"
-    gene_annotation_BLAT_label = "gene_annotation_BLAT"
-    gene_annotation_BLAT_pp_label = "gene_annotation_BLAT_pp"
-    gene_annotation_DIAMOND_label = "gene_annotation_DIAMOND"
-    gene_annotation_DIAMOND_pp_label = "gene_annotation_DIAMOND_pp"
-    taxon_annotation_label = "taxonomic_annotation"
-    ec_annotation_label = "enzyme_annotation"
-    ec_annotation_detect_label = "enzyme_annotation_detect"
-    ec_annotation_priam_label = "enzyme_annotation_priam"
-    ec_annotation_DIAMOND_label = "enzyme_annotation_DIAMOND"
-    ec_annotation_pp_label = "enzyme_annotation_pp"
-    output_label = "outputs"
+    quality_filter_label                = "quality_filter"
+    host_filter_label                   = "host_read_filter"
+    vector_filter_label                 = "vector_read_filter"
+    rRNA_filter_label                   = "rRNA_filter"
+    rRNA_filter_second_split_label      = "rRNA_filter_second_split"
+    rRNA_filter_barrnap_label           = "rRNA_filter_barrnap"
+    rRNA_filter_infernal_label          = "rRNA_filter_infernal"
+    rRNA_filter_post_label              = "rRNA_filter_post"
+    repop_job_label                     = "duplicate_repopulation"
+    assemble_contigs_label              = "assemble_contigs"
+    destroy_contigs_label               = "destroy_contigs"
+    gene_annotation_BWA_label           = "gene_annotation_BWA"
+    gene_annotation_BWA_pp_label        = "gene_annotation_BWA_pp"
+    gene_annotation_BLAT_label          = "gene_annotation_BLAT"
+    gene_annotation_BLAT_cat_label      = "gene_annotation_BLAT_cat"
+    gene_annotation_BLAT_pp_label       = "gene_annotation_BLAT_pp"
+    gene_annotation_DIAMOND_label       = "gene_annotation_DIAMOND"
+    gene_annotation_DIAMOND_pp_label    = "gene_annotation_DIAMOND_pp"
+    taxon_annotation_label              = "taxonomic_annotation"
+    ec_annotation_label                 = "enzyme_annotation"
+    ec_annotation_detect_label          = "enzyme_annotation_detect"
+    ec_annotation_priam_label           = "enzyme_annotation_priam"
+    ec_annotation_DIAMOND_label         = "enzyme_annotation_DIAMOND"
+    ec_annotation_pp_label              = "enzyme_annotation_pp"
+    output_label                        = "outputs"
 
     
     # Creates our command object, for creating shellscripts.
@@ -641,16 +642,18 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         real_thread_count = thread_count
         if(thread_count == 1):
             real_thread_count = 2
-        BWAPool = mp.Pool(int(real_thread_count / 2))
+        BWAPool = mp.Pool(4)#int(real_thread_count / 2))
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
+                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section, split_sample))
+                print("split sample:", full_sample_path)
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA" + "_" + file_tag
                 BWAPool.apply_async(commands.create_and_launch,
                     args = (
                         gene_annotation_BWA_label,
-                        commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, split_sample),
+                        commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path),
                         True,
                         job_name
                     )
@@ -670,19 +673,32 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         BWA_pp_Pool = mp.Pool(int(real_thread_count / 2))
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
+                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section, split_sample))
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA_pp" + "_" + file_tag
                 BWA_pp_Pool.apply_async(commands.create_and_launch,
                     args = (
                         gene_annotation_BWA_label, 
-                        commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, split_sample),
+                        commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, assemble_contigs_label, full_sample_path),
                         True,
                         job_name
                     )
                 )
         BWA_pp_Pool.close()
         BWA_pp_Pool.join()
+        
+        process = mp.Process(
+            target = commands.create_and_launch,
+            args = (
+                gene_annotation_BWA_label, commands.create_BWA_copy_contig_map_command(gene_annotation_BWA_label, assemble_contigs_label),
+                True,
+                "GA_copy_contigs"
+            )
+        )
+        process.start()
+        process.join()
+        
         
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_pp_label)
         
@@ -710,42 +726,66 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
+        sample_job_flag = True
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
                 if(split_sample.endswith(".fasta")):
                     file_tag = os.path.basename(split_sample)
                     file_tag = os.path.splitext(file_tag)[0]
+                    full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
                     for fasta_db in os.listdir(paths.DNA_DB_Split):
                         if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna") or fasta_db.endswith(".ffn"):
                             job_name = "BLAT_" + file_tag + "_" + fasta_db
                             BlatPool.apply_async(commands.create_and_launch,
                                 args=(
                                     gene_annotation_BLAT_label,
-                                    commands.create_BLAT_annotate_command(gene_annotation_BLAT_label, split_sample, fasta_db),
+                                    commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
                                     True,
                                     job_name
                                 )
                             )
+                            if(sample_job_flag):
+                                print("saving 1 job for sampling:", job_name + ".sh")
+                                sample_job_flag = False
+                            else:
+                                print("for file explosion reasons, removing:", job_name +".sh") 
+                                os.remove(os.path.join(gene_annotation_BLAT_path, job_name + ".sh"))
+                            
         BlatPool.close()
         BlatPool.join()
 
-        for section in sections:
-            inner_name = section + "_cat"
-            process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    gene_annotation_BLAT_label,
-                    commands.create_BLAT_cat_command(gene_annotation_BLAT_label, section),
-                    True,
-                    inner_name
+        sample_job_flag = True
+        for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
+                job_name = split_sample + "_cat"
+                process = mp.Process(
+                    target=commands.create_and_launch,
+                    args=(
+                        gene_annotation_BLAT_label,
+                        commands.create_BLAT_cat_command_v2(gene_annotation_BLAT_label, full_sample_path),
+                        True,
+                        job_name
+                    )
                 )
-            )
+            if(sample_job_flag):
+                print("saving 1 job for sampling:", job_name + ".sh")
+                sample_job_flag = False
+            else:
+                print("for file explosion reasons, removing:", job_name +".sh") 
+                os.remove(os.path.join(gene_annotation_BLAT_path, job_name + ".sh"))
+                
             process.start()
             mp_store.append(process)
         for item in mp_store:
             item.join()
         mp_store[:] = []
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_label)
+        
+   
+        
     
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label):
         
@@ -762,10 +802,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     file_tag = os.path.basename(split_sample)
                     file_tag = os.path.splitext(file_tag)[0]
                     job_name = "BLAT_" + file_tag + "_pp"
+                    full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
                     Blat_pp_Pool.apply_async(commands.create_and_launch,
                         args=(
                             gene_annotation_BLAT_label,
-                            commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, split_sample, fasta_db),
+                            commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
                             True,
                             job_name
                         )

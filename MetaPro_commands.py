@@ -1558,10 +1558,10 @@ class mt_pipe_commands:
 
    
     def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category):
-        subfolder = os.path.join(self.Output_Path, stage_name)
-        data_folder = os.path.join(subfolder, "data")
-        split_folder = os.path.join(data_folder, "0_read_split", category)
-        
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        split_folder    = os.path.join(data_folder, "0_read_split", category)
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
@@ -1594,7 +1594,7 @@ class mt_pipe_commands:
         split_fasta = ">&2 echo splitting fasta for " + category + " | "
         split_fasta += self.tool_path_obj.Python + " "    
         split_fasta += self.tool_path_obj.File_splitter + " "
-        split_fasta += os.path.join(dep_folder, category, ".fasta") + " "
+        split_fasta += os.path.join(dep_folder, category +".fasta") + " "
         split_fasta += os.path.join(split_folder, category) + " "
         split_fasta += self.Threads_str
         
@@ -1641,6 +1641,7 @@ class mt_pipe_commands:
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         bwa_folder      = os.path.join(data_folder, "1_bwa")
+        
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1708,7 +1709,7 @@ class mt_pipe_commands:
         return COMMANDS_Annotate_BWA
         
         
-    def create_BWA_pp_command_v2(self, stage_name, query_file):
+    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
             
@@ -1719,6 +1720,7 @@ class mt_pipe_commands:
         bwa_folder      = os.path.join(data_folder, "1_bwa")
         split_folder    = os.path.join(data_folder, "0_read_split")
         final_folder    = os.path.join(subfolder, "final_results")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1727,11 +1729,7 @@ class mt_pipe_commands:
         
         reads_in    = query_file
         bwa_in      = os.path.join(bwa_folder, sample_root_name + ".sam")
-        reads_out   = ""
-        if(sample_root_name.startswith("contig")):
-            reads_out = os.path.join(final_folder, sample_root_name + ".fasta")
-        else:
-            reads_out = os.path.join(final_folder, sample_root_name + ".fastq")
+        reads_out = os.path.join(final_folder, sample_root_name + ".fasta")
             
         map_read_bwa = ">&2 echo GA BWA PP generic | "
         map_read_bwa += self.tool_path_obj.Python + " "
@@ -1743,15 +1741,31 @@ class mt_pipe_commands:
         map_read_bwa += bwa_in + " "
         map_read_bwa += reads_out
         
-        copy_contig_map = ">&2 echo copy contig map | "
-        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+        
 
         COMMANDS_Annotate_BWA = [
             map_read_bwa,
-            copy_contig_map
+            #copy_contig_map
         ]
-
         return COMMANDS_Annotate_BWA
+
+    def create_BWA_copy_contig_map_command(self, stage_name, dependency_stage_name):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        bwa_folder      = os.path.join(data_folder, "1_bwa")
+        split_folder    = os.path.join(data_folder, "0_read_split")
+        final_folder    = os.path.join(subfolder, "final_results")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+        self.make_folder(final_folder)
+    
+        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+        
+        return [copy_contig_map]
 
     def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, fasta):
         subfolder   = os.path.join(self.Output_Path, stage_name)
