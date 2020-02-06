@@ -1810,6 +1810,24 @@ class mt_pipe_commands:
 
         cat_command = "cat " + os.path.join(blat_folder, section + "*.blatout") + " > " + os.path.join(blat_merge_folder, section + ".blatout")
         return [cat_command]
+        
+    def create_BLAT_cat_command_v2(self, stage_name, query_file):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        # This merges each blatout file based on the sample's name
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        blat_folder         = os.path.join(data_folder, "0_blat")
+        blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_merge_folder)
+
+        cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
+        return [cat_command]
+        
+        
 
     def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
         # this call is meant to be run after the BLAT calls have been completed.
@@ -1856,6 +1874,45 @@ class mt_pipe_commands:
 
         return COMMANDS_Annotate_BLAT_Post
 
+    def create_BLAT_pp_command_v2(self, stage_name, query_file):
+        # this call is meant to be run after the BLAT calls have been completed.
+        
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        blat_folder         = os.path.join(data_folder, "1_blat_merge")
+        final_folder        = os.path.join(subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_folder)
+        self.make_folder(final_folder)
+
+        blat_pp = ">&2 echo BLAT post-processing | "
+        blat_pp += self.tool_path_obj.Python + " "
+        blat_pp += self.tool_path_obj.Map_reads_gene_BLAT + " "
+        blat_pp += self.tool_path_obj.DNA_DB + " "
+        blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "
+        blat_pp += query_file + " "
+        blat_pp += os.path.join(blat_folder, sample_root_name + ".blatout") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "
+        
+
+        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+
+        COMMANDS_Annotate_BLAT_Post = [
+            blat_pp,
+            copy_contig_map
+        ]
+
+        return COMMANDS_Annotate_BLAT_Post
+
+
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -1880,6 +1937,32 @@ class mt_pipe_commands:
         diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
 
         return [diamond_annotate]
+        
+    def create_DIAMOND_annotate_command_v2(self, stage_name, query_file):
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        #dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        diamond_folder      = os.path.join(data_folder, "0_diamond")
+        #section_folder      = os.path.join(data_folder, section)
+        #section_temp_folder = os.path.join(section_folder, "temp")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(diamond_folder)
+        self.make_folder(section_folder)
+        #self.make_folder(section_temp_folder)
+
+        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section + " | "
+        diamond_annotate += self.tool_path_obj.DIAMOND
+        diamond_annotate += " blastx -p " + self.Threads_str
+        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
+        diamond_annotate += " -q " + os.path.join(dep_loc, section + ".fasta")
+        diamond_annotate += " -o " + os.path.join(diamond_folder, section + ".dmdout")
+        diamond_annotate += " -f 6 -t " + section_temp_folder
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
+
+        return [diamond_annotate]
+
 
     def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name):
         # the command just calls the merger program

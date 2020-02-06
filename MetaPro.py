@@ -748,18 +748,31 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_label)
     
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label):
-        inner_name = "BLAT_pp"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                gene_annotation_BLAT_label,
-                commands.create_BLAT_pp_command(gene_annotation_BLAT_label, gene_annotation_BWA_label),
-                True,
-                inner_name
-            )
-        )
-        process.start()
-        process.join()
+        
+        real_thread_count = thread_count
+        if(thread_count == 1):
+            real_thread_count = 2
+        Blat_pp_Pool = mp.Pool(int(real_thread_count / 2))
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        for section in sections:
+            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    job_name = "BLAT_" + file_tag + "_pp"
+                    Blat_pp_Pool.apply_async(commands.create_and_launch,
+                        args=(
+                            gene_annotation_BLAT_label,
+                            commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, split_sample, fasta_db),
+                            True,
+                            job_name
+                        )
+                    )
+        Blat_pp_Pool.close()
+        Blat_pp_Pool.join()
+        
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label)
 
     cleanup_GA_BLAT_start = time.time()
