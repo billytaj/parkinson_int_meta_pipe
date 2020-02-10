@@ -61,7 +61,7 @@ class mt_pipe_commands:
         if inner_name is not None:
             shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
             tool_output_path = os.path.join(self.Output_Path, job_name, inner_name + "_tool_output.txt")
-        with open(shell_script_full_path, "w+") as PBS_script_out:
+        with open(shell_script_full_path, "w") as PBS_script_out:
             for item in command_list:
                 PBS_script_out.write(item + "\n")
             PBS_script_out.close()
@@ -88,7 +88,16 @@ class mt_pipe_commands:
                         # raise
         else:
             print("not running job.  run_job set to False")
-
+    
+    def launch_only(self, job_name, command_list, run_job=False, inner_name=None):
+        #just launch the job.  Don't make a script file.
+        try:
+            sp.check_output([command_list])
+        except sp.CalledProcessError as e:
+            return_code = e.returncode
+            if return_code != 1:
+                raise
+        
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
         data_folder                 = os.path.join(subfolder, "data")
@@ -1839,7 +1848,12 @@ class mt_pipe_commands:
         self.make_folder(blat_merge_folder)
 
         cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
-        return [cat_command]
+        
+        cleanup_command = "rm " + os.path.join(blat_folder, sample_root_name + "*.blatout")
+        return [
+            cat_command,
+            cleanup_command
+        ]
         
         
 
@@ -1888,7 +1902,7 @@ class mt_pipe_commands:
 
         return COMMANDS_Annotate_BLAT_Post
 
-    def create_BLAT_pp_command_v2(self, stage_name, query_file):
+    def create_BLAT_pp_command_v2(self, stage_name, query_file, dependency_stage_name):
         # this call is meant to be run after the BLAT calls have been completed.
         
         sample_root_name = os.path.basename(query_file)
@@ -1898,6 +1912,7 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         blat_folder         = os.path.join(data_folder, "1_blat_merge")
         final_folder        = os.path.join(subfolder, "final_results")
+        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1921,10 +1936,26 @@ class mt_pipe_commands:
 
         COMMANDS_Annotate_BLAT_Post = [
             blat_pp,
-            copy_contig_map
+            #copy_contig_map
         ]
 
         return COMMANDS_Annotate_BLAT_Post
+
+    def create_BLAT_copy_contig_map_command(self, stage_name, dependency_stage_name):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        final_folder    = os.path.join(subfolder, "final_results")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        #self.make_folder(bwa_folder)
+        self.make_folder(final_folder)
+    
+        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+        
+        return [copy_contig_map]
 
 
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
