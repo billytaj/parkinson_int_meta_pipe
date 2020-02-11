@@ -258,7 +258,7 @@ def form_prot_map(hits, mapped_reads, contig2read_map, prot2read_map):
 
 # WRITE OUTPUT: rewrite gene<->read map file to include DMD-aligned:
 # [BWA&BLAT&DMD-aligned geneID, length, #reads, readIDs ...]
-def write_proteins_genemap(mapped_gene_file, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file):
+def write_proteins_genemap(prot2read_map, Prot_DB, new_gene2read_file, prot_file):
     reads_count= 0
     proteins= []
     unique_reads_set = set()
@@ -279,29 +279,12 @@ def write_proteins_genemap(mapped_gene_file, mapped_reads, prot2read_map, Prot_D
                     reads_count+= 1
                 else:
                     out_map.write("\n")                     #  and a new line character.
-    
-    # WRITE OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs.  It's for a downstream tool.
-    # (.faa; fasta-format):
-    gene_seqs = SeqIO.index(mapped_gene_file,"fasta")           # key=geneID, value=SeqRecord
-    genes_trans= []
-    for gene in gene_seqs:                                  # Take each BWA&BLAT-aligned genes
-        try:
-            genes_trans.append(SeqRecord(seq= gene_seqs[gene].seq.translate(stop_symbol=""), id= gene_seqs[gene].id, description= gene_seqs[gene].description))
-                                                            #  and translate its SeqRecord sequence to aa.
-        except:
-            pass
-
-    print(dt.today(), "writing fasta")
+                    
     with open(prot_file,"w") as out_prot:
-        SeqIO.write(genes_trans, out_prot, "fasta")         # Write aligned gene aa seqs
-        SeqIO.write(proteins, out_prot, "fasta")            #  and aligned proteins aa seqs.
-
-
-    # print DMD stats:
-    print (str(reads_count) + ' reads were mapped with Diamond.')
-    print ('Reads mapped to ' + str(len(proteins)) + ' proteins.')
-    print(dt.today(), "finished writing new gene map")
+        SeqIO.write(proteins, out_prot, "fasta")            # and aligned proteins aa seqs.
     
+
+
 def check_prot2read_map(prot2read_map):
     read_count = 0
     unique_reads = set()
@@ -401,15 +384,13 @@ if __name__ == "__main__":
 
     Prot_DB                 = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
     contig2read_file        = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
-    #gene2read_file          = sys.argv[3]   # INPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
     new_gene2read_file      = sys.argv[3]   # OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
-    prev_mapped_gene_file   = sys.argv[4]   # INPUT: BWA&BLAT-aligned geneIDs and nt seqs (.fna; fasta-format)
-    prot_file               = sys.argv[5]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
+    prot_file               = sys.argv[4]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
     
     
-    reads_in    = sys.argv[6]
-    dmd_in      = sys.argv[7]
-    reads_out   = sys.argv[8]
+    reads_in    = sys.argv[5]
+    dmd_in      = sys.argv[6]
+    reads_out   = sys.argv[7]
     
     input_safety = check_file_safety(reads_in) and check_file_safety(dmd_in)
     
@@ -427,9 +408,11 @@ if __name__ == "__main__":
         
         dmd_hits = get_dmd_hit_details(dmd_in, reads_in)
         unmapped_reads = form_prot_map(dmd_hits, mapped_reads, contig2read_map, prot2read_map)
-        write_prot_map_process = mp.Process(target = write_proteins_genemap, args = (prev_mapped_gene_file, mapped_reads, prot2read_map, Prot_DB, prot_file, new_gene2read_file))
+        write_prot_map_process = mp.Process(target = write_proteins_genemap, args = (prot2read_map, Prot_DB, new_gene2read_file, prot_file))
         write_prot_map_process.start()
         process_store.append(write_prot_map_process)
+        
+        
         write_unmapped_reads_process = mp.Process(target = write_unmapped_seqs, args = (unmapped_reads, reads_in, reads_out))
         write_unmapped_reads_process.start()
         process_store.append(write_unmapped_reads_process)

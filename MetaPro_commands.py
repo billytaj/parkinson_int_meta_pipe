@@ -1931,12 +1931,9 @@ class mt_pipe_commands:
         blat_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "
         
 
-        copy_contig_map = ">&2 echo copy contig map | "
-        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
 
         COMMANDS_Annotate_BLAT_Post = [
-            blat_pp,
-            #copy_contig_map
+            blat_pp
         ]
 
         return COMMANDS_Annotate_BLAT_Post
@@ -2049,6 +2046,40 @@ class mt_pipe_commands:
         ]
 
         return COMMANDS_Annotate_Diamond_Post
+        
+    def create_DIAMOND_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
+    
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        # the command just calls the merger program
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be blat pp
+        diamond_folder  = os.path.join(data_folder, "0_diamond/")
+        final_folder    = os.path.join(subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(final_folder)
+
+        diamond_pp = ">&2 echo DIAMOND post process | "
+        diamond_pp += self.tool_path_obj.Python + " "
+        diamond_pp += self.tool_path_obj.Map_reads_prot_DMND + " "
+        diamond_pp += self.tool_path_obj.Prot_DB_reads + " "                # IN
+        diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
+        diamond_pp += os.path.join(final_folder, "gene_map.tsv") + " "      # OUT
+        diamond_pp += os.path.join(final_folder, "proteins.faa") + " "      # OUT
+        
+        diamond_pp += query_file + " "                                                  # IN
+        diamond_pp += os.path.join(diamond_folder, sample_root_name + ".dmdout") + " "  # IN
+        diamond_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "     # OUT
+        
+
+        COMMANDS_Annotate_Diamond_Post = [
+            diamond_pp
+        ]
+
+        return COMMANDS_Annotate_Diamond_Post    
 
     def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, diamond_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)

@@ -215,6 +215,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_BLAT_pp_label       = "gene_annotation_BLAT_pp"
     gene_annotation_DIAMOND_label       = "gene_annotation_DIAMOND"
     gene_annotation_DIAMOND_pp_label    = "gene_annotation_DIAMOND_pp"
+    gene_annotation_final_label         = "gene_annotation_final"
     taxon_annotation_label              = "taxonomic_annotation"
     ec_annotation_label                 = "enzyme_annotation"
     ec_annotation_detect_label          = "enzyme_annotation_detect"
@@ -812,26 +813,33 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(thread_count == 1):
             real_thread_count = 2
         Blat_pp_Pool = mp.Pool(int(real_thread_count / 2))
-        sections = ["contigs", "singletons"]
-        if read_mode == "paired":
-            sections.extend(["pair_1", "pair_2"])
-        for section in sections:
-            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
-                if(split_sample.endswith(".fasta")):
-                    file_tag = os.path.basename(split_sample)
-                    file_tag = os.path.splitext(file_tag)[0]
-                    job_name = "BLAT_" + file_tag + "_pp"
-                    full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
-                    Blat_pp_Pool.apply_async(commands.create_and_launch,
-                        args=(
-                            gene_annotation_BLAT_label,
-                            commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, gene_annotation_BWA_label),
-                            True,
-                            job_name
-                        )
+        for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "BLAT_" + file_tag + "_pp"
+                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
+                Blat_pp_Pool.apply_async(commands.create_and_launch,
+                    args=(
+                        gene_annotation_BLAT_label,
+                        commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, gene_annotation_BWA_label),
+                        True,
+                        job_name
                     )
+                )
         Blat_pp_Pool.close()
         Blat_pp_Pool.join()
+        
+        process = mp.Process(
+            target = commands.create_and_launch,
+            args = (
+                gene_annotation_BLAT_label, commands.create_BLAT_copy_contig_map_command(gene_annotation_BLAT_label, gene_annotation_BWA_label),
+                True,
+                "GA_BLAT_copy_contigs"
+            )
+        )
+        process.start()
+        process.join()
         
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label)
 
@@ -877,20 +885,33 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
     #if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
     if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label):
-        inner_name = "diamond_pp"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                gene_annotation_DIAMOND_label,
-                commands.create_DIAMOND_pp_command(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label),
-                True,
-                inner_name
-            )
-        )
-        process.start()
-        process.join()
+    
+        real_thread_count = thread_count
+        if(thread_count == 1):
+            real_thread_count = 2
+        DIAMOND_pp_Pool = mp.Pool(int(real_thread_count / 2))
+        for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "DIAMOND_pp_" + file_tag
+                full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
+                DIAMOND_pp_Pool.apply_async(commands.create_and_launch,
+                    args=(
+                        gene_annotation_DIAMOND_label,
+                        commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
+                        True,
+                        job_name
+                    )
+                )
+        DIAMOND_pp_Pool.close()
+        DIAMOND_pp_Pool.join()
+            
         write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label)
+    
+    #if check_bypass_log(output_folder_path, gene_annotation_final_label):
         
+    
     cleanup_GA_DIAMOND_start = time.time()
     if(verbose_mode == "quiet"):
         delete_folder(gene_annotation_DIAMOND_path)

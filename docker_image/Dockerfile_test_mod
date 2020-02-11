@@ -220,7 +220,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/n
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ea_combine_v3.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ga_BLAT_generic.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ga_BWA_generic.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ga_Diamond_v3.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/ga_Diamond_generic.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_contig_stats.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_data_change_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/new_contig_map/Scripts/output_EC_metrics.py /pipeline/Scripts
