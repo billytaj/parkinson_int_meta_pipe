@@ -272,7 +272,7 @@ def write_proteins_genemap(prot2read_map, Prot_DB, new_gene2read_file, prot_file
                                                             #  (PROTdb is needed to get the aa sequence.)
             if record.id in prot2read_map:                  #  If PROTdb prot is one of the matched proteins,
                 proteins.append(record)                     #  append the SeqRec to proteins list (for next file), and
-                out_map.write(record.id + "\t" + str(len(record.seq)*3) + "\t" + str(len(prot2read_map[record.id])))
+                out_map.write(record.id + "\t" + str(len(record.seq)*3) + "\t" + str(len(prot2read_map[record.id]))) #multiplied by 3 because proteins come in amino acids (groups of 3)
                                                             #  write [aligned protID, length (in nt), #reads, ...],
                 for read in prot2read_map[record.id]:
                     out_map.write("\t" + read.strip("\n"))  #  [readIDs ...],

@@ -1746,6 +1746,7 @@ class mt_pipe_commands:
         map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
         map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
         map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
+        map_read_bwa += os.path.join(final_folder, sample_root_name, "_mapped_genes.fna") + " " #OUT
         map_read_bwa += reads_in + " "
         map_read_bwa += bwa_in + " "
         map_read_bwa += reads_out
@@ -1981,26 +1982,29 @@ class mt_pipe_commands:
         return [diamond_annotate]
         
     def create_DIAMOND_annotate_command_v2(self, stage_name, query_file):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+    
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         #dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         diamond_folder      = os.path.join(data_folder, "0_diamond")
-        #section_folder      = os.path.join(data_folder, section)
-        #section_temp_folder = os.path.join(section_folder, "temp")
-
+        main_temp_folder    = os.path.join(data_folder, sample_root_name + "_diamond_temp")
+        temp_folder =       os.path.join(main_temp_folder, "temp")
+        
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(diamond_folder)
-        self.make_folder(section_folder)
-        #self.make_folder(section_temp_folder)
-
-        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section + " | "
+        self.make_folder(main_temp_folder)
+        self.make_folder(temp_folder)
+        
+        diamond_annotate = ">&2 echo gene annotate DIAMOND " + sample_root_name + " | "
         diamond_annotate += self.tool_path_obj.DIAMOND
         diamond_annotate += " blastx -p " + self.Threads_str
         diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
-        diamond_annotate += " -q " + os.path.join(dep_loc, section + ".fasta")
-        diamond_annotate += " -o " + os.path.join(diamond_folder, section + ".dmdout")
-        diamond_annotate += " -f 6 -t " + section_temp_folder
+        diamond_annotate += " -q " + query_file 
+        diamond_annotate += " -o " + os.path.join(diamond_folder, sample_root_name + ".dmdout")
+        diamond_annotate += " -f 6 -t " + temp_folder #section_temp_folder
         diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
 
         return [diamond_annotate]
@@ -2067,8 +2071,8 @@ class mt_pipe_commands:
         diamond_pp += self.tool_path_obj.Map_reads_prot_DMND + " "
         diamond_pp += self.tool_path_obj.Prot_DB_reads + " "                # IN
         diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
-        diamond_pp += os.path.join(final_folder, "gene_map.tsv") + " "      # OUT
-        diamond_pp += os.path.join(final_folder, "proteins.faa") + " "      # OUT
+        diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_gene_map.tsv") + " "      # OUT
+        diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_proteins.faa") + " "      # OUT
         
         diamond_pp += query_file + " "                                                  # IN
         diamond_pp += os.path.join(diamond_folder, sample_root_name + ".dmdout") + " "  # IN

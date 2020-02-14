@@ -241,7 +241,7 @@ def write_unmapped_reads(unmapped_reads, reads_in, output_file):
         #prev_mapping_count= len(mapped_reads)
 
 
-def write_gene_map(gene2read_file, gene2read_map):
+def write_gene_map(gene2read_file, gene2read_map, mapped_gene_file):
     # WRITE OUTPUT: write gene<->read mapfile of BWA-aligned:
     # [BWA-aligned geneID, length, #reads, readIDs ...]
     reads_count = 0
@@ -258,15 +258,16 @@ def write_gene_map(gene2read_file, gene2read_map):
                     reads_count+= 1
                 else:
                     out_map.write("\n")                     #  and a new line character.
-
-    # print BWA stats:
-    print (str(reads_count) + ' reads were mapped with BWA.')
-    print ('Reads mapped to ' + str(len(genes)) + ' genes.')    
+    
+    #WRITE THE ANNOTATED GENES OUT TO A FILE.  FOR DOWNSTREAM USE
+    with open(mapped_gene_file,"w") as outfile:
+        SeqIO.write(genes, outfile, "fasta") 
     
 if __name__ == "__main__":
-    DNA_DB              = sys.argv[1]             # INPUT: DNA db used for BWA alignement
-    contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
-    gene2read_out       = sys.argv[3]     # OUTPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
+    DNA_DB              = sys.argv[1]       # INPUT: DNA db used for BWA alignement
+    contig2read_file    = sys.argv[2]       # INPUT: [contigID, #reads, readIDs ...]
+    gene2read_out       = sys.argv[3]       # OUTPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
+    mapped_gene_file    = sys.argv[4]       # OUTPUT: genes mapped by BWA.
     
     reads_in            = sys.argv[4]   
     bwa_in              = sys.argv[5]

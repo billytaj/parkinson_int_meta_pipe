@@ -274,7 +274,6 @@ def write_gene_map(DNA_DB, new_gene2read_file, gene2read_map, mapped_gene_file):
                     out_map.write("\n")                     #  and a new line character.
 
     # WRITE OUTPUT: BWA&BLAT-aligned geneIDs and seqs (.fna; fasta-format):
-    # (this wasn't done in BWA post-processing)
     with open(mapped_gene_file,"w") as outfile:
         SeqIO.write(genes, outfile, "fasta")    
         

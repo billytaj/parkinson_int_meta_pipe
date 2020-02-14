@@ -865,8 +865,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(thread_count == 1):
             real_thread_count = 2
         DIAMOND_Pool = mp.Pool(int(real_thread_count / 2))
-        for item in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
-            if(item.endswith(".fasta")):
+        for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "DIAMOND_" + file_tag
