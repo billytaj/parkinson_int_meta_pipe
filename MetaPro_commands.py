@@ -55,8 +55,10 @@ class mt_pipe_commands:
 
         # docker mode: single cpu
         # no ID, no sbatch.  just run the command
-
+        
         shell_script_full_path = os.path.join(self.Output_Path, job_name, job_name + ".sh")
+        
+        #sys.stdout = open(shell_script_full_path + ".out", "w")
         tool_output_path = os.path.join(self.Output_Path, job_name, job_name + "_tool_output.txt")
         if inner_name is not None:
             shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
@@ -70,6 +72,13 @@ class mt_pipe_commands:
             output = ""
             try:
                 #output = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT)
+                #full_command = shell_script_full_path + " > " + shell_script_full_path + ".out 2&>1"
+                #out = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT) #, " > " + shell_script_full_path + ".out 2>&1"])#, stderr = sp.STDOUT)
+                #out = sp.getoutput(["sh", shell_script_full_path])
+                #out_file = shell_script_full_path + ".out"
+                #with open(out_file, "w") as job_out:
+                #    for item in out:
+                #        job_out.write(item + "\n")
                 sp.check_output(["sh", shell_script_full_path])#, stderr = sp.STDOUT)
             except sp.CalledProcessError as e:
                 return_code = e.returncode

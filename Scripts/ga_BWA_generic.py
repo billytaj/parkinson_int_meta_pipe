@@ -285,7 +285,7 @@ if __name__ == "__main__":
         prev_mapping_count = 0
         unmapped_reads = gene_map(bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
         
-        write_gene_map(gene2read_out, gene2read_map)
+        write_gene_map(gene2read_out, gene2read_map, mapped_gene_file)
         write_unmapped_reads(unmapped_reads, reads_in, reads_out)
         
     else:
