@@ -269,9 +269,9 @@ if __name__ == "__main__":
     gene2read_out       = sys.argv[3]       # OUTPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
     mapped_gene_file    = sys.argv[4]       # OUTPUT: genes mapped by BWA.
     
-    reads_in            = sys.argv[4]   
-    bwa_in              = sys.argv[5]
-    reads_out           = sys.argv[6]
+    reads_in            = sys.argv[5]   
+    bwa_in              = sys.argv[6]
+    reads_out           = sys.argv[7]
     
     input_safety = check_file_safety(reads_in) and check_file_safety(bwa_in)
     

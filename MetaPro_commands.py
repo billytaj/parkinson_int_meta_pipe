@@ -1755,7 +1755,7 @@ class mt_pipe_commands:
         map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
         map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
         map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
-        map_read_bwa += os.path.join(final_folder, sample_root_name, "_mapped_genes.fna") + " " #OUT
+        map_read_bwa += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " " #OUT
         map_read_bwa += reads_in + " "
         map_read_bwa += bwa_in + " "
         map_read_bwa += reads_out
