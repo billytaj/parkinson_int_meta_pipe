@@ -14,9 +14,10 @@ import os
 import os.path
 import sys
 import pandas as pd
-
+from datetime import datetime as dt
 
 def split_fastq(file_name_in, file_name_out, split_count = 4):
+    print(dt.today(), "FASTQ file name in:", file_name_in)
     #FASTQ has 4 lines per entry.
     file_base_name = os.path.splitext(file_name_in)[0]
     fastq_df = pd.read_csv(file_name_in, header=None, names=[None], sep="\n", skip_blank_lines = False, quoting=3)

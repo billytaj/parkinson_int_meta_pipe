@@ -13,9 +13,10 @@ class mt_pipe_commands:
     # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
+    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
 
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
+        self.no_host_flag = no_host
 
         # path to the genome sequence file
         if sequence_single is not None:
@@ -54,13 +55,15 @@ class mt_pipe_commands:
 
         # docker mode: single cpu
         # no ID, no sbatch.  just run the command
-
+        
         shell_script_full_path = os.path.join(self.Output_Path, job_name, job_name + ".sh")
+        
+        #sys.stdout = open(shell_script_full_path + ".out", "w")
         tool_output_path = os.path.join(self.Output_Path, job_name, job_name + "_tool_output.txt")
         if inner_name is not None:
             shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
             tool_output_path = os.path.join(self.Output_Path, job_name, inner_name + "_tool_output.txt")
-        with open(shell_script_full_path, "w+") as PBS_script_out:
+        with open(shell_script_full_path, "w") as PBS_script_out:
             for item in command_list:
                 PBS_script_out.write(item + "\n")
             PBS_script_out.close()
@@ -69,6 +72,13 @@ class mt_pipe_commands:
             output = ""
             try:
                 #output = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT)
+                #full_command = shell_script_full_path + " > " + shell_script_full_path + ".out 2&>1"
+                #out = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT) #, " > " + shell_script_full_path + ".out 2>&1"])#, stderr = sp.STDOUT)
+                #out = sp.getoutput(["sh", shell_script_full_path])
+                #out_file = shell_script_full_path + ".out"
+                #with open(out_file, "w") as job_out:
+                #    for item in out:
+                #        job_out.write(item + "\n")
                 sp.check_output(["sh", shell_script_full_path])#, stderr = sp.STDOUT)
             except sp.CalledProcessError as e:
                 return_code = e.returncode
@@ -87,7 +97,16 @@ class mt_pipe_commands:
                         # raise
         else:
             print("not running job.  run_job set to False")
-
+    
+    def launch_only(self, job_name, command_list, run_job=False, inner_name=None):
+        #just launch the job.  Don't make a script file.
+        try:
+            sp.check_output([command_list])
+        except sp.CalledProcessError as e:
+            return_code = e.returncode
+            if return_code != 1:
+                raise
+        
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
         data_folder                 = os.path.join(subfolder, "data")
@@ -842,28 +861,33 @@ class mt_pipe_commands:
         #dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
-        split_folder            = os.path.join(data_folder, category, category + "_second_split_fastq")
+        second_split_folder     = os.path.join(data_folder, category, category + "_second_split_fastq")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(split_folder)
+        self.make_folder(second_split_folder)
         
         #remove_other_file = ">&2 echo removing previous split | "
         #remove_other_file += "rm" + " "
         #remove_other_file += split_folder + "*"
+        
+        
+        base_name = os.path.basename(file_to_split)
+        real_base = os.path.splitext(base_name)[0]
+        second_output_path = os.path.join(second_split_folder, real_base)
         
         split_data = ">&2 echo splitting data into chunks: " + category + " | "
         split_data += self.tool_path_obj.Python + " "
         split_data += self.tool_path_obj.File_splitter + " "
         split_data += file_to_split + " "
         #split_data += file_to_split.split(".")[0] + " "
-        split_data += os.path.join(split_folder, file_to_split.split(".")[0]) + " "
+        split_data += second_output_path + " "
         split_data += str(split_count)
         
         print("-----------------")
         print(dt.today(), file_to_split)
         print(dt.today(), file_to_split.split(".")[0])
-        
+        print(dt.today(), "output path FROM COMMANDS second split:", second_output_path)
         COMMANDS_2nd_split = [
             split_data
         ]
@@ -1072,17 +1096,69 @@ class mt_pipe_commands:
         self.make_folder(final_rRNA_folder)
 
         if self.read_mode == "single":
-            cat_singletons_mRNA = "cat " + singletons_mRNA_folder + "/* 1>>" + os.path.join(final_mRNA_folder, "singletons.fastq")
-            cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(final_rRNA_folder, "singletons.fastq")
+            cat_singletons_mRNA = "for f in" + " "
+            cat_singletons_mRNA += singletons_mRNA_folder 
+            cat_singletons_mRNA += "/*; do cat \"$f\" >>" + " " 
+            cat_singletons_mRNA += os.path.join(final_mRNA_folder, "singletons.fastq") 
+            cat_singletons_mRNA += "; done"
+            
+            
+            #cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(final_rRNA_folder, "singletons.fastq")
+            cat_singletons_rRNA = "for f in" + " "
+            cat_singletons_rRNA += singletons_rRNA_folder
+            cat_singletons_rRNA += "/*; do cat \"$f\" >>" + " "
+            cat_singletons_rRNA += os.path.join(final_rRNA_folder, "singletons.fastq")
+            cat_singletons_rRNA += "; done"
+            
+            
         elif self.read_mode == "paired":
-            cat_singletons_mRNA = "cat " + singletons_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
-            cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
+            #cat_singletons_mRNA = "cat " + singletons_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
+            #cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
+            cat_singletons_mRNA = "for f in" + " "
+            cat_singletons_mRNA += singletons_mRNA_folder
+            cat_singletons_mRNA += "/*; do cat \"$f\" >>" + " "
+            cat_singletons_mRNA += os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
+            cat_singletons_mRNA += "; done"
+            
+            cat_singletons_rRNA = "for f in" + " "
+            cat_singletons_rRNA += singletons_rRNA_folder
+            cat_singletons_rRNA += "/*; do cat \"$f\" >>" + " "
+            cat_singletons_rRNA += os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
+            cat_singletons_rRNA += "; done"
+            
+            
 
-        cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
-        cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
+        #cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
+        #cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
+        cat_pair_1_mRNA = "for f in" + " "
+        cat_pair_1_mRNA += pair_1_mRNA_folder 
+        cat_pair_1_mRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_1_mRNA += os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
+        cat_pair_1_mRNA += "; done"
+        
+        cat_pair_1_rRNA = "for f in" + " "
+        cat_pair_1_rRNA += pair_1_rRNA_folder 
+        cat_pair_1_rRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_1_rRNA += os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
+        cat_pair_1_rRNA += "; done"
+        
+        #cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
+        #cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
 
-        cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
-        cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
+        cat_pair_2_mRNA = "for f in" + " "
+        cat_pair_2_mRNA += pair_2_mRNA_folder 
+        cat_pair_2_mRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_2_mRNA += os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
+        cat_pair_2_mRNA += "; done"
+        
+        cat_pair_2_rRNA = "for f in" + " "
+        cat_pair_2_rRNA += pair_2_rRNA_folder 
+        cat_pair_2_rRNA += "/*; do cat \"$f\" >>" + " "
+        cat_pair_2_rRNA += os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
+        cat_pair_2_rRNA += "; done"
+        
+        
+
 
         singleton_mRNA_filter = ">&2 echo " + str(dt.today()) + " filtering mRNA for singletons | "
         singleton_mRNA_filter += self.tool_path_obj.Python + " "
@@ -1335,9 +1411,10 @@ class mt_pipe_commands:
         #if there is no output, bypass contigs. -> But this is a v2 upgrade.  
         spades_rename = "cp " + os.path.join(spades_folder, "transcripts.fasta") + " " + os.path.join(spades_folder, "contigs.fasta")  # rename output
         
-        post_mgm_contig = os.path.join(mgm_folder, "disassembled_contigs.fasta")
-        mgm_report      = os.path.join(mgm_folder, "gene_report.txt")
-        final_contigs   = os.path.join(mgm_folder, "contigs.fasta")
+        original_contigs    = os.path.join(spades_folder, "contigs.fasta") 
+        post_mgm_contig     = os.path.join(mgm_folder, "disassembled_contigs.fasta")
+        mgm_report          = os.path.join(mgm_folder, "gene_report.txt")
+        final_contigs       = os.path.join(mgm_folder, "contigs.fasta")
         
         #-------------------------------------------------------
         #spades does too good of a job sometimes.  Disassemble it into genes.
@@ -1353,23 +1430,29 @@ class mt_pipe_commands:
         remove_whitespace += final_contigs
         
 
-        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + final_contigs
+        #bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + final_contigs
+        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + original_contigs
+        
+        
         # Build a report of what was consumed by contig transmutation (assemble/disassemble)
         bwa_pair_1_contigs = ">&2 echo BWA pair contigs | "
         bwa_pair_1_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_pair_1_contigs += final_contigs + " "
+        #bwa_pair_1_contigs += final_contigs + " "
+        bwa_pair_1_contigs += original_contigs + " "
         bwa_pair_1_contigs += os.path.join(dep_loc, "pair_1.fastq")
         bwa_pair_1_contigs += " > " + os.path.join(bwa_folder, "pair_1.sam")
 
         bwa_pair_2_contigs = ">&2 echo BWA pair contigs | "
         bwa_pair_2_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_pair_2_contigs += final_contigs + " "
+        #bwa_pair_2_contigs += final_contigs + " "
+        bwa_pair_2_contigs += original_contigs + " "
         bwa_pair_2_contigs += os.path.join(dep_loc, "pair_2.fastq")
         bwa_pair_2_contigs += " > " + os.path.join(bwa_folder, "pair_2.sam")
 
         bwa_singletons_contigs = ">&2 echo BWA singleton contigs | "
         bwa_singletons_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_singletons_contigs += final_contigs + " "
+        #bwa_singletons_contigs += final_contigs + " "
+        bwa_singletons_contigs += original_contigs + " "
         bwa_singletons_contigs += os.path.join(dep_loc, "singletons.fastq")
         bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons.sam")
 
@@ -1491,39 +1574,53 @@ class mt_pipe_commands:
 
         return COMMANDS_Assemble
 
-    def create_disassemble_contigs_command(self, stage_name, dependency_stage_name):
-        subfolder           = os.path.join(self.Output_Path, stage_name)
-        data_folder         = os.path.join(subfolder, "data")
-        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
-        mgm_folder          = os.path.join(data_folder, "0_mgm")
-        final_folder        = os.path.join(subfolder, "final_results")
-
+   
+    def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        split_folder    = os.path.join(data_folder, "0_read_split", category)
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mgm_folder)
-        self.make_folder(final_folder)
+        self.make_folder(split_folder)
         
-        post_mgm_contig = os.path.join(mgm_folder, "disassembled_contigs.fasta")
-        mgm_report      = os.path.join(mgm_folder, "gene_report.txt")
-        final_contigs   = os.path.join(final_folder, "contigs.fasta")
+        split_fastq = ">&2 echo splitting fastq for " + category + " | "
+        split_fastq += "split -l 250000" + " "        
+        split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
+        split_fastq += "--additional-suffix .fastq" + " "
+        split_fastq += "-d" + " "
+        split_fastq += os.path.join(split_folder, category + "_")
         
-        disassemble_contigs = ">&2 echo Disassembling contigs | "
-        disassemble_contigs += self.tool_path_obj.MetaGeneMark + " -o " + mgm_report + " "
-        disassemble_contigs += "-D " + post_mgm_contig + " "
-        disassemble_contigs += "-m " + self.tool_path_obj.mgm_model + " "
-        disassemble_contigs += os.path.join(dep_loc, "contigs.fasta")
-        
-        remove_whitespace = ">&2 echo Removing whitespace from fasta | " 
-        remove_whitespace += self.tool_path_obj.remove_gaps_in_fasta + " "
-        remove_whitespace += post_mgm_contig + " "
-        remove_whitespace += final_contigs
-        
-        COMMANDS_disassemble_contigs = [
-            disassemble_contigs,
-            remove_whitespace
+        COMMANDS_GA_prep_fastq = [
+            split_fastq
         ]
+        
+        return COMMANDS_GA_prep_fastq
 
-
+    def create_split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        split_folder    = os.path.join(data_folder, "0_read_split", category)
+        dep_folder      = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(split_folder)
+        
+        
+        
+        split_fasta = ">&2 echo splitting fasta for " + category + " | "
+        split_fasta += self.tool_path_obj.Python + " "    
+        split_fasta += self.tool_path_obj.File_splitter + " "
+        split_fasta += os.path.join(dep_folder, category +".fasta") + " "
+        split_fasta += os.path.join(split_folder, category) + " "
+        split_fasta += self.Threads_str
+        
+        COMMANDS_GA_prep_fasta = [
+            split_fasta
+        ]
+        
+        return COMMANDS_GA_prep_fasta
 
     def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
         # meant to be called multiple times: section -> contigs, singletons, pair_1, pair_2
@@ -1549,12 +1646,43 @@ class mt_pipe_commands:
         bwa_job += os.path.join(dep_loc, section_file) + " | "
         bwa_job += self.tool_path_obj.SAMTOOLS + " view "
         bwa_job += "> " + os.path.join(bwa_folder, section + ".sam")
+        
 
         COMMANDS_BWA = [
             bwa_job
         ]
 
         return COMMANDS_BWA
+
+    def create_BWA_annotate_command_v2(self, stage_name, query_file):
+        # meant to be called multiple times: query file is a split file
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        bwa_folder      = os.path.join(data_folder, "1_bwa")
+        
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+
+        file_tag = os.path.basename(query_file)
+        file_tag = os.path.splitext(file_tag)[0]
+        
+        bwa_job = ">&2 echo BWA on " + file_tag + " | "
+        bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
+        bwa_job += self.tool_path_obj.DNA_DB + " "
+        #bwa_job += os.path.join(dep_loc, section_file) + " | "
+        bwa_job += query_file + " | "
+        bwa_job += self.tool_path_obj.SAMTOOLS + " view "
+        bwa_job += "> " + os.path.join(bwa_folder, file_tag + ".sam")
+        
+
+        COMMANDS_BWA = [
+            bwa_job
+        ]
+
+        return COMMANDS_BWA
+
 
     def create_BWA_pp_command(self, stage_name, dependency_stage_name):
         subfolder       = os.path.join(self.Output_Path, stage_name)
@@ -1597,6 +1725,66 @@ class mt_pipe_commands:
         ]
 
         return COMMANDS_Annotate_BWA
+        
+        
+    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+            
+        
+        #meant to be called on the split-file version.  PP script will not merge gene maps.
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        bwa_folder      = os.path.join(data_folder, "1_bwa")
+        split_folder    = os.path.join(data_folder, "0_read_split")
+        final_folder    = os.path.join(subfolder, "final_results")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+        self.make_folder(final_folder)
+        
+        reads_in    = query_file
+        bwa_in      = os.path.join(bwa_folder, sample_root_name + ".sam")
+        reads_out = os.path.join(final_folder, sample_root_name + ".fasta")
+            
+        map_read_bwa = ">&2 echo GA BWA PP generic | "
+        map_read_bwa += self.tool_path_obj.Python + " "
+        map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
+        map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
+        map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
+        map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
+        map_read_bwa += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " " #OUT
+        map_read_bwa += reads_in + " "
+        map_read_bwa += bwa_in + " "
+        map_read_bwa += reads_out
+        
+        
+
+        COMMANDS_Annotate_BWA = [
+            map_read_bwa,
+            #copy_contig_map
+        ]
+        return COMMANDS_Annotate_BWA
+
+    def create_BWA_copy_contig_map_command(self, stage_name, dependency_stage_name):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        bwa_folder      = os.path.join(data_folder, "1_bwa")
+        split_folder    = os.path.join(data_folder, "0_read_split")
+        final_folder    = os.path.join(subfolder, "final_results")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(bwa_folder)
+        self.make_folder(final_folder)
+    
+        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+        
+        return [copy_contig_map]
 
     def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, fasta):
         subfolder   = os.path.join(self.Output_Path, stage_name)
@@ -1616,6 +1804,31 @@ class mt_pipe_commands:
         blat_command += os.path.join(blat_folder, section + "_" + fasta + ".blatout")
 
         return [blat_command]
+        
+    def create_BLAT_annotate_command_v2(self, stage_name, query_file, fasta_db):
+        #takes in a sample query file (expecting a segment of the whole GA data, after BWA
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        
+        subfolder   = os.path.join(self.Output_Path, stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        blat_folder = os.path.join(data_folder, "0_blat")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_folder)
+
+        blat_command = ">&2 echo BLAT annotation for " + sample_root_name + " " + fasta_db + " | "
+        blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
+        blat_command += self.tool_path_obj.DNA_DB_Split + fasta_db + " "
+        blat_command += query_file
+        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
+        blat_command += os.path.join(blat_folder, sample_root_name + "_" + fasta_db + ".blatout")
+
+        return [blat_command]
+        
+        
+        
 
     def create_BLAT_cat_command(self, stage_name, section):
         # this is meant to be called for each section: contigs, singletons, pair_1, pair_2
@@ -1630,6 +1843,29 @@ class mt_pipe_commands:
 
         cat_command = "cat " + os.path.join(blat_folder, section + "*.blatout") + " > " + os.path.join(blat_merge_folder, section + ".blatout")
         return [cat_command]
+        
+    def create_BLAT_cat_command_v2(self, stage_name, query_file):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        # This merges each blatout file based on the sample's name
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        blat_folder         = os.path.join(data_folder, "0_blat")
+        blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_merge_folder)
+
+        cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
+        
+        cleanup_command = "rm " + os.path.join(blat_folder, sample_root_name + "*.blatout")
+        return [
+            cat_command,
+            cleanup_command
+        ]
+        
+        
 
     def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
         # this call is meant to be run after the BLAT calls have been completed.
@@ -1676,6 +1912,59 @@ class mt_pipe_commands:
 
         return COMMANDS_Annotate_BLAT_Post
 
+    def create_BLAT_pp_command_v2(self, stage_name, query_file, dependency_stage_name):
+        # this call is meant to be run after the BLAT calls have been completed.
+        
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        blat_folder         = os.path.join(data_folder, "1_blat_merge")
+        final_folder        = os.path.join(subfolder, "final_results")
+        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_folder)
+        self.make_folder(final_folder)
+
+        blat_pp = ">&2 echo BLAT post-processing | "
+        blat_pp += self.tool_path_obj.Python + " "
+        blat_pp += self.tool_path_obj.Map_reads_gene_BLAT + " "
+        blat_pp += self.tool_path_obj.DNA_DB + " "
+        blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "
+        blat_pp += query_file + " "
+        blat_pp += os.path.join(blat_folder, sample_root_name + ".blatout") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "
+        
+
+
+        COMMANDS_Annotate_BLAT_Post = [
+            blat_pp
+        ]
+
+        return COMMANDS_Annotate_BLAT_Post
+
+    def create_BLAT_copy_contig_map_command(self, stage_name, dependency_stage_name):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        final_folder    = os.path.join(subfolder, "final_results")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        #self.make_folder(bwa_folder)
+        self.make_folder(final_folder)
+    
+        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
+        
+        return [copy_contig_map]
+
+
     def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -1697,9 +1986,38 @@ class mt_pipe_commands:
         diamond_annotate += " -q " + os.path.join(dep_loc, section + ".fasta")
         diamond_annotate += " -o " + os.path.join(diamond_folder, section + ".dmdout")
         diamond_annotate += " -f 6 -t " + section_temp_folder
-        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60"
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
 
         return [diamond_annotate]
+        
+    def create_DIAMOND_annotate_command_v2(self, stage_name, query_file):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+    
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        #dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        diamond_folder      = os.path.join(data_folder, "0_diamond")
+        main_temp_folder    = os.path.join(data_folder, sample_root_name + "_diamond_temp")
+        temp_folder =       os.path.join(main_temp_folder, "temp")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(diamond_folder)
+        self.make_folder(main_temp_folder)
+        self.make_folder(temp_folder)
+        
+        diamond_annotate = ">&2 echo gene annotate DIAMOND " + sample_root_name + " | "
+        diamond_annotate += self.tool_path_obj.DIAMOND
+        diamond_annotate += " blastx -p " + self.Threads_str
+        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
+        diamond_annotate += " -q " + query_file 
+        diamond_annotate += " -o " + os.path.join(diamond_folder, sample_root_name + ".dmdout")
+        diamond_annotate += " -f 6 -t " + temp_folder #section_temp_folder
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
+
+        return [diamond_annotate]
+
 
     def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name):
         # the command just calls the merger program
@@ -1741,13 +2059,78 @@ class mt_pipe_commands:
         ]
 
         return COMMANDS_Annotate_Diamond_Post
+        
+    def create_DIAMOND_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
+    
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        # the command just calls the merger program
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be blat pp
+        diamond_folder  = os.path.join(data_folder, "0_diamond/")
+        final_folder    = os.path.join(subfolder, "final_results")
 
-    def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, diamond_stage):
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(final_folder)
+
+        diamond_pp = ">&2 echo DIAMOND post process | "
+        diamond_pp += self.tool_path_obj.Python + " "
+        diamond_pp += self.tool_path_obj.Map_reads_prot_DMND + " "
+        diamond_pp += self.tool_path_obj.Prot_DB_reads + " "                # IN
+        diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
+        diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_gene_map.tsv") + " "      # OUT
+        diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_proteins.faa") + " "      # OUT
+        
+        diamond_pp += query_file + " "                                                  # IN
+        diamond_pp += os.path.join(diamond_folder, sample_root_name + ".dmdout") + " "  # IN
+        diamond_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "     # OUT
+        
+
+        COMMANDS_Annotate_Diamond_Post = [
+            diamond_pp
+        ]
+
+        return COMMANDS_Annotate_Diamond_Post 
+
+
+
+    def create_GA_final_merge_command(self, current_stage_name, dep_0_name, dep_1_name, dep_2_name):
+        subfolder = os.path.join(self.Output_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        final_folder = os.path.join(subfolder, "final_results")
+        dep_0_path = os.path.join(self.Output_Path, dep_0_name, "final_results")
+        dep_1_path = os.path.join(self.Output_Path, dep_1_name, "final_results")
+        dep_2_path = os.path.join(self.Output_Path, dep_2_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(final_folder)
+        
+        final_merge = self.tool_path_obj.Python + " "
+        final_merge += self.tool_path_obj.GA_final_merge + " "
+        final_merge += dep_0_path + " "
+        final_merge += dep_1_path + " "
+        final_merge += dep_2_path + " "
+        final_merge += data_folder + " "
+        final_merge += final_folder
+        
+        COMMANDS_ga_final_merge = [
+            final_merge
+        ]
+        
+        return COMMANDS_ga_final_merge
+        
+
+        
+
+    def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
         rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
         assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
-        diamond_folder          = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
         kaiju_folder            = os.path.join(data_folder, "1_kaiju")
         centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
@@ -1766,7 +2149,7 @@ class mt_pipe_commands:
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
         get_taxa_from_gene += self.tool_path_obj.Python + " "
         get_taxa_from_gene += self.tool_path_obj.Annotated_taxid + " "  # SLOW STEP
-        get_taxa_from_gene += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        get_taxa_from_gene += os.path.join(final_merge_folder, "gene_map.tsv") + " "
         get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
         get_taxa_from_gene += os.path.join(ga_taxa_folder, "ga_taxon.tsv")
 
@@ -1921,11 +2304,11 @@ class mt_pipe_commands:
         
       
 
-    def create_EC_DETECT_command(self, current_stage_name, diamond_stage):
-        subfolder       = os.path.join(self.Output_Path, current_stage_name)
-        data_folder     = os.path.join(subfolder, "data")
-        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        detect_folder   = os.path.join(data_folder, "0_detect")
+    def create_EC_DETECT_command(self, current_stage_name, ga_final_merge_stage):
+        subfolder           = os.path.join(self.Output_Path, current_stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        detect_folder       = os.path.join(data_folder, "0_detect")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1934,7 +2317,7 @@ class mt_pipe_commands:
         detect_protein = ">&2 echo running detect on split file | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
-        detect_protein += os.path.join(diamond_folder,"proteins.faa")
+        detect_protein += os.path.join(final_merge_folder,"all_proteins.faa")
         detect_protein += " --output_file " + os.path.join(detect_folder, "proteins.detect")
         detect_protein += " --fbeta " + os.path.join(detect_folder, "proteins.fbeta")
         detect_protein += " --db " + self.tool_path_obj.DetectDB
@@ -1950,10 +2333,10 @@ class mt_pipe_commands:
 
         return COMMANDS_DETECT
 
-    def create_EC_PRIAM_command(self, current_stage_name, diamond_stage):
+    def create_EC_PRIAM_command(self, current_stage_name, ga_final_merge_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
         
 
@@ -1964,7 +2347,7 @@ class mt_pipe_commands:
         PRIAM_command += self.tool_path_obj.Java + " "
         PRIAM_command += self.tool_path_obj.Priam
         PRIAM_command += " -n " + "proteins_priam" + " "
-        PRIAM_command += " -i " + os.path.join(diamond_folder, "proteins.faa")
+        PRIAM_command += " -i " + os.path.join(final_merge_folder, "all_proteins.faa")
         PRIAM_command += " -p " + self.tool_path_obj.PriamDB
         PRIAM_command += " -o " + PRIAM_folder
         PRIAM_command += " --np " + self.Threads_str
@@ -1978,10 +2361,10 @@ class mt_pipe_commands:
         return COMMANDS_PRIAM
         
         
-    def create_EC_DIAMOND_command(self, current_stage_name, diamond_stage):
+    def create_EC_DIAMOND_command(self, current_stage_name, ga_final_merge_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
         
         self.make_folder(diamond_ea_folder)
@@ -1989,7 +2372,7 @@ class mt_pipe_commands:
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
         diamond_ea_command += self.tool_path_obj.DIAMOND + " blastp"
         diamond_ea_command += " -p " + self.Threads_str
-        diamond_ea_command += " --query " + os.path.join(diamond_folder, "proteins.faa")
+        diamond_ea_command += " --query " + os.path.join(final_merge_folder, "all_proteins.faa")
         diamond_ea_command += " --db " + self.tool_path_obj.SWISS_PROT
         diamond_ea_command += " --outfmt " + "6 qseqid sseqid length qstart qend sstart send evalue bitscore qcovhsp slen pident"
         diamond_ea_command += " --out " + os.path.join(diamond_ea_folder, "proteins.blastout")
@@ -2002,10 +2385,10 @@ class mt_pipe_commands:
         
         return COMMANDS_DIAMOND_EC
         
-    def create_EC_postprocess_command(self, current_stage_name, diamond_stage):
+    def create_EC_postprocess_command(self, current_stage_name, ga_final_merge_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         detect_folder       = os.path.join(data_folder, "0_detect")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
         diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
@@ -2023,7 +2406,7 @@ class mt_pipe_commands:
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
-        postprocess_command += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        postprocess_command += os.path.join(final_merge_folder, "gene_map.tsv") + " "
         postprocess_command += os.path.join(final_folder, "proteins.ECs_All")
 
         COMMANDS_EC_Postprocess = [
@@ -2033,7 +2416,7 @@ class mt_pipe_commands:
 
         return COMMANDS_EC_Postprocess
 
-    def create_output_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         mpl_folder          = os.path.join(data_folder, "0_MPL")
@@ -2041,7 +2424,7 @@ class mt_pipe_commands:
         host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
         contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
         repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
@@ -2058,14 +2441,15 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         
         copy_gene_map = ">&2 echo copying gene map | "
-        copy_gene_map += "cp " + os.path.join(diamond_folder, "gene_map.tsv") + " "
+        copy_gene_map += "cp " + os.path.join(final_merge_folder, "gene_map.tsv") + " "
         copy_gene_map += final_folder
         
+        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
         
         taxa_table_generation = ">&2 echo generating taxonomy table | "
         taxa_table_generation += self.tool_path_obj.Python + " "
         taxa_table_generation += self.tool_path_obj.taxa_table + " "
-        taxa_table_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        taxa_table_generation += gene_map_location + " "
         taxa_table_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
         taxa_table_generation += os.path.join(ta_folder, "constrain_classification.tsv") + " "
         taxa_table_generation += os.path.join(final_folder, "taxa_table.tsv")
@@ -2077,7 +2461,7 @@ class mt_pipe_commands:
         network_generation += "None" + " "
         network_generation += self.tool_path_obj.nodes + " "
         network_generation += self.tool_path_obj.names + " "
-        network_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        network_generation += gene_map_location + " "
         network_generation += os.path.join(ta_folder, "taxonomic_classifications.tsv") + " "
         network_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
         network_generation += self.tool_path_obj.show_unclassified + " "
@@ -2090,64 +2474,64 @@ class mt_pipe_commands:
         flatten_rpkm += os.path.join(final_folder, "RPKM_table.tsv") + " "
         flatten_rpkm += os.path.join(final_folder, "EC_heatmap_RPKM.tsv")
         
-        
-        get_unique_host_reads_singletons = ">&2 echo get singleton host reads for stats | "
-        get_unique_host_reads_singletons += self.tool_path_obj.Python + " "
-        get_unique_host_reads_singletons += self.tool_path_obj.get_unique_host_reads + " "
-        get_unique_host_reads_singletons += os.path.join(host_folder, "singletons.fastq") + " "
-        get_unique_host_reads_singletons += os.path.join(quality_folder, "singletons.fastq") + " "
-        get_unique_host_reads_singletons += os.path.join(unique_hosts_folder, "singleton_hosts.fastq")
-        
-        get_unique_host_reads_pair_1 = ">&2 echo get pair 1 host reads for stats | " 
-        get_unique_host_reads_pair_1 += self.tool_path_obj.Python + " "
-        get_unique_host_reads_pair_1 += self.tool_path_obj.get_unique_host_reads + " "
-        get_unique_host_reads_pair_1 += os.path.join(host_folder, "pair_1.fastq") + " "
-        get_unique_host_reads_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " "
-        get_unique_host_reads_pair_1 += os.path.join(unique_hosts_folder, "pair_1_hosts.fastq")
-        
-        get_unique_host_reads_pair_2 = ">&2 echo get pair 2 host reads for stats | " 
-        get_unique_host_reads_pair_2 += self.tool_path_obj.Python + " "
-        get_unique_host_reads_pair_2 += self.tool_path_obj.get_unique_host_reads + " "
-        get_unique_host_reads_pair_2 += os.path.join(host_folder, "pair_2.fastq") + " "
-        get_unique_host_reads_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " "
-        get_unique_host_reads_pair_2 += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq")
-        
-        repop_singletons_hosts = ">&2 echo repopulating singletons hosts | " 
-        repop_singletons_hosts += self.tool_path_obj.Python + " "
-        repop_singletons_hosts += self.tool_path_obj.duplicate_repopulate + " "
-        if(self.read_mode == "single"):
-            repop_singletons_hosts += os.path.join(quality_folder, "singletons_hq.fastq") + " "
-        else:
-            repop_singletons_hosts += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + " "
-        repop_singletons_hosts += os.path.join(unique_hosts_folder, "singleton_hosts.fastq") + " "
-        repop_singletons_hosts += os.path.join(quality_folder, "singletons_unique.fastq.clstr") + " "
-        repop_singletons_hosts += os.path.join(full_hosts_folder, "singletons_full_hosts.fastq")
-        
-        
-        repop_pair_1_hosts = ">&2 echo repopulating pair 1 hosts | " 
-        repop_pair_1_hosts += self.tool_path_obj.Python + " "
-        repop_pair_1_hosts += self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_1_hosts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
-        repop_pair_1_hosts += os.path.join(unique_hosts_folder, "pair_1_hosts.fastq") + " "
-        repop_pair_1_hosts += os.path.join(quality_folder, "pair_1_unique.fastq.clstr") + " "
-        repop_pair_1_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq")
-        
-        repop_pair_2_hosts = ">&2 echo repopulating pair 2 hosts | " 
-        repop_pair_2_hosts += self.tool_path_obj.Python + " "
-        repop_pair_2_hosts += self.tool_path_obj.duplicate_repopulate + " "
-        repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_match.fastq") + " "
-        repop_pair_2_hosts += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq") + " "
-        repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_unique.fastq.clstr") + " "
-        repop_pair_2_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq")
-        
-        combine_hosts = ">&2 echo combining hosts | " 
-        combine_hosts += "cat" + " "
-        combine_hosts += os.path.join(full_hosts_folder, "singletons_full_hosts.fastq") + " "
-        if(self.read_mode == "paired"):
-            combine_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq") + " "
-            combine_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq") + " "
-        combine_hosts += ">" + " "
-        combine_hosts += os.path.join(full_hosts_folder, "combined_hosts.fastq")
+        if(not self.no_host_flag):
+            get_unique_host_reads_singletons = ">&2 echo get singleton host reads for stats | "
+            get_unique_host_reads_singletons += self.tool_path_obj.Python + " "
+            get_unique_host_reads_singletons += self.tool_path_obj.get_unique_host_reads + " "
+            get_unique_host_reads_singletons += os.path.join(host_folder, "singletons.fastq") + " "
+            get_unique_host_reads_singletons += os.path.join(quality_folder, "singletons.fastq") + " "
+            get_unique_host_reads_singletons += os.path.join(unique_hosts_folder, "singleton_hosts.fastq")
+            
+            get_unique_host_reads_pair_1 = ">&2 echo get pair 1 host reads for stats | " 
+            get_unique_host_reads_pair_1 += self.tool_path_obj.Python + " "
+            get_unique_host_reads_pair_1 += self.tool_path_obj.get_unique_host_reads + " "
+            get_unique_host_reads_pair_1 += os.path.join(host_folder, "pair_1.fastq") + " "
+            get_unique_host_reads_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " "
+            get_unique_host_reads_pair_1 += os.path.join(unique_hosts_folder, "pair_1_hosts.fastq")
+            
+            get_unique_host_reads_pair_2 = ">&2 echo get pair 2 host reads for stats | " 
+            get_unique_host_reads_pair_2 += self.tool_path_obj.Python + " "
+            get_unique_host_reads_pair_2 += self.tool_path_obj.get_unique_host_reads + " "
+            get_unique_host_reads_pair_2 += os.path.join(host_folder, "pair_2.fastq") + " "
+            get_unique_host_reads_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " "
+            get_unique_host_reads_pair_2 += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq")
+            
+            repop_singletons_hosts = ">&2 echo repopulating singletons hosts | " 
+            repop_singletons_hosts += self.tool_path_obj.Python + " "
+            repop_singletons_hosts += self.tool_path_obj.duplicate_repopulate + " "
+            if(self.read_mode == "single"):
+                repop_singletons_hosts += os.path.join(quality_folder, "singletons_hq.fastq") + " "
+            else:
+                repop_singletons_hosts += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + " "
+            repop_singletons_hosts += os.path.join(unique_hosts_folder, "singleton_hosts.fastq") + " "
+            repop_singletons_hosts += os.path.join(quality_folder, "singletons_unique.fastq.clstr") + " "
+            repop_singletons_hosts += os.path.join(full_hosts_folder, "singletons_full_hosts.fastq")
+            
+            
+            repop_pair_1_hosts = ">&2 echo repopulating pair 1 hosts | " 
+            repop_pair_1_hosts += self.tool_path_obj.Python + " "
+            repop_pair_1_hosts += self.tool_path_obj.duplicate_repopulate + " "
+            repop_pair_1_hosts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
+            repop_pair_1_hosts += os.path.join(unique_hosts_folder, "pair_1_hosts.fastq") + " "
+            repop_pair_1_hosts += os.path.join(quality_folder, "pair_1_unique.fastq.clstr") + " "
+            repop_pair_1_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq")
+            
+            repop_pair_2_hosts = ">&2 echo repopulating pair 2 hosts | " 
+            repop_pair_2_hosts += self.tool_path_obj.Python + " "
+            repop_pair_2_hosts += self.tool_path_obj.duplicate_repopulate + " "
+            repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_match.fastq") + " "
+            repop_pair_2_hosts += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq") + " "
+            repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_unique.fastq.clstr") + " "
+            repop_pair_2_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq")
+            
+            combine_hosts = ">&2 echo combining hosts | " 
+            combine_hosts += "cat" + " "
+            combine_hosts += os.path.join(full_hosts_folder, "singletons_full_hosts.fastq") + " "
+            if(self.read_mode == "paired"):
+                combine_hosts += os.path.join(full_hosts_folder, "pair_1_full_hosts.fastq") + " "
+                combine_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq") + " "
+            combine_hosts += ">" + " "
+            combine_hosts += os.path.join(full_hosts_folder, "combined_hosts.fastq")
 
         read_counts = ">&2 echo generating read count table | "
         read_counts += self.tool_path_obj.Python + " "
@@ -2165,9 +2549,12 @@ class mt_pipe_commands:
             read_counts += os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons.fastq") + ","
             read_counts += os.path.join(repopulation_folder, "pair_1.fastq") + " "
-        read_counts += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        read_counts += gene_map_location + " "
         read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
-        read_counts += os.path.join(full_hosts_folder, "combined_hosts.fastq") + " "
+        if(self.no_host_flag):
+            read_counts += "no_host" + " "
+        else:
+            read_counts += os.path.join(full_hosts_folder, "combined_hosts.fastq") + " "
         read_counts += os.path.join(final_folder, "read_count.tsv")
         
         
@@ -2205,7 +2592,24 @@ class mt_pipe_commands:
         
     
         if(self.read_mode == "single"):
-            COMMANDS_Outputs = [
+            
+            
+            if(self.no_host_flag):
+                COMMANDS_Outputs = [
+                copy_gene_map,
+                taxa_table_generation,
+                network_generation,
+                flatten_rpkm, 
+                #get_unique_host_reads_singletons,
+                #repop_singletons_hosts,
+                #combine_hosts,
+                read_counts,
+                per_read_scores,
+                contig_stats,
+                EC_heatmap
+                ]
+            else:
+                COMMANDS_Outputs = [
                 copy_gene_map,
                 taxa_table_generation,
                 network_generation,
@@ -2217,25 +2621,44 @@ class mt_pipe_commands:
                 per_read_scores,
                 contig_stats,
                 EC_heatmap
-            ]
+                ]
         else:
-            COMMANDS_Outputs = [
-                copy_gene_map,
-                taxa_table_generation,
-                network_generation,
-                flatten_rpkm, 
-                get_unique_host_reads_singletons,
-                get_unique_host_reads_pair_1,
-                get_unique_host_reads_pair_2,
-                repop_singletons_hosts,
-                repop_pair_1_hosts,
-                repop_pair_2_hosts,
-                combine_hosts,
-                read_counts,
-                per_read_scores,
-                contig_stats,
-                EC_heatmap
-            ]
+            if(self.no_host_flag):
+                COMMANDS_Outputs = [
+                    copy_gene_map,
+                    taxa_table_generation,
+                    network_generation,
+                    flatten_rpkm, 
+                    #get_unique_host_reads_singletons,
+                    #get_unique_host_reads_pair_1,
+                    #get_unique_host_reads_pair_2,
+                    #repop_singletons_hosts,
+                    #repop_pair_1_hosts,
+                    #repop_pair_2_hosts,
+                    #combine_hosts,
+                    read_counts,
+                    per_read_scores,
+                    contig_stats,
+                    EC_heatmap
+                ]
+            else:
+                COMMANDS_Outputs = [
+                    copy_gene_map,
+                    taxa_table_generation,
+                    network_generation,
+                    flatten_rpkm, 
+                    get_unique_host_reads_singletons,
+                    get_unique_host_reads_pair_1,
+                    get_unique_host_reads_pair_2,
+                    repop_singletons_hosts,
+                    repop_pair_1_hosts,
+                    repop_pair_2_hosts,
+                    combine_hosts,
+                    read_counts,
+                    per_read_scores,
+                    contig_stats,
+                    EC_heatmap
+                ]
        
         
         return COMMANDS_Outputs

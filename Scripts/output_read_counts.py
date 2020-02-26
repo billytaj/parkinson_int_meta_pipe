@@ -29,8 +29,12 @@ def ec_count(map):
     ecs = set()
     with open(map, "r") as infile:
         for line in infile:
-            ecs.add(line.split("\t")[2].strip())
-
+            #ecs.add(line.split("\t")[2].strip())
+            ec_line_list = line.split("\t")
+            ec_portion = ec_line_list[2].strip("\n")
+            ec_list = ec_portion.split("|")
+            for ec in ec_list:
+                ecs.add(ec)
     return len(ecs)
 
 
@@ -64,8 +68,12 @@ if __name__ == "__main__":
     data.append("%.2f" % (quality_sequence_pct*100))
     
     headings.append("host reads found in sample")
-    host_read_counts = fastq_count(combined_host)
-    data.append(str(int(host_read_counts)))
+    host_read_counts = 0
+    if(combined_host == "no_host"):
+        data.append("0")
+    else:
+        host_read_counts = fastq_count(combined_host)
+        data.append(str(int(host_read_counts)))
     
     headings.append("% host reads in sample")
     host_pct = host_read_counts / raw_sequence_count
