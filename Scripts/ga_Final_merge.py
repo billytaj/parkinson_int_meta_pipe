@@ -65,6 +65,7 @@ def convert_genes_to_proteins(mapped_gene_file):#, section, gene_trans_dict):
         #SeqIO.write(proteins, out_prot, "fasta")            # and aligned proteins aa seqs.
         
 def concatenate_gene_maps(path, gene_map_dict):
+    #merge all gene maps given a directory
     #the gene length stays constant.  The number of reads do not.
     path_contents = os.listdir(path)
     #gene_map_dict = dict()
@@ -106,6 +107,7 @@ def concatenate_gene_maps(path, gene_map_dict):
                         #print("new entry:", gene_name, gene_map_dict[gene_name])
     #return gene_map_dict
 def final_gene_map_merge(gene_map_list, final_gene_map):
+    #merge all the interim gene maps that we've got
     #final_gene_map = dict()
     for gene_map in gene_map_list:
         for gene_name_key in gene_map:
@@ -152,8 +154,8 @@ def merge_fastas(path_0, path_1, section, header, extension):
     return final_fasta_file
     
     
-def export_gene_map(gene_map, path):
-    final_gene_map_file = os.path.join(path, "gene_map.tsv")
+def export_gene_map(gene_map, export_path):
+    final_gene_map_file = os.path.join(export_path, "gene_map.tsv")
     
     with open(final_gene_map_file, "w") as gene_map_out:
         #out_line = "geneID" + "\t" + "gene length" + "\t" + "Reads"
@@ -211,11 +213,29 @@ def merge_all_proteins(path, gene_transcripts_list, export_path):
         #    out_line = str(gene.id) + "\n" + str(gene.seq) + "\n"
         #    proteins_out.write(out_line)
         SeqIO.write(gene_transcripts_list, proteins_out, "fasta")
+        
+def handle_final_proteins(final_path, export_path):
+    #just a function dump so we can do this step in parallel with other things
+
+    #scrub for duplicates (because seqIO index doesn't like duplicates)
+    bwa_blat_proteins_file = merge_fastas(final_path, final_path, "all", "BWA_BLAT_proteins", ".fna")
+    unique_fna_file = "unique_" + os.path.basename(bwa_blat_proteins_file)
+    scrub_duplicates(bwa_blat_proteins_file, unique_fna_file)
+    
+    
+    gene_transcripts_list = convert_genes_to_proteins(unique_fna_file)
+    #print("GENE TRANSCRIPT:", len(gene_transcripts_list))
+    #for item in gene_transcripts_list:
+    #    print(item)
+    
+    merge_all_proteins(final_path, gene_transcripts_list, export_path)
+        
 if __name__ == "__main__":
     bwa_path                = sys.argv[1]
     blat_path               = sys.argv[2]
     diamond_path            = sys.argv[3]
     final_path              = sys.argv[4]
+    export_path             = sys.argv[5]
     #diamond_proteins_file   = sys.argv[5]
     
     manager = mp.Manager()
@@ -229,44 +249,11 @@ if __name__ == "__main__":
     process_store = []
     
     
-    
-    make_merge_fasta_process(process_store, diamond_path, final_path, "GA_leftover", ".fasta")
-    make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna")
-    make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")
-    make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")
-    for item in process_store:
-        item.join()
-    process_store[:] = []
-    
-    
-    #secondary combine
-    make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
-    #make_merge_fasta_process(process_store, final_path, final_path, "dmd", ".faa")
-    for item in process_store:
-        item.join()
-    process_store[:] = []
-    #make_convert_proteins_process(process_store, final_path, mgr_gene_transcripts_dict)
-    #
-    #gene_trans_dict = dict(mgr_gene_transcripts_dict)
-    #for item in gene_trans_dict:
-    #    print(item)
-    
-    
-    #tertiary combine
-    bwa_blat_proteins_file = merge_fastas(final_path, final_path, "all", "BWA_BLAT_proteins", ".fna")
-    unique_fna_file = "unique_" + os.path.basename(bwa_blat_proteins_file)
-    scrub_duplicates(bwa_blat_proteins_file, unique_fna_file)
-    
-    
-    gene_transcripts_list = convert_genes_to_proteins(unique_fna_file)
-    print("GENE TRANSCRIPT:", len(gene_transcripts_list))
-    #for item in gene_transcripts_list:
-    #    print(item)
-    
-    merge_all_proteins(final_path, gene_transcripts_list, final_path)
-    
-    sys.exit("premature death")
-    
+    #merge the leftover reads, and annotated genes (for protein translation)
+    make_merge_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta")  #leftover reads
+    make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna")    #BLAT genes
+    make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")      #BWA genes
+    make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")            #DIAMOND proteins
     
     #merge the gene maps
     bwa_gene_map_merge_process = mp.Process(target = concatenate_gene_maps, args = (bwa_path, mgr_bwa_gene_map))
@@ -283,29 +270,21 @@ if __name__ == "__main__":
     print(dt.today(), "launched DIAMOND gene map merge")
     
     
-    
     for item in process_store:
         item.join()
     process_store[:] = []
-    #------------------------------------------------------------------------------------
-    #convert genes to proteins
-    #convert_genes_to_proteins(section, mapped_gene_file, gene_trans_dict)
     
     
+    #secondary combine on the genes (BWA and BLAT)
+    make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
+    #make_merge_fasta_process(process_store, final_path, final_path, "dmd", ".faa")
+    for item in process_store:
+        item.join()
+    process_store[:] = []
     
-    
-    
-    
-    
-    
-    
-    
-    
-    ##export the transcripts
-    #gene_trans_dict = dict(mgr_gene_transcripts_dict)
-    #write_transcripts_process = mp.Process(target = export_proteins, args = (diamond_proteins_file, gene_trans_dict))
-    #write_transcripts_process.start()
-    #process_store.append(write_transcripts_process)
+    finish_proteins_process = mp.Process(target = handle_final_proteins, args = (final_path, export_path))
+    finish_proteins_process.start()
+    process_store.append(finish_proteins_process)
     
     
     bwa_gene_map = dict(mgr_bwa_gene_map)
@@ -324,8 +303,7 @@ if __name__ == "__main__":
     
     final_gene_map = dict(mgr_final_gene_map)
     
-    export_gene_map(final_gene_map, diamond_path)
+    export_gene_map(final_gene_map, export_path)
     
-    #for item in final_gene_map:
-    #    print(item, final_gene_map[item])
+
         

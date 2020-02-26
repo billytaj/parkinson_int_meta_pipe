@@ -215,7 +215,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_BLAT_pp_label       = "gene_annotation_BLAT_pp"
     gene_annotation_DIAMOND_label       = "gene_annotation_DIAMOND"
     gene_annotation_DIAMOND_pp_label    = "gene_annotation_DIAMOND_pp"
-    gene_annotation_final_label         = "gene_annotation_final"
+    gene_annotation_final_merge_label   = "gene_annotation_FINAL_MERGE"
     taxon_annotation_label              = "taxonomic_annotation"
     ec_annotation_label                 = "enzyme_annotation"
     ec_annotation_detect_label          = "enzyme_annotation_detect"
@@ -909,7 +909,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             
         write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label)
     
-    #if check_bypass_log(output_folder_path, gene_annotation_final_label):
         
     
     cleanup_GA_DIAMOND_start = time.time()
@@ -922,6 +921,24 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_DIAMOND_end = time.time()
     print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
     print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
+    
+    
+    GA_final_merge_start = time.time()
+    if check_bypass_log(output_folder_path, gene_annotation_final_merge_label):
+        final_merge_process = mp.Process(
+            target = commands.create_and_launch, 
+            args = (
+                gene_annotation_final_merge_label,
+                commands.create_GA_final_merge_command(gene_annotation_final_merge_label, gene_annotation_BWA_label, gene_annotation_BLAT_label, gene_annotation_DIAMOND_label),
+                True, 
+                "GA_final_merge"
+            )
+        )
+        final_merge_process.start()
+        final_merge_process.join()
+        write_to_bypass_log(output_folder_path, gene_annotation_final_merge_label)
+    GA_final_merge_end = time.time()
+    print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")
     
     # ------------------------------------------------------
     # Taxonomic annotation
@@ -950,6 +967,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     TA_end = time.time()
     print("TA:", '%1.1f' % (TA_end - TA_start - (cleanup_TA_end - cleanup_TA_start)), "s")
     print("TA cleanup:", '%1.1f' % (cleanup_TA_end - cleanup_TA_start), "s")
+    
+    
+    
+    
+    
+    
     
     # ------------------------------------------------------
     # Detect EC annotation

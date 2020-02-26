@@ -2092,7 +2092,38 @@ class mt_pipe_commands:
             diamond_pp
         ]
 
-        return COMMANDS_Annotate_Diamond_Post    
+        return COMMANDS_Annotate_Diamond_Post 
+
+
+
+    def create_GA_final_merge_command(self, current_stage_name, dep_0_name, dep_1_name, dep_2_name):
+        subfolder = os.path.join(self.Output_Path, current_stage_name)
+        data_folder = os.path.join(subfolder, "data")
+        final_folder = os.path.join(subfolder, "final_results")
+        dep_0_path = os.path.join(self.Output_Path, dep_0_name, "final_results")
+        dep_1_path = os.path.join(self.Output_Path, dep_1_name, "final_results")
+        dep_2_path = os.path.join(self.Output_Path, dep_2_name, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(final_folder)
+        
+        final_merge = self.tool_path_obj.Python + " "
+        final_merge += self.tool_path_obj.GA_final_merge + " "
+        final_merge += dep_0_path + " "
+        final_merge += dep_1_path + " "
+        final_merge += dep_2_path + " "
+        final_merge += data_folder + " "
+        final_merge += final_folder
+        
+        COMMANDS_ga_final_merge = [
+            final_merge
+        ]
+        
+        return COMMANDS_ga_final_merge
+        
+
+        
 
     def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, diamond_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
