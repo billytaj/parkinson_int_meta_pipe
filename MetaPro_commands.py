@@ -2125,12 +2125,12 @@ class mt_pipe_commands:
 
         
 
-    def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, diamond_stage):
+    def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
         rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
         assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
-        diamond_folder          = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
         kaiju_folder            = os.path.join(data_folder, "1_kaiju")
         centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
@@ -2149,7 +2149,7 @@ class mt_pipe_commands:
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
         get_taxa_from_gene += self.tool_path_obj.Python + " "
         get_taxa_from_gene += self.tool_path_obj.Annotated_taxid + " "  # SLOW STEP
-        get_taxa_from_gene += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        get_taxa_from_gene += os.path.join(final_merge_folder, "gene_map.tsv") + " "
         get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
         get_taxa_from_gene += os.path.join(ga_taxa_folder, "ga_taxon.tsv")
 
@@ -2304,11 +2304,11 @@ class mt_pipe_commands:
         
       
 
-    def create_EC_DETECT_command(self, current_stage_name, diamond_stage):
-        subfolder       = os.path.join(self.Output_Path, current_stage_name)
-        data_folder     = os.path.join(subfolder, "data")
-        diamond_folder  = os.path.join(self.Output_Path, diamond_stage, "final_results")
-        detect_folder   = os.path.join(data_folder, "0_detect")
+    def create_EC_DETECT_command(self, current_stage_name, ga_final_merge_stage):
+        subfolder           = os.path.join(self.Output_Path, current_stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        detect_folder       = os.path.join(data_folder, "0_detect")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -2317,7 +2317,7 @@ class mt_pipe_commands:
         detect_protein = ">&2 echo running detect on split file | "
         detect_protein += self.tool_path_obj.Python + " "
         detect_protein += self.tool_path_obj.Detect + " "
-        detect_protein += os.path.join(diamond_folder,"proteins.faa")
+        detect_protein += os.path.join(final_merge_folder,"all_proteins.faa")
         detect_protein += " --output_file " + os.path.join(detect_folder, "proteins.detect")
         detect_protein += " --fbeta " + os.path.join(detect_folder, "proteins.fbeta")
         detect_protein += " --db " + self.tool_path_obj.DetectDB
@@ -2333,10 +2333,10 @@ class mt_pipe_commands:
 
         return COMMANDS_DETECT
 
-    def create_EC_PRIAM_command(self, current_stage_name, diamond_stage):
+    def create_EC_PRIAM_command(self, current_stage_name, ga_final_merge_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
         
 
@@ -2347,7 +2347,7 @@ class mt_pipe_commands:
         PRIAM_command += self.tool_path_obj.Java + " "
         PRIAM_command += self.tool_path_obj.Priam
         PRIAM_command += " -n " + "proteins_priam" + " "
-        PRIAM_command += " -i " + os.path.join(diamond_folder, "proteins.faa")
+        PRIAM_command += " -i " + os.path.join(final_merge_folder, "all_proteins.faa")
         PRIAM_command += " -p " + self.tool_path_obj.PriamDB
         PRIAM_command += " -o " + PRIAM_folder
         PRIAM_command += " --np " + self.Threads_str
@@ -2361,10 +2361,10 @@ class mt_pipe_commands:
         return COMMANDS_PRIAM
         
         
-    def create_EC_DIAMOND_command(self, current_stage_name, diamond_stage):
+    def create_EC_DIAMOND_command(self, current_stage_name, ga_final_merge_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
         
         self.make_folder(diamond_ea_folder)
@@ -2372,7 +2372,7 @@ class mt_pipe_commands:
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
         diamond_ea_command += self.tool_path_obj.DIAMOND + " blastp"
         diamond_ea_command += " -p " + self.Threads_str
-        diamond_ea_command += " --query " + os.path.join(diamond_folder, "proteins.faa")
+        diamond_ea_command += " --query " + os.path.join(final_merge_folder, "all_proteins.faa")
         diamond_ea_command += " --db " + self.tool_path_obj.SWISS_PROT
         diamond_ea_command += " --outfmt " + "6 qseqid sseqid length qstart qend sstart send evalue bitscore qcovhsp slen pident"
         diamond_ea_command += " --out " + os.path.join(diamond_ea_folder, "proteins.blastout")
@@ -2385,10 +2385,10 @@ class mt_pipe_commands:
         
         return COMMANDS_DIAMOND_EC
         
-    def create_EC_postprocess_command(self, current_stage_name, diamond_stage):
+    def create_EC_postprocess_command(self, current_stage_name, ga_final_merge_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         detect_folder       = os.path.join(data_folder, "0_detect")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
         diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
@@ -2406,7 +2406,7 @@ class mt_pipe_commands:
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
-        postprocess_command += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        postprocess_command += os.path.join(final_merge_folder, "gene_map.tsv") + " "
         postprocess_command += os.path.join(final_folder, "proteins.ECs_All")
 
         COMMANDS_EC_Postprocess = [
@@ -2416,7 +2416,7 @@ class mt_pipe_commands:
 
         return COMMANDS_EC_Postprocess
 
-    def create_output_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, diamond_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         mpl_folder          = os.path.join(data_folder, "0_MPL")
@@ -2424,7 +2424,7 @@ class mt_pipe_commands:
         host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
         contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
         repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        diamond_folder      = os.path.join(self.Output_Path, diamond_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
@@ -2441,14 +2441,15 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         
         copy_gene_map = ">&2 echo copying gene map | "
-        copy_gene_map += "cp " + os.path.join(diamond_folder, "gene_map.tsv") + " "
+        copy_gene_map += "cp " + os.path.join(final_merge_folder, "gene_map.tsv") + " "
         copy_gene_map += final_folder
         
+        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
         
         taxa_table_generation = ">&2 echo generating taxonomy table | "
         taxa_table_generation += self.tool_path_obj.Python + " "
         taxa_table_generation += self.tool_path_obj.taxa_table + " "
-        taxa_table_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        taxa_table_generation += gene_map_location + " "
         taxa_table_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
         taxa_table_generation += os.path.join(ta_folder, "constrain_classification.tsv") + " "
         taxa_table_generation += os.path.join(final_folder, "taxa_table.tsv")
@@ -2460,7 +2461,7 @@ class mt_pipe_commands:
         network_generation += "None" + " "
         network_generation += self.tool_path_obj.nodes + " "
         network_generation += self.tool_path_obj.names + " "
-        network_generation += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        network_generation += gene_map_location + " "
         network_generation += os.path.join(ta_folder, "taxonomic_classifications.tsv") + " "
         network_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
         network_generation += self.tool_path_obj.show_unclassified + " "
@@ -2548,7 +2549,7 @@ class mt_pipe_commands:
             read_counts += os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
             read_counts += os.path.join(repopulation_folder, "singletons.fastq") + ","
             read_counts += os.path.join(repopulation_folder, "pair_1.fastq") + " "
-        read_counts += os.path.join(diamond_folder, "gene_map.tsv") + " "
+        read_counts += gene_map_location + " "
         read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
         if(self.no_host_flag):
             read_counts += "no_host" + " "
