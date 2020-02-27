@@ -161,7 +161,7 @@ def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_length
                 query_length = gene_length_dict[query_name]
                 
             bitscore = float(list_line[8])
-            coverage_percentage = 100 * 3 * alignment_length / query_length
+            coverage_percent = 100 * 3 * alignment_length / query_length
             identity_percent = float(list_line[11].strip("\n"))
             
             if(query_length >= 100):
