@@ -1121,7 +1121,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             args=(
                 output_label,
                 commands.create_output_generation_command(output_label, quality_filter_label, host_filter_label, 
-                assemble_contigs_label, repop_job_label, gene_annotation_DIAMOND_label, taxon_annotation_label, ec_annotation_label), 
+                assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label), 
                 True
             )
         )
@@ -1163,6 +1163,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("GA BLAT cleanup:", '%1.1f' % (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start), "s")
     print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
     print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
+    print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")    
     print("TA:", '%1.1f' % (TA_end - TA_start - (cleanup_TA_end - cleanup_TA_start)), "s")
     print("TA cleanup:", '%1.1f' % (cleanup_TA_end - cleanup_TA_start), "s")
     print("EC:", '%1.1f' % (EC_end - EC_start), "s")
