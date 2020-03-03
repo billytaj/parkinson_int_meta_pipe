@@ -158,11 +158,16 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
 
 
 def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack):
+    paths = mpp.tool_path_obj(config_path)
     no_host = args_pack["no_host"]
     keep_second_split = args_pack["keep_second_split"]
     verbose_mode = args_pack["verbose_mode"]
     infernal_limit = args_pack["infernal_limit"]
-
+    BWA_mem_threshold = paths.BWA_mem_threshold
+    BLAT_mem_threshold = paths.BLAT_mem_threshold
+    DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
+    
+    
     if not single_path == "":
         read_mode = "single"
         quality_encoding = determine_encoding(single_path)
@@ -245,7 +250,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
     elif read_mode == "paired":
         commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
-    paths = mpp.tool_path_obj(config_path)
+    
 
     # This is the format we use to launch each stage of the pipeline.
     # We start a multiprocess that starts a subprocess.
@@ -670,7 +675,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(real_thread_count < bwa_thread_count):
             bwa_thread_count =  real_thread_count
         print(dt.today(), "BWA threads used:", bwa_thread_count)    
-        BWA_mem_threshold = 40*1000*1024*1024 #40GB
+        
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
                 if(mem_checker(BWA_mem_threshold)):
@@ -690,9 +695,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     time.sleep(5) #placed here so the process has some time to get started.
                 else:               
                     print(dt.today(), "mem has reached a limit.  waiting to finish jobs first")
-                    for item in mp_store:
-                        item.join()
-                    mp_store[:] = []
+                    time.sleep(5)
+                    #for item in mp_store:
+                    #    item.join()
+                    #mp_store[:] = []
+        print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
         for item in mp_store:
             item.join()
         mp_store[:] = []
@@ -795,8 +802,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     for fasta_db in os.listdir(paths.DNA_DB_Split):
                         if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                             job_name = "BLAT_" + file_tag + "_" + fasta_db
-                            
-                            BLAT_mem_threshold = 1024*1024*100
                             if(mem_checker(BLAT_mem_threshold)):
                                 print(dt.today(), "mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                                 BLAT_process = mp.Process(target = commands.create_and_launch,
@@ -965,7 +970,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "DIAMOND_" + file_tag
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
-                DIAMOND_mem_threshold = 20*1000*1024*1024 #20GB
                 if(mem_checker(DIAMOND_mem_threshold)):
                     print(dt.today(), "mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                     DIAMOND_process = mp.Process(target = commands.create_and_launch,
@@ -982,9 +986,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     
                 else:
                     print(dt.today(), "DIAMOND: we've reached the mem limit. waiting for jobs to finish")
-                    for item in mp_store:
-                        item.join()
-                    mp_store[:] = []
+                    time.sleep(5)
+                    #for item in mp_store:
+                    #    item.join()
+                    #mp_store[:] = []
         
         # DIAMOND_Pool = mp.Pool(int(real_thread_count / 2))
         # print(dt.today(), "DIAMOND threads used:", real_thread_count/2)
