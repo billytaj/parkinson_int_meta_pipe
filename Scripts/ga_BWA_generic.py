@@ -289,10 +289,12 @@ if __name__ == "__main__":
         write_unmapped_reads(unmapped_reads, reads_in, reads_out)
         
     else:
-        print(dt.today(), "input unsafe.  Either no reads, or BWA annotated nothing.  passing on")
+        print(dt.today(), "input unsafe.  Either no reads, or BWA annotated nothing.  converting to fasta, then passing on")
         if(check_file_safety(reads_in)):
-            copyfile(reads_in, reads_out)
-        
+            reads_to_convert = SeqIO.parse(reads_in, "fastq")
+            SeqIO.write(reads_to_convert, reads_out, "fasta")
+            #copyfile(reads_in, reads_out)
+            
     
     
     
