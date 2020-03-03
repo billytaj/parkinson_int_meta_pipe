@@ -291,9 +291,11 @@ if __name__ == "__main__":
     else:
         print(dt.today(), "input unsafe.  Either no reads, or BWA annotated nothing.  converting to fasta, then passing on")
         if(check_file_safety(reads_in)):
-            reads_to_convert = SeqIO.parse(reads_in, "fastq")
-            SeqIO.write(reads_to_convert, reads_out, "fasta")
-            #copyfile(reads_in, reads_out)
+            if(reads_in.endswith(".fastq"):
+                reads_to_convert = SeqIO.parse(reads_in, "fastq")
+                SeqIO.write(reads_to_convert, reads_out, "fasta")
+            else:
+                copyfile(reads_in, reads_out)
             
     
     
