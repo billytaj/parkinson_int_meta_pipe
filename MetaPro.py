@@ -180,7 +180,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         print("OPERATING IN PAIRED-MODE")
         
     if threads == 0:
-        real_thread_count = mp.cpu_count() - 4
+        real_thread_count = mp.cpu_count()
     else:
         real_thread_count = threads
        
