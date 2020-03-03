@@ -14,9 +14,9 @@ import shutil
 from datetime import datetime as dt
 import psutil as psu
 
-def mem_checker():
+def mem_checker(threshold):
     mem = psu.virtual_memory()
-    threshold = 200 * 1024 * 1024 #200MB
+    #threshold = 200 * 1024 * 1024 #200MB
     
     if(mem.available <= threshold):
         return False
@@ -670,11 +670,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(real_thread_count < bwa_thread_count):
             bwa_thread_count =  real_thread_count
         print(dt.today(), "BWA threads used:", bwa_thread_count)    
-        
+        BWA_mem_threshold = 40*1000*1024*1024 #40GB
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
-                if(mem_checker()):
-                    print(dt.today(), "mem ok:", psu.virtual_memory().available)
+                if(mem_checker(BWA_mem_threshold)):
+                    print(dt.today(), "mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
                     full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section, split_sample))
                     print("split sample:", full_sample_path)
                     file_tag = os.path.basename(split_sample)
@@ -682,11 +682,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     job_name = "BWA" + "_" + file_tag
                     bwa_process = mp.Process(
                         target = commands.create_and_launch, 
-                        args = (gene_annotation_BWA_label, commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path))
+                        args = (gene_annotation_BWA_label, commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path), True, job_name)
                     )
                     bwa_process.start()
                     
                     mp_store.append(bwa_process)
+                    time.sleep(5) #placed here so the process has some time to get started.
                 else:               
                     print(dt.today(), "mem has reached a limit.  waiting to finish jobs first")
                     for item in mp_store:
@@ -717,9 +718,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 # )
         # BWAPool.close()
         # BWAPool.join()
-        
-        
-        
         
         
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_label)
@@ -787,6 +785,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         sample_job_flag = True
         missed_jobs_list = []
         #job_name = "BLAT_single_job"
+        
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
                 if(split_sample.endswith(".fasta")):
@@ -796,36 +795,81 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     for fasta_db in os.listdir(paths.DNA_DB_Split):
                         if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                             job_name = "BLAT_" + file_tag + "_" + fasta_db
-                            BlatPool.apply_async(commands.create_and_launch,
-                            #BlatPool.apply_async(commands.launch_only,
-                                args=(
-                                    gene_annotation_BLAT_label,
-                                    commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
-                                    True,
-                                    job_name
+                            
+                            BLAT_mem_threshold = 1024*1024*100
+                            if(mem_checker(BLAT_mem_threshold)):
+                                print(dt.today(), "mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                                BLAT_process = mp.Process(target = commands.create_and_launch,
+                                    args=(
+                                        gene_annotation_BLAT_label,
+                                        commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
+                                        True,
+                                        job_name
+                                    )
                                 )
-                            )
-                            time.sleep(0.0003)
-                            if(sample_job_flag):
-                                print("saving 1 job for sampling:", job_name + ".sh")
-                                sample_job_flag = False
+                                BLAT_process.start()
+                                mp_store.append(BLAT_process)
+                                time.sleep(0.0003)
+                                if(sample_job_flag):
+                                    print("saving 1 job for sampling:", job_name + ".sh")
+                                    sample_job_flag = False
+                                else:
+                                    #print("for file explosion reasons, removing:", job_name +".sh") 
+                                    if(os.path.exists(job_name + ".sh")):
+                                        os.remove(os.path.join(gene_annotation_BLAT_path, job_name + ".sh"))
+                                #    else:
+                                #        missed_jobs_list.append(job_name)
                             else:
-                                print("for file explosion reasons, removing:", job_name +".sh") 
-                                if(os.path.exists(job_name + ".sh")):
-                                    os.remove(os.path.join(gene_annotation_BLAT_path, job_name + ".sh"))
-                            #    else:
-                            #        missed_jobs_list.append(job_name)
+                                print(dt.today(), "too many BLAT jobs.  waiting for some to finish")
+                                for item in mp_store:
+                                    item.join()
+                                mp_store[:] = []
         print(dt.today(), "final BLAT job removal")
         for item in os.listdir(gene_annotation_BLAT_path):
             if(item.endswith(".ffn.sh")):
                 if(os.path.exists(item)):
                     os.remove(item)
+        #--------------------------------------------
+        # original version
+        # for section in sections:
+            # for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+                # if(split_sample.endswith(".fasta")):
+                    # file_tag = os.path.basename(split_sample)
+                    # file_tag = os.path.splitext(file_tag)[0]
+                    # full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
+                    # for fasta_db in os.listdir(paths.DNA_DB_Split):
+                        # if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
+                            # job_name = "BLAT_" + file_tag + "_" + fasta_db
+                            # BlatPool.apply_async(commands.create_and_launch,
+                            # #BlatPool.apply_async(commands.launch_only,
+                                # args=(
+                                    # gene_annotation_BLAT_label,
+                                    # commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
+                                    # True,
+                                    # job_name
+                                # )
+                            # )
+                            # time.sleep(0.0003)
+                            # if(sample_job_flag):
+                                # print("saving 1 job for sampling:", job_name + ".sh")
+                                # sample_job_flag = False
+                            # else:
+                                # print("for file explosion reasons, removing:", job_name +".sh") 
+                                # if(os.path.exists(job_name + ".sh")):
+                                    # os.remove(os.path.join(gene_annotation_BLAT_path, job_name + ".sh"))
+                            # #    else:
+                            # #        missed_jobs_list.append(job_name)
+        # print(dt.today(), "final BLAT job removal")
+        # for item in os.listdir(gene_annotation_BLAT_path):
+            # if(item.endswith(".ffn.sh")):
+                # if(os.path.exists(item)):
+                    # os.remove(item)
         #for item in missed_jobs_list:
         #    if(os.path.exists(item)):
         #        os.remove(item)
             
-        BlatPool.close()
-        BlatPool.join()
+        #BlatPool.close()
+        #BlatPool.join()
 
         
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_label)
@@ -915,24 +959,55 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_DIAMOND_tool_output_path = os.path.join(gene_annotation_DIAMOND_path, "data", "0_diamond")
     #if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path, file_check_bypass = True):
     if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_label):
-        DIAMOND_Pool = mp.Pool(int(real_thread_count / 2))
-        print(dt.today(), "DIAMOND threads used:", real_thread_count/2)
         for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "DIAMOND_" + file_tag
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
-                DIAMOND_Pool.apply_async(commands.create_and_launch,
-                    args=(
-                        gene_annotation_DIAMOND_label,
-                        commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
-                        True,
-                        job_name
+                DIAMOND_mem_threshold = 20*1000*1024*1024 #20GB
+                if(mem_checker(DIAMOND_mem_threshold)):
+                    print(dt.today(), "mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                    DIAMOND_process = mp.Process(target = commands.create_and_launch,
+                        args=(
+                            gene_annotation_DIAMOND_label,
+                            commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
+                            True,
+                            job_name
+                        )
                     )
-                )
-        DIAMOND_Pool.close()
-        DIAMOND_Pool.join()
+                    DIAMOND_process.start()
+                    mp_store.append(DIAMOND_process)
+                    time.sleep(5) #it's enough time for the process to eat some memory.
+                    
+                else:
+                    print(dt.today(), "DIAMOND: we've reached the mem limit. waiting for jobs to finish")
+                    for item in mp_store:
+                        item.join()
+                    mp_store[:] = []
+        
+        # DIAMOND_Pool = mp.Pool(int(real_thread_count / 2))
+        # print(dt.today(), "DIAMOND threads used:", real_thread_count/2)
+        # for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
+            # if(split_sample.endswith(".fasta")):
+                # file_tag = os.path.basename(split_sample)
+                # file_tag = os.path.splitext(file_tag)[0]
+                # job_name = "DIAMOND_" + file_tag
+                # full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
+                # DIAMOND_Pool.apply_async(commands.create_and_launch,
+                    # args=(
+                        # gene_annotation_DIAMOND_label,
+                        # commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
+                        # True,
+                        # job_name
+                    # )
+                # )
+        # DIAMOND_Pool.close()
+        # DIAMOND_Pool.join()
+        print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
         write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_label)
         
     #if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
