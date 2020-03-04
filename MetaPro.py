@@ -784,8 +784,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
     #if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_label):
-        BlatPool = mp.Pool(int(real_thread_count / 2))
-        print(dt.today(), "BLAT threads used:", real_thread_count/2)
+        BlatPool = mp.Pool(int(real_thread_count / 4))
+        print(dt.today(), "BLAT threads used:", real_thread_count/4)
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
@@ -854,7 +854,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                     job_name
                                 )
                             )
-                            time.sleep(0.0003)
+                            time.sleep(0.001)
                             if(sample_job_flag):
                                 print("saving 1 job for sampling:", job_name + ".sh")
                                 sample_job_flag = False
