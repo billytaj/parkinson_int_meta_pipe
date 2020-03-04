@@ -869,9 +869,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             if(item.endswith(".ffn.sh")):
                 if(os.path.exists(item)):
                     os.remove(item)
-        for item in missed_jobs_list:
-           if(os.path.exists(item)):
-               os.remove(item)
+        
             
         BlatPool.close()
         BlatPool.join()
