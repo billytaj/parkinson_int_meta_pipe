@@ -161,6 +161,7 @@ class tool_path_obj:
         BWA_mem_default = 50
         BLAT_mem_default = 10 #100MB
         DIAMOND_mem_default = 35 #60GB
+        chunk_size_default = 100000
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
             self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
@@ -181,6 +182,11 @@ class tool_path_obj:
             except KeyError:
                 self.DIAMOND_mem_threshold = DIAMOND_mem_default
                 
+            try:
+                self.chunk_size  = config["Settings"]["chunk_size"]                             if config["Settings"]["chunk_size"]                 or config["Settings"]["chunk_size"]      == "" else chunk_size_default
+            except KeyError:
+                self.chunk_size = chunk_size_default
+                    
             
         else:
             self.target_rank = "genus"
@@ -190,3 +196,4 @@ class tool_path_obj:
             self.BWA_mem_threshold = BWA_mem_default
             self.BLAT_mem_threshold = BLAT_mem_default
             self.DIAMOND_mem_threshold = DIAMOND_mem_default
+            self.chunk_size = chunk_size_default

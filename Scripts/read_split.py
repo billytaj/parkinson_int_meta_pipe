@@ -48,7 +48,8 @@ def split_fastq(file_name_in, file_name_out, split_count = 4):
             print("empty frame detected.  no sense in running the rest")
             break
 
-def split_fasta(file_name_in, file_name_out, split_count = 4):
+def split_fasta(file_name_in, file_name_out, chunks#split_count = 4):
+    #modded to take in fixed chunks
     fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
     fasta_df.columns = ["row"]
     #There's apparently a possibility for NaNs to be introduced in the raw fasta.  We have to strip it before we process (from DIAMOND proteins.faa)
@@ -67,7 +68,7 @@ def split_fasta(file_name_in, file_name_out, split_count = 4):
     fasta_df["sequence"] = fasta_df[fasta_df.columns[:]].apply(lambda x: "".join(x.dropna()), axis=1)  # consolidate all cols into a single sequence
     fasta_df.drop(temp_columns, axis=1, inplace=True)
     # At this point, we've already got the number of reads.
-    chunks = m.ceil(len(fasta_df) / split_count)  # how many sequences each split file will have
+    #chunks = m.ceil(len(fasta_df) / split_count)  # how many sequences each split file will have
     print("total df length:", len(fasta_df))
     print("chunk size:", chunks)
     if (chunks < 1):
