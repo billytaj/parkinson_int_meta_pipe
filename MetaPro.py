@@ -918,7 +918,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         print(dt.today(), job_name, "waiting. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                         time.sleep(5)
                         
-        print(dy.today(), "submitted all BLAT pp jobs.  waiting for sync")
+        print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []

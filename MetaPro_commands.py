@@ -100,12 +100,13 @@ class mt_pipe_commands:
     
     def launch_only(self, job_name, command_list, run_job=False, inner_name=None):
         #just launch the job.  Don't make a script file.
-        try:
-            sp.check_output([command_list])
-        except sp.CalledProcessError as e:
-            return_code = e.returncode
-            if return_code != 1:
-                raise
+        for command_item in command_list:
+            try:
+                os.system(command_item)
+            except sp.CalledProcessError as e:
+                return_code = e.returncode
+                if return_code != 1:
+                    raise
         
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
