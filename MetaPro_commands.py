@@ -13,7 +13,7 @@ class mt_pipe_commands:
     # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, chunk_size, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
+    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, chunk_size = 100000, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
 
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
         self.no_host_flag = no_host
