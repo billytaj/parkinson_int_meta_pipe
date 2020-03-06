@@ -48,7 +48,7 @@ def split_fastq(file_name_in, file_name_out, split_count = 4):
             print("empty frame detected.  no sense in running the rest")
             break
 
-def split_fasta(file_name_in, file_name_out, chunks#split_count = 4):
+def split_fasta(file_name_in, file_name_out, chunks):#split_count = 4):
     #modded to take in fixed chunks
     fasta_df = pd.read_csv(file_name_in, error_bad_lines=False, header=None, sep="\n")  # import the fasta
     fasta_df.columns = ["row"]
