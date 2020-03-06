@@ -158,25 +158,28 @@ class tool_path_obj:
         
         #--------------------------------------------------
         # miscellaneous values
+        BWA_mem_default = 50
+        BLAT_mem_default = 10 #100MB
+        DIAMOND_mem_default = 35 #60GB
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
             self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
             self.show_unclassified          = config["Settings"]["Show_unclassified"]           if config["Settings"]["Show_unclassified"]          or config["Settings"]["Show_unclassified"]          == "" else "No"
             self.rpkm_cutoff                = config["Settings"]["RPKM_cutoff"]                 if config["Settings"]["RPKM_cutoff"]                or config["Settings"]["RPKM_cutoff"]                == "" else 0.01
             try:
-                self.BWA_mem_threshold      = config["Settings"]["BWA_mem_threshold"]           if config["Settings"]["BWA_mem_threshold"]          or config["Settings"]["BWA_mem_threshold"]          == "" else 50*1000*1024*1024 #50GB
+                self.BWA_mem_threshold      = config["Settings"]["BWA_mem_threshold"]           if config["Settings"]["BWA_mem_threshold"]          or config["Settings"]["BWA_mem_threshold"]          == "" else BWA_mem_default
             except KeyError:
-                self.BWA_mem_threshold = 50*1000*1024*1024
+                self.BWA_mem_threshold = BWA_mem_default
                 
             try:
-                self.BLAT_mem_threshold     = config["Settings"]["BLAT_mem_threshold"]          if config["Settings"]["BLAT_mem_threshold"]         or config["Settings"]["BLAT_mem_threshold"]         == "" else 100*1024*1024 #100MB
+                self.BLAT_mem_threshold     = config["Settings"]["BLAT_mem_threshold"]          if config["Settings"]["BLAT_mem_threshold"]         or config["Settings"]["BLAT_mem_threshold"]         == "" else BLAT_mem_default
             except KeyError:
-                self.BLAT_mem_threshold = 100*1024*1024    
+                self.BLAT_mem_threshold = BLAT_mem_default  
                 
             try:
-                self.DIAMOND_mem_threshold  = config["Settings"]["DIAMOND_mem_threshold"]       if config["Settings"]["DIAMOND_mem_threshold"]      or config["Settings"]["DIAMOND_mem_threshold"]      == "" else 50*1000*1024*1024 #50GB
+                self.DIAMOND_mem_threshold  = config["Settings"]["DIAMOND_mem_threshold"]       if config["Settings"]["DIAMOND_mem_threshold"]      or config["Settings"]["DIAMOND_mem_threshold"]      == "" else DIAMOND_mem_default
             except KeyError:
-                self.DIAMOND_mem_threshold = 50*1000*1024*1024
+                self.DIAMOND_mem_threshold = DIAMOND_mem_default
                 
             
         else:
@@ -184,6 +187,6 @@ class tool_path_obj:
             self.adapterremoval_minlength = 30
             self.show_unclassified = "No"
             self.rpkm_cutoff = 0.01
-            self.BWA_mem_threshold = 50*1000*1024*1024
-            self.BLAT_mem_threshold = 100*1024*1024
-            self.DIAMOND_mem_threshold = 50*1000*1024*1024
+            self.BWA_mem_threshold = BWA_mem_default
+            self.BLAT_mem_threshold = BLAT_mem_default
+            self.DIAMOND_mem_threshold = DIAMOND_mem_default

@@ -1857,9 +1857,10 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(blat_merge_folder)
 
-        cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
-        
-        cleanup_command = "rm " + os.path.join(blat_folder, sample_root_name + "*.blatout")
+        #cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
+        cat_command = "for f in " + os.path.join(blat_folder, sample_root_name + "*.blatout") + ";  do cat $f >> " + os.path.join(blat_merge_folder, sample_root_name + ".blatout") + "; done"
+        #cleanup_command = "rm " + os.path.join(blat_folder, sample_root_name + "*.blatout")
+        cleanup_command = "for f in " + os.path.join(blat_folder, sample_root_name + "*.blatout") + "; do rm $f; done"
         return [
             cat_command,
             cleanup_command
