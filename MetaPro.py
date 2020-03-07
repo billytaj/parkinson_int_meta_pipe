@@ -1094,7 +1094,94 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
     #if not check_where_resume(taxon_annotation_path, None, gene_annotation_DIAMOND_path):
     if check_bypass_log(output_folder_path, taxon_annotation_label):
-        process = mp.Process(
+        
+        sections = ["contigs.fasta", "singletons.fastq"]
+        if read_mode == "paired":
+            sections.extend(["pair_1.fastq", "pair_2.fastq"])
+        job_submitted = False
+        for item in sections:
+            sample_name = item.split(".")[0]
+            job_name = "kaiju_on_" + sample_name
+            while(not job_submitted):
+                if(mem_checker(50):
+                    kaiju_process = mp.Process(
+                        target = commands.create_and_launch,
+                        args = commands.create_TA_kaiju_generic_command(taxon_annotation_label, item, rRNA_filter_label, assemble_contigs_label, gene_annotation_final_merge_label),
+                        True,
+                        job_name
+                    )
+                    kaiju_process.start()
+                    mp_store.append(kaiju_process)
+                    job_submitted = True
+                    print(dt.today(), "submitted:", job_name, "mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                else:
+                    time.sleep(5)
+                    print(dt.today(), "not enough mem.  waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+        #--------------------------------------------------------------------
+        job_submitted = False
+        job_name = "centrifuge_on_reads"
+        while(not job_submitted):
+            if(mem_checker(50)):
+            #centrifuge can't be parameterized, so we'll write it longform
+                centrifuge_reads_process = mp.Process(
+                    target = commands.create_and_launch,
+                    args = commands.create_TA_centrifuge_reads_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, gene_annotation_final_merge_label),
+                    True,
+                    job_name
+                )
+                centrifuge_reads_process.start()
+                mp_store.append(centrifuge_reads_process)
+                job_submitted = True
+                print(dt.today(), "submitted:", job_name, "mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+            else:
+                time.sleep(5)
+                print(dt.today(), "not enough mem.  waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+        #--------------------------------------------------------------------
+        job_submitted = False
+        job_name = "centrifuge_on_contigs"
+        while(not job_submitted):
+            if(mem_checker(50)):
+            #centrifuge can't be parameterized, so we'll write it longform
+                centrifuge_contigs_process = mp.Process(
+                    target = commands.create_and_launch,
+                    args = commands.create_TA_centrifuge_contigs_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, gene_annotation_final_merge_label),
+                    True,
+                    job_name
+                )
+                centrifuge_contigs_process.start()
+                mp_store.append(centrifuge_contigs_process)
+                job_submitted = True
+                print(dt.today(), "submitted:", job_name, "mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+            else:
+                time.sleep(5)
+                print(dt.today(), "not enough mem.  waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+    
+        job_submitted = False
+        job_name = "centrifuge_on_rRNA"
+        while(not job_submitted):
+            if(mem_checker(50)):
+            #centrifuge can't be parameterized, so we'll write it longform
+                centrifuge_rRNA_process = mp.Process(
+                    target = commands.create_and_launch,
+                    args = commands.create_TA_centrifuge_rRNA_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, gene_annotation_final_merge_label),
+                    True,
+                    job_name
+                )
+                centrifuge_rRNA_process.start()
+                mp_store.append(centrifuge_rRNA_process)
+                job_submitted = True
+                print(dt.today(), "submitted:", job_name, "mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+            else:
+                time.sleep(5)
+                print(dt.today(), "not enough mem.  waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+    
+    
+        
+    
+    
+    
+    
+    process = mp.Process(
             target=commands.create_and_launch,
             args=(
                 taxon_annotation_label,

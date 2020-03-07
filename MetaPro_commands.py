@@ -2126,7 +2126,272 @@ class mt_pipe_commands:
         return COMMANDS_ga_final_merge
         
 
+    def create_TA_kaiju_generic_command(self, current_stage_name, whole_name, extension, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
+        #sample_root_name = contigs, pairs, singletons
+        #extensions = .fastq, .fasta
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        wevote_folder           = os.path.join(data_folder, "3_wevote")
+        final_folder            = os.path.join(subfolder, "final_results")
         
+        sample_name = whole_name.split(".")[0]
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(kaiju_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
+        self.make_folder(final_folder)
+        
+        kaiju_run = ">&2 echo kaiju on " + sample_name + " | "
+        kaiju_run += self.tool_path_obj.Kaiju
+        kaiju_run += " -t " + self.tool_path_obj.nodes
+        kaiju_run += " -f " + self.tool_path_obj.Kaiju_db
+        
+        if(sample_root_name == "pairs"):
+            kaiju_run += " -i " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+            kaiju_run += " -j " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+        else:
+            kaiju_run += " -i " + os.path.join(assemble_contigs_folder, whole_name)
+        
+        kaiju_run += " -z " + self.Threads_str
+        kaiju_run += " -o " + os.path.join(kaiju_folder, sample_name + ".tsv")
+        
+        return [
+            kaiju_run
+        ]
+        
+    def create_TA_centrifuge_reads_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        wevote_folder           = os.path.join(data_folder, "3_wevote")
+        final_folder            = os.path.join(subfolder, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(kaiju_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
+        self.make_folder(final_folder)
+        
+        centrifuge_on_reads = ">&2 echo centrifuge on reads | "
+        centrifuge_on_reads += self.tool_path_obj.Centrifuge
+        centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
+        centrifuge_on_reads += " -U " + os.path.join(assemble_contigs_folder, "singletons.fastq")
+        if self.read_mode == "paired":
+            centrifuge_on_reads += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+            centrifuge_on_reads += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+        centrifuge_on_reads += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_reads += " --phred" + self.Qual_str
+        centrifuge_on_reads += " -p 6"
+        centrifuge_on_reads += " -S " + os.path.join(centrifuge_folder, "reads.tsv")
+        centrifuge_on_reads += " --report-file " + os.path.join(centrifuge_folder, "reads.txt")
+        
+        return [
+            centrifuge_on_reads
+        ]
+        
+        def create_TA_centrifuge_contigs_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        wevote_folder           = os.path.join(data_folder, "3_wevote")
+        final_folder            = os.path.join(subfolder, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(kaiju_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
+        self.make_folder(final_folder)
+        
+        centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
+        centrifuge_on_contigs += self.tool_path_obj.Centrifuge
+        centrifuge_on_contigs += " -f -x " + self.tool_path_obj.Centrifuge_db
+        centrifuge_on_contigs += " -U " + os.path.join(assemble_contigs_folder, "contigs.fasta")
+        centrifuge_on_contigs += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_contigs += " --phred" + self.Qual_str
+        centrifuge_on_contigs += " -p 6"
+        centrifuge_on_contigs += " -S " + os.path.join(centrifuge_folder, "contigs.tsv")
+        centrifuge_on_contigs += " --report-file " + os.path.join(centrifuge_folder, "contigs.txt")
+        
+        return [
+            centrifuge_on_contigs
+        ]
+    
+        def create_TA_centrifuge_rRNA_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        wevote_folder           = os.path.join(data_folder, "3_wevote")
+        final_folder            = os.path.join(subfolder, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(kaiju_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
+        self.make_folder(final_folder)
+    
+        centrifuge_on_rRNA = ">&2 echo centrifuge on rRNA | "
+        centrifuge_on_rRNA += self.tool_path_obj.Centrifuge
+        centrifuge_on_rRNA += " -x " + self.tool_path_obj.Centrifuge_db
+        centrifuge_on_rRNA += " -U " + os.path.join(rRNA_folder, "singletons.fastq")
+        if self.read_mode == "paired":
+            centrifuge_on_rRNA += " -1 " + os.path.join(rRNA_folder, "pair_1.fastq")
+            centrifuge_on_rRNA += " -2 " + os.path.join(rRNA_folder, "pair_2.fastq")
+        centrifuge_on_rRNA += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+        centrifuge_on_rRNA += " --phred" + self.Qual_str
+        centrifuge_on_rRNA += " -p 6"
+        centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "rRNA.tsv")
+        centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "rRNA.txt")
+        
+        return [
+            centrifuge_on_rRNA
+        ]
+        
+    def create_TA_wevote_command():
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        wevote_folder           = os.path.join(data_folder, "3_wevote")
+        final_folder            = os.path.join(subfolder, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(kaiju_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
+        self.make_folder(final_folder)
+        
+        
+        cat_kaiju = ">&2 echo merging all kaiju results | "
+        cat_kaiju += "cat "
+        cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
+        cat_kaiju += os.path.join(kaiju_folder, "singletons.tsv")
+        if self.read_mode == "paired":
+            cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
+        cat_kaiju += " > " + os.path.join(kaiju_folder, "merged_kaiju.tsv")
+        
+        cat_centrifuge = ">&2 echo combining all centrifuge results | "
+        cat_centrifuge += "cat "
+        cat_centrifuge += os.path.join(centrifuge_folder, "reads.tsv") + " "
+        cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
+        cat_centrifuge += " > " + os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
+        
+        wevote_combine = ">&2 echo combining classification outputs for wevote | "
+        wevote_combine += self.tool_path_obj.Python + " "
+        wevote_combine += self.tool_path_obj.Classification_combine + " "
+        wevote_combine += os.path.join(assemble_contigs_folder, "contig_map.tsv")
+        wevote_combine += " " + os.path.join(wevote_folder, "wevote_ensemble.csv") + " "
+        wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
+        wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
+        wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
+        wevote_combine += os.path.join(kaiju_folder, "merged_kaiju.tsv") + " "
+        wevote_combine += os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
+
+        wevote_call = ">&2 echo Running WEVOTE | "
+        wevote_call += self.tool_path_obj.WEVOTE
+        wevote_call += " -i " + os.path.join(wevote_folder, "wevote_ensemble.csv")
+        wevote_call += " -d " + self.tool_path_obj.WEVOTEDB
+        wevote_call += " -p " + os.path.join(wevote_folder, "wevote")
+        wevote_call += " -n " + self.Threads_str
+        wevote_call += " -k " + "2"
+        wevote_call += " -a " + "0"
+        wevote_call += " -s " + "0"
+
+        wevote_collect = ">&2 echo gathering WEVOTE results | "
+        wevote_collect += self.tool_path_obj.Python + " "
+        wevote_collect += self.tool_path_obj.Wevote_parser + " "
+        wevote_collect += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt") + " "
+        wevote_collect += os.path.join(final_folder, "taxonomic_classifications.tsv")
+        
+        constrain = ">&2 echo Constraining the Taxonomic Annotation | " 
+        constrain += self.tool_path_obj.Python + " " + self.tool_path_obj.Constrain_classification + " "
+        constrain += self.tool_path_obj.target_rank + " "
+        constrain += os.path.join(final_folder, "taxonomic_classifications.tsv") + " "
+        constrain += self.tool_path_obj.nodes + " "
+        constrain += self.tool_path_obj.names + " "
+        constrain += os.path.join(final_folder, "constrain_classification.tsv")
+        
+        return [
+            cat_kaiju,
+            cat_centrifuge,
+            wevote_combine,
+            wevote_call,
+            wevote_collect,
+            constrain
+        ]
+        
+        
+    def create_TA_get_taxa_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        wevote_folder           = os.path.join(data_folder, "3_wevote")
+        final_folder            = os.path.join(subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(kaiju_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(wevote_folder)
+        self.make_folder(rRNA_folder)
+        self.make_folder(final_folder)
+
+        get_taxa_from_gene = ">&2 echo get taxa from gene | "
+        get_taxa_from_gene += self.tool_path_obj.Python + " "
+        get_taxa_from_gene += self.tool_path_obj.Annotated_taxid + " "  # SLOW STEP
+        get_taxa_from_gene += os.path.join(final_merge_folder, "gene_map.tsv") + " "
+        get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
+        get_taxa_from_gene += os.path.join(ga_taxa_folder, "ga_taxon.tsv")
+        
+        return [
+            get_taxa_from_gene
+        ]
 
     def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
