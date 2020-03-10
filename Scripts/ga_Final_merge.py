@@ -7,6 +7,55 @@ from datetime import datetime as dt
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
+
+def import_gene_report(gene_report_path):
+
+    gene_segment_dict = dict()
+    with open(gene_report_path, "r") as gene_report:
+        contig_name = ""
+        contig_segment_name_list = []
+        start_of_loop = True
+        gene_segment_sum = 0
+        
+        
+        
+        for line in gene_report:
+            
+            cleaned_line = line.strip("\n")
+            cleaned_line = cleaned_line.split(" ")
+            
+            cleaned_line = [i for i in cleaned_line if i]
+            if(len(cleaned_line) > 1):
+                #print(cleaned_line)
+                if(cleaned_line[0] == "FASTA"):
+                    if(start_of_loop == False):
+                        for item in contig_segment_name_list:
+                            #print("gene segment length:", gene_segment_dict[item], "gene segment sum:", gene_segment_sum)
+                            
+                            gene_segment_dict[item] = gene_segment_dict[item] / gene_segment_sum
+                        contig_segment_name_list[:] = []
+                    contig_name = cleaned_line[3]
+                    #print("contig:", contig_name)
+                    start_of_loop = False
+                    gene_segment_sum = 0
+                if(cleaned_line[0] == "Model" or cleaned_line[0] == "Gene" or cleaned_line[0] == "#" or cleaned_line[0] == "Predicted"):
+                    continue
+                if(cleaned_line[0].isdigit()):
+                    #print(cleaned_line)
+                    contig_segment_name = "gene_" + cleaned_line[0] + "|" + contig_name
+                    #print("contig segment name:", contig_segment_name)
+                    gene_segment_sum += int(cleaned_line[4])
+                    #print("gene segment sum:", gene_segment_sum)
+                    contig_segment_name_list.append(contig_segment_name)
+                    gene_segment_dict[contig_segment_name] = int(cleaned_line[4])
+        for item in contig_segment_name_list:
+        #    print("gene segment length:", gene_segment_dict[item], "gene segment sum:", gene_segment_sum)
+            gene_segment_dict[item] = gene_segment_dict[item] / gene_segment_sum
+        contig_segment_name_list[:] = []
+        
+    return gene_segment_dict
+
+
 def export_proteins(diamond_proteins_file, gene_trans_dict, final_proteins):
     with open(diamond_proteins_file, "a") as diamond_proteins:
         for item in gene_trans_dict:
@@ -64,7 +113,11 @@ def convert_genes_to_proteins(mapped_gene_file):#, section, gene_trans_dict):
     #    SeqIO.write(genes_trans, out_prot, "fasta")         # Write aligned gene aa seqs
         #SeqIO.write(proteins, out_prot, "fasta")            # and aligned proteins aa seqs.
         
-def concatenate_gene_maps(path, gene_map_dict):
+        
+def convert_contig_gene_maps():
+    #takes contig gene maps and updates the read counts a bit.
+        
+def concatenate_gene_maps(path, gene_map_dict, gene_segment_dict):
     #merge all gene maps given a directory
     #the gene length stays constant.  The number of reads do not.
     path_contents = os.listdir(path)
@@ -104,6 +157,18 @@ def concatenate_gene_maps(path, gene_map_dict):
                     else:
                         
                         gene_map_dict[gene_name] = [gene_length, number_of_reads] + reads
+                 
+                 #update the read count with the gene segments' proper read counts.       
+                 for gene in gene_map_dict:
+                    reads = gene_map_dict[2:]
+                    number_of_reads = gene_map_dict[1]
+                    gene_length = gene_map_dict[0]
+                    for read_ID in reads:
+                        if read_ID in gene_segment_dict:
+                            number_of_reads += gene_segment_dict[read_ID]
+                            gene_map_dict[gene] = [gene_length, number_of_reads] + reads
+                        
+                        
                         #print("new entry:", gene_name, gene_map_dict[gene_name])
     #return gene_map_dict
 def final_gene_map_merge(gene_map_list, final_gene_map):
