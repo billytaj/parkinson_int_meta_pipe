@@ -12,8 +12,22 @@ import zipfile
 import pandas as pd
 import shutil
 from datetime import datetime as dt
+import psutil as psu
 
-
+def mem_checker(threshold):
+    #threshold is a percentage
+    mem = psu.virtual_memory()
+    available_mem = mem.available
+    total_mem = mem.total
+    
+    available_pct = 100 * available_mem / total_mem
+    
+    if(available_pct <= threshold):
+        return False
+    else:
+        return True
+        
+        
 def make_folder(folder_path):
     if not (os.path.exists(folder_path)):
         os.makedirs(folder_path)
@@ -39,21 +53,33 @@ def compress_folder(folder_path):
 def write_to_bypass_log(folder_path, message):
     bypass_log_path = os.path.join(folder_path, "bypass_log.txt")
     with open(bypass_log_path, "a") as bypass_log:
-        bypass_log.write(message + "\n")
+        bypass_log.write("\n")
+        new_message = message + "\n"
+        bypass_log.write(new_message)
+        
+
 
 def check_bypass_log(folder_path, message):
     bypass_keys_list = list()
     bypass_log_path = os.path.join(folder_path, "bypass_log.txt")
-    with open(bypass_log_path, "r") as bypass_log:
-        for line in bypass_log:
-            bypass_key = line.strip("\n")
-            bypass_keys_list.append(bypass_key)
-    if(message in bypass_keys_list):
-        print(dt.today(), "bypassing:", message)
-        return False
+    if(os.path.exists(bypass_log_path)):
+        with open(bypass_log_path, "r") as bypass_log:
+            for line in bypass_log:
+                bypass_key = line.strip("\n")
+                bypass_keys_list.append(bypass_key)
+        if(message in bypass_keys_list):
+            print(dt.today(), "bypassing:", message)
+            return False
+        else:
+            print(dt.today(), "running:", message) 
+            return True
     else:
-        print(dt.today(), "running:", message) 
+        open(bypass_log_path, "a").close()
+        print(dt.today(), "no bypass log.  running:", message)
         return True
+        
+
+            
         
 # Used to determine quality encoding of fastq sequences.
 # Assumes Phred+64 unless there is a character within the first 10000 reads with encoding in the Phred+33 range.
@@ -148,11 +174,17 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
 
 
 def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack):
+    paths = mpp.tool_path_obj(config_path)
     no_host = args_pack["no_host"]
     keep_second_split = args_pack["keep_second_split"]
     verbose_mode = args_pack["verbose_mode"]
     infernal_limit = args_pack["infernal_limit"]
-
+    chunks = paths.chunk_size
+    BWA_mem_threshold = paths.BWA_mem_threshold
+    BLAT_mem_threshold = paths.BLAT_mem_threshold
+    DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
+    
+    
     if not single_path == "":
         read_mode = "single"
         quality_encoding = determine_encoding(single_path)
@@ -165,9 +197,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         print("OPERATING IN PAIRED-MODE")
         
     if threads == 0:
-        thread_count = mp.cpu_count()
+        real_thread_count = mp.cpu_count()
     else:
-        thread_count = threads
+        real_thread_count = threads
+       
+    if(real_thread_count == 1):
+        real_thread_count = 2
+    print("number of threads used:", real_thread_count)         
+            
     mp_store = []  # stores the multiprocessing processes
 
     # --------------------------------------------------
@@ -227,10 +264,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
     elif read_mode == "paired":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
-    paths = mpp.tool_path_obj(config_path)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
+    
 
     # This is the format we use to launch each stage of the pipeline.
     # We start a multiprocess that starts a subprocess.
@@ -570,6 +607,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # Assemble contigs
     assemble_contigs_start = time.time()
     assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
+    
+    
     #if not check_where_resume(assemble_contigs_path, None, repop_job_path):
     if check_bypass_log(output_folder_path, assemble_contigs_label):
         process = mp.Process(
@@ -582,8 +621,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         process.start()
         process.join()
-        write_to_bypass_log(output_folder_path, assemble_contigs_label)
         
+        mgm_file = os.path.join(assemble_contigs_path, "data", "1_mgm", "gene_report.txt")
+        if(os.path.exists(mgm_file)):
+            write_to_bypass_log(output_folder_path, assemble_contigs_label)
+        else:
+            sys.exit("mgm did not run.  look into it.  pipeline stopping here")
+        
+        
+        
+       
     cleanup_assemble_contigs_start = time.time()
     if(verbose_mode == "quiet"):
         delete_folder(assemble_contigs_path)
@@ -641,27 +688,49 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
-        real_thread_count = thread_count
-        if(thread_count == 1):
-            real_thread_count = 2
-        BWAPool = mp.Pool(4)#int(real_thread_count / 2))
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
+                job_submitted = False
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section, split_sample))
                 print("split sample:", full_sample_path)
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA" + "_" + file_tag
-                BWAPool.apply_async(commands.create_and_launch,
-                    args = (
-                        gene_annotation_BWA_label,
-                        commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path),
-                        True,
-                        job_name
-                    )
-                )
-        BWAPool.close()
-        BWAPool.join()
+                BWA_output_name = file_tag + ".sam"
+                BWA_output_path = os.path.join(gene_annotation_BWA_path, "data", "1_bwa", BWA_output_name)
+                #this checker assumes that BWA only exports a file when it's finished running
+                if(os.path.exists(BWA_output_path)):
+                    continue
+                else:
+                    while(not job_submitted): 
+                        if(mem_checker(BWA_mem_threshold)):
+                            print(dt.today(), "mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                            
+                            bwa_process = mp.Process(
+                                target = commands.create_and_launch, 
+                                args = (gene_annotation_BWA_label, commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path), True, job_name)
+                            )
+                            bwa_process.start()
+                            
+                            mp_store.append(bwa_process)
+                            job_submitted = True
+                            print(dt.today(), "submitted:", job_name)
+                            time.sleep(5) #placed here so the process has some time to get started.
+                            
+                        else:               
+                            print(dt.today(), "mem has reached a limit.  waiting:", job_name, "available mem:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                            
+                            time.sleep(5)
+                            #for item in mp_store:
+                            #    item.join()
+                            #mp_store[:] = []
+        print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+
+       
+        
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_label)
         
     
@@ -669,26 +738,39 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
-        real_thread_count = thread_count
-        if(thread_count == 1):
-            real_thread_count = 2
-        BWA_pp_Pool = mp.Pool(int(real_thread_count / 2))
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section, split_sample))
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA_pp" + "_" + file_tag
-                BWA_pp_Pool.apply_async(commands.create_and_launch,
-                    args = (
-                        gene_annotation_BWA_label, 
-                        commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, assemble_contigs_label, full_sample_path),
-                        True,
-                        job_name
-                    )
-                )
-        BWA_pp_Pool.close()
-        BWA_pp_Pool.join()
+                job_submitted = False
+                while(not job_submitted):
+                    if(mem_checker(10)):
+                        print(dt.today(), "BWA PP mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                        BWA_pp_process = mp.Process(target = commands.create_and_launch,
+                            args = (
+                                gene_annotation_BWA_label, 
+                                commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, assemble_contigs_label, full_sample_path),
+                                True,
+                                job_name
+                            )
+                        )
+                        BWA_pp_process.start()
+                        mp_store.append(BWA_pp_process)
+                        job_submitted = True
+                        print(dt.today(), "submitted:", job_name)
+                        time.sleep(1)
+                    else:
+                        time.sleep(5)
+                        print(dt.today(), "BWA pp mem busy:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                        
+                        
+        print(dt.today(), "all BWA PP jobs submitted.  waiting for sync")            
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+
         
         process = mp.Process(
             target = commands.create_and_launch,
@@ -721,16 +803,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
     #if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_label):
-        real_thread_count = thread_count
-        if(thread_count == 1):
-            real_thread_count = 2
         BlatPool = mp.Pool(int(real_thread_count / 2))
+        print(dt.today(), "BLAT threads used:", real_thread_count/2)
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
         sample_job_flag = True
         missed_jobs_list = []
-        #job_name = "BLAT_single_job"
+        
         for section in sections:
             for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
                 if(split_sample.endswith(".fasta")):
@@ -740,41 +820,46 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     for fasta_db in os.listdir(paths.DNA_DB_Split):
                         if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                             job_name = "BLAT_" + file_tag + "_" + fasta_db
-                            BlatPool.apply_async(commands.create_and_launch,
-                            #BlatPool.apply_async(commands.launch_only,
-                                args=(
-                                    gene_annotation_BLAT_label,
-                                    commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
-                                    True,
-                                    job_name
-                                )
-                            )
-                            time.sleep(0.0003)
-                            if(sample_job_flag):
-                                print("saving 1 job for sampling:", job_name + ".sh")
-                                sample_job_flag = False
+                            blat_output_name = file_tag + "_" + fasta_db + ".blatout"
+                            blat_output_path = os.path.join(gene_annotation_BLAT_path, "data", "0_blat", blat_output_name)
+                            #This checker assume BLAT only exports a file when it's finished running
+                            if(os.path.exists(blat_output_path)):
+                                #print(dt.today(), "BLAT job ran already, skipping:", blat_output_name)
+                                continue
                             else:
-                                print("for file explosion reasons, removing:", job_name +".sh") 
-                                if(os.path.exists(job_name + ".sh")):
-                                    os.remove(os.path.join(gene_annotation_BLAT_path, job_name + ".sh"))
-                            #    else:
-                            #        missed_jobs_list.append(job_name)
+                                job_submitted = False
+                                while(not job_submitted):
+                                    if(mem_checker(BLAT_mem_threshold)):
+                                        #why this? because we have too many BLAT jobs, and the deletion of those shellscript files added too much of a delay.
+                                        BLAT_process = mp.Process(target = commands.launch_only,#commands.create_and_launch,
+                                            args=(
+                                                gene_annotation_BLAT_label,
+                                                commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
+                                                True,
+                                                job_name
+                                            )
+                                        )
+                                        BLAT_process.start()
+                                        mp_store.append(BLAT_process)
+                                        job_submitted = True
+                                        print(dt.today(), job_name, "submitted: mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                                    else:
+                                        print(dt.today(), "too many BLAT jobs. waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                                        time.sleep(5)
+                                
         print(dt.today(), "final BLAT job removal")
-        for item in os.listdir(gene_annotation_BLAT_path):
-            if(item.endswith(".ffn.sh")):
-                if(os.path.exists(item)):
-                    os.remove(item)
-        #for item in missed_jobs_list:
-        #    if(os.path.exists(item)):
-        #        os.remove(item)
-            
-        BlatPool.close()
-        BlatPool.join()
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        #for item in os.listdir(gene_annotation_BLAT_path):
+        #    if(item.endswith(".ffn.sh")):
+        #        if(os.path.exists(item)):
+        #            os.remove(item)
 
         
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_label)
         
-        
+    #retired    
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_cleanup_label):
         for item in os.listdir(gene_annotation_BLAT_path):
             if(item.endswith(".ffn.sh")):
@@ -808,28 +893,37 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_cat_label)
     
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label):
-        
-        real_thread_count = thread_count
-        if(thread_count == 1):
-            real_thread_count = 2
-        Blat_pp_Pool = mp.Pool(int(real_thread_count / 2))
         for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BLAT_" + file_tag + "_pp"
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
-                Blat_pp_Pool.apply_async(commands.create_and_launch,
-                    args=(
-                        gene_annotation_BLAT_label,
-                        commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, gene_annotation_BWA_label),
-                        True,
-                        job_name
-                    )
-                )
-        Blat_pp_Pool.close()
-        Blat_pp_Pool.join()
-        
+                job_submitted = False
+                while(not job_submitted):
+                    if(mem_checker(10)):
+                        Blat_pp_process = mp.Process(target = commands.create_and_launch,
+                            args=(
+                                gene_annotation_BLAT_label,
+                                commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, gene_annotation_BWA_label),
+                                True,
+                                job_name
+                            )
+                        )
+                        Blat_pp_process.start()
+                        mp_store.append(Blat_pp_process)
+                        print(dt.today(), job_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                        time.sleep(1)
+                        job_submitted = True
+                    else:
+                        print(dt.today(), job_name, "waiting. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                        time.sleep(5)
+                        
+        print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+ 
         process = mp.Process(
             target = commands.create_and_launch,
             args = (
@@ -861,51 +955,105 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_DIAMOND_tool_output_path = os.path.join(gene_annotation_DIAMOND_path, "data", "0_diamond")
     #if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path, file_check_bypass = True):
     if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_label):
-        real_thread_count = thread_count
-        if(thread_count == 1):
-            real_thread_count = 2
-        DIAMOND_Pool = mp.Pool(int(real_thread_count / 2))
         for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "DIAMOND_" + file_tag
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
-                DIAMOND_Pool.apply_async(commands.create_and_launch,
-                    args=(
-                        gene_annotation_DIAMOND_label,
-                        commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
-                        True,
-                        job_name
-                    )
-                )
-        DIAMOND_Pool.close()
-        DIAMOND_Pool.join()
+                job_submitted = False
+                while(not job_submitted):
+                    if(mem_checker(DIAMOND_mem_threshold)):
+                        DIAMOND_process = mp.Process(target = commands.create_and_launch,
+                            args=(
+                                gene_annotation_DIAMOND_label,
+                                commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
+                                True,
+                                job_name
+                            )
+                        )
+                        DIAMOND_process.start()
+                        mp_store.append(DIAMOND_process)
+                        print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                        job_submitted = True
+                        time.sleep(5) #it's enough time for the process to eat some memory.
+                        
+                    else:
+                        print(dt.today(), "DIAMOND: we've reached the mem limit. waiting:", job_name)
+                        time.sleep(5)
+                        #for item in mp_store:
+                        #    item.join()
+                        #mp_store[:] = []
+        
+        # DIAMOND_Pool = mp.Pool(int(real_thread_count / 2))
+        # print(dt.today(), "DIAMOND threads used:", real_thread_count/2)
+        # for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
+            # if(split_sample.endswith(".fasta")):
+                # file_tag = os.path.basename(split_sample)
+                # file_tag = os.path.splitext(file_tag)[0]
+                # job_name = "DIAMOND_" + file_tag
+                # full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
+                # DIAMOND_Pool.apply_async(commands.create_and_launch,
+                    # args=(
+                        # gene_annotation_DIAMOND_label,
+                        # commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
+                        # True,
+                        # job_name
+                    # )
+                # )
+        # DIAMOND_Pool.close()
+        # DIAMOND_Pool.join()
+        print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
         write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_label)
         
     #if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
     if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label):
-    
-        real_thread_count = thread_count
-        if(thread_count == 1):
-            real_thread_count = 2
         DIAMOND_pp_Pool = mp.Pool(int(real_thread_count / 2))
+        print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
         for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "DIAMOND_pp_" + file_tag
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
-                DIAMOND_pp_Pool.apply_async(commands.create_and_launch,
-                    args=(
-                        gene_annotation_DIAMOND_label,
-                        commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
-                        True,
-                        job_name
-                    )
-                )
-        DIAMOND_pp_Pool.close()
-        DIAMOND_pp_Pool.join()
+                job_submitted = False
+                while(not job_submitted):
+                    if(mem_checker(10)):
+                        DIAMOND_pp_process = mp.Process(target = commands.create_and_launch,
+                            args=(
+                                gene_annotation_DIAMOND_label,
+                                commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
+                                True,
+                                job_name
+                            )
+                        )
+                        DIAMOND_pp_process.start()
+                        mp_store.append(DIAMOND_pp_process)
+                        job_submitted = True
+                        print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                        time.sleep(1)
+                    else:
+                        
+                        print(dt.today(), job_name, "waiting.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                        time.sleep(5)
+                        
+        print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+                # DIAMOND_pp_Pool.apply_async(commands.create_and_launch,
+                    # args=(
+                        # gene_annotation_DIAMOND_label,
+                        # commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
+                        # True,
+                        # job_name
+                    # )
+                # )
+        # DIAMOND_pp_Pool.close()
+        # DIAMOND_pp_Pool.join()
             
         write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label)
     
@@ -1163,7 +1311,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("GA BLAT cleanup:", '%1.1f' % (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start), "s")
     print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
     print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
-    print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")    
     print("TA:", '%1.1f' % (TA_end - TA_start - (cleanup_TA_end - cleanup_TA_start)), "s")
     print("TA cleanup:", '%1.1f' % (cleanup_TA_end - cleanup_TA_start), "s")
     print("EC:", '%1.1f' % (EC_end - EC_start), "s")

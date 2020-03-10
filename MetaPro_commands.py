@@ -13,7 +13,7 @@ class mt_pipe_commands:
     # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
+    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, chunk_size = 100000, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
 
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
         self.no_host_flag = no_host
@@ -36,6 +36,7 @@ class mt_pipe_commands:
         self.Qual_str = str(Quality_score)
         self.Output_Path = os.getcwd()
         self.Threads_str = str(Thread_count)
+        self.chunk_size = str(chunk_size)
 
         print("Output filepath:", self.Output_Path)
 
@@ -100,13 +101,14 @@ class mt_pipe_commands:
     
     def launch_only(self, job_name, command_list, run_job=False, inner_name=None):
         #just launch the job.  Don't make a script file.
-        try:
-            sp.check_output([command_list])
-        except sp.CalledProcessError as e:
-            return_code = e.returncode
-            if return_code != 1:
-                raise
-        
+        for command_item in command_list:
+            try:
+                os.system(command_item)
+            except sp.CalledProcessError as e:
+                return_code = e.returncode
+                if return_code != 1:
+                    raise
+            
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
         data_folder                 = os.path.join(subfolder, "data")
@@ -1585,7 +1587,7 @@ class mt_pipe_commands:
         self.make_folder(split_folder)
         
         split_fastq = ">&2 echo splitting fastq for " + category + " | "
-        split_fastq += "split -l 250000" + " "        
+        split_fastq += "split -l " + str(int(self.chunk_size) * 4) + " "        
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
         split_fastq += "--additional-suffix .fastq" + " "
         split_fastq += "-d" + " "
@@ -1614,7 +1616,7 @@ class mt_pipe_commands:
         split_fasta += self.tool_path_obj.File_splitter + " "
         split_fasta += os.path.join(dep_folder, category +".fasta") + " "
         split_fasta += os.path.join(split_folder, category) + " "
-        split_fasta += self.Threads_str
+        split_fasta += self.chunk_size
         
         COMMANDS_GA_prep_fasta = [
             split_fasta
@@ -1857,12 +1859,13 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(blat_merge_folder)
 
-        cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
-        
-        cleanup_command = "rm " + os.path.join(blat_folder, sample_root_name + "*.blatout")
+        #cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
+        cat_command = "for f in " + os.path.join(blat_folder, sample_root_name + "_*.blatout") + ";  do cat $f >> " + os.path.join(blat_merge_folder, sample_root_name + ".blatout") + " && rm $f; done"
+        #cleanup_command = "rm " + os.path.join(blat_folder, sample_root_name + "*.blatout")
+        cleanup_command = "for f in " + os.path.join(blat_folder, sample_root_name + "_*.blatout") + "; do rm $f; done"
         return [
-            cat_command,
-            cleanup_command
+            cat_command
+            #cleanup_command
         ]
         
         
