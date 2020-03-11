@@ -2099,13 +2099,14 @@ class mt_pipe_commands:
 
 
 
-    def create_GA_final_merge_command(self, current_stage_name, dep_0_name, dep_1_name, dep_2_name):
+    def create_GA_final_merge_command(self, current_stage_name, dep_0_name, dep_1_name, dep_2_name, dep_3_name):
         subfolder = os.path.join(self.Output_Path, current_stage_name)
         data_folder = os.path.join(subfolder, "data")
         final_folder = os.path.join(subfolder, "final_results")
         dep_0_path = os.path.join(self.Output_Path, dep_0_name, "final_results")
         dep_1_path = os.path.join(self.Output_Path, dep_1_name, "final_results")
         dep_2_path = os.path.join(self.Output_Path, dep_2_name, "final_results")
+        dep_3_path = os.path.join(self.Output_Path, dep_3_name)
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -2113,6 +2114,7 @@ class mt_pipe_commands:
         
         final_merge = self.tool_path_obj.Python + " "
         final_merge += self.tool_path_obj.GA_final_merge + " "
+        final_merge += dep_3_path + " "
         final_merge += dep_0_path + " "
         final_merge += dep_1_path + " "
         final_merge += dep_2_path + " "

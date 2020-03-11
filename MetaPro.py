@@ -1077,7 +1077,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             target = commands.create_and_launch, 
             args = (
                 gene_annotation_final_merge_label,
-                commands.create_GA_final_merge_command(gene_annotation_final_merge_label, gene_annotation_BWA_label, gene_annotation_BLAT_label, gene_annotation_DIAMOND_label),
+                commands.create_GA_final_merge_command(gene_annotation_final_merge_label, gene_annotation_BWA_label, gene_annotation_BLAT_label, gene_annotation_DIAMOND_label, assemble_contigs_label),
                 True, 
                 "GA_final_merge"
             )

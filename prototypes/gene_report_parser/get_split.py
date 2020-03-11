@@ -1,6 +1,6 @@
 import os
 import sys
-import datetime as dt
+from datetime import datetime as dt
 
 #this code imports the gene_report and gets the split proportion
 
@@ -63,6 +63,14 @@ def import_contig_map(contig_map_path):
     return contig_map_dict
 
 
+def convert_gene_segment_dict(gene_segment_dict, contig_map_dict):
+    for item in gene_segment_dict:
+        contig_name = item.split("|")[1]
+        gene_segment_percent = gene_segment_dict[item]
+        contig_reads = contig_map_dict[contig_name]
+        gene_segment_dict[item] = int(round(float(contig_reads) * gene_segment_percent))
+
+
 if __name__ == "__main__":
     
     gene_report_path = sys.argv[1]
@@ -70,12 +78,9 @@ if __name__ == "__main__":
     gene_segment_dict = import_gene_report(gene_report_path)
     contig_map_dict = import_contig_map(contig_map_path)
     
-    for item in gene_segment_dict:
-        contig_name = item.split("|")[1]
-        gene_segment_percent = gene_segment_dict[item]
-        contig_reads = contig_map_dict[contig_name]
-        gene_segment_dict[item] = int(round(float(contig_reads) * gene_segment_percent))
+    convert_gene_segment_dict(gene_segment_dict, contig_map_dict)
             
+    print(dt.today(), "converting")        
     for item in gene_segment_dict:
         print(item, gene_segment_dict[item])
         
