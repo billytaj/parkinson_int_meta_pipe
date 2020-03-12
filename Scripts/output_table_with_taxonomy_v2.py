@@ -1,123 +1,178 @@
 #!/usr/bin/env python
+#Mar 12, 2020:
+#This exports the taxonomy table.  It now also takes into account the gene segments.
 
 import sys
-
-gene2read = sys.argv[1]     #IN: the gene_map (genes to reads)
-gene2EC = sys.argv[2]       #IN: proteins.EC all
-read2taxonomy = sys.argv[3] #IN: constrain classification.tsv
-taxa_table = sys.argv[4]          #OUT: taxa table
-
-
-read2taxonomy_dict = {}
-with open(read2taxonomy, "r") as infile:
-    for line in infile:
-        cols = line.split("\t")
-        read = cols[1]
-        read2taxonomy_dict[read] = cols[2].strip("\n")
-
-mapped_reads = 0
-gene2read_dict = {}
-with open(gene2read, "r") as infile:
-    for line in infile:
-        cols = line.split("\t")
-        gene = cols[0]
-        gene_len = cols[1]
-        reads = []
-        for read in cols[3:]:
-            reads.append(read.strip("\n"))
-        mapped_reads += len(reads)
-        if gene in gene2read_dict:
-            gene2read_dict[gene][1].extend(reads)
-        else:
-            gene2read_dict[gene] = (gene_len, reads)
-
-#this should export the EC info as 1 large string
-gene2EC_dict = {}
-with open(gene2EC, "r") as infile:
-    for line in infile:
-        cols = line.split("\t")
-        gene = cols[0]
-        EC_string = cols[2].strip("\n")
-        gene2EC_dict[gene] = EC_string
+def translate_contig_segement_map(contig_segment_dict, contig_map_dict):
+    for item in contig_segment_dict:
+        contig_name = item.split("|")[1]
+        contig_segment_percent = contig_segment_dict[item]
+        contig_reads = contig_map_dict[contig_name]
+        contig_segment_dict[item] = int(round(float(contig_reads) * contig_segment_percent))
+    
+def import_contig_map(contig_map_path):
+    contig_map_dict = dict()
+    with open(contig_map_path, "r") as contig_map:
         
-RPKM_dict = {}
-#gene2read_dict is a table with genes on one side, and the reads that make it up on the other (in a list)
-#the table contains (gene ID, the length, the number of reads, the constituent read IDs themselves)
-#Javi note: This piece of code is actually a little weird.
-# for gene in gene2read_dict:
-    # RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
-    # RPKM_dict[gene] = [gene2read_dict[gene][0], len(gene2read_dict[gene][1])]
-    # for EC in EC2genes_dict:
-        # if gene in EC2genes_dict[EC]:
-            # RPKM_dict[gene].append(EC)
-            # break
-    # else:
-        # RPKM_dict[gene].append("0.0.0.0")
-    
-    # RPKM_dict[gene].append(len(gene2read_dict[gene][1])/RPKM_div)
-    
-    # unclassified_reads = 0
-    # for taxa in Rank_id:
-        # read_count = 0
-        # for read in gene2read_dict[gene][1]:
-            # try:
-                # if read2taxid_dict[read] == taxa:
-                    # read_count += 1
-            # except:
-                # unclassified_reads += 1
-        # else:
-            # RPKM_dict[gene].append(read_count / RPKM_div)
-    # else:
-        # RPKM_dict[gene].append(unclassified_reads / RPKM_div)
+        for line in contig_map:
+            line_split = line.split("\t")
+            contig_name = line_split[0]
+            read_count = line_split[1]
+            contig_map_dict[contig_name] = read_count
+    return contig_map_dict
 
-RPKM_taxonomy_dict = {}
-for gene in gene2read_dict:
-    #RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
-    gene_EC_val = ""
+def import_gene_report(gene_report_path):
+    #There's a better solution than to import the gene report + contig map, and that's to make a contig segment -> read count map.  But... baby steps, here.
+    contig_segment_dict = dict()
+    with open(gene_report_path, "r") as gene_report:
+        contig_name = ""
+        contig_segment_name_list = []
+        start_of_loop = True
+        contig_segment_sum = 0
+        
+        for line in gene_report:
+            
+            cleaned_line = line.strip("\n")
+            cleaned_line = cleaned_line.split(" ")
+            
+            cleaned_line = [i for i in cleaned_line if i]
+            if(len(cleaned_line) > 1):
+                #print(cleaned_line)
+                if(cleaned_line[0] == "FASTA"):
+                    if(start_of_loop == False):
+                        for item in contig_segment_name_list:
+                            #print("contig segment length:", contig_segment_dict[item], "contig segment sum:", contig_segment_sum)
+                            
+                            contig_segment_dict[item] = contig_segment_dict[item] / contig_segment_sum
+                        contig_segment_name_list[:] = []
+                    contig_name = cleaned_line[3]
+                    #print("contig:", contig_name)
+                    start_of_loop = False
+                    contig_segment_sum = 0
+                if(cleaned_line[0] == "Model" or cleaned_line[0] == "Gene" or cleaned_line[0] == "#" or cleaned_line[0] == "Predicted"):
+                    continue
+                if(cleaned_line[0].isdigit()):
+                    #print(cleaned_line)
+                    contig_segment_name = "gene_" + cleaned_line[0] + "|" + contig_name
+                    #print("contig segment name:", contig_segment_name)
+                    contig_segment_sum += int(cleaned_line[4])
+                    #print("contig segment sum:", contig_segment_sum)
+                    contig_segment_name_list.append(contig_segment_name)
+                    contig_segment_dict[contig_segment_name] = int(cleaned_line[4])
+        for item in contig_segment_name_list:
+        #    print("contig segment length:", contig_segment_dict[item], "contig segment sum:", contig_segment_sum)
+            contig_segment_dict[item] = contig_segment_dict[item] / contig_segment_sum
+        contig_segment_name_list[:] = []
+        
+    return contig_segment_dict
+
+def import_classification_table(read2taxonomy):
+    read2taxonomy_dict = {}
+    with open(read2taxonomy, "r") as infile:
+        for line in infile:
+            cols = line.split("\t")
+            read = cols[1]
+            read2taxonomy_dict[read] = cols[2].strip("\n")
+
+    return read2taxonomy_dict
     
+def import_gene_map(gene2read):
+    mapped_reads = 0
+    gene2read_dict = {}
+    with open(gene2read, "r") as infile:
+        for line in infile:
+            cols = line.split("\t")
+            gene = cols[0]
+            gene_len = cols[1]
+            reads = []
+            for read in cols[3:]:
+                reads.append(read.strip("\n"))
+            mapped_reads += len(reads)
+            if gene in gene2read_dict:
+                gene2read_dict[gene][1].extend(reads)
+            else:
+                gene2read_dict[gene] = (gene_len, reads)    
+             
+    return gene2read_dict
     
-    if(gene in gene2EC_dict):
-        gene_EC_val = gene2EC_dict[gene]
-        if(gene_EC_val == ""):
+def import_gene_ec_map(gene2EC):    
+    #this should export the EC info as 1 large string
+    gene2EC_dict = {}
+    with open(gene2EC, "r") as infile:
+        for line in infile:
+            cols = line.split("\t")
+            gene = cols[0]
+            EC_string = cols[2].strip("\n")
+            gene2EC_dict[gene] = EC_string
+    return gene2EC_dict
+    
+if __name__ == "__main__":
+    gene2read               = sys.argv[1] #IN: the gene_map (genes to reads)
+    gene2EC                 = sys.argv[2] #IN: proteins.EC all
+    read2taxonomy           = sys.argv[3] #IN: constrain classification.tsv
+    assembly_gene_report    = sys.argv[4] #IN: the MGM gene report
+    contig_map              = sys.argv[5] #IN: contig map
+    taxa_table              = sys.argv[6] #OUT: taxa table
+
+    contig_map_dict = import_contig_map(contig_map)
+    contig_segment_dict = import_gene_report(assembly_gene_report)
+    translate_contig_segement_map(contig_segment_dict, contig_map_dict)
+
+    read2taxonomy_dict = import_classification_table(read2taxonomy)
+
+    gene2read_dict = import_gene_map(gene2read)
+    
+    gene2EC_dict = import_gene_ec_map(gene2EC)
+
+    
+            
+    RPKM_dict = {}
+
+    RPKM_taxonomy_dict = {}
+    for gene in gene2read_dict:
+        #RPKM_div = ((float(gene2read_dict[gene][0])/float(1000))*(mapped_reads/float(1000000)))
+        gene_EC_val = ""
+        
+        
+        if(gene in gene2EC_dict):
+            gene_EC_val = gene2EC_dict[gene]
+            if(gene_EC_val == ""):
+                gene_EC_val = "0.0.0.0"
+            print("gene_EC_val from list:", gene_EC_val)
+
+        else:
             gene_EC_val = "0.0.0.0"
-        print("gene_EC_val from list:", gene_EC_val)
+            
+        taxon_count_dict = {} #key: taxon.  val: the read counts associated with the taxon (to accomodate for not knowing the reads inside the contig segments)
+        for read in gene2read_dict[gene][1]:
+            real_read = ""
+            if(read.startswith("gene")):
+                transformed_read_list = read.split("|")
+                tail = transformed_read_list[-1].split(">")[-1]
+                header = transformed_read_list[0]
+                real_read = header + "|" + tail
+            else:
+                real_read = read
+            taxon = read2taxonomy_dict[real_read]
+            if taxon in taxon_count_dict:
+                #taxon_count_dict[taxon].append(read)
+                if(real_read.startswith("gene")):
+                    taxon_count_dict[taxon] += contig_segment_dict[real_read]
+                else:      
+                    taxon_count_dict[taxon] += 1
+            else:
+                if(real_read.startswith("gene")):
+                    taxon_count_dict[taxon] = contig_segment_dict[real_read]
+                else:
+                    taxon_count_dict[taxon] = 1
+                #taxon_count_dict[taxon].append(read)
+                #taxon_count_dict[taxon] = [read]
+        for taxon in taxon_count_dict:
+            RPKM_taxonomy_dict[gene+"||"+taxon] = [gene, taxon, gene2read_dict[gene][0], taxon_count_dict[taxon], gene_EC_val]
+            #RPKM_taxonomy_dict[gene+"||"+taxon].append(len(taxon_count_dict[taxon])/RPKM_div)
 
-    else:
-        gene_EC_val = "0.0.0.0"
-        
-    taxon2read_dict = {} 
-    for read in gene2read_dict[gene][1]:
-        taxon = read2taxonomy_dict[read]
-        if taxon in taxon2read_dict:
-            taxon2read_dict[taxon].append(read)
-        else:
-            taxon2read_dict[taxon] = []
-            taxon2read_dict[taxon].append(read)
-            #taxon2read_dict[taxon] = [read]
-    for taxon in taxon2read_dict:
-        RPKM_taxonomy_dict[gene+"||"+taxon] = [gene, taxon, gene2read_dict[gene][0], len(taxon2read_dict[taxon]), gene_EC_val]
-        #RPKM_taxonomy_dict[gene+"||"+taxon].append(len(taxon2read_dict[taxon])/RPKM_div)
+    with open(taxa_table, "w") as taxa_table_out:
+        taxa_table_out.write("GeneID\tTaxonomy\tLength\tReads\tEC#\n")
+        for entry in RPKM_taxonomy_dict:
+            taxa_table_out.write("\t".join(str(x) for x in RPKM_taxonomy_dict[entry]) + "\n")
 
-with open(taxa_table, "w") as taxa_table_out:
-    taxa_table_out.write("GeneID\tTaxonomy\tLength\tReads\tEC#\n")
-    for entry in RPKM_taxonomy_dict:
-        taxa_table_out.write("\t".join(str(x) for x in RPKM_taxonomy_dict[entry]) + "\n")
-
-
-# Cytoscape_dict = {}
-# for EC in EC2genes_dict:
-    # for entry in RPKM_dict:
-        # if RPKM_dict[entry][2] == EC:
-            # try:
-                # for index, RPKM_val in enumerate(Cytoscape_dict[EC]):
-                    # Cytoscape_dict[EC][index] += RPKM_dict[entry][3 + index]
-            # except:
-                # Cytoscape_dict[EC] = RPKM_dict[entry][3:]
-    # try:
-        # Cytoscape_dict[EC].append("piechart: attributelist=\"" + ",".join(str(x) for x in Rank) + "\" colorlist=\"" + ",".join(str(x) for x in Rank_colour) + ",#000000" + "\" showlabels=false\"")
-    # except:
-        # pass
-# with open(Cytoscape, "w") as Cytoscape_out:
-    # Cytoscape_out.write("EC#\tRPKM\t" + "\t".join(str(x) for x in Rank) + "\tOther\tPiechart\n")
-    # for entry in Cytoscape_dict:
-        # Cytoscape_out.write(entry + "\t" + "\t".join(str(x) for x in Cytoscape_dict[entry]) + "\n")

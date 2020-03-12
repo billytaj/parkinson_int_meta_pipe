@@ -2457,6 +2457,8 @@ class mt_pipe_commands:
         taxa_table_generation += gene_map_location + " "
         taxa_table_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
         taxa_table_generation += os.path.join(ta_folder, "constrain_classification.tsv") + " "
+        taxa_table_generation += os.path.join(self.Output_Path, contig_stage, "data", "1_mgm", "gene_report.txt") + " "
+        taxa_table_generation += os.path.join(contig_folder, "contig_map.tsv") + " "
         taxa_table_generation += os.path.join(final_folder, "taxa_table.tsv")
         
         network_generation = ">&2 echo Generating RPKM and Cytoscape network | "

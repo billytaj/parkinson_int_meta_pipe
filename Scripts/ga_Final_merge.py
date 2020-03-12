@@ -53,7 +53,7 @@ def import_gene_report(gene_report_path):
         
     return gene_segment_dict
     
-def translate_gene_segement_map(gene_segment_dict):
+def translate_gene_segement_map(gene_segment_dict, contig_map_dict):
     for item in gene_segment_dict:
         contig_name = item.split("|")[1]
         gene_segment_percent = gene_segment_dict[item]
@@ -340,7 +340,7 @@ if __name__ == "__main__":
     
     gene_segment_dict = import_gene_report(gene_report_path)
     contig_map_dict = import_contig_map(contig_map_path)
-    translate_gene_segement_map(gene_segment_dict)
+    translate_gene_segement_map(gene_segment_dict, contig_map_dict)
     
     for item in gene_segment_dict:
         print(item, gene_segment_dict[item])
