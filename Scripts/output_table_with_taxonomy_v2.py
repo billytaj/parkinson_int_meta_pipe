@@ -125,6 +125,9 @@ if __name__ == "__main__":
     gene2EC_dict = import_gene_ec_map(gene2EC)
 
     
+    #for item in read2taxonomy_dict:
+    #    print("keys:", item)
+    #sys.exit("break")
             
     RPKM_dict = {}
 
@@ -153,7 +156,8 @@ if __name__ == "__main__":
                 real_read = header + "|" + tail
             else:
                 real_read = read
-            taxon = read2taxonomy_dict[real_read]
+            
+            taxon = read2taxonomy_dict[read]
             if taxon in taxon_count_dict:
                 #taxon_count_dict[taxon].append(read)
                 if(real_read.startswith("gene")):
