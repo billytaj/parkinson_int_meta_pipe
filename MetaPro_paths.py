@@ -160,7 +160,7 @@ class tool_path_obj:
         # miscellaneous values
         BWA_mem_default = 50
         BLAT_mem_default = 10 #100MB
-        DIAMOND_mem_default = 35 #60GB
+        DIAMOND_mem_default = 50 #60GB
         chunk_size_default = 100000
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
