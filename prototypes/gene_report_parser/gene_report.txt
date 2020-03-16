@@ -1,0 +1,268 @@
+GeneMark.hmm PROKARYOTIC (Version 3.38)
+Date: Tue Mar  3 14:23:38 2020
+Sequence file name: /scratch/j/jparkin/billyc59/NOD_tests/outputs/MetaPro/dummy_resume/assemble_contigs/data/0_spades/contigs.fasta
+Model file name: /pipeline_tools/mgm/MetaGeneMark_v1.mod
+RBS: false
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_30
+
+FASTA definition line: NODE_1_length_587_cov_56.485455_g0_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+    1        +         237         470          234        2
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_30
+
+FASTA definition line: NODE_2_length_511_cov_55.512658_g1_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_35
+
+FASTA definition line: NODE_3_length_492_cov_6.617582_g2_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+    2        +          <2         379          378        1
+    3        +         373        >492          120        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_30
+
+FASTA definition line: NODE_4_length_461_cov_77.389151_g3_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_47
+
+FASTA definition line: NODE_5_length_391_cov_470.624294_g4_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_40
+
+FASTA definition line: NODE_6_length_328_cov_37.178694_g5_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+    4        -          <3        >326          324        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_37
+
+FASTA definition line: NODE_7_length_302_cov_9.328302_g6_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+    5        -          45        >302          258        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_46
+
+FASTA definition line: NODE_8_length_295_cov_2318.379845_g7_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_35
+
+FASTA definition line: NODE_9_length_295_cov_4.868217_g8_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+    6        -          <1         192          192        1
+    7        -         220        >294           75        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_39
+
+FASTA definition line: NODE_10_length_272_cov_11.140426_g9_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+    8        +         169        >270          102        2
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_36
+
+FASTA definition line: NODE_11_length_268_cov_9.675325_g10_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+    9        +         202        >267           66        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_43
+
+FASTA definition line: NODE_12_length_258_cov_3.402715_g11_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   10        -          15        >257          243        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_47
+
+FASTA definition line: NODE_13_length_257_cov_29.318182_g12_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_40
+
+FASTA definition line: NODE_14_length_257_cov_3.422727_g13_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   11        -          <2        >256          255        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_38
+
+FASTA definition line: NODE_15_length_256_cov_3.684932_g14_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   12        -          <2        >256          255        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_43
+
+FASTA definition line: NODE_16_length_255_cov_1160.197248_g15_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_30
+
+FASTA definition line: NODE_17_length_246_cov_5.430622_g16_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   13        +          <3         209          207        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_38
+
+FASTA definition line: NODE_18_length_244_cov_33.705314_g17_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_46
+
+FASTA definition line: NODE_19_length_239_cov_180.425743_g18_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_52
+
+FASTA definition line: NODE_20_length_234_cov_943.568528_g19_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_41
+
+FASTA definition line: NODE_21_length_231_cov_5.876289_g20_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   14        -          <2        >229          228        2
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_43
+
+FASTA definition line: NODE_22_length_225_cov_3.069149_g21_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   15        +          <2         217          216        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_40
+
+FASTA definition line: NODE_23_length_220_cov_2.759563_g22_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_37
+
+FASTA definition line: NODE_24_length_219_cov_5.357143_g23_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   16        -          <1        >219          219        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_41
+
+FASTA definition line: NODE_25_length_216_cov_7.307263_g24_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   17        +          <3         167          165        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_42
+
+FASTA definition line: NODE_26_length_215_cov_4.640449_g25_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   18        -          <2        >214          213        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_30
+
+FASTA definition line: NODE_27_length_215_cov_2.910112_g26_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   19        +         102        >215          114        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_39
+
+FASTA definition line: NODE_28_length_209_cov_9.709302_g27_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   20        -          <2        >208          207        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_41
+
+FASTA definition line: NODE_29_length_206_cov_16.260355_g28_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   21        +         139        >204           66        2
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_44
+
+FASTA definition line: NODE_30_length_201_cov_4.786585_g29_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_40
+
+FASTA definition line: NODE_31_length_194_cov_10.191083_g30_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   22        +          32        >193          162        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_49
+
+FASTA definition line: NODE_32_length_192_cov_378.025806_g31_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   23        -          67        >192          126        1
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_49
+
+FASTA definition line: NODE_33_length_187_cov_30.220000_g32_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+
+Model information: Heuristic_model_for_genetic_code_11_and_GC_38
+
+FASTA definition line: NODE_34_length_187_cov_28.853333_g33_i0
+Predicted genes
+   Gene    Strand    LeftEnd    RightEnd       Gene     Class
+    #                                         Length
+   24        -          28        >186          159        1
+

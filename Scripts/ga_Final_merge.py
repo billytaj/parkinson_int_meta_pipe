@@ -7,6 +7,70 @@ from datetime import datetime as dt
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
+
+def import_gene_report(gene_report_path):
+
+    gene_segment_dict = dict()
+    with open(gene_report_path, "r") as gene_report:
+        contig_name = ""
+        contig_segment_name_list = []
+        start_of_loop = True
+        gene_segment_sum = 0
+        
+        for line in gene_report:
+            
+            cleaned_line = line.strip("\n")
+            cleaned_line = cleaned_line.split(" ")
+            
+            cleaned_line = [i for i in cleaned_line if i]
+            if(len(cleaned_line) > 1):
+                #print(cleaned_line)
+                if(cleaned_line[0] == "FASTA"):
+                    if(start_of_loop == False):
+                        for item in contig_segment_name_list:
+                            #print("gene segment length:", gene_segment_dict[item], "gene segment sum:", gene_segment_sum)
+                            
+                            gene_segment_dict[item] = gene_segment_dict[item] / gene_segment_sum
+                        contig_segment_name_list[:] = []
+                    contig_name = cleaned_line[3]
+                    #print("contig:", contig_name)
+                    start_of_loop = False
+                    gene_segment_sum = 0
+                if(cleaned_line[0] == "Model" or cleaned_line[0] == "Gene" or cleaned_line[0] == "#" or cleaned_line[0] == "Predicted"):
+                    continue
+                if(cleaned_line[0].isdigit()):
+                    #print(cleaned_line)
+                    contig_segment_name = "gene_" + cleaned_line[0] + "|" + contig_name
+                    #print("contig segment name:", contig_segment_name)
+                    gene_segment_sum += int(cleaned_line[4])
+                    #print("gene segment sum:", gene_segment_sum)
+                    contig_segment_name_list.append(contig_segment_name)
+                    gene_segment_dict[contig_segment_name] = int(cleaned_line[4])
+        for item in contig_segment_name_list:
+        #    print("gene segment length:", gene_segment_dict[item], "gene segment sum:", gene_segment_sum)
+            gene_segment_dict[item] = gene_segment_dict[item] / gene_segment_sum
+        contig_segment_name_list[:] = []
+        
+    return gene_segment_dict
+    
+def translate_gene_segement_map(gene_segment_dict, contig_map_dict):
+    for item in gene_segment_dict:
+        contig_name = item.split("|")[1]
+        gene_segment_percent = gene_segment_dict[item]
+        contig_reads = contig_map_dict[contig_name]
+        gene_segment_dict[item] = int(round(float(contig_reads) * gene_segment_percent))
+    
+def import_contig_map(contig_map_path):
+    contig_map_dict = dict()
+    with open(contig_map_path, "r") as contig_map:
+        
+        for line in contig_map:
+            line_split = line.split("\t")
+            contig_name = line_split[0]
+            read_count = line_split[1]
+            contig_map_dict[contig_name] = read_count
+    return contig_map_dict
+
 def export_proteins(diamond_proteins_file, gene_trans_dict, final_proteins):
     with open(diamond_proteins_file, "a") as diamond_proteins:
         for item in gene_trans_dict:
@@ -56,13 +120,10 @@ def convert_genes_to_proteins(mapped_gene_file):#, section, gene_trans_dict):
                                                             #  and translate its SeqRecord sequence to aa.
         except Exception:
             pass
-    #Then merge the DIAMOND proteins to the same file.
-    #print(dt.today(), "writing fasta")
+
     return gene_trans
-    #gene_trans_dict[section] = gene_trans
-    #with open(prot_file,"a") as out_prot:
-    #    SeqIO.write(genes_trans, out_prot, "fasta")         # Write aligned gene aa seqs
-        #SeqIO.write(proteins, out_prot, "fasta")            # and aligned proteins aa seqs.
+        
+        
         
 def concatenate_gene_maps(path, gene_map_dict):
     #merge all gene maps given a directory
@@ -104,6 +165,10 @@ def concatenate_gene_maps(path, gene_map_dict):
                     else:
                         
                         gene_map_dict[gene_name] = [gene_length, number_of_reads] + reads
+                 
+                
+                        
+                        
                         #print("new entry:", gene_name, gene_map_dict[gene_name])
     #return gene_map_dict
 def final_gene_map_merge(gene_map_list, final_gene_map):
@@ -154,9 +219,13 @@ def merge_fastas(path_0, path_1, section, header, extension):
     return final_fasta_file
     
     
-def export_gene_map(gene_map, export_path):
-    final_gene_map_file = os.path.join(export_path, "gene_map.tsv")
+def export_gene_map(gene_map, export_path, header = None):
+    final_gene_map_file = ""
+    if(header == None):
     
+        final_gene_map_file = os.path.join(export_path, "gene_map.tsv")
+    else:
+        final_gene_map_file = os.path.join(export_path, header + "_gene_map.tsv")
     with open(final_gene_map_file, "w") as gene_map_out:
         #out_line = "geneID" + "\t" + "gene length" + "\t" + "Reads"
         for gene_name_key in gene_map:
@@ -229,15 +298,53 @@ def handle_final_proteins(final_path, export_path):
     #    print(item)
     
     merge_all_proteins(final_path, gene_transcripts_list, export_path)
+    
+def translate_contig_segments_to_reads(gene_map_dict, gene_segment_dict):
+    #update the read count with the gene segments' proper read counts.   
+    for item in gene_segment_dict:
+        print(type(item), item)
         
+    for gene in gene_map_dict:
+        
+        reads = gene_map_dict[gene][2:]
+        number_of_reads = gene_map_dict[gene][1]
+        gene_length = gene_map_dict[gene][0]
+        for read_ID in reads:
+            if(read_ID.startswith("gene")):
+                read_ID_list = read_ID.split("|")
+                tail = read_ID_list[-1]
+                tail = tail.split(">")[-1]
+                gene_segment_key = read_ID_list[0] + "|" + tail
+                #print(dt.today(), "working with:", gene_segment_key)
+                if gene_segment_key in gene_segment_dict:
+                    #print("Read ID:", gene_segment_key, "length:", gene_segment_dict[gene_segment_key])
+                    if(gene_segment_dict[gene_segment_key] > 1):
+                        #print("read count added to count:", gene_segment_dict[gene_segment_key], "+", number_of_reads, "-1")
+                        number_of_reads += gene_segment_dict[gene_segment_key] - 1
+                        
+                    gene_map_dict[gene] = [gene_length, number_of_reads] + reads
+                    
+
+ 
 if __name__ == "__main__":
-    bwa_path                = sys.argv[1]
-    blat_path               = sys.argv[2]
-    diamond_path            = sys.argv[3]
-    final_path              = sys.argv[4]
-    export_path             = sys.argv[5]
+    assemble_path           = sys.argv[1]
+    bwa_path                = sys.argv[2]
+    blat_path               = sys.argv[3]
+    diamond_path            = sys.argv[4]
+    final_path              = sys.argv[5]
+    export_path             = sys.argv[6]
     #diamond_proteins_file   = sys.argv[5]
     
+    gene_report_path = os.path.join(assemble_path, "data", "1_mgm", "gene_report.txt")
+    contig_map_path = os.path.join(bwa_path, "contig_map.tsv")
+    
+    gene_segment_dict = import_gene_report(gene_report_path)
+    contig_map_dict = import_contig_map(contig_map_path)
+    translate_gene_segement_map(gene_segment_dict, contig_map_dict)
+    
+    for item in gene_segment_dict:
+        print(item, gene_segment_dict[item])
+    #sys.exit("Early")
     manager = mp.Manager()
     mgr_bwa_gene_map            = manager.dict()
     mgr_blat_gene_map           = manager.dict()
@@ -275,21 +382,29 @@ if __name__ == "__main__":
     process_store[:] = []
     
     
+    
+    
     #secondary combine on the genes (BWA and BLAT)
-    make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
+    #make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
     #make_merge_fasta_process(process_store, final_path, final_path, "dmd", ".faa")
     for item in process_store:
         item.join()
     process_store[:] = []
     
-    finish_proteins_process = mp.Process(target = handle_final_proteins, args = (final_path, export_path))
-    finish_proteins_process.start()
-    process_store.append(finish_proteins_process)
+    # finish_proteins_process = mp.Process(target = handle_final_proteins, args = (final_path, export_path))
+    # finish_proteins_process.start()
+    # process_store.append(finish_proteins_process)
     
     
     bwa_gene_map = dict(mgr_bwa_gene_map)
     blat_gene_map = dict(mgr_blat_gene_map)
     diamond_gene_map = dict(mgr_diamond_gene_map)
+    
+    #the maps contain contig segments that under-represent the count.  We need to convert.
+    translate_contig_segments_to_reads(bwa_gene_map, gene_segment_dict)
+    translate_contig_segments_to_reads(blat_gene_map, gene_segment_dict)
+    translate_contig_segments_to_reads(diamond_gene_map, gene_segment_dict)
+    
     
     gene_map_list = [bwa_gene_map, blat_gene_map, diamond_gene_map]
     #merge all gene maps
