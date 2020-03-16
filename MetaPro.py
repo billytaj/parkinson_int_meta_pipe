@@ -183,7 +183,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     BWA_mem_threshold = paths.BWA_mem_threshold
     BLAT_mem_threshold = paths.BLAT_mem_threshold
     DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
-    
+    BWA_job_limit = paths.BWA_job_limit
+    BLAT_job_limit = paths.BLAT_job_limit
+    DIAMOND_job_limit = paths.DIAMOND_job_limit
     
     if not single_path == "":
         read_mode = "single"
@@ -703,27 +705,30 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     while(not job_submitted): 
-                        if(mem_checker(BWA_mem_threshold)):
-                            print(dt.today(), "mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
-                            
-                            bwa_process = mp.Process(
-                                target = commands.create_and_launch, 
-                                args = (gene_annotation_BWA_label, commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path), True, job_name)
-                            )
-                            bwa_process.start()
-                            
-                            mp_store.append(bwa_process)
-                            job_submitted = True
-                            print(dt.today(), "submitted:", job_name)
-                            time.sleep(5) #placed here so the process has some time to get started.
-                            
-                        else:               
-                            print(dt.today(), "mem has reached a limit.  waiting:", job_name, "available mem:", psu.virtual_memory().available / (1024*1024*1000), "GB")
-                            
-                            time.sleep(5)
-                            #for item in mp_store:
-                            #    item.join()
-                            #mp_store[:] = []
+                        if(len(mp_store) < BWA_job_limit):
+                            if(mem_checker(BWA_mem_threshold)):
+                                print(dt.today(), "mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                                
+                                bwa_process = mp.Process(
+                                    target = commands.create_and_launch, 
+                                    args = (gene_annotation_BWA_label, commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path), True, job_name)
+                                )
+                                bwa_process.start()
+                                
+                                mp_store.append(bwa_process)
+                                job_submitted = True
+                                print(dt.today(), "submitted:", job_name)
+                                time.sleep(5) #placed here so the process has some time to get started.
+                                
+                            else:               
+                                print(dt.today(), "mem has reached a limit.  waiting:", job_name, "available mem:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                                
+                                time.sleep(5)
+                        else:
+                            print(dt.today(), "Too many BWA jobs launched.  Capped at:", BWA_job_limit, "waiting for jobs to finish before launching more")
+                            for item in mp_store:
+                                item.join()
+                            mp_store[:] = []
         print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
         for item in mp_store:
             item.join()
@@ -746,24 +751,30 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 job_name = "BWA_pp" + "_" + file_tag
                 job_submitted = False
                 while(not job_submitted):
-                    if(mem_checker(10)):
-                        print(dt.today(), "BWA PP mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
-                        BWA_pp_process = mp.Process(target = commands.create_and_launch,
-                            args = (
-                                gene_annotation_BWA_label, 
-                                commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, assemble_contigs_label, full_sample_path),
-                                True,
-                                job_name
+                    if(len(mp_store) < BWA_job_limit):
+                        if(mem_checker(10)):
+                            print(dt.today(), "BWA PP mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                            BWA_pp_process = mp.Process(target = commands.create_and_launch,
+                                args = (
+                                    gene_annotation_BWA_label, 
+                                    commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, assemble_contigs_label, full_sample_path),
+                                    True,
+                                    job_name
+                                )
                             )
-                        )
-                        BWA_pp_process.start()
-                        mp_store.append(BWA_pp_process)
-                        job_submitted = True
-                        print(dt.today(), "submitted:", job_name)
-                        time.sleep(1)
+                            BWA_pp_process.start()
+                            mp_store.append(BWA_pp_process)
+                            job_submitted = True
+                            print(dt.today(), "submitted:", job_name)
+                            time.sleep(1)
+                        else:
+                            time.sleep(5)
+                            print(dt.today(), "BWA pp mem busy:", psu.virtual_memory().available / (1024*1024*1000), "GB")
                     else:
-                        time.sleep(5)
-                        print(dt.today(), "BWA pp mem busy:", psu.virtual_memory().available / (1024*1024*1000), "GB")
+                        print(dt.today(), "too many BWA pp jobs launched.  capped at:", BWA_job_limit, "waiting for jobs to finish before launching more")
+                        for item in mp_store:
+                            item.join()
+                        mp_store[:] = []
                         
                         
         print(dt.today(), "all BWA PP jobs submitted.  waiting for sync")            
@@ -803,8 +814,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
     #if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_label):
-        BlatPool = mp.Pool(int(real_thread_count / 2))
-        print(dt.today(), "BLAT threads used:", real_thread_count/2)
+        
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
@@ -828,24 +838,31 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                 continue
                             else:
                                 job_submitted = False
+                                
                                 while(not job_submitted):
-                                    if(mem_checker(BLAT_mem_threshold)):
-                                        #why this? because we have too many BLAT jobs, and the deletion of those shellscript files added too much of a delay.
-                                        BLAT_process = mp.Process(target = commands.launch_only,#commands.create_and_launch,
-                                            args=(
-                                                gene_annotation_BLAT_label,
-                                                commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
-                                                True,
-                                                job_name
+                                    if(len(mp_store) < BLAT_job_limit):
+                                        if(mem_checker(BLAT_mem_threshold)):
+                                            #why this? because we have too many BLAT jobs, and the deletion of those shellscript files added too much of a delay.
+                                            BLAT_process = mp.Process(target = commands.launch_only,#commands.create_and_launch,
+                                                args=(
+                                                    gene_annotation_BLAT_label,
+                                                    commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
+                                                    True,
+                                                    job_name
+                                                )
                                             )
-                                        )
-                                        BLAT_process.start()
-                                        mp_store.append(BLAT_process)
-                                        job_submitted = True
-                                        print(dt.today(), job_name, "submitted: mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                                            BLAT_process.start()
+                                            mp_store.append(BLAT_process)
+                                            job_submitted = True
+                                            print(dt.today(), job_name, "submitted: mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                                        else:
+                                            print(dt.today(), "too many BLAT jobs. waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                                            time.sleep(5)
                                     else:
-                                        print(dt.today(), "too many BLAT jobs. waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                                        time.sleep(5)
+                                        print(dt.today(), "too many BLAT jobs running. Capped at:", paths.BLAT_job_limit , "OS will complain about Error 24. waiting for jobs to finish before launching more")
+                                        for item in mp_store:
+                                            item.join()
+                                        mp_store[:] = []
                                 
         print(dt.today(), "final BLAT job removal")
         for item in mp_store:
@@ -860,12 +877,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_label)
         
     #retired    
-    if check_bypass_log(output_folder_path, gene_annotation_BLAT_cleanup_label):
-        for item in os.listdir(gene_annotation_BLAT_path):
-            if(item.endswith(".ffn.sh")):
-                job_path = os.path.join(gene_annotation_BLAT_path, item)
-                os.remove(job_path)
-        write_to_bypass_log(output_folder_path, gene_annotation_BLAT_cleanup_label)
+    #if check_bypass_log(output_folder_path, gene_annotation_BLAT_cleanup_label):
+    #    for item in os.listdir(gene_annotation_BLAT_path):
+    #        if(item.endswith(".ffn.sh")):
+    #            job_path = os.path.join(gene_annotation_BLAT_path, item)
+    #            os.remove(job_path)
+    #    write_to_bypass_log(output_folder_path, gene_annotation_BLAT_cleanup_label)
         
     if check_bypass_log(output_folder_path, gene_annotation_BLAT_cat_label):
         for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
@@ -874,18 +891,27 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 file_tag = os.path.splitext(file_tag)[0]
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
                 job_name = file_tag + "_cat"
-                process = mp.Process(
-                    target=commands.create_and_launch,
-                    args=(
-                        gene_annotation_BLAT_label,
-                        commands.create_BLAT_cat_command_v2(gene_annotation_BLAT_label, full_sample_path),
-                        True,
-                        job_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)
                 
+                job_submitted = False
+                while(not job_submitted):
+                    if(len(mp_store) < BLAT_job_limit):
+                        process = mp.Process(
+                            target=commands.create_and_launch,
+                            args=(
+                                gene_annotation_BLAT_label,
+                                commands.create_BLAT_cat_command_v2(gene_annotation_BLAT_label, full_sample_path),
+                                True,
+                                job_name
+                            )
+                        )
+                        process.start()
+                        mp_store.append(process)
+                        job_submitted = True
+                    else:
+                        print(dt.today(), "too many BLAT cat commands running.  capped at:", BLAT_job_limit, "waiting for jobs to finish before launching more")
+                        for item in mp_store:
+                            item.join()
+                        mp_store[:] = []
             
         for item in mp_store:
             item.join()
@@ -901,23 +927,29 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
                 job_submitted = False
                 while(not job_submitted):
-                    if(mem_checker(10)):
-                        Blat_pp_process = mp.Process(target = commands.create_and_launch,
-                            args=(
-                                gene_annotation_BLAT_label,
-                                commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, gene_annotation_BWA_label),
-                                True,
-                                job_name
+                    if(len(mp_store) < BLAT_job_limit):
+                        if(mem_checker(10)):
+                            Blat_pp_process = mp.Process(target = commands.create_and_launch,
+                                args=(
+                                    gene_annotation_BLAT_label,
+                                    commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, gene_annotation_BWA_label),
+                                    True,
+                                    job_name
+                                )
                             )
-                        )
-                        Blat_pp_process.start()
-                        mp_store.append(Blat_pp_process)
-                        print(dt.today(), job_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                        time.sleep(1)
-                        job_submitted = True
+                            Blat_pp_process.start()
+                            mp_store.append(Blat_pp_process)
+                            print(dt.today(), job_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                            time.sleep(1)
+                            job_submitted = True
+                        else:
+                            print(dt.today(), job_name, "waiting. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                            time.sleep(5)
                     else:
-                        print(dt.today(), job_name, "waiting. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                        time.sleep(5)
+                        print(dt.today(), "too many BLAT pp jobs running.  capped at:", BLAT_job_limit, "waiting for jobs to finish before launching more")
+                        for item in mp_store:
+                            item.join()
+                        mp_store[:] = []
                         
         print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
         for item in mp_store:
@@ -963,46 +995,33 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
                 job_submitted = False
                 while(not job_submitted):
-                    if(mem_checker(DIAMOND_mem_threshold)):
-                        DIAMOND_process = mp.Process(target = commands.create_and_launch,
-                            args=(
-                                gene_annotation_DIAMOND_label,
-                                commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
-                                True,
-                                job_name
+                    if(len(mp_store) < DIAMOND_job_limit):
+                        if(mem_checker(DIAMOND_mem_threshold)):
+                            DIAMOND_process = mp.Process(target = commands.create_and_launch,
+                                args=(
+                                    gene_annotation_DIAMOND_label,
+                                    commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
+                                    True,
+                                    job_name
+                                )
                             )
-                        )
-                        DIAMOND_process.start()
-                        mp_store.append(DIAMOND_process)
-                        print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                        job_submitted = True
-                        time.sleep(5) #it's enough time for the process to eat some memory.
+                            DIAMOND_process.start()
+                            mp_store.append(DIAMOND_process)
+                            print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                            job_submitted = True
+                            time.sleep(5) #it's enough time for the process to eat some memory.
+                            
+                        else:
+                            print(dt.today(), "DIAMOND: we've reached the mem limit. waiting:", job_name)
+                            time.sleep(5)
                         
                     else:
-                        print(dt.today(), "DIAMOND: we've reached the mem limit. waiting:", job_name)
-                        time.sleep(5)
-                        #for item in mp_store:
-                        #    item.join()
-                        #mp_store[:] = []
+                        print(dt.today(), "Too many DIAMOND jobs running.  capped at:", DIAMOND_job_limit, "waiting for jobs to finish before launching more")
+                        for item in mp_store:
+                            item.join()
+                        mp_store[:] = []
         
-        # DIAMOND_Pool = mp.Pool(int(real_thread_count / 2))
-        # print(dt.today(), "DIAMOND threads used:", real_thread_count/2)
-        # for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
-            # if(split_sample.endswith(".fasta")):
-                # file_tag = os.path.basename(split_sample)
-                # file_tag = os.path.splitext(file_tag)[0]
-                # job_name = "DIAMOND_" + file_tag
-                # full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
-                # DIAMOND_Pool.apply_async(commands.create_and_launch,
-                    # args=(
-                        # gene_annotation_DIAMOND_label,
-                        # commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
-                        # True,
-                        # job_name
-                    # )
-                # )
-        # DIAMOND_Pool.close()
-        # DIAMOND_Pool.join()
+
         print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
         for item in mp_store:
             item.join()
@@ -1021,39 +1040,37 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
                 job_submitted = False
                 while(not job_submitted):
-                    if(mem_checker(10)):
-                        DIAMOND_pp_process = mp.Process(target = commands.create_and_launch,
-                            args=(
-                                gene_annotation_DIAMOND_label,
-                                commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
-                                True,
-                                job_name
+                    if(len(mp_store) < DIAMOND_job_limit):
+                        if(mem_checker(10)):
+                            DIAMOND_pp_process = mp.Process(target = commands.create_and_launch,
+                                args=(
+                                    gene_annotation_DIAMOND_label,
+                                    commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
+                                    True,
+                                    job_name
+                                )
                             )
-                        )
-                        DIAMOND_pp_process.start()
-                        mp_store.append(DIAMOND_pp_process)
-                        job_submitted = True
-                        print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                        time.sleep(1)
+                            DIAMOND_pp_process.start()
+                            mp_store.append(DIAMOND_pp_process)
+                            job_submitted = True
+                            print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                            time.sleep(1)
+                        else:
+                            
+                            print(dt.today(), job_name, "waiting.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                            time.sleep(5)
                     else:
-                        
-                        print(dt.today(), job_name, "waiting.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                        time.sleep(5)
-                        
+                        print(dt.today(), "too many DIAMOND pp jobs running.  capped at:", DIAMOND_job_limit, "waiting for jobs to finish before launching more")
+                        for item in mp_store:
+                            item.join()
+                        mp_store[:] = []
+                    
+                    
         print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []
-                # DIAMOND_pp_Pool.apply_async(commands.create_and_launch,
-                    # args=(
-                        # gene_annotation_DIAMOND_label,
-                        # commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
-                        # True,
-                        # job_name
-                    # )
-                # )
-        # DIAMOND_pp_Pool.close()
-        # DIAMOND_pp_Pool.join()
+                
             
         write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label)
     

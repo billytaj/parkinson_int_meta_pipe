@@ -162,6 +162,9 @@ class tool_path_obj:
         BLAT_mem_default = 10 #100MB
         DIAMOND_mem_default = 50 #60GB
         chunk_size_default = 100000
+        BWA_job_limit_default = 19000
+        BLAT_job_limit_default = 19000
+        DIAMOND_job_limit_default = 19000
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
             self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
@@ -186,6 +189,23 @@ class tool_path_obj:
                 self.chunk_size  = config["Settings"]["chunk_size"]                             if config["Settings"]["chunk_size"]                 or config["Settings"]["chunk_size"]      == "" else chunk_size_default
             except KeyError:
                 self.chunk_size = chunk_size_default
+                
+            try:
+                self.BWA_job_limit  = config["Settings"]["BWA_job_limit"]                     if config["Settings"]["BWA_job_limit"]             or config["Settings"]["BWA_job_limit"]      == "" else BWA_job_limit_default
+            except KeyError:
+                self.BWA_job_limit = BWA_job_limit_default
+                
+            try:
+                self.BLAT_job_limit  = config["Settings"]["BLAT_job_limit"]                     if config["Settings"]["BLAT_job_limit"]             or config["Settings"]["BLAT_job_limit"]      == "" else BLAT_job_limit_default
+            except KeyError:
+                self.BLAT_job_limit = BLAT_job_limit_default
+            
+            try:
+                self.DIAMOND_job_limit  = config["Settings"]["DIAMOND_job_limit"]                     if config["Settings"]["DIAMOND_job_limit"]             or config["Settings"]["DIAMOND_job_limit"]      == "" else DIAMOND_job_limit_default
+            except KeyError:
+                self.DIAMOND_job_limit = DIAMOND_job_limit_default
+                
+            
                     
             
         else:
@@ -197,3 +217,6 @@ class tool_path_obj:
             self.BLAT_mem_threshold = BLAT_mem_default
             self.DIAMOND_mem_threshold = DIAMOND_mem_default
             self.chunk_size = chunk_size_default
+            self.BWA_job_limit = BWA_job_limit_default
+            self.BLAT_job_limit = BLAT_job_limit_default
+            self.DIAMOND_job_limit = DIAMOND_job_limit_default
