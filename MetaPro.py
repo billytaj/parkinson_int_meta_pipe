@@ -16,13 +16,14 @@ import psutil as psu
 
 def mem_checker(threshold):
     #threshold is a percentage
+    
     mem = psu.virtual_memory()
     available_mem = mem.available
     total_mem = mem.total
     
     available_pct = 100 * available_mem / total_mem
     
-    if(available_pct <= threshold):
+    if(float(available_pct) <= float(threshold)):
         return False
     else:
         return True
