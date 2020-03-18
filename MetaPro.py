@@ -16,7 +16,6 @@ import psutil as psu
 
 def mem_checker(threshold):
     #threshold is a percentage
-    
     mem = psu.virtual_memory()
     available_mem = mem.available
     total_mem = mem.total
