@@ -385,15 +385,16 @@ if __name__ == "__main__":
     
     
     #secondary combine on the genes (BWA and BLAT)
-    #make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
-    #make_merge_fasta_process(process_store, final_path, final_path, "dmd", ".faa")
+    make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
+    make_merge_fasta_process(process_store, final_path, final_path, "dmd", ".faa")
+    
     for item in process_store:
         item.join()
     process_store[:] = []
     
-    # finish_proteins_process = mp.Process(target = handle_final_proteins, args = (final_path, export_path))
-    # finish_proteins_process.start()
-    # process_store.append(finish_proteins_process)
+    finish_proteins_process = mp.Process(target = handle_final_proteins, args = (final_path, export_path))
+    finish_proteins_process.start()
+    process_store.append(finish_proteins_process)
     
     
     bwa_gene_map = dict(mgr_bwa_gene_map)
