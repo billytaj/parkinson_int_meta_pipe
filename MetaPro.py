@@ -270,6 +270,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     output_unique_hosts_pair_2_label        = "output_unique_hosts_pair_2"
     output_combine_hosts_label              = "output_combine_hosts"
     output_per_read_scores_label            = "output_per_read_scores"
+    output_contig_stats_label               = "output_contig_stats"
+    output_ec_heatmap_label                 = "output_ec_heatmap"
+    output_read_count_label                 = "output_read_count"
+    
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
         commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
@@ -1286,53 +1290,169 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     Cytoscape_start = time.time()
     network_path = os.path.join(output_folder_path, output_label)
     #if not check_where_resume(network_path, None, ec_annotation_path):
-    if check_bypass_log(output_folder, output_copy_gene_map_label):
-        inner_name = output_copy_gene_map_label
-        process = mp.Process(
-                target = create_and_launch, 
-                args = (
-                    output_label, 
-                    commands.create_output_copy_gene_map(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+    generic_output_arg_list = (output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label)
+    if check_bypass_log(output_folder, output_label):
+        if check_bypass_log(output_folder, output_network_gen_label):
+            inner_name = output_network_gen_label
+            process = mp.Process(
+                    target = commands.create_and_launch, 
+                    args = (
+                        output_label, 
+                        commands.create_output_network_generation_command(generic_output_arg_list),
+                        True, 
+                        inner_name
+                    )
+                )
+            process.start()
+            mp_store.append(process)
+        if check_bypass_log(output_folder, output_per_read_scores_label):
+            inner_name = output_per_read_scores_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (output_label,
+                    commands.create_output_per_read_scores_command(generic_output_arg_list),
                     True, 
                     inner_name
                 )
             )
-        process.start()
-        mp_store.append(process)
-        
-    if check_bypass_log(output_folder, output_copy_gene_map_label):
-        inner_name = output_copy_gene_map_label
-        process = mp.Process(
-                target = create_and_launch, 
-                args = (output_label, 
-                    commands.create_output_copy_gene_map(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
-                    True, 
+            process.start()
+            mp_store.append(process)
+        if check_bypass_log(output_folder, output_copy_gene_map_label):
+            inner_name = output_copy_gene_map_label
+            process = mp.Process(
+                    target = commands.create_and_launch, 
+                    args = (output_label, 
+                        commands.create_output_copy_gene_map_command(generic_output_arg_list),
+                        True, 
+                        inner_name
+                    )
+                )
+            process.start()
+            mp_store.append(process)
+            
+        if check_bypass_log(output_folder, output_taxa_table_label):
+            inner_name = output_taxa_table_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (output_label,
+                    commands.create_output_taxa_table_command(generic_output_arg_list),
+                    True,
                     inner_name
                 )
             )
-        process.start()
-        mp_store.append(process)
+            process.start()
+            mp_store.append(process)
+        if check_bypass_log(output_folder, output_contig_stats_label):
+            inner_name = output_contig_stats_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (output_label,
+                    commands.create_output_contig_stats_command(generic_output_arg_list),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            mp_store.append(process)
+            
         
-    if check_bypass_log(output_folder, output_taxa_table_label):
-        inner_name = output_taxa_table_label
-        process = mp.Process(
-            target = create_and_launch,
-            args = (output_label,
-                commands.create_output_taxa_table_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+            
+        if not(no_host):
+            if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
+                inner_name = output_unique_hosts_singletons_label
+                process = mp.Process(
+                    target = commands.create_and_launch,
+                    args = (output_label, 
+                        commands.create_output_unique_hosts_singletons_command(generic_output_arg_list),
+                        True,
+                        inner_name
+                    )
+                )
+                process.start()
+                mp_store.append(process)
+            if(read_mode == "paired"):
+                if check_bypass_log(output_folder, output_unique_hosts_pair_1_label):
+                    inner_name = output_unique_hosts_pair_1_label
+                    process = mp.Process(
+                        target = commands.create_and_launch,
+                        args = (output_label,
+                            commands.create_output_unique_hosts_pair_1_command(generic_output_arg_list),
+                            True,
+                            inner_name
+                        )
+                    )
+                    process.start()
+                    mp_store.append(process)
+                    
+                if check_bypass_log(output_folder, output_unique_hosts_pair_2_label):
+                    inner_name = output_unique_hosts_pair_2_label
+                    process = mp.Process(
+                        target = commands.create_and_launch,
+                        args = (output_label,
+                            commands.create_output_unique_hosts_pair_2_command(generic_output_arg_list),
+                            True,
+                            inner_name
+                        )
+                    )
+                    process.start()
+                    mp_store.append(process)
+            
+        print(dt.today(), "output report phase 1 launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        
+        
+        if check_bypass_log(output_folder, output_combine_hosts_label):
+            inner_name = output_combine_hosts_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (output_label,
+                    commands.create_output_combine_hosts_command(generic_output_arg_list),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            mp_store.append(process)
+            
+        if check_bypass_log(output_folder, output_ec_heatmap_label):
+            inner_name = output_ec_heatmap_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (output_label,
+                    commands.create_output_EC_heatmap_command(generic_output_arg_list),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            mp_store.append(process)
+            
+        print(dt.today(), "output report phase 2 launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        
+        if check_bypass_log(output_folder, output_read_count_label):
+            inner_name = output_read_count_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                arg = (output_label,
+                commands.create_output_read_count_command(generic_output_arg_list),
                 True,
                 inner_name
+                )
             )
-        )
-        process.start()
-        mp_store.append(process)
+            process.start()
+            mp_store.append(process)
         
-    if not(no_host):
-        if(read_mode == "single"):
+        print(dt.today(), "output report phase 3 (final) launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
         
-        elif(read_mode == "paired"):
         
-    
-    
     cleanup_cytoscape_start = time.time()
     if(verbose_mode == "quiet"):
         delete_folder(network_path)

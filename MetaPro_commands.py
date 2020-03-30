@@ -2529,7 +2529,13 @@ class mt_pipe_commands:
         network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
         network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
         
-        return [network_generation]
+        flatten_rpkm = ">&2 echo Reformat RPKM for EC heatmap | "
+        flatten_rpkm += self.tool_path_obj.Python + " "
+        flatten_rpkm += self.tool_path_obj.format_RPKM + " "
+        flatten_rpkm += os.path.join(final_folder, "RPKM_table.tsv") + " "
+        flatten_rpkm += os.path.join(final_folder, "EC_heatmap_RPKM.tsv")
+        
+        return [network_generation, flatten_rpkm]
         
     def create_output_unique_hosts_singletons_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         #only call if we had hosts to filter
@@ -2824,3 +2830,57 @@ class mt_pipe_commands:
         EC_heatmap += final_folder
         
         return [EC_heatmap]
+        
+        
+        
+    def create_output_read_count_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+        #only call if we had hosts to filter, and run it after the host regen is complete.
+        subfolder           = os.path.join(self.Output_Path, current_stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        mpl_folder          = os.path.join(data_folder, "0_MPL")
+        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
+        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
+        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
+        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
+        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
+        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
+        data_folder         = os.path.join(subfolder, "data")
+        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
+        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
+        final_folder        = os.path.join(subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(mpl_folder)
+        self.make_folder(data_folder)
+        self.make_folder(unique_hosts_folder)
+        self.make_folder(full_hosts_folder)
+        self.make_folder(final_folder)
+        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
+        
+        read_counts = ">&2 echo generating read count table | "
+        read_counts += self.tool_path_obj.Python + " "
+        read_counts += self.tool_path_obj.read_count + " "
+        if self.read_mode == "single":
+            read_counts += self.sequence_single + " "
+            read_counts += os.path.join(quality_folder, "singletons_hq.fastq") + " "
+            read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + " "
+            read_counts += os.path.join(repopulation_folder, "singletons.fastq") + " "
+        elif self.read_mode == "paired":
+            read_counts += self.sequence_path_1 + " "
+            read_counts += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + ","
+            read_counts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
+            read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + ","
+            read_counts += os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
+            read_counts += os.path.join(repopulation_folder, "singletons.fastq") + ","
+            read_counts += os.path.join(repopulation_folder, "pair_1.fastq") + " "
+        read_counts += gene_map_location + " "
+        read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
+        if(self.no_host_flag):
+            read_counts += "no_host" + " "
+        else:
+            read_counts += os.path.join(full_hosts_folder, "combined_hosts.fastq") + " "
+        read_counts += os.path.join(final_folder, "read_count.tsv")    
+        
+        return [read_counts]
