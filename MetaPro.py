@@ -235,35 +235,41 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # the pipeline stages are all labelled.  This is for multiple reasons:  to keep the interim files organized properly
     # and to perform the auto-resume/kill features
 
-    quality_filter_label                = "quality_filter"
-    host_filter_label                   = "host_read_filter"
-    vector_filter_label                 = "vector_read_filter"
-    rRNA_filter_label                   = "rRNA_filter"
-    rRNA_filter_second_split_label      = "rRNA_filter_second_split"
-    rRNA_filter_barrnap_label           = "rRNA_filter_barrnap"
-    rRNA_filter_infernal_label          = "rRNA_filter_infernal"
-    rRNA_filter_post_label              = "rRNA_filter_post"
-    repop_job_label                     = "duplicate_repopulation"
-    assemble_contigs_label              = "assemble_contigs"
-    destroy_contigs_label               = "destroy_contigs"
-    gene_annotation_BWA_label           = "gene_annotation_BWA"
-    gene_annotation_BWA_pp_label        = "gene_annotation_BWA_pp"
-    gene_annotation_BLAT_label          = "gene_annotation_BLAT"
-    gene_annotation_BLAT_cleanup_label  = "gene_annotation_BLAT_cleanup"
-    gene_annotation_BLAT_cat_label      = "gene_annotation_BLAT_cat"
-    gene_annotation_BLAT_pp_label       = "gene_annotation_BLAT_pp"
-    gene_annotation_DIAMOND_label       = "gene_annotation_DIAMOND"
-    gene_annotation_DIAMOND_pp_label    = "gene_annotation_DIAMOND_pp"
-    gene_annotation_final_merge_label   = "gene_annotation_FINAL_MERGE"
-    taxon_annotation_label              = "taxonomic_annotation"
-    ec_annotation_label                 = "enzyme_annotation"
-    ec_annotation_detect_label          = "enzyme_annotation_detect"
-    ec_annotation_priam_label           = "enzyme_annotation_priam"
-    ec_annotation_DIAMOND_label         = "enzyme_annotation_DIAMOND"
-    ec_annotation_pp_label              = "enzyme_annotation_pp"
-    output_label                        = "outputs"
-
-    
+    quality_filter_label                    = "quality_filter"
+    host_filter_label                       = "host_read_filter"
+    vector_filter_label                     = "vector_read_filter"
+    rRNA_filter_label                       = "rRNA_filter"
+    rRNA_filter_second_split_label          = "rRNA_filter_second_split"
+    rRNA_filter_barrnap_label               = "rRNA_filter_barrnap"
+    rRNA_filter_infernal_label              = "rRNA_filter_infernal"
+    rRNA_filter_post_label                  = "rRNA_filter_post"
+    repop_job_label                         = "duplicate_repopulation"
+    assemble_contigs_label                  = "assemble_contigs"
+    destroy_contigs_label                   = "destroy_contigs"
+    gene_annotation_BWA_label               = "gene_annotation_BWA"
+    gene_annotation_BWA_pp_label            = "gene_annotation_BWA_pp"
+    gene_annotation_BLAT_label              = "gene_annotation_BLAT"
+    gene_annotation_BLAT_cleanup_label      = "gene_annotation_BLAT_cleanup"
+    gene_annotation_BLAT_cat_label          = "gene_annotation_BLAT_cat"
+    gene_annotation_BLAT_pp_label           = "gene_annotation_BLAT_pp"
+    gene_annotation_DIAMOND_label           = "gene_annotation_DIAMOND"
+    gene_annotation_DIAMOND_pp_label        = "gene_annotation_DIAMOND_pp"
+    gene_annotation_final_merge_label       = "gene_annotation_FINAL_MERGE"
+    taxon_annotation_label                  = "taxonomic_annotation"
+    ec_annotation_label                     = "enzyme_annotation"
+    ec_annotation_detect_label              = "enzyme_annotation_detect"
+    ec_annotation_priam_label               = "enzyme_annotation_priam"
+    ec_annotation_DIAMOND_label             = "enzyme_annotation_DIAMOND"
+    ec_annotation_pp_label                  = "enzyme_annotation_pp"
+    output_label                            = "outputs"
+    output_copy_gene_map_label              = "output_copy_gene_map"
+    output_taxa_table_label                 = "output_taxa_table"
+    output_network_gen_label                = "output_network_generation"
+    output_unique_hosts_singletons_label    = "output_unique_hosts_singletons"
+    output_unique_hosts_pair_1_label        = "output_unique_hosts_pair_1"
+    output_unique_hosts_pair_2_label        = "output_unique_hosts_pair_2"
+    output_combine_hosts_label              = "output_combine_hosts"
+    output_per_read_scores_label            = "output_per_read_scores"
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
         commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
@@ -1280,19 +1286,53 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     Cytoscape_start = time.time()
     network_path = os.path.join(output_folder_path, output_label)
     #if not check_where_resume(network_path, None, ec_annotation_path):
-    if check_bypass_log(output_folder_path, output_label):
+    if check_bypass_log(output_folder, output_copy_gene_map_label):
+        inner_name = output_copy_gene_map_label
         process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                output_label,
-                commands.create_output_generation_command(output_label, quality_filter_label, host_filter_label, 
-                assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label), 
-                True
+                target = create_and_launch, 
+                args = (
+                    output_label, 
+                    commands.create_output_copy_gene_map(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    True, 
+                    inner_name
+                )
+            )
+        process.start()
+        mp_store.append(process)
+        
+    if check_bypass_log(output_folder, output_copy_gene_map_label):
+        inner_name = output_copy_gene_map_label
+        process = mp.Process(
+                target = create_and_launch, 
+                args = (output_label, 
+                    commands.create_output_copy_gene_map(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    True, 
+                    inner_name
+                )
+            )
+        process.start()
+        mp_store.append(process)
+        
+    if check_bypass_log(output_folder, output_taxa_table_label):
+        inner_name = output_taxa_table_label
+        process = mp.Process(
+            target = create_and_launch,
+            args = (output_label,
+                commands.create_output_taxa_table_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                True,
+                inner_name
             )
         )
         process.start()
-        process.join()
-        write_to_bypass_log(output_folder_path, output_label)
+        mp_store.append(process)
+        
+    if not(no_host):
+        if(read_mode == "single"):
+        
+        elif(read_mode == "paired"):
+        
+    
+    
     cleanup_cytoscape_start = time.time()
     if(verbose_mode == "quiet"):
         delete_folder(network_path)
@@ -1300,6 +1340,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         compress_folder(network_path)
         delete_folder(network_path)
     cleanup_cytoscape_end = time.time()
+        
+        
+        
         
     Cytoscape_end = time.time()
     end_time = time.time()
