@@ -3,6 +3,8 @@
 #This exports the taxonomy table.  It now also takes into account the gene segments.
 
 import sys
+from datetime import datetime as dt
+
 def translate_contig_segement_map(contig_segment_dict, contig_map_dict):
     for item in contig_segment_dict:
         contig_name = item.split("|")[1]
