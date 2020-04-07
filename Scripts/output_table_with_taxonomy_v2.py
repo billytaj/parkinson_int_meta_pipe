@@ -157,20 +157,23 @@ if __name__ == "__main__":
             else:
                 real_read = read
             
-            taxon = read2taxonomy_dict[read]
-            if taxon in taxon_count_dict:
-                #taxon_count_dict[taxon].append(read)
-                if(real_read.startswith("gene")):
-                    taxon_count_dict[taxon] += contig_segment_dict[real_read]
-                else:      
-                    taxon_count_dict[taxon] += 1
-            else:
-                if(real_read.startswith("gene")):
-                    taxon_count_dict[taxon] = contig_segment_dict[real_read]
+            if(read in read2taxonomy_dict):
+                taxon = read2taxonomy_dict[read]
+                if taxon in taxon_count_dict:
+                    #taxon_count_dict[taxon].append(read)
+                    if(real_read.startswith("gene")):
+                        taxon_count_dict[taxon] += contig_segment_dict[real_read]
+                    else:      
+                        taxon_count_dict[taxon] += 1
                 else:
-                    taxon_count_dict[taxon] = 1
-                #taxon_count_dict[taxon].append(read)
-                #taxon_count_dict[taxon] = [read]
+                    if(real_read.startswith("gene")):
+                        taxon_count_dict[taxon] = contig_segment_dict[real_read]
+                    else:
+                        taxon_count_dict[taxon] = 1
+                    #taxon_count_dict[taxon].append(read)
+                    #taxon_count_dict[taxon] = [read]
+            else:
+                print(dt.today(), read, "in gene map:", gene, "but no TA association")
         for taxon in taxon_count_dict:
             RPKM_taxonomy_dict[gene+"||"+taxon] = [gene, taxon, gene2read_dict[gene][0], taxon_count_dict[taxon], gene_EC_val]
             #RPKM_taxonomy_dict[gene+"||"+taxon].append(len(taxon_count_dict[taxon])/RPKM_div)

@@ -1226,6 +1226,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         EC_process_list.append(process)
         #process.join()
     EC_DIAMOND_end = time.time()
+    
     for item in EC_process_list:
         item.join()
     EC_process_list[:] = []
