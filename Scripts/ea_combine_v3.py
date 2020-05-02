@@ -170,7 +170,9 @@ def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_length
                     if(swissprot_name in swissprot_map_dict):
                         EC_val = swissprot_map_dict[swissprot_name]
                         if(query_name in gene_ec_dict):
-                            gene_ec_dict[query_name] += EC_val
+                            old_entry = gene_ec_dict[query_name]
+                            old_entry += EC_val
+                            gene_ec_dict[query_name] = old_entry
                         else:
                             gene_ec_dict[query_name] = EC_val
                 else:
@@ -298,7 +300,9 @@ if __name__ == "__main__":
     #then take all of DETECT's results
         if(key in common_dict):
             detect_ec_list = detect_ec_dict[key]
-            common_dict[key] += detect_ec_list
+            old_entry = common_dict[key]
+            old_entry += detect_ec_list
+            common_dict[key] = old_entry
             common_dict[key] = list(set(common_dict[key])) #gets rid of dupes, and turns it back into a list
         else:
             common_dict[key] = detect_ec_dict[key]
