@@ -43,6 +43,7 @@ class tool_path_obj:
             self.path_to_superpath  = config["Databases"]["path_to_superpath"]  if config["Databases"]["path_to_superpath"] or config["Databases"]["path_to_superpath"] == "" else os.path.join(custom_database_path, "pathway_to_superpathway.csv")
             self.mgm_model          = config["Databases"]["MetaGeneMark_model"] if config["Databases"]["MetaGeneMark_model"]or config["Databases"]["MetaGeneMark_model"]== "" else os.path.join(tool_path, "mgm/MetaGeneMark_v1.mod")
             
+            
         else:
             self.UniVec_Core        = os.path.join(database_path,           "univec_core/UniVec_Core.fasta")
             self.Adapter            = os.path.join(database_path,           "Trimmomatic_adapters/TruSeq3-PE-2.fa")
@@ -65,7 +66,11 @@ class tool_path_obj:
             self.EC_pathway         = os.path.join(custom_database_path,    "EC_pathway.txt")
             self.path_to_superpath  = os.path.join(custom_database_path,    "pathway_to_superpathway.csv")
             self.mgm_model          = os.path.join(tool_path,               "mgm/MetaGeneMark_v1.mod")
-            self.enzyme_db          = os.path.join(custom_database_path,    "FREQ_EC_pairs_3_mai_2020.txt")
+   
+        try:
+            self.enzyme_db = config["Databases"]["enzyme_db"] if config["Databases"]["enzyme_db"] or config["Databases"]["enzyme_db"] == "" else self.enzyme_db = os.path.join(custom_database_path, "FREQ_EC_pairs_3_mai_2020.txt")
+        except:
+            self.enzyme_db = os.path.join(custom_database_path, "FREQ_EC_pairs_3_mai_2020.txt")
             
         #----------------------------------------------------------
         # external tools
@@ -172,37 +177,37 @@ class tool_path_obj:
             self.show_unclassified          = config["Settings"]["Show_unclassified"]           if config["Settings"]["Show_unclassified"]          or config["Settings"]["Show_unclassified"]          == "" else "No"
             self.rpkm_cutoff                = config["Settings"]["RPKM_cutoff"]                 if config["Settings"]["RPKM_cutoff"]                or config["Settings"]["RPKM_cutoff"]                == "" else 0.01
             try:
-                self.BWA_mem_threshold      = config["Settings"]["BWA_mem_threshold"]           if config["Settings"]["BWA_mem_threshold"]          or config["Settings"]["BWA_mem_threshold"]          == "" else BWA_mem_default
+                self.BWA_mem_threshold = config["Settings"]["BWA_mem_threshold"] if config["Settings"]["BWA_mem_threshold"] or config["Settings"]["BWA_mem_threshold"]  == "" else BWA_mem_default
             except KeyError:
                 self.BWA_mem_threshold = BWA_mem_default
                 
             try:
-                self.BLAT_mem_threshold     = config["Settings"]["BLAT_mem_threshold"]          if config["Settings"]["BLAT_mem_threshold"]         or config["Settings"]["BLAT_mem_threshold"]         == "" else BLAT_mem_default
+                self.BLAT_mem_threshold = config["Settings"]["BLAT_mem_threshold"] if config["Settings"]["BLAT_mem_threshold"] or config["Settings"]["BLAT_mem_threshold"] == "" else BLAT_mem_default
             except KeyError:
                 self.BLAT_mem_threshold = BLAT_mem_default  
                 
             try:
-                self.DIAMOND_mem_threshold  = config["Settings"]["DIAMOND_mem_threshold"]       if config["Settings"]["DIAMOND_mem_threshold"]      or config["Settings"]["DIAMOND_mem_threshold"]      == "" else DIAMOND_mem_default
+                self.DIAMOND_mem_threshold  = config["Settings"]["DIAMOND_mem_threshold"] if config["Settings"]["DIAMOND_mem_threshold"] or config["Settings"]["DIAMOND_mem_threshold"] == "" else DIAMOND_mem_default
             except KeyError:
                 self.DIAMOND_mem_threshold = DIAMOND_mem_default
                 
             try:
-                self.chunk_size  = config["Settings"]["chunk_size"]                             if config["Settings"]["chunk_size"]                 or config["Settings"]["chunk_size"]      == "" else chunk_size_default
+                self.chunk_size  = config["Settings"]["chunk_size"] if config["Settings"]["chunk_size"] or config["Settings"]["chunk_size"] == "" else chunk_size_default
             except KeyError:
                 self.chunk_size = chunk_size_default
                 
             try:
-                self.BWA_job_limit  = config["Settings"]["BWA_job_limit"]                     if config["Settings"]["BWA_job_limit"]             or config["Settings"]["BWA_job_limit"]      == "" else BWA_job_limit_default
+                self.BWA_job_limit  = config["Settings"]["BWA_job_limit"] if config["Settings"]["BWA_job_limit"] or config["Settings"]["BWA_job_limit"] == "" else BWA_job_limit_default
             except KeyError:
                 self.BWA_job_limit = BWA_job_limit_default
                 
             try:
-                self.BLAT_job_limit  = config["Settings"]["BLAT_job_limit"]                     if config["Settings"]["BLAT_job_limit"]             or config["Settings"]["BLAT_job_limit"]      == "" else BLAT_job_limit_default
+                self.BLAT_job_limit  = config["Settings"]["BLAT_job_limit"] if config["Settings"]["BLAT_job_limit"] or config["Settings"]["BLAT_job_limit"] == "" else BLAT_job_limit_default
             except KeyError:
                 self.BLAT_job_limit = BLAT_job_limit_default
             
             try:
-                self.DIAMOND_job_limit  = config["Settings"]["DIAMOND_job_limit"]                     if config["Settings"]["DIAMOND_job_limit"]             or config["Settings"]["DIAMOND_job_limit"]      == "" else DIAMOND_job_limit_default
+                self.DIAMOND_job_limit  = config["Settings"]["DIAMOND_job_limit"] if config["Settings"]["DIAMOND_job_limit"] or config["Settings"]["DIAMOND_job_limit"] == "" else DIAMOND_job_limit_default
             except KeyError:
                 self.DIAMOND_job_limit = DIAMOND_job_limit_default
                 
