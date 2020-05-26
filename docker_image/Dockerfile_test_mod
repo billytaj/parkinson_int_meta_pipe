@@ -203,6 +203,7 @@ RUN mkdir mgm && mv MetaGeneMark_linux_64.tar.gz MetaGeneMark.tar && tar -xvf Me
 #------------------------------------------
 # Add vi (at Emil's request)
 RUN apt-get install -y vim
+RUN apt-get install -y less
 
 
 #-------------------------------------------
