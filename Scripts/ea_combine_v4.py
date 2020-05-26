@@ -131,8 +131,6 @@ def import_detect_ec(detect_fbeta_file, gene_ec_dict, prob_dict):
                 EC_val = list_line[1]
                 probability = list_line[2]
                 if(key in gene_ec_dict):
-                    #if(key == "BAH62832.1"):
-                    #    print(dt.today(), key, "key already present.  appending", EC_val)
                     
                     new_list = gene_ec_dict[key] #Apparently manager dicts can't handle appends.  this is eye-opening....
                     
@@ -146,17 +144,12 @@ def import_detect_ec(detect_fbeta_file, gene_ec_dict, prob_dict):
                     
                     gene_ec_dict[key] = new_list
                     
-                    #if(key == "BAH62832.1"):
-                    #    print(key, gene_ec_dict[key])
+                
                 else:
-                    #if(key == "BAH62832.1"):
-                    #    print(dt.today(), "new gene.  adding")
                     gene_ec_dict[key] = [EC_val]
                     prob_key = key + "_" + EC_val
                     prob_dict[prob_key] = probability
-                    #if(key == "BAH62832.1"):
-                    #    print(key, gene_ec_dict[key])
-    #return gene_ec_dict
+                   
     
 def import_priam_ec(priam_sequence_ec, gene_ec_dict, prob_ec_dict):
     #gene_ec_dict = dict()
@@ -201,20 +194,12 @@ def import_priam_ec(priam_sequence_ec, gene_ec_dict, prob_ec_dict):
                         prob_key = query_name + "_" + ec
                         if(prob_key in prob_ec_dict):
                             continue
-                            #it's safe to ignore.
-                            #print("-------------------------------------")
-                            #print(dt.today(), "EA priam: prob key repeated.  overwriting")
-                            #print("line count:", line_count, prob_key, probability)
                         else:
                             prob_ec_dict[prob_key] = probability
-                        #if(query_name == "BAH62832.1"):
-                        #    print("INSERTED!", query_name, line)
+                        
                     else:
-                        #if(query_name == "BAH62832.1"):
                         print("line valid but not inserted")
-                #else:
-                    #if(query_name == "BAH62832.1"):
-                    #print("this line is skipped:", line)
+                
             if(query_name is "None"):
                 print(dt.today(), "This shouldn't be happening.  a line was skipped")
     #return gene_ec_dict
@@ -317,8 +302,6 @@ if __name__ == "__main__":
     diamond_ec_mgr_dict = manager.dict()
     swissprot_map_dict = create_swissprot_map(SWISS_PROT_MAP)
     
-    #for item in swissprot_map_dict:
-    #   print(item, swissprot_map_dict[item])
     diamond_ec_process = mp.Process(
         target = import_diamond_ec, 
         args = (diamond_file, swissprot_map_dict, gene_length_dict, diamond_ec_mgr_dict)
@@ -374,11 +357,6 @@ if __name__ == "__main__":
         priam_ec_set = set(priam_ec_dict[item])
         diamond_ec_set = set(diamond_ec_dict[item])
         combined_ec = list(diamond_ec_set.intersection(priam_ec_set))
-        
-        #if(len(combined_ec) > 1):
-            #print("-----------------------------------")
-            #print(dt.today(), "priam and diamond agreed to multiple ECs")
-            #print(combined_ec)
         if(len(combined_ec) > 0):
             common_dict[item] = combined_ec
     
@@ -422,9 +400,6 @@ if __name__ == "__main__":
                     prob_list.append(str(prob) + "_"+ ec)
                 prob_list = sorted(prob_list, key = extract_value)
                 prob_list.reverse()
-                if(len(prob_list) == 0):
-                    print("prob key:", key + "_" + ec)
-                    print(common_dict[key])
                 ec_0 = prob_list[0].split("_")[1]
                 pair_list.append(ec_0)
                 pair_list += detect_ec_list
@@ -452,16 +427,13 @@ if __name__ == "__main__":
                 pair_list = sorted(pair_list)
                 ec_pair_key = pair_list[0] + "_" + pair_list[1]
                 if(ec_pair_key in freq_dict):
-                    #print(dt.today(), "detect pair success")
                     final_dict[key] = pair_list
                 else:
                     print(dt.today(), "detect pair failed", ec_pair_key)
                     final_dict[key] = [prob_ec_0]
             elif(len(detect_ec_list) == 1):
                 final_dict[key] = detect_ec_list
-    inspect_key = "gi|522837947|ref|NZ_KE159513.1|:866511-868508|328812|g__Parabacteroides.s__Parabacteroides_goldsteinii|UniRef90_unknown|UniRef50_B6YRR9"
-    #print("final detect:", final_dict[inspect_key])
-    
+   
     #dealing with stuff only in priam/diamond
     for key in common_dict.keys():
         if(key in final_dict):
@@ -486,20 +458,12 @@ if __name__ == "__main__":
                 pair_list = sorted(pair_list)
                 ec_pair_key = pair_list[0] + "_" + pair_list[1]
                 
-                if(key == inspect_key):
-                    print("prob list:", prob_list)
-                
                 if(ec_pair_key in freq_dict):
-                    #print(dt.today(), "pair success")
                     final_dict[key] = pair_list
                 else:
                     print(dt.today(), "pair failed", ec_pair_key)
-                    if(key == inspect_key):
-                        print("inspect key using:", pair_list)
                     final_dict[key] = [pair_list[0]]
             elif(len(common_ec_list) == 1):
-                if(key == "gi|522837947|ref|NZ_KE159513.1|:866511-868508|328812|g__Parabacteroides.s__Parabacteroides_goldsteinii|UniRef90_unknown|UniRef50_B6YRR9"):
-                    print("prob list from single:", prob_list)
                 final_dict[key] = common_ec_list
                 
             
