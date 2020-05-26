@@ -2409,9 +2409,9 @@ class mt_pipe_commands:
         postprocess_command += os.path.join(detect_folder, "proteins.fbeta") + " "
         postprocess_command += os.path.join(PRIAM_folder, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt") + " "
         postprocess_command += os.path.join(diamond_ea_folder, "proteins.blastout") + " "
-        postprocess_command += self.tool_path_obj.SWISS_PROT + " "
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
         postprocess_command += os.path.join(final_merge_folder, "gene_map.tsv") + " "
+        postprocess_command += self.tool_path_obj.enzyme_db + " "
         postprocess_command += os.path.join(final_folder, "proteins.ECs_All")
 
         COMMANDS_EC_Postprocess = [
