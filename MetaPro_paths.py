@@ -68,7 +68,7 @@ class tool_path_obj:
             self.mgm_model          = os.path.join(tool_path,               "mgm/MetaGeneMark_v1.mod")
    
         try:
-            self.enzyme_db = config["Databases"]["enzyme_db"] if config["Databases"]["enzyme_db"] or config["Databases"]["enzyme_db"] == "" else self.enzyme_db = os.path.join(custom_database_path, "FREQ_EC_pairs_3_mai_2020.txt")
+            self.enzyme_db = config["Databases"]["enzyme_db"] if config["Databases"]["enzyme_db"] or config["Databases"]["enzyme_db"] == "" else os.path.join(custom_database_path, "FREQ_EC_pairs_3_mai_2020.txt")
         except:
             self.enzyme_db = os.path.join(custom_database_path, "FREQ_EC_pairs_3_mai_2020.txt")
             
