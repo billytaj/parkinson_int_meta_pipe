@@ -219,7 +219,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/C
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/Detect_2.2.7.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/assembly_map.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ea_combine_v3.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ea_combine_v4.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BLAT_generic.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_BWA_generic.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/ga_Diamond_generic.py /pipeline/Scripts
@@ -255,6 +255,8 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 # 
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/custom_databases/EC_pathway.txt /pipeline/custom_databases
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/custom_databases/pathway_to_superpathway.csv /pipeline/custom_databases
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/custom_databases/FREQ_EC_pairs_3_mai_2020.txt /pipeline/custom_databases
+
 
 #--------------------------------------------
 # get setup scripts

@@ -65,6 +65,7 @@ class tool_path_obj:
             self.EC_pathway         = os.path.join(custom_database_path,    "EC_pathway.txt")
             self.path_to_superpath  = os.path.join(custom_database_path,    "pathway_to_superpathway.csv")
             self.mgm_model          = os.path.join(tool_path,               "mgm/MetaGeneMark_v1.mod")
+            self.enzyme_db          = os.path.join(custom_database_path,    "FREQ_EC_pairs_3_mai_2020.txt")
             
         #----------------------------------------------------------
         # external tools
@@ -140,7 +141,7 @@ class tool_path_obj:
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT_generic.py")
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond_generic.py")
         self.GA_final_merge             = os.path.join(script_path, "ga_Final_merge.py")
-        self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine_v3.py")
+        self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine_v4.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine_v2.py")
