@@ -441,9 +441,6 @@ if __name__ == "__main__":
         else:
             
             common_ec_list = common_dict[key]
-            if(key == inspect_key):
-                print("common ec from inside:", common_ec_list)
-            
             if(len(common_ec_list) > 1):
                 pair_list = []
                 prob_list = []
@@ -469,9 +466,7 @@ if __name__ == "__main__":
             
 
     
-    #print("detect:", detect_ec_dict[inspect_key])
-    print("priam:", common_dict[inspect_key])
-    print("final:", final_dict[inspect_key])
+    
     #----------------------------------------------
     #export the final ec list
     with open(Output_file, "w") as ec_out:
