@@ -293,8 +293,7 @@ if __name__ == "__main__":
     gene_length_dict = import_gene_map(gene_map_file)
     freq_dict = import_freq_file(freq_file)
     print(dt.today(), "size of freq dict:", len(freq_dict))
-    for item in freq_dict:
-        print(item)
+    
     ec_process_list = []
     #-----------------------------------------
     # import the data
