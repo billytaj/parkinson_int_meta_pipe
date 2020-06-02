@@ -125,23 +125,27 @@ def gene_map(sam, mapped_reads, gene2read_map, contig2read_map, contig2read_map_
                 contig = False                           # If query isn't a contig, just move on.
             
             # does query alignment meet threshold?:
+            CIGAR = re.split("([MIDNSHPX=])", line_parts[5]) # Split CIGAR string into list, placing
+            CIGAR = CIGAR[:-1]                      #lop off the empty char artifact from the split
+            position_count = 0                      #position counter, because the CIGAR string is split into alternating segments of <length><Label>, 
             length = 0
             matched = 0
-            CIGAR = re.split("([MIDNSHPX=])", line_parts[5]) # Split CIGAR string into list, placing
-                                                            #  all chars w/in [...] into own field
-                                                            #  (e.g., 9S41M50S->['9','S','41','M','50','S','']).
-            for index in range(len(CIGAR))[:-1]:            # Loop CIGAR elements (last element=''),
-                if CIGAR[index+1] in len_chars:             # Use CIGAR operations that step along the query seq,
-                    length+= int(CIGAR[index])              #  to determine length of query.
-                if CIGAR[index+1]=="M":                     # Use CIGAR match operation to
-                    matched+= int(CIGAR[index])             #  determine no. nuclotides matched.
+            segment_length = 0
+            for item in CIGAR:
+                if((position_count %2) == 0):       #every even position (starting from 0) is going to be a length
+                    segment_length = int(item)
+                elif((position_count %2) == 1):     #every odd position is going to be a label
+                    length += segment_length
+                    if(item == "M"):
+                        matched += segment_length
+                position_count += 1
+            
+            
             if matched<length*0.9:                          # If alignment is <90% matched:
                 unmapped.add(query)                         # add it to the unmapped set and
                 continue                                    # skip to the next query.
 
             # store info for queries that remain:
-            #query2gene_map[query].add(db_match)             # Collect all aligned genes for contig/read.
-            #queryIScontig[query]= contig                    # Store contig (T/F) info.
             inner_details_dict["gene"] = db_match
             inner_details_dict["is_contig"] = contig
             query_details_dict[query] = inner_details_dict
