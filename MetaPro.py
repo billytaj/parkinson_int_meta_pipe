@@ -188,9 +188,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     BWA_mem_threshold = paths.BWA_mem_threshold
     BLAT_mem_threshold = paths.BLAT_mem_threshold
     DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
-    BWA_job_limit = paths.BWA_job_limit
-    BLAT_job_limit = paths.BLAT_job_limit
-    DIAMOND_job_limit = paths.DIAMOND_job_limit
+    BWA_job_limit = int(paths.BWA_job_limit)
+    BLAT_job_limit = int(paths.BLAT_job_limit)
+    DIAMOND_job_limit = int(paths.DIAMOND_job_limit)
     
     if not single_path == "":
         read_mode = "single"
