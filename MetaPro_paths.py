@@ -168,9 +168,9 @@ class tool_path_obj:
         BLAT_mem_default = 10 #100MB
         DIAMOND_mem_default = 50 #60GB
         chunk_size_default = 100000
-        BWA_job_limit_default = 19000
-        BLAT_job_limit_default = 19000
-        DIAMOND_job_limit_default = 19000
+        BWA_job_limit_default = 80
+        BLAT_job_limit_default = 80
+        DIAMOND_job_limit_default = 80
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
             self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
