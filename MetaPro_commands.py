@@ -1826,9 +1826,12 @@ class mt_pipe_commands:
         blat_command += query_file
         blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
         blat_command += os.path.join(blat_folder, sample_root_name + "_" + fasta_db + ".blatout")
-
-        return [blat_command]
         
+        if(os.path.getsize(query_file) > 0):
+            return [blat_command]
+        else:
+            dummy_blat_command = ">&2 echo Not running BLAT command on empty file: " + query_file
+            return [dummy_blat_command]
         
         
 
