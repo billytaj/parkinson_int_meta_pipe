@@ -2425,6 +2425,53 @@ class mt_pipe_commands:
         return COMMANDS_EC_Postprocess
 
         
+    def create_output_taxa_table_v2_command(self, current_stage_name, quality_stage, taxonomic_annotation_stage):
+        subfolder           = os.path.join(self.Output_Path, current_stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        taxa_prep_folder    = os.path.join(data_folder, "3_taxa_table")
+        taxa_folder         = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(taxa_prep_folder)
+        
+        copy_contig_data = ">&2 echo Copying contig data | "
+        copy_contig_data += "cp" + " "
+        copy_contig_data += os.path.join(taxa_folder, "contig_map.fasta") + " "
+        copy_contig_data += taxa_prep_folder
+        
+        bwa_index_contigs = ">&2 echo BWA index contigs | "
+        bwa_index_contigs += self.tool_path_obj.BWA + " "
+        bwa_index_contigs += "index" + " "
+        
+        bwa_raw_on_contigs = ">&2 echo BWA raw on contigs | "
+        bwa_raw_on_contigs += self.tool_path_obj.BWA + " "
+        bwa_raw_on_contigs += "mem -t " + self.Threads_str + " "
+        if(self.read_mode == "single"):
+            bwa_raw_on_contigs += self.sequence_single + " "
+        else:
+            bwa_raw_on_contigs += self.sequence_path_1 + " "
+        bwa_raw_on_contigs += "> " + os.path.join(taxa_prep_folder, "raw_on_contigs.sam") + " "
+
+        parse_sam = ">&2 echo parsing raw-on-contigs SAM | "
+        parse_sam += self.tool_path_obj.Python + " "
+        parse_sam += self.tool_path_obj.parse_sam + " "
+        parse_sam += os.path.join(taxa_prep_folder, "raw_on_contigs.sam") + " "
+        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
+        parse_sam += os.path.join(taxa_prep_folder, "contig_read_count.tsv")
+        
+        are_you_in_a_contig = ">&2 echo Sorting if a read is in a contig | "
+        are_you_in_a_contig += self.tool_path_obj.Python + " "
+        are_you_in_a_contig += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
+        if(self.read_mode == "single"):
+            are_you_in_a_contig += self.sequence_single + " "
+        else:   
+            are_you_in_a_contig += self.sequence_path_1 + " "
+        are_you_in_a_contig += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv")  
+
+        
+        
+        
     def create_output_taxa_table_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
