@@ -6,7 +6,7 @@ import multiprocessing as mp
 from datetime import datetime as dt
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-
+import time
 
 def import_gene_report(gene_report_path):
 
@@ -78,30 +78,47 @@ def export_proteins(diamond_proteins_file, gene_trans_dict, final_proteins):
             
 def scrub_duplicates(fasta_in, fasta_out):
     imported_seqs = dict()
-    header = ""
-    seq_body = ""
+    header = "None"
+    seq_body = "None"
+    skip_flag = False
+    #inspect_key = ">gi|483984714|ref|NZ_KB892660.1|:c111601-110108|33035|g__Blautia.s__Blautia_producta|UniRef90_unknown|UniRef50_R5TWD5"
     with open(fasta_in, "r") as in_seq:
         for line in in_seq:
-            if line.startswith(">"):
-                if(header == ""):
-                    header = line.strip("\n")
+            cleaned_line = line.strip("\n")
+            
+            if(cleaned_line.startswith(">")):
+                if(header == "None"):
+                    header = cleaned_line
+                if(header in imported_seqs):
+                    #header already imported.  skip it
+                    header = "None"
+                    skip_flag = True
                 else:
-                    if(header in imported_seqs):
-                        print("skipping duplicate header:", header)
-                        header = ""
-                        seq_body = ""
-                    else:
+                    skip_flag = False
+                    if(seq_body != "None"):
+                        #gene data gathered
                         imported_seqs[header] = seq_body
-                        header = ""
-                        seq_body = ""
+                        #if(header == inspect_key):
+                        #    print(dt.today(), "inspect key found:", header)#, seq_body)
+                            
+                        
+                        seq_body = "None"
+                        header = cleaned_line
+                        
             else:
-                seq_body += line.strip("\n")
+                if(skip_flag):
+                    seq_body = "None"
+                    
+                else:
+                    if(seq_body == "None"):
+                        seq_body = cleaned_line
+                    else:
+                        seq_body += cleaned_line
     
     with open(fasta_out, "w") as out_seq:
         for item in imported_seqs:
             out_line = item + "\n" + imported_seqs[item] + "\n"
-            out_seq.write(out_line)            
-
+            out_seq.write(out_line)    
 def convert_genes_to_proteins(mapped_gene_file):#, section, gene_trans_dict):
     # WRITE OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs.  It's for a downstream tool.     
     # (.faa; fasta-format):
@@ -110,18 +127,24 @@ def convert_genes_to_proteins(mapped_gene_file):#, section, gene_trans_dict):
     
     
     gene_seqs = SeqIO.index(mapped_gene_file,"fasta")           # key=geneID, value=SeqRecord
+    #inspect_key = "gi|483984714|ref|NZ_KB892660.1|:c111601-110108|33035|g__Blautia.s__Blautia_producta|UniRef90_unknown|UniRef50_R5TWD5"
     
-    
-    gene_trans= []
+    #gene_trans= []
+    gene_trans_dict = dict()
     for gene in gene_seqs:                                  # Take each BWA&BLAT-aligned genes
-        print("working on:", gene)
-        try:
-            gene_trans.append(SeqRecord(seq= gene_seqs[gene].seq.translate(stop_symbol=""), id= gene_seqs[gene].id, description= gene_seqs[gene].description))
-                                                            #  and translate its SeqRecord sequence to aa.
-        except Exception:
-            pass
 
-    return gene_trans
+        translated_seqRecord = SeqRecord(seq= gene_seqs[gene].seq.translate(stop_symbol=""), id= gene_seqs[gene].id, description= gene_seqs[gene].description)
+        gene_id = gene
+        gene_trans_dict[gene_id] = translated_seqRecord.seq                                                        #  and translate its SeqRecord sequence to aa.
+        if(len(gene_trans_dict[gene_id]) * 3 > len(gene_seqs[gene].seq)):
+            print(dt.today(), gene_id, "protein longer than bp seq.  protein;", len(gene_trans_dict[gene_id]), "bp:", len(gene_seqs[gene].seq))
+            sys.exit("this is real bad")
+
+
+    
+    
+
+    return gene_trans_dict
         
         
         
@@ -268,7 +291,8 @@ def make_second_merge_process(process_store, path_0, path_1, header, tail):
         process_store.append(merge_process)
         
         
-def merge_all_proteins(path, gene_transcripts_list, export_path):
+def merge_all_proteins(path, gene_transcripts_dict, export_path):
+    #this just exports.
     all_proteins_path = os.path.join(export_path, "all_proteins.faa")
     with open(all_proteins_path, "w") as proteins_out:
         for item in os.listdir(path):
@@ -278,10 +302,16 @@ def merge_all_proteins(path, gene_transcripts_list, export_path):
                 with open(full_path, "r") as dmd_proteins:
                     for line in dmd_proteins:
                         proteins_out.write(line)
+        for gene in gene_transcripts_dict:
+            #print("EXPORTING gene transcript:", gene, gene_transcripts_dict[gene])
+            out_line = ">" + gene + "\n" 
+            out_line += str(gene_transcripts_dict[gene]) + "\n"
+            
+            proteins_out.write(out_line)
         #for gene in gene_transcripts_list:
         #    out_line = str(gene.id) + "\n" + str(gene.seq) + "\n"
         #    proteins_out.write(out_line)
-        SeqIO.write(gene_transcripts_list, proteins_out, "fasta")
+        #SeqIO.write(gene_transcripts_list, proteins_out, "fasta")
         
 def handle_final_proteins(final_path, export_path):
     #just a function dump so we can do this step in parallel with other things
@@ -289,15 +319,16 @@ def handle_final_proteins(final_path, export_path):
     #scrub for duplicates (because seqIO index doesn't like duplicates)
     bwa_blat_proteins_file = merge_fastas(final_path, final_path, "all", "BWA_BLAT_proteins", ".fna")
     unique_fna_file = "unique_" + os.path.basename(bwa_blat_proteins_file)
-    scrub_duplicates(bwa_blat_proteins_file, unique_fna_file)
-    
-    
-    gene_transcripts_list = convert_genes_to_proteins(unique_fna_file)
+    real_unique_fna_file = os.path.join(final_path, unique_fna_file)
+    scrub_duplicates(bwa_blat_proteins_file, real_unique_fna_file)
+    print(dt.today(), real_unique_fna_file, "should have no duplicates")
+    #sys.exit("Duplicates removed")
+    gene_transcripts_dict = convert_genes_to_proteins(real_unique_fna_file)
     #print("GENE TRANSCRIPT:", len(gene_transcripts_list))
     #for item in gene_transcripts_list:
     #    print(item)
     
-    merge_all_proteins(final_path, gene_transcripts_list, export_path)
+    merge_all_proteins(final_path, gene_transcripts_dict, export_path)
     
 def translate_contig_segments_to_reads(gene_map_dict, gene_segment_dict):
     #update the read count with the gene segments' proper read counts.   

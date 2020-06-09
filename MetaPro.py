@@ -1116,7 +1116,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         )
         final_merge_process.start()
         final_merge_process.join()
-        write_to_bypass_log(output_folder_path, gene_annotation_final_merge_label)
+        #check if all_proteins.faa was generated
+        all_proteins_path = os.path.join(output_folder_path, gene_annotation_final_merge_label, "final_results", "all_proteins.faa")
+        if(os.path.getsize(all_proteins_path) > 0):
+            write_to_bypass_log(output_folder_path, gene_annotation_final_merge_label)
+            print(dt.today(), "All_proteins.faa is OK.  Continuing")
+        else:
+            sys.exit("GA final merge failed.  proteins weren't translated")
     GA_final_merge_end = time.time()
     print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")
     
