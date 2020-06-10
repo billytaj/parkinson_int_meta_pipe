@@ -61,7 +61,8 @@ def create_swissprot_map(SWISS_PROT_MAP):
     final_mapping_dict = dict()
     with open(SWISS_PROT_MAP, "r") as mapping:
         for line in mapping.readlines():
-            line_as_list = line.split("\t")
+            cleaned_line = line.strip("\n")
+            line_as_list = cleaned_line.split("\t")
             mapping_dict[line_as_list[0]] = set(line_as_list[2:])
     
     
