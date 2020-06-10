@@ -161,6 +161,8 @@ class tool_path_obj:
         self.data_change_metrics        = os.path.join(script_path, "output_data_change_metrics.py")
         self.get_unique_host_reads      = os.path.join(script_path, "output_get_host_reads.py")
         self.remove_gaps_in_fasta       = os.path.join(script_path, "remove_gaps_in_fasta.py")
+        self.parse_sam                  = os.path.join(script_path, "output_parse_sam.py")
+        self.are_you_in_a_contig        = os.path.join(script_path, "output_are_you_in_a_contig.py")
         
         #--------------------------------------------------
         # miscellaneous values
