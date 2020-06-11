@@ -2467,8 +2467,8 @@ class mt_pipe_commands:
         parse_sam += self.tool_path_obj.Python + " "
         parse_sam += self.tool_path_obj.parse_sam + " "
         parse_sam += os.path.join(taxa_prep_folder, "raw_on_contigs.sam") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_read_count.tsv")
+        parse_sam += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
+        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv")
         
         are_you_in_a_contig = ">&2 echo Sorting if a read is in a contig | "
         are_you_in_a_contig += self.tool_path_obj.Python + " "
@@ -2728,16 +2728,7 @@ class mt_pipe_commands:
         #only call if we had hosts to filter, and run it after the host regen is complete.
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
         contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
@@ -2761,9 +2752,6 @@ class mt_pipe_commands:
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
-        self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
         
         EC_heatmap = ">&2 echo forming EC heatmap | "
