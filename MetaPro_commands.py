@@ -2456,6 +2456,7 @@ class mt_pipe_commands:
         bwa_raw_on_contigs = ">&2 echo BWA raw on contigs | "
         bwa_raw_on_contigs += self.tool_path_obj.BWA + " "
         bwa_raw_on_contigs += "mem -t " + self.Threads_str + " "
+        bwa_raw_on_contigs += os.path.join(taxa_prep_folder, "contigs.fasta") + " "
         if(self.read_mode == "single"):
             bwa_raw_on_contigs += self.sequence_single + " "
         else:
@@ -2517,9 +2518,10 @@ class mt_pipe_commands:
         
         return[copy_gene_map]
         
-    def create_output_network_generation_command(self, current_stage_name, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_network_generation_command(self, current_stage_name, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
+        ga_final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
@@ -2528,7 +2530,7 @@ class mt_pipe_commands:
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
+        gene_map_location = os.path.join(ga_final_merge_folder, "gene_map.tsv")
         
         network_generation = ">&2 echo Generating RPKM and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
