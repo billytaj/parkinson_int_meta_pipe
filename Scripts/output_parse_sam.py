@@ -25,7 +25,7 @@ def import_sam_file(sam_file):
                     continue
                 else:
                     
-                    CIGAR = re.split("([MIDNSHPX=])", line_parts[5]) # Split CIGAR string into list, placing
+                    CIGAR = re.split("([MIDNSHPX=])", line_list[5]) # Split CIGAR string into list, placing
                     CIGAR = CIGAR[:-1]                      #lop off the empty char artifact from the split
                     position_count = 0                      #position counter, because the CIGAR string is split into alternating segments of <length><Label>, 
                     length = 0
