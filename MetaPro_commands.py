@@ -2425,28 +2425,38 @@ class mt_pipe_commands:
         return COMMANDS_EC_Postprocess
 
         
-    def create_output_taxa_table_v2_command(self, current_stage_name, quality_stage, taxonomic_annotation_stage):
+    def create_output_taxa_table_v2_command(self, current_stage_name, assemble_contigs_stage, taxonomic_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         taxa_prep_folder    = os.path.join(data_folder, "3_taxa_table")
+        contig_folder       = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
         taxa_folder         = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
+        final_folder        = os.path.join(subfolder, "final_results")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(taxa_prep_folder)
+        self.make_folder(final_folder)
         
         copy_contig_data = ">&2 echo Copying contig data | "
         copy_contig_data += "cp" + " "
-        copy_contig_data += os.path.join(taxa_folder, "contig_map.fasta") + " "
+        copy_contig_data += os.path.join(contig_folder, "contigs.fasta") + " "
         copy_contig_data += taxa_prep_folder
+        
+        copy_constrain_class = ">&2 echo Copying constrain classification | "
+        copy_constrain_class += "cp" + " "
+        copy_constrain_class += os.path.join(taxa_folder, "constrain_classification.tsv") + " "
+        copy_constrain_class += taxa_prep_folder
         
         bwa_index_contigs = ">&2 echo BWA index contigs | "
         bwa_index_contigs += self.tool_path_obj.BWA + " "
         bwa_index_contigs += "index" + " "
+        bwa_index_contigs += os.path.join(taxa_prep_folder, "contigs.fasta")
         
         bwa_raw_on_contigs = ">&2 echo BWA raw on contigs | "
         bwa_raw_on_contigs += self.tool_path_obj.BWA + " "
         bwa_raw_on_contigs += "mem -t " + self.Threads_str + " "
+        bwa_raw_on_contigs += os.path.join(taxa_prep_folder, "contigs.fasta") + " "
         if(self.read_mode == "single"):
             bwa_raw_on_contigs += self.sequence_single + " "
         else:
@@ -2457,113 +2467,71 @@ class mt_pipe_commands:
         parse_sam += self.tool_path_obj.Python + " "
         parse_sam += self.tool_path_obj.parse_sam + " "
         parse_sam += os.path.join(taxa_prep_folder, "raw_on_contigs.sam") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_read_count.tsv")
+        parse_sam += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
+        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv")
         
         are_you_in_a_contig = ">&2 echo Sorting if a read is in a contig | "
         are_you_in_a_contig += self.tool_path_obj.Python + " "
+        are_you_in_a_contig += self.tool_path_obj.are_you_in_a_contig + " "
         are_you_in_a_contig += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
         if(self.read_mode == "single"):
             are_you_in_a_contig += self.sequence_single + " "
         else:   
             are_you_in_a_contig += self.sequence_path_1 + " "
-        are_you_in_a_contig += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv")  
+        are_you_in_a_contig += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv") 
 
+        make_taxa_table = ">&2 echo Making taxa table | "
+        make_taxa_table += self.tool_path_obj.Python + " "
+        make_taxa_table += self.tool_path_obj.taxa_table + " "
+        make_taxa_table += os.path.join(taxa_prep_folder, "constrain_classification.tsv") + " "
+        make_taxa_table += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
+        make_taxa_table += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv") + " "
+        make_taxa_table += os.path.join(final_folder, "taxa_table.tsv")
+
+        command_list = [
+            copy_contig_data, 
+            copy_constrain_class,
+            bwa_index_contigs,
+            bwa_raw_on_contigs,
+            parse_sam,
+            are_you_in_a_contig,
+            make_taxa_table
+        ]
         
+        return command_list
         
+   
         
-    def create_output_taxa_table_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_copy_gene_map_command(self, current_stage_name,ga_final_merge_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
-        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
+        ga_final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
-        self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
-        
-        taxa_table_generation = ">&2 echo generating taxonomy table | "
-        taxa_table_generation += self.tool_path_obj.Python + " "
-        taxa_table_generation += self.tool_path_obj.taxa_table + " "
-        taxa_table_generation += gene_map_location + " "
-        taxa_table_generation += os.path.join(ea_folder, "proteins.ECs_All") + " "
-        taxa_table_generation += os.path.join(ta_folder, "constrain_classification.tsv") + " "
-        taxa_table_generation += os.path.join(self.Output_Path, contig_stage, "data", "1_mgm", "gene_report.txt") + " "
-        taxa_table_generation += os.path.join(contig_folder, "contig_map.tsv") + " "
-        taxa_table_generation += os.path.join(final_folder, "taxa_table.tsv")
-        
-        return [taxa_table_generation]
-        
-    def create_output_copy_gene_map_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
-        subfolder           = os.path.join(self.Output_Path, current_stage_name)
-        data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
-        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
-        final_folder        = os.path.join(subfolder, "final_results")
-
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
-        self.make_folder(full_hosts_folder)
-        self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
+        gene_map_location = os.path.join(ga_final_merge_folder, "gene_map.tsv")
         
         copy_gene_map = ">&2 echo copying gene map | "
-        copy_gene_map += "cp " + os.path.join(final_merge_folder, "gene_map.tsv") + " "
+        copy_gene_map += "cp " + os.path.join(ga_final_merge_folder, "gene_map.tsv") + " "
         copy_gene_map += final_folder
         
         return[copy_gene_map]
         
-    def create_output_network_generation_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_network_generation_command(self, current_stage_name, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
-        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
-        self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
+        gene_map_location = os.path.join(ga_final_merge_folder, "gene_map.tsv")
         
         network_generation = ">&2 echo Generating RPKM and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
@@ -2587,18 +2555,12 @@ class mt_pipe_commands:
         
         return [network_generation, flatten_rpkm]
         
-    def create_output_unique_hosts_singletons_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_unique_hosts_singletons_command(self, current_stage_name, quality_stage, host_stage):
         #only call if we had hosts to filter
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
         quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
         host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
         unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
         full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
@@ -2606,12 +2568,10 @@ class mt_pipe_commands:
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
         self.make_folder(data_folder)
         self.make_folder(unique_hosts_folder)
         self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
         
         
         get_unique_host_reads_singletons = ">&2 echo get singleton host reads for stats | "
@@ -2635,18 +2595,12 @@ class mt_pipe_commands:
         
         return [get_unique_host_reads_singletons, repop_singletons_hosts]
         
-    def create_output_unique_hosts_pair_1_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_unique_hosts_pair_1_command(self, current_stage_name, quality_stage, host_stage):
         #only call if we had hosts to filter
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
         quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
         host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
         unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
         full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
@@ -2654,12 +2608,11 @@ class mt_pipe_commands:
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
+
         self.make_folder(data_folder)
         self.make_folder(unique_hosts_folder)
         self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
         
         get_unique_host_reads_pair_1 = ">&2 echo get pair 1 host reads for stats | " 
         get_unique_host_reads_pair_1 += self.tool_path_obj.Python + " "
@@ -2678,18 +2631,12 @@ class mt_pipe_commands:
         
         return [get_unique_host_reads_pair_1, repop_pair_1_hosts]
         
-    def create_output_unique_hosts_pair_2_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_unique_hosts_pair_2_command(self, current_stage_name, quality_stage, host_stage):
         #only call if we had hosts to filter
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
         quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
         host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
         unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
         full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
@@ -2697,12 +2644,9 @@ class mt_pipe_commands:
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
         self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
         self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
         
         get_unique_host_reads_pair_2 = ">&2 echo get pair 2 host reads for stats | " 
         get_unique_host_reads_pair_2 += self.tool_path_obj.Python + " "
@@ -2722,31 +2666,15 @@ class mt_pipe_commands:
         return [get_unique_host_reads_pair_2, repop_pair_2_hosts]
         
         
-    def create_output_combine_hosts_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_combine_hosts_command(self, current_stage_name):
         #only call if we had hosts to filter, and run it after the host regen is complete.
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
-        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
         full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
-        final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
         self.make_folder(full_hosts_folder)
-        self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")   
         
         combine_hosts = ">&2 echo combining hosts | " 
         combine_hosts += "cat" + " "
@@ -2761,31 +2689,17 @@ class mt_pipe_commands:
         return [combine_hosts]
         
         
-    def create_output_per_read_scores_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_per_read_scores_command(self, current_stage_name, quality_stage):
         #only call if we had hosts to filter, and run it after the host regen is complete.
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
         quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
-        self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
         
         per_read_scores = ">&2 echo collecting per-read quality | " 
         per_read_scores += self.tool_path_obj.Python + " "
@@ -2810,31 +2724,17 @@ class mt_pipe_commands:
         
         
         
-    def create_output_contig_stats_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_contig_stats_command(self, current_stage_name, contig_stage):
         #only call if we had hosts to filter, and run it after the host regen is complete.
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
-        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
         contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
         self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
-        self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
         
         contig_stats = ">&2 echo collecting contig stats | " 
         contig_stats += self.tool_path_obj.Python + " "
@@ -2844,32 +2744,15 @@ class mt_pipe_commands:
         
         return [contig_stats]
         
-    def create_output_EC_heatmap_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_EC_heatmap_command(self, current_stage_name):
         #only call if we had hosts to filter, and run it after the host regen is complete.
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
-        quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
-        repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
-        final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
-        full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
-        self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
-        
         
         EC_heatmap = ">&2 echo forming EC heatmap | "
         EC_heatmap += self.tool_path_obj.Python + " "
@@ -2883,28 +2766,19 @@ class mt_pipe_commands:
         
         
         
-    def create_output_read_count_command(self, current_stage_name, quality_stage, host_stage, contig_stage, repopulation_stage, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
+    def create_output_read_count_command(self, current_stage_name, quality_stage, repopulation_stage, ga_final_merge_stage, enzyme_annotation_stage):
         #only call if we had hosts to filter, and run it after the host regen is complete.
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        mpl_folder          = os.path.join(data_folder, "0_MPL")
         quality_folder      = os.path.join(self.Output_Path, quality_stage, "final_results")
-        host_folder         = os.path.join(self.Output_Path, host_stage, "final_results")
-        contig_folder       = os.path.join(self.Output_Path, contig_stage, "final_results")
         repopulation_folder = os.path.join(self.Output_Path, repopulation_stage, "final_results")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        ta_folder           = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
-        data_folder         = os.path.join(subfolder, "data")
-        unique_hosts_folder = os.path.join(data_folder, "1_unique_hosts")
         full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(mpl_folder)
-        self.make_folder(data_folder)
-        self.make_folder(unique_hosts_folder)
         self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
         gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")

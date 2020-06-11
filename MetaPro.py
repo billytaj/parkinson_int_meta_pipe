@@ -1310,7 +1310,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     target = commands.create_and_launch, 
                     args = (
                         output_label, 
-                        commands.create_output_network_generation_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                        commands.create_output_network_generation_command(output_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
                         True, 
                         inner_name
                     )
@@ -1322,7 +1322,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
-                    commands.create_output_per_read_scores_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    commands.create_output_per_read_scores_command(output_label, quality_filter_label),
                     True, 
                     inner_name
                 )
@@ -1334,7 +1334,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process = mp.Process(
                     target = commands.create_and_launch, 
                     args = (output_label, 
-                        commands.create_output_copy_gene_map_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                        commands.create_output_copy_gene_map_command(output_label, gene_annotation_final_merge_label),
                         True, 
                         inner_name
                     )
@@ -1347,7 +1347,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
-                    commands.create_output_taxa_table_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    commands.create_output_taxa_table_v2_command(output_label, assemble_contigs_label, taxon_annotation_label),
                     True,
                     inner_name
                 )
@@ -1359,7 +1359,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
-                    commands.create_output_contig_stats_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    commands.create_output_contig_stats_command(output_label, assemble_contigs_label),
                     True,
                     inner_name
                 )
@@ -1375,7 +1375,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 process = mp.Process(
                     target = commands.create_and_launch,
                     args = (output_label, 
-                        commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                        commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label),
                         True,
                         inner_name
                     )
@@ -1388,7 +1388,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     process = mp.Process(
                         target = commands.create_and_launch,
                         args = (output_label,
-                            commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                            commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label),
                             True,
                             inner_name
                         )
@@ -1401,7 +1401,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     process = mp.Process(
                         target = commands.create_and_launch,
                         args = (output_label,
-                            commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                            commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label),
                             True,
                             inner_name
                         )
@@ -1431,7 +1431,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
-                    commands.create_output_combine_hosts_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    commands.create_output_combine_hosts_command(output_label),
                     True,
                     inner_name
                 )
@@ -1444,7 +1444,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
-                    commands.create_output_EC_heatmap_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    commands.create_output_EC_heatmap_command(output_label),
                     True,
                     inner_name
                 )
@@ -1466,7 +1466,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
-                    commands.create_output_read_count_command(output_label, quality_filter_label, host_filter_label,assemble_contigs_label, repop_job_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                    commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, gene_annotation_final_merge_label, ec_annotation_label),
                     True,
                     inner_name
                 )
