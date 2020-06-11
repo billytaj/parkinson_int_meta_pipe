@@ -2472,6 +2472,7 @@ class mt_pipe_commands:
         
         are_you_in_a_contig = ">&2 echo Sorting if a read is in a contig | "
         are_you_in_a_contig += self.tool_path_obj.Python + " "
+        are_you_in_a_contig += self.tool_path_obj.are_you_in_a_contig + " "
         are_you_in_a_contig += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
         if(self.read_mode == "single"):
             are_you_in_a_contig += self.sequence_single + " "
