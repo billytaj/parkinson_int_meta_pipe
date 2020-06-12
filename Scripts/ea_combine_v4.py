@@ -6,7 +6,7 @@ import os.path
 import sys
 from datetime import datetime as dt
 import multiprocessing as mp
-
+import time 
 class ec:
     def __init__(self, ec, prob):
         self.ec = ec
@@ -57,8 +57,9 @@ def import_freq_file(freq_file):
     return freq_dict
 
 def create_swissprot_map(SWISS_PROT_MAP):
-    mapping_dict = {}
-    final_mapping_dict = dict()
+    
+    mapping_dict = {} #key: EC, val: swissprot proteins
+    final_mapping_dict = dict() #key: swissprot, val: ECs
     with open(SWISS_PROT_MAP, "r") as mapping:
         for line in mapping.readlines():
             cleaned_line = line.strip("\n")
@@ -66,6 +67,8 @@ def create_swissprot_map(SWISS_PROT_MAP):
             mapping_dict[line_as_list[0]] = set(line_as_list[2:])
     
     
+        
+        
     for ec in mapping_dict.keys():
         gene_list = mapping_dict[ec]
         
@@ -151,6 +154,53 @@ def import_detect_ec(detect_fbeta_file, gene_ec_dict, prob_dict):
                     prob_key = key + "_" + EC_val
                     prob_dict[prob_key] = probability
                    
+def import_priam_ec_v2(priam_sequence_ec, gene_ec_dict, prob_ec_dict):
+    #just uses E-values.  This one's the low-quality one that uses a cutoff of E-5, regardless if PRIAM counted it
+    query_name = "None"
+    ec_list = []
+    line_count = 0
+    with open(priam_sequence_ec, "r") as priam_ec:
+        for line in priam_ec:
+            line_count += 1
+            #print(line)
+            if(line == "\n"):
+                continue
+            
+            elif(line.startswith(">")):
+                #new line
+                if(len(ec_list) > 0):
+                    if(query_name is "None"):
+                        print(dt.today(), "This shouldn't happen.  full EC list.  no query")
+                    else:
+                        gene_ec_dict[query_name] = ec_list
+                        #print("===================================")
+                        ec_list[:] = []
+                        
+                query_name = line.strip(">")
+                query_name = query_name.strip("\n")
+                query_list = query_name.split(" ")
+                query_name = query_list[0]
+                #print(dt.today(), "working on", query_name)
+                
+            else:
+                list_line = line.split("\t")
+                ec = list_line[0].strip("\n")
+                ec = ec.strip(" ")
+                ec = ec.strip("#")
+                e_value = float(list_line[2])
+                #print(dt.today(), "PRIAM: looking at e-value:", e_value)
+                if(e_value < 1e-5):
+                    #print("evalue passed:", ec)
+                    #time.sleep(0.5)
+                    ec_list.append(ec)
+                    prob_key = query_name + "_" + ec
+                    if(prob_key in prob_ec_dict):
+                        continue
+                    else:
+                        prob_ec_dict[prob_key] = e_value
+                    
+            if(query_name is "None"):
+                print(dt.today(), "This shouldn't be happening.  a line was skipped")
     
 def import_priam_ec(priam_sequence_ec, gene_ec_dict, prob_ec_dict):
     #gene_ec_dict = dict()
@@ -204,6 +254,53 @@ def import_priam_ec(priam_sequence_ec, gene_ec_dict, prob_ec_dict):
             if(query_name is "None"):
                 print(dt.today(), "This shouldn't be happening.  a line was skipped")
     #return gene_ec_dict
+
+def import_diamond_ec_v2(diamond_proteins_blastout, swissprot_map_dict, gene_length_dict, gene_ec_lq_dict, gene_ec_hq_dict):
+    #This one uses E-values
+    with open(diamond_proteins_blastout, "r") as diamond_ec:
+        for item in diamond_ec:
+            #note that this DIAMOND call has special parameters (for some reason)
+            list_line = item.split("\t")
+            #print(list_line)
+            query_name = list_line[0].strip("\n")
+            query_name = query_name.strip(">")
+            swissprot_name = list_line[1]
+            
+
+            e_value = float(list_line[7])
+            #print(dt.today(), "DIAMOND e-value:", e_value)
+            if(e_value <= 1e-5):
+                #take this hit
+                if(swissprot_name in swissprot_map_dict):
+                    EC_val = swissprot_map_dict[swissprot_name]
+                    if(query_name in gene_ec_lq_dict):
+                        old_entry = gene_ec_lq_dict[query_name]
+                        old_entry += EC_val
+                        gene_ec_lq_dict[query_name] = old_entry
+                    else:
+                        gene_ec_lq_dict[query_name] = EC_val
+                else:
+                    print(dt.today(), "LQ import diamond V2:", swissprot_name, "not found in swissprot map.  This shoudn't happen")
+                    gene_ec_lq_dict[query_name] = ["0.0.0.0"]
+            
+            if(e_value <= 1e-10):
+                if(swissprot_name in swissprot_map_dict):
+                    EC_val = swissprot_map_dict[swissprot_name]
+                    if(query_name in gene_ec_hq_dict):
+                        old_entry = gene_ec_hq_dict[query_name]
+                        old_entry += EC_val
+                        gene_ec_hq_dict[query_name] = old_entry
+                    else:
+                        gene_ec_hq_dict[query_name] = EC_val
+                else:
+                    print(dt.today(), "HQ import diamond V2:", swissprot_name, "not found in swissprot map.  This shoudn't happen")
+                    gene_ec_hq_dict[query_name] = ["0.0.0.0"]
+            else:   
+                gene_ec_hq_dict[query_name] = ["0.0.0.0"]
+                    
+                    
+                    
+            
     
 def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_length_dict, gene_ec_dict):
     #gene_ec_dict = dict()
@@ -235,6 +332,9 @@ def import_diamond_ec(diamond_proteins_blastout, swissprot_map_dict, gene_length
                             gene_ec_dict[query_name] = old_entry
                         else:
                             gene_ec_dict[query_name] = EC_val
+                    else:
+                        print(dt.today(), "import diamond V1:", swissprot_name, "not found in swissprot map.  this shouldn't happen")
+                        EC_val = ["0.0.0.0"]
                 else:
                     EC_val = ["0.0.0.0"]
             else:
@@ -277,89 +377,20 @@ def debug_export(ec_dict, file_name):
 def extract_value(x):
     #used for sorting the ECs tied with prob
     split = x.split("_")
-    return float(split[0])            
-            
-if __name__ == "__main__":
-    detect_file     = sys.argv[1]
-    priam_file      = sys.argv[2]
-    diamond_file    = sys.argv[3]
-    SWISS_PROT_MAP  = sys.argv[4]
-    gene_map_file   = sys.argv[5]
-    freq_file       = sys.argv[6]
-    Output_file     = sys.argv[7]
-    
+    return float(split[0]) 
 
-    
-    
-    gene_length_dict = import_gene_map(gene_map_file)
-    freq_dict = import_freq_file(freq_file)
-    print(dt.today(), "size of freq dict:", len(freq_dict))
-    
-    ec_process_list = []
-    #-----------------------------------------
-    # import the data
-    manager = mp.Manager()
-    diamond_ec_mgr_dict = manager.dict()
-    swissprot_map_dict = create_swissprot_map(SWISS_PROT_MAP)
-    
-    diamond_ec_process = mp.Process(
-        target = import_diamond_ec, 
-        args = (diamond_file, swissprot_map_dict, gene_length_dict, diamond_ec_mgr_dict)
-    )
-    diamond_ec_process.start()
-    ec_process_list.append(diamond_ec_process)
-    
-    priam_ec_mgr_dict = manager.dict()
-    priam_prob_mgr_dict = manager.dict()
-    priam_ec_process = mp.Process(
-        target = import_priam_ec, 
-        args = (priam_file, priam_ec_mgr_dict, priam_prob_mgr_dict)
-    )
-    priam_ec_process.start()
-    ec_process_list.append(priam_ec_process)
-    
-    detect_ec_mgr_dict = manager.dict()
-    detect_prob_mgr_dict = manager.dict()
-    detect_ec_process = mp.Process(
-        target = import_detect_ec,
-        args = (detect_file, detect_ec_mgr_dict, detect_prob_mgr_dict)
-    )
-    detect_ec_process.start()
-    ec_process_list.append(detect_ec_process)
-    
-    print(dt.today(), "waiting for import jobs to finish")
-    for item in ec_process_list:
-        item.join()
-    ec_process_list[:] = []
-    print(dt.today(), "import jobs finished")
-    
-    
-    
-    
-    diamond_ec_dict = dict(diamond_ec_mgr_dict) #key: gene.  value: list of ECs
-    priam_ec_dict = dict(priam_ec_mgr_dict)     #key: gene.  value: list of ECs
-    detect_ec_dict = dict(detect_ec_mgr_dict)   #key: gene.  value: list of ECs
-    detect_prob_dict = dict(detect_prob_mgr_dict) #key: gene_EC. val: prob
-    priam_prob_dict = dict(priam_prob_mgr_dict)#key: gene_EC, val: prob
-    print(dt.today(), "finished converting dicts")
-    
-    
-    #--------------------------------------------------
-    # merge the results.  get the genes for which both tools came back with an EC
-    diamond_keys = set(diamond_ec_dict.keys())
-    priam_keys = set(priam_ec_dict.keys())
-    common_keys = diamond_keys & priam_keys
-    
-    print(dt.today(), "finished getting common genes")
-    #take the intersection of the ECs found for each gene between priam and diamond
+
+def get_intersection(common_keys, diamond_ec_dict, priam_ec_dict):
     common_dict = dict()
     for item in common_keys:
         priam_ec_set = set(priam_ec_dict[item])
         diamond_ec_set = set(diamond_ec_dict[item])
         combined_ec = list(diamond_ec_set.intersection(priam_ec_set))
         if(len(combined_ec) > 0):
-            common_dict[item] = combined_ec
+            common_dict[item] = combined_ec    
+    return common_dict
     
+def merge_everything(detect_ec_dict, common_dict, detect_prob_dict, priam_prob_dict):    
     #sys.exit("pre-death")
     final_dict = dict()
     for key in detect_ec_dict.keys():
@@ -462,13 +493,9 @@ if __name__ == "__main__":
                     final_dict[key] = [pair_list[0]]
             elif(len(common_ec_list) == 1):
                 final_dict[key] = common_ec_list
-                
-            
-
+    return final_dict
     
-    
-    #----------------------------------------------
-    #export the final ec list
+def export_report(final_dict, Output_file):
     with open(Output_file, "w") as ec_out:
         for item in sorted(final_dict.keys()):
             skip_line = False
@@ -481,7 +508,151 @@ if __name__ == "__main__":
             if(len(ec_list) == 0):
                 continue
             if(not skip_line):     
-                ec_out.write(item + "\t" + str(len(ec_list)) + "\t" + ec_string + "\n")
+                ec_out.write(item + "\t" + str(len(ec_list)) + "\t" + ec_string + "\n")    
+    
+def thing_in_question(inspect_key, detect_ec_dict, priam_ec_lq_dict, priam_ec_hq_dict, diamond_ec_lq_dict, diamond_ec_hq_dict):
+    #inspect_key = "gi|490134789|ref|NZ_KB822565.1|:c146428-142376|97138|g__Clostridium.s__Clostridium_sp_ASF356|UniRef90_unknown|UniRef50_K4KWD0"
+    #inspect_key = "gi|498503065|ref|NZ_KB822571.1|:503009-504169|1235803|g__Parabacteroides.s__Parabacteroides_sp_ASF519|UniRef90_R6X568|UniRef50_E8QZN3"
+    #inspect_key = "gi|483984714|ref|NZ_KB892660.1|:c111601-110108|33035|g__Blautia.s__Blautia_producta|UniRef90_unknown|UniRef50_R5TWD5"
+    print("thing in question:")
+    print(inspect_key)
+    if(inspect_key in priam_ec_lq_dict):
+        print("PRIAM LQ:", priam_ec_lq_dict[inspect_key])
+    else:
+        print("PRIAM HQ: none")
+    if(inspect_key in priam_ec_hq_dict):
+        print("PRIAM HQ:", priam_ec_hq_dict[inspect_key])
+    else:
+        print("PRIAM HQ: none")
+        
+    if(inspect_key in diamond_ec_hq_dict):
+        print("DIAMOND HQ:", diamond_ec_hq_dict[inspect_key])
+    else:
+        print("DIAMOND HQ: none")        
+    if(inspect_key in diamond_ec_lq_dict):
+        print("DIAMOND LQ:", diamond_ec_lq_dict[inspect_key])
+    else:
+        print("DIAMOND LQ: none")
+        
+        
+    if(inspect_key in detect_ec_dict):
+        print("DETECT:", detect_ec_dict[inspect_key])
+    else:
+        print("DETECT: none")
+    
+    
+    
+if __name__ == "__main__":
+    detect_file     = sys.argv[1]
+    priam_file      = sys.argv[2]
+    diamond_file    = sys.argv[3]
+    SWISS_PROT_MAP  = sys.argv[4]
+    gene_map_file   = sys.argv[5]
+    freq_file       = sys.argv[6]
+    hq_output       = sys.argv[7]
+    lq_output       = sys.argv[8]
+
+    
+    
+    gene_length_dict = import_gene_map(gene_map_file)
+    freq_dict = import_freq_file(freq_file)
+    print(dt.today(), "size of freq dict:", len(freq_dict))
+    
+    ec_process_list = []
+    #-----------------------------------------
+    # import the data
+    manager = mp.Manager()
+    diamond_ec_lq_mgr_dict = manager.dict()
+    diamond_ec_hq_mgr_dict = manager.dict()
+    swissprot_map_dict = create_swissprot_map(SWISS_PROT_MAP)
+    
+    diamond_ec_process = mp.Process(
+        target = import_diamond_ec_v2, 
+        args = (diamond_file, swissprot_map_dict, gene_length_dict, diamond_ec_lq_mgr_dict, diamond_ec_hq_mgr_dict)
+    )
+    diamond_ec_process.start()
+    ec_process_list.append(diamond_ec_process)
+    
+    priam_ec_hq_mgr_dict = manager.dict()
+    priam_prob_hq_mgr_dict = manager.dict()
+    priam_ec_hq_process = mp.Process(
+        target = import_priam_ec, 
+        args = (priam_file, priam_ec_hq_mgr_dict, priam_prob_hq_mgr_dict)
+    )
+    priam_ec_hq_process.start()
+    ec_process_list.append(priam_ec_hq_process)
+    
+    priam_ec_lq_mgr_dict = manager.dict()
+    priam_prob_lq_mgr_dict = manager.dict()
+    priam_ec_lq_process = mp.Process(
+        target = import_priam_ec_v2, 
+        args = (priam_file, priam_ec_lq_mgr_dict, priam_prob_lq_mgr_dict)
+    )
+    priam_ec_lq_process.start()
+    ec_process_list.append(priam_ec_lq_process)
+    
+    detect_ec_mgr_dict = manager.dict()
+    detect_prob_mgr_dict = manager.dict()
+    detect_ec_process = mp.Process(
+        target = import_detect_ec,
+        args = (detect_file, detect_ec_mgr_dict, detect_prob_mgr_dict)
+    )
+    detect_ec_process.start()
+    ec_process_list.append(detect_ec_process)
+    
+    print(dt.today(), "waiting for import jobs to finish")
+    for item in ec_process_list:
+        item.join()
+    ec_process_list[:] = []
+    print(dt.today(), "import jobs finished")
+    
+    
+    
+    
+    diamond_ec_lq_dict = dict(diamond_ec_lq_mgr_dict) #key: gene.  value: list of ECs
+    diamond_ec_hq_dict = dict(diamond_ec_hq_mgr_dict) #key: gene.  value: list of ECs
+    priam_ec_lq_dict = dict(priam_ec_lq_mgr_dict)     #key: gene.  value: list of ECs
+    priam_ec_hq_dict = dict(priam_ec_hq_mgr_dict)     #key: gene.  value: list of ECs
+    detect_ec_dict = dict(detect_ec_mgr_dict)   #key: gene.  value: list of ECs
+    detect_prob_dict = dict(detect_prob_mgr_dict) #key: gene_EC. val: prob
+    priam_prob_lq_dict = dict(priam_prob_lq_mgr_dict)#key: gene_EC, val: prob
+    priam_prob_hq_dict = dict(priam_prob_hq_mgr_dict)#key: gene_EC, val: prob
+    print(dt.today(), "finished converting dicts")
+    
+    
+    #testing constructs
+    #inspect_key = "gi|555554272|ref|NZ_KI530591.1|:88165-88941|248039|g__Mucispirillum.s__Mucispirillum_schaedleri|UniRef90_V2Q7Z1|UniRef50_E4TJW6"
+    #thing_in_question(inspect_key, detect_ec_dict, priam_ec_lq_dict, priam_ec_hq_dict, diamond_ec_lq_dict, diamond_ec_hq_dict)
+    #inspect_key = "gi|555554272|ref|NZ_KI530591.1|:87704-88150|248039|g__Mucispirillum.s__Mucispirillum_schaedleri|UniRef90_V2Q981|UniRef50_B0TXG6"
+    #print("============================================")
+    #thing_in_question(inspect_key, detect_ec_dict, priam_ec_lq_dict, priam_ec_hq_dict, diamond_ec_lq_dict, diamond_ec_hq_dict)
+    
+    #sys.exit("charized")
+    
+    #--------------------------------------------------
+    # merge the results.  get the genes for which both tools came back with an EC
+    diamond_keys_lq = set(diamond_ec_lq_dict.keys())
+    priam_keys_lq = set(priam_ec_lq_dict.keys())
+    common_keys_lq = diamond_keys_lq & priam_keys_lq
+    
+    diamond_keys_hq = set(diamond_ec_hq_dict.keys())
+    priam_keys_hq = set(priam_ec_hq_dict.keys())
+    common_keys_hq = diamond_keys_hq & priam_keys_hq
+    
+    
+    print(dt.today(), "finished getting common genes")
+    #take the intersection of the ECs found for each gene between priam and diamond
+    common_lq_dict = get_intersection(common_keys_lq, diamond_ec_lq_dict, priam_ec_lq_dict)
+    common_hq_dict = get_intersection(common_keys_hq, diamond_ec_hq_dict, priam_ec_hq_dict)
+
+    final_hq_dict = merge_everything(detect_ec_dict, common_hq_dict, detect_prob_dict, priam_prob_hq_dict)   
+    final_lq_dict = merge_everything(detect_ec_dict, common_lq_dict, detect_prob_dict, priam_prob_lq_dict)            
+    
+    #----------------------------------------------
+    #export the final ec list
+    
+    export_report(final_hq_dict, hq_output)
+    export_report(final_lq_dict, lq_output)
     #export the final ec list
         
     
