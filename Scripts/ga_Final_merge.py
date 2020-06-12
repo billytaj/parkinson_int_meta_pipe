@@ -228,17 +228,32 @@ def final_gene_map_merge(gene_map_list, final_gene_map):
             
     
 def merge_fastas(path_0, path_1, section, header, extension):
-    #it's just a simple concatenation job.
+    #it's just a simple concatenation job. that also checks for duplicates
+    IDs_used = list()
+    skip_this_line = False
     path_contents = os.listdir(path_0)
     final_fasta_file = os.path.join(path_1, header + "_" + section + extension)
     with open(final_fasta_file, "w") as final_fasta:
         for content in path_contents:
             item = os.path.join(path_0, content)
-            #print("fasta merge:", item)
+            print("fasta merge:", item)
             if(content.startswith(section)) and (content.endswith(extension)):
                 with open(item, "r") as sample_fasta:
                     for line in sample_fasta:
-                        final_fasta.write(line)
+                        if(line.startswith(">")):
+                            ID = line
+                            if(ID in IDs_used):
+                                skip_this_line = True
+                            else:
+                                IDs_used.append(ID)
+                                skip_this_line = False
+                                
+                        if not(skip_this_line):        
+                            final_fasta.write(line)
+                        else:
+                            print(dt.today(), ID, "already written.  skipping")
+                            
+    print(dt.today(), "find it at:", final_fasta_file)
     return final_fasta_file
     
     
@@ -294,14 +309,34 @@ def make_second_merge_process(process_store, path_0, path_1, header, tail):
 def merge_all_proteins(path, gene_transcripts_dict, export_path):
     #this just exports.
     all_proteins_path = os.path.join(export_path, "all_proteins.faa")
+    skip_this_line = False
+    IDs_used = list()
     with open(all_proteins_path, "w") as proteins_out:
         for item in os.listdir(path):
             
             if(item.endswith(".faa")):
                 full_path = os.path.join(os.path.abspath(path), item)
+                ID = "None"
                 with open(full_path, "r") as dmd_proteins:
                     for line in dmd_proteins:
-                        proteins_out.write(line)
+                    
+                        if(line.startswith(">")):
+                            ID = line
+                            if(ID in IDs_used):
+                                print(dt.today(), "protein already written. skipping")
+                                skip_this_line = True
+                            else:
+                                IDs_used.append(ID)
+                                skip_this_line = False
+                                #print("IDs used:", IDs_used)
+                                #time.sleep(0.5)
+                            
+                        if not skip_this_line:
+                            proteins_out.write(line)
+                        else:
+                            print("not writing:", ID)
+                            #print(line)
+                            #time.sleep(0.5)
         for gene in gene_transcripts_dict:
             #print("EXPORTING gene transcript:", gene, gene_transcripts_dict[gene])
             out_line = ">" + gene + "\n" 
@@ -355,7 +390,21 @@ def translate_contig_segments_to_reads(gene_map_dict, gene_segment_dict):
                         
                     gene_map_dict[gene] = [gene_length, number_of_reads] + reads
                     
-
+def merge_fastas_v2(path, header, extension, name):
+    list_of_file = os.listdir(path)
+    combined_file = os.path.join(path, "all_" + header + extension)
+    with open(combined_file, "w") as out_file:            
+        for item in list_of_file:
+            if(item.startswith(header) and item.endswith(extension)):
+                
+                working_file = os.path.join(path, item)
+                print("file found matching pattern:", working_file)
+                with open(working_file, "r") as in_file:
+                    for line in in_file:
+                        out_file.write(line)
+    print(dt.today(), "combined file:", combined_file)
+    return combined_file
+                
  
 if __name__ == "__main__":
     assemble_path           = sys.argv[1]
@@ -393,6 +442,7 @@ if __name__ == "__main__":
     make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")      #BWA genes
     make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")            #DIAMOND proteins
     
+    
     #merge the gene maps
     bwa_gene_map_merge_process = mp.Process(target = concatenate_gene_maps, args = (bwa_path, mgr_bwa_gene_map))
     bwa_gene_map_merge_process.start()
@@ -412,16 +462,21 @@ if __name__ == "__main__":
         item.join()
     process_store[:] = []
     
+    #all_dmd_file = merge_fastas_v2(final_path, "dmd", ".faa", "something")
     
+    #sys.exit("dialogue")
     
     
     #secondary combine on the genes (BWA and BLAT)
     make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
-    make_merge_fasta_process(process_store, final_path, final_path, "dmd", ".faa")
+    #make_merge_fasta_process(process_store, final_path, final_path, "dmd", ".faa")
     
     for item in process_store:
         item.join()
     process_store[:] = []
+    
+    
+    
     
     finish_proteins_process = mp.Process(target = handle_final_proteins, args = (final_path, export_path))
     finish_proteins_process.start()
@@ -451,6 +506,8 @@ if __name__ == "__main__":
     final_gene_map = dict(mgr_final_gene_map)
     
     export_gene_map(final_gene_map, export_path)
+    
+    print(dt.today(), "We're at the end")
     
 
         
