@@ -2415,7 +2415,7 @@ class mt_pipe_commands:
         postprocess_command += self.tool_path_obj.SWISS_PROT_map + " "
         postprocess_command += os.path.join(final_merge_folder, "gene_map.tsv") + " "
         postprocess_command += self.tool_path_obj.enzyme_db + " "
-        postprocess_command += os.path.join(final_folder, "proteins.ECs_All")
+        postprocess_command += os.path.join(final_folder, "proteins.ECs_All") + " "
         postprocess_command += os.path.join(final_folder, "lq_proteins.ECs_All")
 
         COMMANDS_EC_Postprocess = [
