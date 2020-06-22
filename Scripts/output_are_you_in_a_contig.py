@@ -24,6 +24,7 @@ def import_raw_fastq(fastq_file):
             if(line_count % 4 == 0):
                 read_id = line.strip("@")
                 read_id = read_id.strip("\n")
+                read_id = read_id.split(" ")[0]
                 read_id_list.append(read_id)
             line_count += 1
     read_id_list = sorted(read_id_list)
