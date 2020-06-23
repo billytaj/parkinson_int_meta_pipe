@@ -1304,44 +1304,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     #if not check_where_resume(network_path, None, ec_annotation_path):
     
     if check_bypass_log(output_folder, output_label):
-        if check_bypass_log(output_folder, output_network_gen_label):
-            inner_name = output_network_gen_label
-            process = mp.Process(
-                    target = commands.create_and_launch, 
-                    args = (
-                        output_label, 
-                        commands.create_output_network_generation_command(output_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
-                        True, 
-                        inner_name
-                    )
-                )
-            process.start()
-            mp_store.append(process)
-        if check_bypass_log(output_folder, output_per_read_scores_label):
-            inner_name = output_per_read_scores_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_per_read_scores_command(output_label, quality_filter_label),
-                    True, 
-                    inner_name
-                )
-            )
-            process.start()
-            mp_store.append(process)
-        if check_bypass_log(output_folder, output_copy_gene_map_label):
-            inner_name = output_copy_gene_map_label
-            process = mp.Process(
-                    target = commands.create_and_launch, 
-                    args = (output_label, 
-                        commands.create_output_copy_gene_map_command(output_label, gene_annotation_final_merge_label),
-                        True, 
-                        inner_name
-                    )
-                )
-            process.start()
-            mp_store.append(process)
-            
+        #phase 0
         if check_bypass_log(output_folder, output_taxa_table_label):
             inner_name = output_taxa_table_label
             process = mp.Process(
@@ -1354,6 +1317,33 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()
             mp_store.append(process)
+    
+        print(dt.today(), "output report phase 0 launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        
+        
+        
+      
+    
+    
+        #phase 1
+        if check_bypass_log(output_folder, output_copy_gene_map_label):
+            inner_name = output_copy_gene_map_label
+            process = mp.Process(
+                    target = commands.create_and_launch, 
+                    args = (output_label, 
+                        commands.create_output_copy_gene_map_command(output_label, gene_annotation_final_merge_label),
+                        True, 
+                        inner_name
+                    )
+                )
+            process.start()
+            mp_store.append(process)
+        
+            
+        
         if check_bypass_log(output_folder, output_contig_stats_label):
             inner_name = output_contig_stats_label
             process = mp.Process(
@@ -1425,7 +1415,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 conditional_write_to_bypass_log(output_unique_hosts_pair_1_label, "outputs/data/1_unique_hosts", "pair_1_hosts.fastq", output_folder_path)
                 conditional_write_to_bypass_log(output_unique_hosts_pair_2_label, "outputs/data/1_unique_hosts", "pair_2_hosts.fastq", output_folder_path)
         #----------------------------------------------------------------------------
-        #Phase 2
+        #Phase 3
         if check_bypass_log(output_folder, output_combine_hosts_label):
             inner_name = output_combine_hosts_label
             process = mp.Process(
@@ -1473,6 +1463,32 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             )
             process.start()
             mp_store.append(process)
+            
+        if check_bypass_log(output_folder, output_network_gen_label):
+            inner_name = output_network_gen_label
+            process = mp.Process(
+                    target = commands.create_and_launch, 
+                    args = (
+                        output_label, 
+                        commands.create_output_network_generation_command(output_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                        True, 
+                        inner_name
+                    )
+                )
+            process.start()
+            mp_store.append(process)
+        if check_bypass_log(output_folder, output_per_read_scores_label):
+            inner_name = output_per_read_scores_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (output_label,
+                    commands.create_output_per_read_scores_command(output_label, quality_filter_label),
+                    True, 
+                    inner_name
+                )
+            )
+            process.start()
+            mp_store.append(process)    
         
         print(dt.today(), "output report phase 3 (final) launched.  waiting for sync")
         for item in mp_store:

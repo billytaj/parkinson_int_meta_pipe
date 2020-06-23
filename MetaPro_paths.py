@@ -163,7 +163,7 @@ class tool_path_obj:
         self.remove_gaps_in_fasta       = os.path.join(script_path, "remove_gaps_in_fasta.py")
         self.parse_sam                  = os.path.join(script_path, "output_parse_sam.py")
         self.are_you_in_a_contig        = os.path.join(script_path, "output_are_you_in_a_contig.py")
-        
+        self.convert_contig_segments    = os.path.join(script_path, "output_convert_gene_map_contig_segments.py")
         
         #--------------------------------------------------
         # miscellaneous values

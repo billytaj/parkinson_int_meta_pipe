@@ -73,8 +73,10 @@ def import_sam_file(sam_file):
     return db_match_dict, read_to_contig_dict
 if __name__ == "__main__":
     sam_file = sys.argv[1]
-    contig_read_map_export = sys.argv[2]
-    contig_read_count_export = sys.argv[3]
+    contig_read_count_export = sys.argv[2]
+    reads_in_contig_export = sys.argv[3]
+    contig_read_map_export = sys.argv[4]
+    
     print(dt.today(), "started import")
     db_match_dict, read_to_contig_dict = import_sam_file(sam_file)
     print(dt.today(), "started final tally")
@@ -98,12 +100,32 @@ if __name__ == "__main__":
         
         
     print(dt.today(), "started export")
-    with open(contig_read_map_export, "w") as out_file:
+    #contig -> read 
+    with open(contig_read_map_export, "w") as contig_map_out:
+        for item in db_match_dict:
+            true_read_count = 0
+            if(item in final_dict):
+                true_read_count = final_dict[item]
+            else:
+                print("This shouldn't happen.  contig in db match not found in final_dict")
+                sys.exit("db_match error")
+            
+            out_line = item + "\t" + str(true_read_count)
+            
+            read_list = list(db_match_dict[item])
+            for read in read_list:
+                out_line += "\t" + read 
+            out_line += "\n"    
+            contig_map_out.write(out_line)
+    
+    #contig -> read_count
+    with open(contig_read_count_export, "w") as out_file:
         for contig in final_dict:
             out_line = contig + "\t" + str(final_dict[contig]) + "\n"
             out_file.write(out_line)
             
-    with open(contig_read_count_export, "w") as read_to_contig_out:
+    #list of reads in contigs    
+    with open(reads_in_contig_export, "w") as read_to_contig_out:
         for read in read_to_contig_dict:
             read_to_contig_out.write(read + "\n")
     print(dt.today(), "finished")

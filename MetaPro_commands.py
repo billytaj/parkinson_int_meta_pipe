@@ -2469,7 +2469,8 @@ class mt_pipe_commands:
         parse_sam += self.tool_path_obj.parse_sam + " "
         parse_sam += os.path.join(taxa_prep_folder, "raw_on_contigs.sam") + " "
         parse_sam += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv")
+        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
+        parse_sam += os.path.join(taxa_prep_folder, "contig_segment_read_map.tsv") 
         
         are_you_in_a_contig = ">&2 echo Sorting if a read is in a contig | "
         are_you_in_a_contig += self.tool_path_obj.Python + " "
@@ -2504,21 +2505,35 @@ class mt_pipe_commands:
    
         
     def create_output_copy_gene_map_command(self, current_stage_name,ga_final_merge_stage):
-        subfolder           = os.path.join(self.Output_Path, current_stage_name)
-        data_folder         = os.path.join(subfolder, "data")
-        ga_final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        final_folder        = os.path.join(subfolder, "final_results")
-
+        #must use the contig map from output_taxa_table.
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        ga_final_merge_folder   = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        convert_gene_map_folder = os.path.join(data_folder, "4_convert_gene_map")
+        output_taxa_folder      = os.path.join(data_folder, "3_taxa_table")
+        final_folder            = os.path.join(subfolder, "final_results")
         self.make_folder(subfolder)
         self.make_folder(data_folder)
+        self.make_folder(convert_gene_map_folder)
         self.make_folder(final_folder)
         gene_map_location = os.path.join(ga_final_merge_folder, "gene_map.tsv")
         
         copy_gene_map = ">&2 echo copying gene map | "
         copy_gene_map += "cp " + os.path.join(ga_final_merge_folder, "gene_map.tsv") + " "
-        copy_gene_map += final_folder
+        copy_gene_map += convert_gene_map_folder
         
-        return[copy_gene_map]
+        copy_contig_map = ">&2 echo copying contig map | "
+        copy_contig_map += "cp " + os.path.join(output_taxa_folder, "contig_segment_read_map.tsv") + " "
+        copy_contig_map += convert_gene_map_folder
+        
+        convert_gene_map = ">&2 echo converting contig segments to reads | "
+        convert_gene_map += self.tool_path_obj.Python + " "
+        convert_gene_map += self.tool_path_obj.convert_contig_segments + " "
+        convert_gene_map += os.path.join(convert_gene_map_folder, "gene_map.tsv") + " "
+        convert_gene_map += os.path.join(convert_gene_map_folder, "contig_segment_read_map.tsv") + " "
+        convert_gene_map += os.path.join(final_folder, "final_gene_map.tsv")
+        
+        return[copy_gene_map, copy_contig_map, convert_gene_map]
         
     def create_output_network_generation_command(self, current_stage_name, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
@@ -2532,7 +2547,7 @@ class mt_pipe_commands:
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(ga_final_merge_folder, "gene_map.tsv")
+        gene_map_location = os.path.join(final_folder, "final_gene_map.tsv")
         
         network_generation = ">&2 echo Generating RPKM and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
@@ -2782,7 +2797,7 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_merge_folder, "gene_map.tsv")
+        gene_map_location = os.path.join(final_folder, "final_gene_map.tsv")
         
         read_counts = ">&2 echo generating read count table | "
         read_counts += self.tool_path_obj.Python + " "
