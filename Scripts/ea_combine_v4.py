@@ -390,8 +390,9 @@ def get_intersection(common_keys, diamond_ec_dict, priam_ec_dict):
             common_dict[item] = combined_ec    
     return common_dict
     
-def merge_everything(detect_ec_dict, common_dict, detect_prob_dict, priam_prob_dict):    
+def merge_everything(detect_ec_dict, common_dict, detect_prob_dict, priam_prob_dict, freq_dict):    
     #sys.exit("pre-death")
+    #key is gene
     final_dict = dict()
     for key in detect_ec_dict.keys():
     #then take all of DETECT's results
@@ -645,8 +646,8 @@ if __name__ == "__main__":
     common_lq_dict = get_intersection(common_keys_lq, diamond_ec_lq_dict, priam_ec_lq_dict)
     common_hq_dict = get_intersection(common_keys_hq, diamond_ec_hq_dict, priam_ec_hq_dict)
 
-    final_hq_dict = merge_everything(detect_ec_dict, common_hq_dict, detect_prob_dict, priam_prob_hq_dict)   
-    final_lq_dict = merge_everything(detect_ec_dict, common_lq_dict, detect_prob_dict, priam_prob_lq_dict)            
+    final_hq_dict = merge_everything(detect_ec_dict, common_hq_dict, detect_prob_dict, priam_prob_hq_dict, freq_dict)   
+    final_lq_dict = merge_everything(detect_ec_dict, common_lq_dict, detect_prob_dict, priam_prob_lq_dict, freq_dict)            
     
     #----------------------------------------------
     #export the final ec list
