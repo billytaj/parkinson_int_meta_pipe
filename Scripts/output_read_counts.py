@@ -16,11 +16,16 @@ def fastq_count(fastq):
 
 def annotated_count(map):
     annotated_mRNA = 0
+    skip_header = True
     genes = 0
     with open(map, "r") as infile:
         for line in infile:
-            genes += 1
-            annotated_mRNA += int(line.split("\t")[2])
+            if(skip_header):
+                skip_header = False
+                continue
+            else:
+                genes += 1
+                annotated_mRNA += int(line.split("\t")[2])
 
     return annotated_mRNA, genes
 
