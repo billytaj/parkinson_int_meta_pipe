@@ -25,7 +25,7 @@ def annotated_count(map):
                 continue
             else:
                 genes += 1
-                annotated_mRNA += int(line.split("\t")[2])
+                annotated_mRNA += float(line.split("\t")[2])
 
     return annotated_mRNA, genes
 
