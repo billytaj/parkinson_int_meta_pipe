@@ -536,8 +536,8 @@ class mt_pipe_commands:
                 vsearch_filter_3,
                 blat_hr_singletons,
                 hr_singletons,
-                copy_singletons,
-                data_change_host
+                copy_singletons#,
+                #data_change_host
             ]
         elif self.read_mode == "paired":
             COMMANDS_host = [
@@ -568,8 +568,8 @@ class mt_pipe_commands:
                 hr_pair_2,
                 copy_singletons,
                 copy_pair_1,
-                copy_pair_2,
-                data_change_host
+                copy_pair_2#,
+                #data_change_host
             ]
 
         return COMMANDS_host

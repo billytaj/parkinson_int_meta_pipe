@@ -592,6 +592,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("rRNA filter cleanup:", '%1.1f' % (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start), "s")
     
     # Duplicate repopulation
+    #---------------------------------------------------------------------------------------------------------------------
     repop_start = time.time()
     repop_job_path = os.path.join(output_folder_path, repop_job_label)
     #if not check_where_resume(repop_job_path, None, rRNA_filter_path):
@@ -1323,7 +1324,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             item.join()
         mp_store[:] = []
         
-        
+        conditional_write_to_bypass_log(output_taxa_table_label, "outputs/final_results", "taxa_table.tsv", output_folder_path)
         
       
     
@@ -1404,10 +1405,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             item.join()
         mp_store[:] = []
         
-        conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv", output_folder_path)
+        
         conditional_write_to_bypass_log(output_per_read_scores_label, "outputs/final_results", "input_per_seq_quality_report.csv", output_folder_path)
         conditional_write_to_bypass_log(output_copy_gene_map_label, "outputs/final_results", "gene_map.tsv", output_folder_path)
-        conditional_write_to_bypass_log(output_taxa_table_label, "outputs/final_results", "taxa_table.tsv", output_folder_path)
         conditional_write_to_bypass_log(output_contig_stats_label, "outputs/final_results", "contig_stats.txt", output_folder_path)
         if not (no_host):
             conditional_write_to_bypass_log(output_unique_hosts_singletons_label, "outputs/data/1_unique_hosts", "singleton_hosts.fastq", output_folder_path)
@@ -1429,18 +1429,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.start()
             mp_store.append(process)
             
-        if check_bypass_log(output_folder, output_ec_heatmap_label):
-            inner_name = output_ec_heatmap_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_EC_heatmap_command(output_label),
-                    True,
-                    inner_name
-                )
-            )
-            process.start()
-            mp_store.append(process)
+        
             
         print(dt.today(), "output report phase 2 launched.  waiting for sync")
         for item in mp_store:
@@ -1495,6 +1484,25 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             item.join()
         mp_store[:] = []
         conditional_write_to_bypass_log(output_read_count_label, "outputs/final_results", "read_count.tsv", output_folder_path)
+        conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv", output_folder_path)
+        
+        if check_bypass_log(output_folder, output_ec_heatmap_label):
+            inner_name = output_ec_heatmap_label
+            process = mp.Process(
+                target = commands.create_and_launch,
+                args = (output_label,
+                    commands.create_output_EC_heatmap_command(output_label),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            mp_store.append(process)
+            
+        print(dt.today(), "output report phase 3 (final) launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []    
         
     cleanup_cytoscape_start = time.time()
     if(verbose_mode == "quiet"):

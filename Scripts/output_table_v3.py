@@ -192,8 +192,12 @@ if show_unclassified:
 # parse gene annotations
 mapped_reads = 0
 gene2read_dict = {}
+skip_header = True
 with open(gene2read, "r") as infile:
     for line in infile:
+        if(skip_header):
+            skip_header = False
+            continue
         cols = line.split("\t")
         gene = cols[0]
         gene_len = cols[1]
