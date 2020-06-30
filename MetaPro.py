@@ -1407,7 +1407,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         
         conditional_write_to_bypass_log(output_per_read_scores_label, "outputs/final_results", "input_per_seq_quality_report.csv", output_folder_path)
-        conditional_write_to_bypass_log(output_copy_gene_map_label, "outputs/final_results", "gene_map.tsv", output_folder_path)
+        conditional_write_to_bypass_log(output_copy_gene_map_label, "outputs/final_results", "final_gene_map.tsv", output_folder_path)
         conditional_write_to_bypass_log(output_contig_stats_label, "outputs/final_results", "contig_stats.txt", output_folder_path)
         if not (no_host):
             conditional_write_to_bypass_log(output_unique_hosts_singletons_label, "outputs/data/1_unique_hosts", "singleton_hosts.fastq", output_folder_path)
