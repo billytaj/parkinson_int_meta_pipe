@@ -2488,7 +2488,7 @@ class mt_pipe_commands:
         make_taxa_table += os.path.join(taxa_prep_folder, "constrain_classification.tsv") + " "
         make_taxa_table += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
         make_taxa_table += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv") + " "
-        make_taxa_table += os.path.join(final_folder, "taxa_table.tsv")
+        make_taxa_table += os.path.join(final_folder, "pre_cleaned_taxa_table.tsv")
 
         command_list = [
             copy_contig_data, 

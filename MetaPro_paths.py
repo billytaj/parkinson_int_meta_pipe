@@ -164,7 +164,8 @@ class tool_path_obj:
         self.parse_sam                  = os.path.join(script_path, "output_parse_sam.py")
         self.are_you_in_a_contig        = os.path.join(script_path, "output_are_you_in_a_contig.py")
         self.convert_contig_segments    = os.path.join(script_path, "output_convert_gene_map_contig_segments.py")
-        
+        self.output_filter_taxa         = os.path.join(script_path, "output_filter_taxa.py")
+        self.output_filter_ECs          = os.path.join(script_path, "output_filter_ECs.py")
         #--------------------------------------------------
         # miscellaneous values
         BWA_mem_default = 50
