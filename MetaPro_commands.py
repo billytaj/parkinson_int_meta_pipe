@@ -2507,6 +2507,7 @@ class mt_pipe_commands:
             bwa_raw_on_contigs,
             parse_sam,
             are_you_in_a_contig,
+            clean_constrain_file,
             make_taxa_table
         ]
         
@@ -2569,6 +2570,8 @@ class mt_pipe_commands:
         clean_lq_ec += os.path.join(ec_folder, "lq_proteins.ECs_All") + " "
         clean_lq_ec += os.path.join(final_gene_map_folder, "final_gene_map.tsv") + " "
         clean_lq_ec += os.path.join(clean_ec_folder, "cleaned_lq_proteins.ECs_All")
+        
+        return [clean_ec_all, clean_lq_ec]
 
         
     def create_output_network_generation_command(self, current_stage_name, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
