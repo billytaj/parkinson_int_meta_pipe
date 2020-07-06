@@ -1448,7 +1448,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             item.join()
         mp_store[:] = []
         conditional_write_to_bypass_log(output_combine_hosts_label, "outputs/2_full_hosts", "conbined_hosts.fastq", output_folder_path)
-        conditional_write_to_bypass_log(output_clean_EC_label, "outputs/5_cleaned_ec", "cleaned_proteins.ECs_All")
+        conditional_write_to_bypass_log(output_clean_EC_label, "outputs/5_cleaned_ec", "cleaned_proteins.ECs_All", output_folder_path)
         
         #-------------------------------------------------------------------
         #Phase 3
