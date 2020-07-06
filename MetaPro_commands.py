@@ -2482,13 +2482,23 @@ class mt_pipe_commands:
             are_you_in_a_contig += self.sequence_path_1 + " "
         are_you_in_a_contig += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv") 
 
+        clean_constrain_file = ">&2 echo Cleaning Constrain_classification | "
+        clean_constrain_file += self.tool_path_obj.Python + " "
+        clean_constrain_file += self.tool_path_obj.output_filter_taxa + " "
+        clean_constrain_file += os.path.join(taxa_prep_folder, "constrain_classification.tsv") + " "
+        clean_constrain_file += os.path.join(taxa_prep_folder, "contig_segment_read_map.tsv") + " "
+        clean_constrain_file += os.path.join(taxa_prep_folder, "cleaned_constrain_classification.tsv")
+        
+
         make_taxa_table = ">&2 echo Making taxa table | "
         make_taxa_table += self.tool_path_obj.Python + " "
         make_taxa_table += self.tool_path_obj.taxa_table + " "
-        make_taxa_table += os.path.join(taxa_prep_folder, "constrain_classification.tsv") + " "
+        make_taxa_table += os.path.join(taxa_prep_folder, "cleaned_constrain_classification.tsv") + " "
         make_taxa_table += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
         make_taxa_table += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv") + " "
-        make_taxa_table += os.path.join(final_folder, "pre_cleaned_taxa_table.tsv")
+        make_taxa_table += os.path.join(final_folder, "taxa_table.tsv")
+        
+        
 
         command_list = [
             copy_contig_data, 
@@ -2502,9 +2512,9 @@ class mt_pipe_commands:
         
         return command_list
         
-   
+
         
-    def create_output_copy_gene_map_command(self, current_stage_name,ga_final_merge_stage):
+    def create_output_copy_gene_map_command(self, current_stage_name, ga_final_merge_stage):
         #must use the contig map from output_taxa_table.
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
@@ -2534,6 +2544,32 @@ class mt_pipe_commands:
         convert_gene_map += os.path.join(final_folder, "final_gene_map.tsv")
         
         return[copy_gene_map, copy_contig_map, convert_gene_map]
+
+    def create_output_clean_ec_report_command(self, current_stage_name, ec_stage):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        ec_folder               = os.path.join(self.Output_Path, ec_stage, "final_results")
+        final_gene_map_folder   = os.path.join(data_folder, "4_convert_gene_map")
+        clean_ec_folder         = os.path.join(data_folder, "5_cleaned_ec")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(clean_ec_folder)
+        
+        clean_ec_all = ">&2 echo Cleaning HQ ECs | "
+        clean_ec_all += self.tool_path_obj.Python + " "
+        clean_ec_all += self.tool_path_obj.output_filter_ECs + " "
+        clean_ec_all += os.path.join(ec_folder, "proteins.ECs_All") + " "
+        clean_ec_all += os.path.join(final_gene_map_folder, "final_gene_map.tsv") + " "
+        clean_ec_all += os.path.join(clean_ec_folder, "cleaned_proteins.ECs_All")
+
+        clean_lq_ec = ">&2 echo Cleaning LQ ECs | "
+        clean_lq_ec += self.tool_path_obj.Python + " "
+        clean_lq_ec += self.tool_path_obj.output_filter_ECs + " "
+        clean_lq_ec += os.path.join(ec_folder, "lq_proteins.ECs_All") + " "
+        clean_lq_ec += os.path.join(final_gene_map_folder, "final_gene_map.tsv") + " "
+        clean_lq_ec += os.path.join(clean_ec_folder, "cleaned_lq_proteins.ECs_All")
+
         
     def create_output_network_generation_command(self, current_stage_name, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)

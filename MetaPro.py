@@ -268,6 +268,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     ec_annotation_pp_label                  = "enzyme_annotation_pp"
     output_label                            = "outputs"
     output_copy_gene_map_label              = "output_copy_gene_map"
+    output_clean_EC_label                   = "output_clean_ec"
     output_taxa_table_label                 = "output_taxa_table"
     output_network_gen_label                = "output_network_generation"
     output_unique_hosts_singletons_label    = "output_unique_hosts_singletons"
@@ -1415,7 +1416,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 conditional_write_to_bypass_log(output_unique_hosts_pair_1_label, "outputs/data/1_unique_hosts", "pair_1_hosts.fastq", output_folder_path)
                 conditional_write_to_bypass_log(output_unique_hosts_pair_2_label, "outputs/data/1_unique_hosts", "pair_2_hosts.fastq", output_folder_path)
         #----------------------------------------------------------------------------
-        #Phase 3
+        #Phase 2
         if check_bypass_log(output_folder, output_combine_hosts_label):
             inner_name = output_combine_hosts_label
             process = mp.Process(
@@ -1429,14 +1430,25 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.start()
             mp_store.append(process)
             
-        
+        if check_bypass_log(output_folder, output_clean_EC_label):
+            inner_name = output_clean_EC_label
+            process = mp.Process(
+                target = commands.create_and_launch, 
+                args = (output_label, 
+                    commands.create_output_clean_ec_report_command(output_label, ec_annotation_label),
+                    True,
+                    inner_name
+                )
+            )
+            process.start()
+            mp_store.append(process)
             
         print(dt.today(), "output report phase 2 launched.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []
         conditional_write_to_bypass_log(output_combine_hosts_label, "outputs/2_full_hosts", "conbined_hosts.fastq", output_folder_path)
-        conditional_write_to_bypass_log(output_ec_heatmap_label, "outputs/final_results", "EC_coverage.csv", output_folder_path)
+        conditional_write_to_bypass_log(output_clean_EC_label, "outputs/5_cleaned_ec", "cleaned_proteins.ECs_All")
         
         #-------------------------------------------------------------------
         #Phase 3
@@ -1479,13 +1491,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.start()
             mp_store.append(process)    
         
-        print(dt.today(), "output report phase 3 (final) launched.  waiting for sync")
+        print(dt.today(), "output report phase 3 launched.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []
         conditional_write_to_bypass_log(output_read_count_label, "outputs/final_results", "read_count.tsv", output_folder_path)
         conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv", output_folder_path)
         
+        #------------------------------------------------------------------------------------------------
+        # Phase 4
         if check_bypass_log(output_folder, output_ec_heatmap_label):
             inner_name = output_ec_heatmap_label
             process = mp.Process(
@@ -1499,10 +1513,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.start()
             mp_store.append(process)
             
-        print(dt.today(), "output report phase 3 (final) launched.  waiting for sync")
+        print(dt.today(), "output report phase 4 (final) launched.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []    
+        conditional_write_to_bypass_log(output_ec_heatmap_label, "outputs/final_results", "EC_coverage.csv", output_folder_path)
         
     cleanup_cytoscape_start = time.time()
     if(verbose_mode == "quiet"):
