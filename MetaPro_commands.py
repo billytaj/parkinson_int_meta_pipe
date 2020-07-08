@@ -36,7 +36,7 @@ class mt_pipe_commands:
         self.Qual_str = str(Quality_score)
         self.Output_Path = os.getcwd()
         self.Threads_str = str(Thread_count)
-        self.chunk_size = str(chunk_size)
+        self.rRNA_chunks = str(chunk_size)
 
         print("Output filepath:", self.Output_Path)
 
@@ -898,32 +898,7 @@ class mt_pipe_commands:
         
         
         
-        
-    def create_rRNA_filter_prep_command_v2(self, stage_name, category, dependency_name):
-        dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
-        subfolder               = os.path.join(self.Output_Path, stage_name)
-        data_folder             = os.path.join(subfolder, "data")
-        split_folder            = os.path.join(data_folder, category, category + "_fastq")
-        
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(split_folder)
-        #arbitrary limit of 80000 lines  Infernal has an upper bound on what it can handle.  it's not 100k
-        
-        split_fastq = ">&2 echo splitting fastq for " + category + " | "
-        split_fastq += "split -l 80000" + " "        
-        split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
-        split_fastq += "--additional-suffix .fastq" + " "
-        split_fastq += "-d" + " "
-        split_fastq += os.path.join(split_folder, category + "_")
-        
-        COMMANDS_rRNA_prep = [
-            split_fastq
-        ]
-        
-        return COMMANDS_rRNA_prep
-        
-    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name):
+    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, chunks):
         #split the data into tiny shards
         dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
@@ -936,9 +911,10 @@ class mt_pipe_commands:
         
         split_fastq = ">&2 echo splitting fastq for " + category + " | " 
         split_fastq += self.tool_path_obj.Python + " "
-        split_fastq += self.tool_path_obj.split_data += self.tool_path_obj.File_splitter + " "
+        split_fastq += self.tool_path_obj.File_splitter + " "
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
-        split_fastq += os.path.join(split_folder, category)
+        split_fastq += os.path.join(split_folder, category) + " "
+        split_fastq += self.rRNA_chunks
         
         return [split_fastq]
         

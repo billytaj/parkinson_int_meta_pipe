@@ -34,21 +34,24 @@ def split_fastq(file_name_in, file_name_out, chunks):#split_count = 4):
     #    chunks = 1
     #    print("new split count:", split_count)
         
-    for i in range(0, split_count):
-        print("working on segment :", i+1, "of", split_count)
+    #for i in range(0, split_count):
+    index_count = 0
+    while(True):
+        print("working on segment :", index_count +1, "of fastq splitter")
         #fancy naming
         new_file_name = file_name_out + "_" + str(i) + ".fastq"
         if(split_count == 1):
             new_file_name = file_name_out + ".fastq"
         #split file by selective selection, and writing
-        start_index = int(i * chunks)
-        end_index = int(((i+1) * chunks))
+        start_index = int(index_count * chunks)
+        end_index = int(((index_count+1) * chunks))
         #if(chunks == 1):
-        #    end_index += 1 #override on splits that only have 1 
+        #    end_index += 1 #override on splits that only have 1
+        index_count += 1
         if not(fastq_df.iloc[start_index:end_index, :].empty):
             fastq_df.iloc[start_index:end_index, :].to_csv(new_file_name, chunksize = chunks, mode = "w+", index=False, sep='\n', header=False, quoting = 3)
         else:
-            print("empty frame detected.  no sense in running the rest")
+            print("empty frame detected.  no sense in running the rest of the fastq splitter")
             break
 
 def split_fasta(file_name_in, file_name_out, chunks):#split_count = 4):
@@ -79,21 +82,24 @@ def split_fasta(file_name_in, file_name_out, chunks):#split_count = 4):
         chunks = 1
         print("new split count:", split_count)
 
-    for i in range(0, split_count):
-        print("working on segment :", i + 1, "of", split_count)
+
+    #for i in range(0, split_count):
+    index_count = 0
+    while(True):
+        print("working on segment :", index_count + 1, "of FASTA splitter" )
         # fancy naming
-        new_file_name = file_name_out + "_" + str(i) + ".fasta"
-        if (split_count == 1):
-            new_file_name = file_name_out + ".fasta"
+        new_file_name = file_name_out + "_" + str(index_count) + ".fasta"
+        
         # split file by selective selection, and writing
-        start_index = int(i * chunks)
-        end_index = int(((i + 1) * chunks))
+        start_index = int(index_count * chunks)
+        end_index = int(((index_count + 1) * chunks))
         # if(chunks == 1):
         #    end_index += 1 #override on splits that only have 1
+        index_count += 1
         if not (fasta_df.iloc[start_index:end_index, :].empty):
             fasta_df.iloc[start_index:end_index, :].to_csv(new_file_name, chunksize=chunks, mode="w+", sep='\n', header=False)
         else:
-            print("empty frame detected.  no sense in running the rest")
+            print("empty frame detected.  no sense in running the rest of FASTA splitter")
             break
     
 if __name__ == "__main__":

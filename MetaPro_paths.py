@@ -173,7 +173,7 @@ class tool_path_obj:
         DIAMOND_mem_default = 50 #60GB
         DETECT_mem_default = 50
         
-        chunk_size_default = 100000
+        chunk_size_default = 10000
         BWA_job_limit_default = 80
         BLAT_job_limit_default = 80
         DIAMOND_job_limit_default = 80

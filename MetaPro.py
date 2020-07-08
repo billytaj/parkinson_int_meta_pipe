@@ -184,7 +184,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     keep_second_split = args_pack["keep_second_split"]
     verbose_mode = args_pack["verbose_mode"]
     infernal_limit = args_pack["infernal_limit"]
-    chunks = paths.chunk_size
+    rRNA_chunks = paths.chunk_size
     BWA_mem_threshold = paths.BWA_mem_threshold
     BLAT_mem_threshold = paths.BLAT_mem_threshold
     DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
@@ -282,9 +282,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = rRNA_chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
     elif read_mode == "paired":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = rRNA_chunks, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
     
 
     # This is the format we use to launch each stage of the pipeline.
@@ -427,7 +427,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     target = commands.launch_only,
                     args = (
                         rRNA_filter_label,
-                        commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label),
+                        commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks),
                         True,
                         inner_name
                     )
