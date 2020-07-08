@@ -122,7 +122,7 @@ class tool_path_obj:
             self.Kaiju          = os.path.join(tool_path, "kaiju/kaiju")
             self.Centrifuge     = os.path.join(tool_path, "centrifuge/centrifuge")
             self.Priam          = os.path.join(tool_path, "PRIAM_search/PRIAM_search.jar")
-            self.Detect         = os.path.join(script_path, "Detect_2.2.7.py")
+            self.Detect         = os.path.join(script_path, "Detect_2.2.8.py")
             self.BLAST_dir      = os.path.join(tool_path, "BLAST_p")
             self.WEVOTE         = os.path.join(tool_path, "WEVOTE/WEVOTE")
             self.Spades         = os.path.join(tool_path, "SPAdes/bin/spades.py")
@@ -164,16 +164,21 @@ class tool_path_obj:
         self.parse_sam                  = os.path.join(script_path, "output_parse_sam.py")
         self.are_you_in_a_contig        = os.path.join(script_path, "output_are_you_in_a_contig.py")
         self.convert_contig_segments    = os.path.join(script_path, "output_convert_gene_map_contig_segments.py")
-        
+        self.output_filter_taxa         = os.path.join(script_path, "output_filter_taxa.py")
+        self.output_filter_ECs          = os.path.join(script_path, "output_filter_ECs.py")
         #--------------------------------------------------
         # miscellaneous values
         BWA_mem_default = 50
         BLAT_mem_default = 10 #100MB
         DIAMOND_mem_default = 50 #60GB
+        DETECT_mem_default = 50
+        
         chunk_size_default = 100000
         BWA_job_limit_default = 80
         BLAT_job_limit_default = 80
         DIAMOND_job_limit_default = 80
+        DETECT_job_limit_default = 1000
+        
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
             self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
@@ -214,6 +219,16 @@ class tool_path_obj:
             except KeyError:
                 self.DIAMOND_job_limit = DIAMOND_job_limit_default
                 
+            try:
+                self.DETECT_job_limit = config["Settings"]["DETECT_job_limit"] if config["Settings"]["DETECT_job_limit"] or config["Settings"]["DETECT_job_limit"] == "" else DETECT_job_limit_default
+            except KeyError:
+                self.DETECT_job_limit = DETECT_job_limit_default
+            
+            try:
+                self.DETECT_mem_threshold = config["Settings"]["DETECT_mem_threshold"] if config["Settings"]["DETECT_mem_threshold"] or config["Settings"]["DETECT_mem_threshold"] == "" else DETECT_mem_default
+            except KeyError:
+                self.DETECT_mem_threshold = DETECT_mem_default
+            
             
                     
             
@@ -225,7 +240,9 @@ class tool_path_obj:
             self.BWA_mem_threshold = BWA_mem_default
             self.BLAT_mem_threshold = BLAT_mem_default
             self.DIAMOND_mem_threshold = DIAMOND_mem_default
+            self.DETECT_mem_threshold = DETECT_mem_default
             self.chunk_size = chunk_size_default
             self.BWA_job_limit = BWA_job_limit_default
             self.BLAT_job_limit = BLAT_job_limit_default
             self.DIAMOND_job_limit = DIAMOND_job_limit_default
+            self.DIAMOND_job_limit = DETECT_job_limit_default
