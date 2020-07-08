@@ -181,16 +181,17 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
 def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack):
     paths = mpp.tool_path_obj(config_path)
     no_host = args_pack["no_host"]
-    keep_second_split = args_pack["keep_second_split"]
     verbose_mode = args_pack["verbose_mode"]
-    infernal_limit = args_pack["infernal_limit"]
-    chunks = paths.chunk_size
+    rRNA_chunks = paths.chunk_size
     BWA_mem_threshold = paths.BWA_mem_threshold
     BLAT_mem_threshold = paths.BLAT_mem_threshold
     DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
+    Infernal_mem_threshold = paths.Infernal_mem_threshold
+    
     BWA_job_limit = int(paths.BWA_job_limit)
     BLAT_job_limit = int(paths.BLAT_job_limit)
     DIAMOND_job_limit = int(paths.DIAMOND_job_limit)
+    Infernal_job_limit = int(paths.Infernal_job_limit)
     
     if not single_path == "":
         read_mode = "single"
@@ -244,7 +245,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     host_filter_label                       = "host_read_filter"
     vector_filter_label                     = "vector_read_filter"
     rRNA_filter_label                       = "rRNA_filter"
-    rRNA_filter_second_split_label          = "rRNA_filter_second_split"
+    rRNA_filter_split_label                 = "rRNA_filter_split"
     rRNA_filter_barrnap_label               = "rRNA_filter_barrnap"
     rRNA_filter_infernal_label              = "rRNA_filter_infernal"
     rRNA_filter_post_label                  = "rRNA_filter_post"
@@ -282,9 +283,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = rRNA_chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
     elif read_mode == "paired":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = chunks, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = rRNA_chunks, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
     
 
     # This is the format we use to launch each stage of the pipeline.
@@ -415,140 +416,132 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for section in reversed(sections):  #we go backwards due to a request by Ana.  pairs first, if applicable, then singletons
             #split the data, if necessary.
             #initial split -> by lines.  we can do both
-            split_path = os.path.join(rRNA_filter_path, "data", section, section + "_fastq")
-            second_split_path = os.path.join(rRNA_filter_path, "data", section, section + "_second_split_fastq")
+            split_path = os.path.join(rRNA_filter_path, "data", section + "_fastq")
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_barrnap")
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section, section + "_infernal") 
             
             #if not check_where_resume(job_label = None, full_path = second_split_path, dep_job_path = vector_path):
-            if check_bypass_log(output_folder_path, rRNA_filter_second_split_label + "_" + section):
+            if check_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + section):
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
                 inner_name = "rRNA_filter_prep_" + section
                 process = mp.Process(
-                    target = commands.create_and_launch,
+                    target = commands.launch_only,
                     args = (
                         rRNA_filter_label,
-                        commands.create_rRNA_filter_prep_command_v2(rRNA_filter_label, section, vector_filter_label),
+                        commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks),
                         True,
                         inner_name
                     )
                 )
         
                 process.start()
-                process.join()
-                write_to_bypass_log(output_folder_path, rRNA_filter_second_split_label + "_" + section)
-                
-            #secondary split -> number of files
-                concurrent_job_count = 0
-                cumulative_job_count = 0
-                batch_count = 0
-                
-                for item in os.listdir(split_path):
-                    #second_split_path = os.path.split(
-                    inner_name = "rRNA_filter_prep_2_" + section + "_" + str(cumulative_job_count)
-                    full_item_path = os.path.join(split_path, item)
-                    print(dt.today(), "full item path:", full_item_path)
-                    cumulative_job_count += 1
-                    process = mp.Process(
-                        target = commands.create_and_launch,
-                        args = (
-                            rRNA_filter_label,
-                            commands.create_rRNA_filter_prep_command_2nd_split(rRNA_filter_label, section, full_item_path,  40),
-                            True,
-                            inner_name
-                        )
-                    )
-                    mp_store.append(process)
-                    process.start()
-                    concurrent_job_count += 1
-                    if(concurrent_job_count >= infernal_limit):
-                        for p_item in mp_store:
-                            p_item.join()
-                        mp_store[:] = []
-                        concurrent_job_count = 0
-                        print(dt.today(), "waiting for rRNA second split to finish running.  batch:", batch_count)
-                        batch_count += 1
-                        print(dt.today(), "pausing for 2 seconds to let things settle")
-                        time.sleep(2)
-                        print(dt.today(), "pause over.  resuming")
-                        
-                for p_item in mp_store:
-                    p_item.join()
-                mp_store[:] = []
+                mp_store.append(process)
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
         
+        for element in sections:
+            if check_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + element):
+                write_to_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + element)
+            
         
+        #-------------------------------------------------------------------------------------------------
+        # BARRNAP
+        for section in reversed(sections):  
+            #split the data, if necessary.
+            #initial split -> by lines.  we can do both
+            split_path = os.path.join(rRNA_filter_path, "data", section + "_fastq")
+            barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_barrnap")
+            infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal") 
+
             #if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
             if check_bypass_log(output_folder_path, rRNA_filter_barrnap_label + "_" + section):
                 concurrent_job_count = 0
                 batch_count = 0
-                for item in os.listdir(second_split_path):
-                    print(dt.today(), "barrnap looking at:", item)
-                    inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
-                    print(dt.today(), "barrnap job script name", inner_name)
-                    print("rRNA filter inner name:", inner_name)
-                    
-                    process = mp.Process(
-                        target=commands.create_and_launch,
-                        args=(
-                            rRNA_filter_label,
-                            commands.create_rRNA_filter_barrnap_command("rRNA_filter", section, item, vector_filter_label),
-                            True,
-                            inner_name
-                        )
-                    )
-                    mp_store.append(process)
-                    process.start()
-                    
-                    concurrent_job_count += 1
-                    if(concurrent_job_count >= infernal_limit): 
-                        print(dt.today(), "letting a batch job run: barrnap", batch_count)
-                        for p_item in mp_store:
-                            p_item.join()
-                        mp_store[:] = []  # clear the list    
-                        concurrent_job_count = 0
-                        batch_count += 1
-                        
-                        print(dt.today(), "pausing barrnap for 2 seconds to let things settle")
-                        time.sleep(2)
-                        print(dt.today(), "brakes off.  continue barrnap")
+                for item in os.listdir(split_path):
+                    job_submitted = False
+                    while(not job_submitted):
+                        if(len(mp_store) < Infernal_job_limit):
+                            if(mem_checker(Infernal_mem_threshold)):
+                                #print(dt.today(), "barrnap looking at:", item)
+                                inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
+                                #print("rRNA filter inner name:", inner_name)
+                                
+                                process = mp.Process(
+                                    target=commands.launch_only,
+                                    args=(
+                                        rRNA_filter_label,
+                                        commands.create_rRNA_filter_barrnap_command("rRNA_filter", section, item, vector_filter_label),
+                                        True,
+                                        inner_name
+                                    )
+                                )
+                                process.start()
+                                mp_store.append(process)
+                                print(dt.today(), "launching barrnap job:", inner_name)
+                                job_submitted = True
+                            else:
+                                print(dt.today(), "mem limit reached.  holding here:", inner_name)
+                                time.sleep(5)
+                                
+                        else:
+                            print(dt.today(), "concurrent Barrnap jobs at its limit")
+                            for p_item in mp_store:
+                                p_item.join()
+                            mp_store[:] = []  # clear the list
                         
                 print(dt.today(), "final batch: barrnap")
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list    
                 write_to_bypass_log(output_folder_path, rRNA_filter_barrnap_label + "_" + section)
-                
-                
+        
+        #----------------------------------------------------------------------------
+        # INFERNAL
+        for section in reversed(sections):  
+            #split the data, if necessary.
+            #initial split -> by lines.  we can do both
+            split_path = os.path.join(rRNA_filter_path, "data", section + "_fastq")
+            barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_barrnap")
+            infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal") 
+
+        
             #if not check_where_resume(job_label = None, full_path = infernal_path):#, dep_job_path = barrnap_path):
             if check_bypass_log(output_folder_path, rRNA_filter_infernal_label + "_" + section):
                 concurrent_job_count = 0
                 batch_count = 0
                 #these jobs now have to be launched in segments
-                for item in os.listdir(second_split_path):
-                    inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
-                    print("rRNA filter inner name:", inner_name)
-                    
-                    process = mp.Process(
-                        target=commands.create_and_launch,
-                        args=(
-                            rRNA_filter_label,
-                            commands.create_rRNA_filter_infernal_command("rRNA_filter", section, item, vector_filter_label),
-                            True,
-                            inner_name
-                        )
-                    )
-                    mp_store.append(process)
-                    process.start()
-                    concurrent_job_count += 1
-                    if(concurrent_job_count >= infernal_limit):
+                for item in os.listdir(split_path):
+                
+                    job_submitted = False
+                    while(not job_submitted):
+                        if(len(mp_store) < Infernal_job_limit):
+                            if(mem_checker(Infernal_mem_threshold)):
+                                inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
+                                print("rRNA filter inner name:", inner_name)
+                                
+                                process = mp.Process(
+                                    target=commands.launch_only,
+                                    args=(
+                                        rRNA_filter_label,
+                                        commands.create_rRNA_filter_infernal_command("rRNA_filter", section, item, vector_filter_label),
+                                        True,
+                                        inner_name
+                                    )
+                                )
+                                mp_store.append(process)
+                                process.start()
+                                job_submitted = True
+                            else:
+                                print(dt.today(), "mem limit reached for Infernal.  pausing here")
+                                time.sleep(5)
+                        else:
+                            print(dt.today(), "concurrent Infernal job limit reached")
+                            for p_item in mp_store:
+                                p_item.join()
+                            mp_store[:] = []  # clear the list
                         
-                        print(dt.today(), "letting small batch of jobs run: infernal", batch_count)
-                        for p_item in mp_store:
-                            p_item.join()
-                        mp_store[:] = []  # clear the list
-                        batch_count += 1
-                        concurrent_job_count = 0
-                        
+                            
                 print(dt.today(), "final batch: infernal")
                 for p_item in mp_store:
                     p_item.join()
@@ -571,14 +564,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.join()
             write_to_bypass_log(output_folder_path, rRNA_filter_post_label)
         
-        if not (keep_second_split):
-            print("deleting rRNA second split")
-            for item in sections:
-                second_split_path = os.path.join(rRNA_filter_path, "data", section, section + "_second_split_fastq")
-                if(os.path.exists(second_split_path)):
-                    shutil.rmtree(second_split_path)
-                else:
-                    print(dt.today(), "already deleted:", second_split_path)
+        
+        
         write_to_bypass_log(output_folder_path, rRNA_filter_label)
         cleanup_rRNA_filter_start = time.time()
         if(verbose_mode == "quiet"):
@@ -1586,8 +1573,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--num_threads", type=int, help="Maximum number of threads used by the pipeline")
     parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
     parser.add_argument("--verbose_mode", type=str, help = "Decide how to handle the interim files, Compress them, or leave them alone.  Values are: keep, compress, quiet")
-    parser.add_argument("-it", "--infernal_threads", type = int, help = "number of threads allowed for rRNA")
-    parser.add_argument("-keep_second_split", action = 'store_true', help = "keep the interim second-split rRNA data")
+
     args = parser.parse_args()
 
     if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
@@ -1605,8 +1591,7 @@ if __name__ == "__main__":
     num_threads     = args.num_threads if args.num_threads else 0
     no_host         = args.nhost if args.nhost else False
     verbose_mode    = args.verbose_mode if args.verbose_mode else "quiet"
-    keep_second_split = args.keep_second_split if args.keep_second_split else False
-    infernal_limit  = args.infernal_threads if args.infernal_threads else 40
+
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
         os.makedirs(output_folder)
@@ -1627,7 +1612,6 @@ if __name__ == "__main__":
     args_pack = dict()
     args_pack["no_host"] = no_host
     args_pack["verbose_mode"] = verbose_mode
-    args_pack["keep_second_split"] = keep_second_split
-    args_pack["infernal_limit"] = infernal_limit
+    
     
     main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack)

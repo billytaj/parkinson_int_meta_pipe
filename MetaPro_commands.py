@@ -36,7 +36,7 @@ class mt_pipe_commands:
         self.Qual_str = str(Quality_score)
         self.Output_Path = os.getcwd()
         self.Threads_str = str(Thread_count)
-        self.chunk_size = str(chunk_size)
+        self.rRNA_chunks = str(chunk_size)
 
         print("Output filepath:", self.Output_Path)
 
@@ -877,7 +877,7 @@ class mt_pipe_commands:
         base_name = os.path.basename(file_to_split)
         real_base = os.path.splitext(base_name)[0]
         second_output_path = os.path.join(second_split_folder, real_base)
-        
+        #this operates on fastq.  Jul 8, 2020: fastq split now done on constant chunksize
         split_data = ">&2 echo splitting data into chunks: " + category + " | "
         split_data += self.tool_path_obj.Python + " "
         split_data += self.tool_path_obj.File_splitter + " "
@@ -898,30 +898,26 @@ class mt_pipe_commands:
         
         
         
-        
-    def create_rRNA_filter_prep_command_v2(self, stage_name, category, dependency_name):
+    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, chunks):
+        #split the data into tiny shards
         dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
-        split_folder            = os.path.join(data_folder, category, category + "_fastq")
+        split_folder            = os.path.join(data_folder, category + "_fastq")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
-        #arbitrary limit of 80000 lines  Infernal has an upper bound on what it can handle.  it's not 100k
         
-        split_fastq = ">&2 echo splitting fastq for " + category + " | "
-        split_fastq += "split -l 80000" + " "        
+        split_fastq = ">&2 echo splitting fastq for " + category + " | " 
+        split_fastq += self.tool_path_obj.Python + " "
+        split_fastq += self.tool_path_obj.File_splitter + " "
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
-        split_fastq += "--additional-suffix .fastq" + " "
-        split_fastq += "-d" + " "
-        split_fastq += os.path.join(split_folder, category + "_")
+        split_fastq += os.path.join(split_folder, category) + " "
+        split_fastq += self.rRNA_chunks
         
-        COMMANDS_rRNA_prep = [
-            split_fastq
-        ]
+        return [split_fastq]
         
-        return COMMANDS_rRNA_prep
     
     def create_rRNA_filter_barrnap_command(self, stage_name, category, fastq_name, dependency_name):
         # converts the fastq segments to fasta for infernal,
@@ -933,9 +929,9 @@ class mt_pipe_commands:
         # stage_name -> "rRNA_Filter"
         dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder           = os.path.join(self.Output_Path, stage_name)
-        data_folder         = os.path.join(subfolder, "data", category)
+        data_folder         = os.path.join(subfolder, "data")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
-        fastq_folder        = os.path.join(data_folder, category + "_second_split_fastq")
+        fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
         mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
@@ -1019,7 +1015,7 @@ class mt_pipe_commands:
     
         dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder           = os.path.join(self.Output_Path, stage_name)
-        data_folder         = os.path.join(subfolder, "data", category)
+        data_folder         = os.path.join(subfolder, "data")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
@@ -1080,12 +1076,12 @@ class mt_pipe_commands:
         pre_filter_folder       = os.path.join(data_folder, "0_pre_singletons")
         pre_filter_mRNA_folder  = os.path.join(pre_filter_folder, "mRNA")
         pre_filter_rRNA_folder  = os.path.join(pre_filter_folder, "rRNA")
-        singletons_mRNA_folder  = os.path.join(data_folder, "singletons", "singletons_mRNA")
-        singletons_rRNA_folder  = os.path.join(data_folder, "singletons", "singletons_rRNA")
-        pair_1_mRNA_folder      = os.path.join(data_folder, "pair_1", "pair_1_mRNA")
-        pair_1_rRNA_folder      = os.path.join(data_folder, "pair_1", "pair_1_rRNA")
-        pair_2_mRNA_folder      = os.path.join(data_folder, "pair_2", "pair_2_mRNA")
-        pair_2_rRNA_folder      = os.path.join(data_folder, "pair_2", "pair_2_rRNA")
+        singletons_mRNA_folder  = os.path.join(data_folder, "singletons_mRNA")
+        singletons_rRNA_folder  = os.path.join(data_folder, "singletons_rRNA")
+        pair_1_mRNA_folder      = os.path.join(data_folder, "pair_1_mRNA")
+        pair_1_rRNA_folder      = os.path.join(data_folder, "pair_1_rRNA")
+        pair_2_mRNA_folder      = os.path.join(data_folder, "pair_2_mRNA")
+        pair_2_rRNA_folder      = os.path.join(data_folder, "pair_2_rRNA")
         final_folder            = os.path.join(subfolder, "final_results")
         final_mRNA_folder       = os.path.join(final_folder, "mRNA")
         final_rRNA_folder       = os.path.join(final_folder, "rRNA")
@@ -2552,6 +2548,7 @@ class mt_pipe_commands:
         ec_folder               = os.path.join(self.Output_Path, ec_stage, "final_results")
         final_gene_map_folder   = os.path.join(data_folder, "4_convert_gene_map")
         clean_ec_folder         = os.path.join(data_folder, "5_cleaned_ec")
+        final_folder            = os.path.join(subfolder, "final_results")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -2561,14 +2558,14 @@ class mt_pipe_commands:
         clean_ec_all += self.tool_path_obj.Python + " "
         clean_ec_all += self.tool_path_obj.output_filter_ECs + " "
         clean_ec_all += os.path.join(ec_folder, "proteins.ECs_All") + " "
-        clean_ec_all += os.path.join(final_gene_map_folder, "final_gene_map.tsv") + " "
+        clean_ec_all += os.path.join(final_folder, "final_gene_map.tsv") + " "
         clean_ec_all += os.path.join(clean_ec_folder, "cleaned_proteins.ECs_All")
 
         clean_lq_ec = ">&2 echo Cleaning LQ ECs | "
         clean_lq_ec += self.tool_path_obj.Python + " "
         clean_lq_ec += self.tool_path_obj.output_filter_ECs + " "
         clean_lq_ec += os.path.join(ec_folder, "lq_proteins.ECs_All") + " "
-        clean_lq_ec += os.path.join(final_gene_map_folder, "final_gene_map.tsv") + " "
+        clean_lq_ec += os.path.join(final_folder, "final_gene_map.tsv") + " "
         clean_lq_ec += os.path.join(clean_ec_folder, "cleaned_lq_proteins.ECs_All")
         
         return [clean_ec_all, clean_lq_ec]
