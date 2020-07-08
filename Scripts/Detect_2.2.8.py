@@ -492,15 +492,19 @@ if __name__=="__main__":
     needle = args.needle if args.needle else "needle"
     DETECT_mem_limit = int(args.mem_limit) if args.mem_limit else 50
     
+    print(dt.today(), "mem limit used:", DETECT_mem_limit, "%")
+    
+    
     dump_dir = args.dump_dir
     if not(dump_dir.endswith("/")):
         dump_dir += "/"
     make_folder(dump_dir) #make if doesn't exist
     if(args.n_count):
         n_count = int(args.n_count)
-    else:
-        n_count = 0
         
+    else:
+        n_count = 80
+    print(dt.today(), "concurrency used:", n_count)    
     
         
     sequences = split_fasta(args.target_file)
