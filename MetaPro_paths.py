@@ -172,12 +172,14 @@ class tool_path_obj:
         BLAT_mem_default = 10 #100MB
         DIAMOND_mem_default = 50 #60GB
         DETECT_mem_default = 50
+        Infernal_mem_default = 50
         
         chunk_size_default = 10000
         BWA_job_limit_default = 80
         BLAT_job_limit_default = 80
         DIAMOND_job_limit_default = 80
         DETECT_job_limit_default = 1000
+        Infernal_job_limit_default = 1000
         
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
@@ -198,6 +200,17 @@ class tool_path_obj:
                 self.DIAMOND_mem_threshold  = config["Settings"]["DIAMOND_mem_threshold"] if config["Settings"]["DIAMOND_mem_threshold"] or config["Settings"]["DIAMOND_mem_threshold"] == "" else DIAMOND_mem_default
             except KeyError:
                 self.DIAMOND_mem_threshold = DIAMOND_mem_default
+                
+            try:
+                self.DETECT_mem_threshold = config["Settings"]["DETECT_mem_threshold"] if config["Settings"]["DETECT_mem_threshold"] or config["Settings"]["DETECT_mem_threshold"] == "" else DETECT_mem_default
+            except KeyError:
+                self.DETECT_mem_threshold = DETECT_mem_default
+            
+            try:
+                self.Infernal_mem_threshold = config["Settings"]["Infernal_mem_threshold"] if config["Settings"]["Infernal_mem_threshold"] or config["Settings"]["Infernal_mem_threshold"] == "" else Infernal_mem_default
+            except KeyError:
+                self.Infernal_mem_threshold = Infernal_mem_default
+                
                 
             try:
                 self.chunk_size  = config["Settings"]["chunk_size"] if config["Settings"]["chunk_size"] or config["Settings"]["chunk_size"] == "" else chunk_size_default
@@ -225,11 +238,9 @@ class tool_path_obj:
                 self.DETECT_job_limit = DETECT_job_limit_default
             
             try:
-                self.DETECT_mem_threshold = config["Settings"]["DETECT_mem_threshold"] if config["Settings"]["DETECT_mem_threshold"] or config["Settings"]["DETECT_mem_threshold"] == "" else DETECT_mem_default
+                self.Infernal_job_limit = config["Settings"]["Infernal_job_limit"] if config["Settings"]["Infernal_job_limit"] or config["Settings"]["Infernal_job_limit"] == "" else Infernal_job_limit_default
             except KeyError:
-                self.DETECT_mem_threshold = DETECT_mem_default
-            
-            
+                self.Infernal_job_limit = Infernal_job_limit_default
                     
             
         else:
@@ -241,8 +252,10 @@ class tool_path_obj:
             self.BLAT_mem_threshold = BLAT_mem_default
             self.DIAMOND_mem_threshold = DIAMOND_mem_default
             self.DETECT_mem_threshold = DETECT_mem_default
+            self.Infernal_mem_threshold = Infernal_mem_default
             self.chunk_size = chunk_size_default
             self.BWA_job_limit = BWA_job_limit_default
             self.BLAT_job_limit = BLAT_job_limit_default
             self.DIAMOND_job_limit = DIAMOND_job_limit_default
             self.DIAMOND_job_limit = DETECT_job_limit_default
+            self.Infernal_job_limit = Infernal_job_limit_default
