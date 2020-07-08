@@ -16,20 +16,23 @@ import sys
 import pandas as pd
 from datetime import datetime as dt
 
-def split_fastq(file_name_in, file_name_out, split_count = 4):
+def split_fastq(file_name_in, file_name_out, chunks):#split_count = 4):
     print(dt.today(), "FASTQ file name in:", file_name_in)
     #FASTQ has 4 lines per entry.
     file_base_name = os.path.splitext(file_name_in)[0]
     fastq_df = pd.read_csv(file_name_in, header=None, names=[None], sep="\n", skip_blank_lines = False, quoting=3)
     fastq_df = pd.DataFrame(fastq_df.values.reshape(int(len(fastq_df)/4), 4))
     #At this point, we've already got the number of reads.
-    chunks = m.ceil(len(fastq_df) / split_count) #how many sequences each split file will have
-    print("total df length:", len(fastq_df))
+    #chunks = m.ceil(len(fastq_df) / split_count) #how many sequences each split file will have
+    #print("total df length:", len(fastq_df))
     print("chunk size:", chunks)
     if(chunks < 1):
-        print("split count too large. not enough info to split")
-        chunks = 1
-        print("new split count:", split_count)
+        print(dt.today(), "chunks is set to a default of 10000.  originally:", chunks)
+        chunks = 10000
+    #if(chunks < 1):
+    #    print("split count too large. not enough info to split")
+    #    chunks = 1
+    #    print("new split count:", split_count)
         
     for i in range(0, split_count):
         print("working on segment :", i+1, "of", split_count)

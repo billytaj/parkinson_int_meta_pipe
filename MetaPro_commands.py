@@ -877,7 +877,7 @@ class mt_pipe_commands:
         base_name = os.path.basename(file_to_split)
         real_base = os.path.splitext(base_name)[0]
         second_output_path = os.path.join(second_split_folder, real_base)
-        
+        #this operates on fastq.  Jul 8, 2020: fastq split now done on constant chunksize
         split_data = ">&2 echo splitting data into chunks: " + category + " | "
         split_data += self.tool_path_obj.Python + " "
         split_data += self.tool_path_obj.File_splitter + " "
@@ -922,6 +922,26 @@ class mt_pipe_commands:
         ]
         
         return COMMANDS_rRNA_prep
+        
+    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name):
+        #split the data into tiny shards
+        dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
+        subfolder               = os.path.join(self.Output_Path, stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        split_folder            = os.path.join(data_folder, category + "_fastq")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(split_folder)
+        
+        split_fastq = ">&2 echo splitting fastq for " + category + " | " 
+        split_fastq += self.tool_path_obj.Python + " "
+        split_fastq += self.tool_path_obj.split_data += self.tool_path_obj.File_splitter + " "
+        split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
+        split_fastq += os.path.join(split_folder, category)
+        
+        return [split_fastq]
+        
     
     def create_rRNA_filter_barrnap_command(self, stage_name, category, fastq_name, dependency_name):
         # converts the fastq segments to fasta for infernal,
