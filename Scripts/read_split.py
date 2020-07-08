@@ -39,7 +39,7 @@ def split_fastq(file_name_in, file_name_out, chunks):#split_count = 4):
     while(True):
         print("working on segment :", index_count +1, "of fastq splitter")
         #fancy naming
-        new_file_name = file_name_out + "_" + str(i) + ".fastq"
+        new_file_name = file_name_out + "_" + str(index_count) + ".fastq"
         if(split_count == 1):
             new_file_name = file_name_out + ".fastq"
         #split file by selective selection, and writing
