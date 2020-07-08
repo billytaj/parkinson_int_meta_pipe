@@ -9,7 +9,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/o
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/MetaPro_paths.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/MetaPro_commands.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/Config.ini /pipeline
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/Scripts/Detect_2.2.7.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/Scripts/Detect_2.2.8.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/Scripts/assembly_map.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/output_filter_genes/Scripts/ea_combine_v4.py /pipeline/Scripts

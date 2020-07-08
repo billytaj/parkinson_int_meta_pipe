@@ -122,7 +122,7 @@ class tool_path_obj:
             self.Kaiju          = os.path.join(tool_path, "kaiju/kaiju")
             self.Centrifuge     = os.path.join(tool_path, "centrifuge/centrifuge")
             self.Priam          = os.path.join(tool_path, "PRIAM_search/PRIAM_search.jar")
-            self.Detect         = os.path.join(script_path, "Detect_2.2.7.py")
+            self.Detect         = os.path.join(script_path, "Detect_2.2.8.py")
             self.BLAST_dir      = os.path.join(tool_path, "BLAST_p")
             self.WEVOTE         = os.path.join(tool_path, "WEVOTE/WEVOTE")
             self.Spades         = os.path.join(tool_path, "SPAdes/bin/spades.py")
