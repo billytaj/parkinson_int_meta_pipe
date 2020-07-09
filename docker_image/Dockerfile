@@ -23,9 +23,9 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/S
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_convert_gene_map_contig_segments.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_data_change_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_EC_metrics.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_read_counts.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_filter_ECs.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_filter_taxa.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_read_counts.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_read_quality_metrics.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_taxa_table.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/develop/Scripts/output_table_v3.py /pipeline/Scripts
