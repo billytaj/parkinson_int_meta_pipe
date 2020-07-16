@@ -34,6 +34,8 @@ def import_gene_map(gene_map_file):
             gene = line_split[0]
             length = line_split[1]
             reads = line_split[3:]
+            reads = [x for x in reads if x]
+            #print("reads:", reads)
             
             if(gene in gene_dict):
                 print("This shouldn't happen.  gene already scanned???")
@@ -57,18 +59,20 @@ if __name__ == "__main__":
     final_map_dict = dict()
     
     for gene in gene_dict:
-        reads = gene_dict[gene]
+        cleaned_reads = gene_dict[gene]
         final_reads = []
-        for read in reads:
+        read_count = 0
+        for read in cleaned_reads:
+            
             if(read.startswith("gene")):
                 if(read in contig_dict):
                     if(gene in final_count_dict):
                         #print("append contig count:", read, contig_count_dict[read])
-                        final_count_dict[gene] += float(contig_count_dict[read])
+                        read_count += float(contig_count_dict[read])
                         #time.sleep(1)
                     else:
                         #print("new contig count:", read, contig_count_dict[read])
-                        final_count_dict[gene] = float(contig_count_dict[read])
+                        read_count = float(contig_count_dict[read])
                         #time.sleep(1)
                         
                     contig_reads = contig_dict[read]
@@ -77,16 +81,22 @@ if __name__ == "__main__":
                 else:
                     #print("contig didn't pass QC in contig map formation.  No reads assigned")
                     if(gene in final_count_dict):
-                        final_count_dict[gene] += 0
+                        read_count += 0
                     else:
-                        final_count_dict[gene] = 0
+                        read_count = 0
             else:
                 final_reads.append(read)
-                if(gene in final_count_dict):
-                    final_count_dict[gene] += 1
+                if(gene in final_map_dict):
+                    read_count += 1
                 else:
-                    final_count_dict[gene] = 1
-            final_map_dict[gene] = final_reads        
+                    read_count = 1
+            final_map_dict[gene] = final_reads
+            #time.sleep(1)
+            #print("===========================================")
+            #print(gene, cleaned_reads, "looking at:", read)
+            #print("read count:",read_count)
+        final_count_dict[gene] = read_count   
+        
                     
     with open(gene_map_export, "w") as out_file:
         header = "gene" + "\t" + "length" + "\t" + "count" + "\t" + "reads" + "\n"
