@@ -655,7 +655,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
        
     cleanup_assemble_contigs_start = time.time()
-    assemble_contigs_data_path = os.join(assemble_contigs_path, "data")
+    assemble_contigs_data_path = os.path.join(assemble_contigs_path, "data")
     if(keep_all == "no" and keep_assemble_contigs == "no"):
         delete_folder(assemble_contigs_data_path)
     elif(keep_all == "compress" or keep_assemble_contigs == "compress"):
@@ -817,7 +817,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_pp_label)
         
     cleanup_GA_BWA_start = time.time()
-    gene_annotation_BWA_data_path = os.join(gene_annotation_BWA_path, "data")
+    gene_annotation_BWA_data_path = os.path.join(gene_annotation_BWA_path, "data")
     if(keep_all == "no" and keep_GA_BWA == "no"):
         delete_folder(gene_annotation_BWA_data_path)
     elif(keep_all == "compress" or keep_GA_BWA == "compress"):
