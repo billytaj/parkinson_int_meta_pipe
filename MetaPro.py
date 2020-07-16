@@ -193,6 +193,23 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     DIAMOND_job_limit = int(paths.DIAMOND_job_limit)
     Infernal_job_limit = int(paths.Infernal_job_limit)
     
+    #-----------------------------------------------------
+    keep_all                = paths.keep_all
+    keep_quality            = paths.keep_quality
+    keep_vector             = paths.keep_vector
+    keep_host               = paths.keep_host
+    keep_rRNA               = paths.keep_rRNA
+    keep_repop              = paths.keep_repop
+    keep_assemble_contigs   = paths.keep_assemble_contigs
+    keep_GA_BWA             = paths.keep_GA_BWA
+    keep_GA_BLAT            = paths.keep_GA_BLAT
+    keep_GA_DIAMOND         = paths.keep_GA_DIAMOND
+    keep_GA_final           = paths.keep_GA_final
+    keep_TA                 = paths.keep_TA
+    keep_EC                 = paths.keep_EC
+    keep_outputs            = paths.keep_outputs
+    
+    
     if not single_path == "":
         read_mode = "single"
         quality_encoding = determine_encoding(single_path)
@@ -309,9 +326,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         process.join()  # wait for it to end
         write_to_bypass_log(output_folder_path, quality_filter_label)
         cleanup_quality_start = time.time()
-        if(verbose_mode == "quiet"):
+        if(keep_all == "no" and keep_quality == "no"):
             delete_folder(quality_path)
-        elif(verbose_mode == "compress"):
+        elif(keep_all == "compress" or keep_quality == "compress"):
             compress_folder(quality_path)
             delete_folder(quality_path)
         cleanup_quality_end = time.time()
@@ -338,9 +355,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.join()  # wait for it to end
             write_to_bypass_log(output_folder_path, host_filter_label)
             cleanup_host_start = time.time()
-            if(verbose_mode == "quiet"):
+            if(keep_all == "no" and keep_host == "no"):
                 delete_folder(host_path)
-            elif(verbose_mode == "compress"):
+            elif(keep_all == "compress" or keep_host == "compress"):
                 compress_folder(host_path)
                 delete_folder(host_path)
             cleanup_host_end = time.time()
@@ -369,9 +386,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.join()  # wait for it to end
             write_to_bypass_log(output_folder_path, vector_filter_label)
             cleanup_vector_start = time.time()
-            if(verbose_mode == "quiet"):
+            if(keep_all == "no" and keep_vector == "no"):
                 delete_folder(vector_path)
-            elif(verbose_mode == "compress"):
+            elif(keep_all == "compress" or  keep_vector == "compress"):
                 compress_folder(vector_path)
                 delete_folder(vector_path)
             cleanup_vector_end = time.time()
@@ -391,9 +408,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             process.join()  # wait for it to end
             write_to_bypass_log(output_folder_path, vector_filter_label)
             cleanup_vector_start = time.time()
-            if(verbose_mode == "quiet"):
+            if(keep_all == "no" and keep_vector == "no"):
                 delete_folder(vector_path)
-            elif(verbose_mode == "compress"):
+            elif(keep_all == "compress" or keep_vector == "compress"):
                 compress_folder(vector_path)
                 delete_folder(vector_path)
             cleanup_vector_end = time.time()
@@ -568,9 +585,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         write_to_bypass_log(output_folder_path, rRNA_filter_label)
         cleanup_rRNA_filter_start = time.time()
-        if(verbose_mode == "quiet"):
+        if(keep_all == "no" and keep_rRNA == "no"):
             delete_folder(rRNA_filter_path)
-        elif(verbose_mode == "compress"):
+        elif(keep_all == "compress" or keep_rRNA == "compress"):
             compress_folder(rRNA_filter_path)
             delete_folder(rRNA_filter_path)
         cleanup_rRNA_filter_end = time.time()
@@ -598,9 +615,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, repop_job_label)
         
     cleanup_repop_start = time.time()
-    if(verbose_mode == "quiet"):
+    if(keep_all == "no" and keep_repop == "no"):
         delete_folder(repop_job_path)
-    elif(verbose_mode == "compress"):
+    elif(keep_all == "compress" or keep_repop == "compress"):
         compress_folder(repop_job_path)
         delete_folder(repop_job_path)
     cleanup_repop_end = time.time()
@@ -638,11 +655,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
        
     cleanup_assemble_contigs_start = time.time()
-    if(verbose_mode == "quiet"):
-        delete_folder(assemble_contigs_path)
-    elif(verbose_mode == "compress"):
+    assemble_contigs_data_path = os.join(assemble_contigs_path, "data")
+    if(keep_all == "no" and keep_assemble_contigs == "no"):
+        delete_folder(assemble_contigs_data_path)
+    elif(keep_all == "compress" or keep_assemble_contigs == "compress"):
         compress_folder(assemble_contigs_path)
-        delete_folder(assemble_contigs_path)
+        delete_folder(assemble_contigs_data_path)
     cleanup_assemble_contigs_end = time.time()
     assemble_contigs_end = time.time()
     print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
@@ -737,12 +755,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-
-       
         
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_label)
-        
-    
+            
     if check_bypass_log(output_folder_path, gene_annotation_BWA_pp_label):
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
@@ -802,11 +817,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, gene_annotation_BWA_pp_label)
         
     cleanup_GA_BWA_start = time.time()
-    if(verbose_mode == "quiet"):
-        delete_folder(gene_annotation_BWA_path)
-    elif(verbose_mode == "compress"):
+    gene_annotation_BWA_data_path = os.join(gene_annotation_BWA_path, "data")
+    if(keep_all == "no" and keep_GA_BWA == "no"):
+        delete_folder(gene_annotation_BWA_data_path)
+    elif(keep_all == "compress" or keep_GA_BWA == "compress"):
         compress_folder(gene_annotation_BWA_path)
-        delete_folder(gene_annotation_BWA_path)
+        delete_folder(gene_annotation_BWA_data_path)
     cleanup_GA_BWA_end = time.time()
     GA_BWA_end = time.time()
     print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
@@ -974,9 +990,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label)
 
     cleanup_GA_BLAT_start = time.time()
-    if(verbose_mode == "quiet"):
+    if(keep_all == "no" and keep_GA_BLAT == "no"):
         delete_folder(gene_annotation_BLAT_path)
-    elif(verbose_mode == "compress"):
+    elif(keep_all == "compress" or keep_GA_BLAT == "compress"):
         compress_folder(gene_annotation_BLAT_path)
         delete_folder(gene_annotation_BLAT_path)
     cleanup_GA_BLAT_end = time.time()
@@ -1081,9 +1097,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
     
     cleanup_GA_DIAMOND_start = time.time()
-    if(verbose_mode == "quiet"):
+    if(keep_all == "no" and keep_GA_DIAMOND == "no"):
         delete_folder(gene_annotation_DIAMOND_path)
-    elif(verbose_mode == "compress"):
+    elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
         compress_folder(gene_annotation_DIAMOND_path)
         delete_folder(gene_annotation_DIAMOND_path)
     cleanup_GA_DIAMOND_end = time.time()
@@ -1093,6 +1109,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     
     GA_final_merge_start = time.time()
+    gene_annotation_FINAL_MERGE_path = os.path.join(output_folder_path, gene_annotation_final_merge_label)
     if check_bypass_log(output_folder_path, gene_annotation_final_merge_label):
         final_merge_process = mp.Process(
             target = commands.create_and_launch, 
@@ -1112,8 +1129,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             print(dt.today(), "All_proteins.faa is OK.  Continuing")
         else:
             sys.exit("GA final merge failed.  proteins weren't translated")
+            
     GA_final_merge_end = time.time()
     print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")
+    if(keep_all == "no" and keep_GA_final == "no"):
+        delete_folder(gene_annotation_FINAL_MERGE_path)
+    elif(keep_all == "compress" or keep_GA_final == "compress"):
+        compress_folder(gene_annotation_FINAL_MERGE_path)
+        delete_folder(gene_annotation_FINAL_MERGE_path)
     
     # ------------------------------------------------------
     # Taxonomic annotation
@@ -1133,9 +1156,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         process.join()
         write_to_bypass_log(output_folder_path, taxon_annotation_label)
     cleanup_TA_start = time.time()
-    if(verbose_mode == "quiet"):
+    if(keep_all == "no" and keep_TA == "no"):
         delete_folder(taxon_annotation_path)
-    elif(verbose_mode == "compress"):
+    elif(keep_all == "compress" or keep_TA == "compress"):
         compress_folder(taxon_annotation_path)
         delete_folder(taxon_annotation_path)
     cleanup_TA_end = time.time()
@@ -1258,9 +1281,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         process.join()
         write_to_bypass_log(output_folder_path, ec_annotation_pp_label)
     cleanup_EC_start = time.time()
-    if(verbose_mode == "quiet"):
+    if(keep_all == "no" and keep_EC == "no"):
         delete_folder(ec_annotation_path)
-    elif(verbose_mode == "compress"):
+    elif(keep_all == "compress" or keep_EC == "compress"):
         compress_folder(ec_annotation_path)
         delete_folder(ec_annotation_path)
     cleanup_EC_end = time.time()
@@ -1507,9 +1530,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         conditional_write_to_bypass_log(output_ec_heatmap_label, "outputs/final_results", "EC_coverage.csv", output_folder_path)
         
     cleanup_cytoscape_start = time.time()
-    if(verbose_mode == "quiet"):
+    if(keep_all == "no" and keep_outputs == "no"):
         delete_folder(network_path)
-    elif(verbose_mode == "compress"):
+    elif(keep_all == "compress" or keep_outputs == "compress"):
         compress_folder(network_path)
         delete_folder(network_path)
     cleanup_cytoscape_end = time.time()

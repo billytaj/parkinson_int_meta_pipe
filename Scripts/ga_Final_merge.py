@@ -140,10 +140,6 @@ def convert_genes_to_proteins(mapped_gene_file):#, section, gene_trans_dict):
             print(dt.today(), gene_id, "protein longer than bp seq.  protein;", len(gene_trans_dict[gene_id]), "bp:", len(gene_seqs[gene].seq))
             sys.exit("this is real bad")
 
-
-    
-    
-
     return gene_trans_dict
         
         
