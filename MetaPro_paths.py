@@ -261,7 +261,7 @@ class tool_path_obj:
             
             #------------------------------------------------------------------------------------------------
             try:
-                self.keep_all = config["Settings"]["keep_all"] if config["Settings"]["keep_all"] or config["Settings"]["keep_all"] == "" else: keep_all
+                self.keep_all = config["Settings"]["keep_all"] if config["Settings"]["keep_all"] or config["Settings"]["keep_all"] == "" else: keep_all_default
             except KeyError:
                 self.keep_all = keep_all_default
                 
