@@ -261,72 +261,72 @@ class tool_path_obj:
             
             #------------------------------------------------------------------------------------------------
             try:
-                self.keep_all = config["Settings"]["keep_all"] if config["Settings"]["keep_all"] or config["Settings"]["keep_all"] == "" else: keep_all_default
+                self.keep_all = config["Settings"]["keep_all"] if config["Settings"]["keep_all"] or config["Settings"]["keep_all"] == "" else keep_all_default
             except KeyError:
                 self.keep_all = keep_all_default
                 
             try:
-                self.keep_quality = config["Settings"]["keep_quality"] if config["Settings"]["keep_quality"] or config["Settings"]["keep_quality"] == "" else: keep_quality_default
+                self.keep_quality = config["Settings"]["keep_quality"] if config["Settings"]["keep_quality"] or config["Settings"]["keep_quality"] == "" else keep_quality_default
             except KeyError:
                 self.keep_quality = keep_quality_default
                 
             try:
-                self.keep_host = config["Settings"]["keep_host"] if config["Settings"]["keep_host"] or config["Settings"]["keep_host"] == "" else: keep_host_default
+                self.keep_host = config["Settings"]["keep_host"] if config["Settings"]["keep_host"] or config["Settings"]["keep_host"] == "" else keep_host_default
             except KeyError:
                 self.keep_host = keep_host_default
                     
             try:
-                self.keep_vector = config["Settings"]["keep_vector"] if config["Settings"]["keep_vector"] or config["Settings"]["keep_vector"] == "" else: keep_vector_default
+                self.keep_vector = config["Settings"]["keep_vector"] if config["Settings"]["keep_vector"] or config["Settings"]["keep_vector"] == "" else keep_vector_default
             except KeyError:
                 self.keep_vector = keep_vector_default
             
             try:
-                self.keep_rRNA = config["Settings"]["keep_rRNA"] if config["Settings"]["keep_rRNA"] or config["Settings"]["keep_rRNA"] == "" else: keep_rRNA_default
+                self.keep_rRNA = config["Settings"]["keep_rRNA"] if config["Settings"]["keep_rRNA"] or config["Settings"]["keep_rRNA"] == "" else keep_rRNA_default
             except KeyError:
                 self.keep_rRNA = keep_rRNA_default
             
             try:
-                self.keep_repop = config["Settings"]["keep_repop"] if config["Settings"]["keep_repop"] or config["Settings"]["keep_repop"] == "" else: keep_repop_default
+                self.keep_repop = config["Settings"]["keep_repop"] if config["Settings"]["keep_repop"] or config["Settings"]["keep_repop"] == "" else keep_repop_default
             except KeyError:
                 self.keep_repop = keep_repop_default
             
             try:
-                self.keep_assemble_contigs = config["Settings"]["keep_assemble_contigs"] if config["Settings"]["keep_assemble_contigs"] or config["Settings"]["keep_assemble_contigs"] == "" else: keep_assemble_contigs_default
+                self.keep_assemble_contigs = config["Settings"]["keep_assemble_contigs"] if config["Settings"]["keep_assemble_contigs"] or config["Settings"]["keep_assemble_contigs"] == "" else keep_assemble_contigs_default
             except KeyError:
                 self.keep_assemble_contigs = keep_assemble_contigs_default
             
             try:
-                self.keep_GA_BWA = config["Settings"]["keep_GA_BWA"] if config["Settings"]["keep_GA_BWA"] or config["Settings"]["keep_GA_BWA"] == "" else: keep_GA_BWA_default
+                self.keep_GA_BWA = config["Settings"]["keep_GA_BWA"] if config["Settings"]["keep_GA_BWA"] or config["Settings"]["keep_GA_BWA"] == "" else keep_GA_BWA_default
             except KeyError:
                 self.keep_GA_BWA = keep_GA_BWA_default
             
             try:
-                self.keep_GA_BLAT = config["Settings"]["keep_GA_BLAT"] if config["Settings"]["keep_GA_BLAT"] or config["Settings"]["keep_GA_BLAT"] == "" else: keep_GA_BLAT_default
+                self.keep_GA_BLAT = config["Settings"]["keep_GA_BLAT"] if config["Settings"]["keep_GA_BLAT"] or config["Settings"]["keep_GA_BLAT"] == "" else keep_GA_BLAT_default
             except KeyError:
                 self.keep_GA_BLAT = keep_GA_BLAT_default
             
             try:
-                self.keep_GA_DIAMOND = config["Settings"]["keep_GA_DIAMOND"] if config["Settings"]["keep_GA_DIAMOND"] or config["Settings"]["keep_GA_DIAMOND"] == "" else: keep_GA_DIAMOND_default
+                self.keep_GA_DIAMOND = config["Settings"]["keep_GA_DIAMOND"] if config["Settings"]["keep_GA_DIAMOND"] or config["Settings"]["keep_GA_DIAMOND"] == "" else keep_GA_DIAMOND_default
             except KeyError:
                 self.keep_GA_DIAMOND = keep_GA_DIAMOND_default
                 
             try:
-                self.keep_GA_final = config["Settings"]["keep_GA_final"] if config["Settings"]["keep_GA_final"] or config["Settings"]["keep_GA_final"] == "" else: keep_gene_annotation_FINAL_MERGE_default
+                self.keep_GA_final = config["Settings"]["keep_GA_final"] if config["Settings"]["keep_GA_final"] or config["Settings"]["keep_GA_final"] == "" else keep_gene_annotation_FINAL_MERGE_default
             except KeyError:
                 self.keep_GA_final = keep_GA_final_default    
                 
             try:
-                self.keep_TA = config["Settings"]["keep_taxonomic_annotation"] if config["Settings"]["keep_taxonomic_annotation"] or config["Settings"]["keep_taxonomic_annotation"] == "" else: keep_TA_default
+                self.keep_TA = config["Settings"]["keep_taxonomic_annotation"] if config["Settings"]["keep_taxonomic_annotation"] or config["Settings"]["keep_taxonomic_annotation"] == "" else keep_TA_default
             except KeyError:
                 self.keep_TA = keep_TA_default    
             
             try:
-                self.keep_EC = config["Settings"]["keep_enzyme_annotation"] if config["Settings"]["keep_enzyme_annotation"] or config["Settings"]["keep_enzyme_annotation"] == "" else: keep_EC_default
+                self.keep_EC = config["Settings"]["keep_enzyme_annotation"] if config["Settings"]["keep_enzyme_annotation"] or config["Settings"]["keep_enzyme_annotation"] == "" else keep_EC_default
             except KeyError:
                 self.keep_EC = keep_EC_default
              
             try:
-                self.keep_outputs = config["Settings"]["keep_outputs"] if config["Settings"]["keep_outputs"] or config["Settings"]["keep_outputs"] == "" else: keep_outputs_default
+                self.keep_outputs = config["Settings"]["keep_outputs"] if config["Settings"]["keep_outputs"] or config["Settings"]["keep_outputs"] == "" else keep_outputs_default
             except KeyError:
                 self.keep_outputs = keep_outputs_default
              
