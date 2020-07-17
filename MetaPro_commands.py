@@ -37,6 +37,7 @@ class mt_pipe_commands:
         self.Output_Path = os.getcwd()
         self.Threads_str = str(Thread_count)
         self.rRNA_chunks = str(chunk_size)
+        self.chunk_size = chunk_size
 
         print("Output filepath:", self.Output_Path)
 
