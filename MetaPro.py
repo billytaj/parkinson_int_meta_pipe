@@ -209,6 +209,24 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     keep_EC                 = paths.keep_EC
     keep_outputs            = paths.keep_outputs
     
+    print("============================================================")
+    print("data cleaner options:")
+    print("keep all:", keep_all)
+    print("keep quality:", keep_quality)
+    print("keep vector:", keep_vector)
+    print("keep host:", keep_host)
+    print("keep rRNA:", keep_rRNA)
+    print("keep repop:", keep_repop)
+    print("keep assemble contigs:", keep_assemble_contigs)
+    print("keep GA BWA:", keep_GA_BWA)
+    print("keep GA BLAT:", keep_GA_BLAT)
+    print("keep GA DIAMOND:", keep_GA_DIAMOND)
+    print("keep GA final:", keep_GA_final)
+    print("keep TA:" keep_TA)
+    print("keep EC:", keep_EC)
+    print("keep outputs:", keep_outputs)
+    print("===============================================")
+    
     
     if not single_path == "":
         read_mode = "single"
