@@ -222,7 +222,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("keep GA BLAT:", keep_GA_BLAT)
     print("keep GA DIAMOND:", keep_GA_DIAMOND)
     print("keep GA final:", keep_GA_final)
-    print("keep TA:" keep_TA)
+    print("keep TA:", keep_TA)
     print("keep EC:", keep_EC)
     print("keep outputs:", keep_outputs)
     print("===============================================")
