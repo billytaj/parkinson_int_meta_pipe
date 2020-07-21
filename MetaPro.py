@@ -1445,18 +1445,19 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 conditional_write_to_bypass_log(output_unique_hosts_pair_2_label, "outputs/data/1_unique_hosts", "pair_2_hosts.fastq", output_folder_path)
         #----------------------------------------------------------------------------
         #Phase 2
-        if check_bypass_log(output_folder, output_combine_hosts_label):
-            inner_name = output_combine_hosts_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_combine_hosts_command(output_label),
-                    True,
-                    inner_name
+        if not(no_host):
+            if check_bypass_log(output_folder, output_combine_hosts_label):
+                inner_name = output_combine_hosts_label
+                process = mp.Process(
+                    target = commands.create_and_launch,
+                    args = (output_label,
+                        commands.create_output_combine_hosts_command(output_label),
+                        True,
+                        inner_name
+                    )
                 )
-            )
-            process.start()
-            mp_store.append(process)
+                process.start()
+                mp_store.append(process)
             
         if check_bypass_log(output_folder, output_clean_EC_label):
             inner_name = output_clean_EC_label
@@ -1475,8 +1476,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        conditional_write_to_bypass_log(output_combine_hosts_label, "outputs/2_full_hosts", "conbined_hosts.fastq", output_folder_path)
         conditional_write_to_bypass_log(output_clean_EC_label, "outputs/5_cleaned_ec", "cleaned_proteins.ECs_All", output_folder_path)
+        if not (no_host):
+            conditional_write_to_bypass_log(output_combine_hosts_label, "outputs/2_full_hosts", "conbined_hosts.fastq", output_folder_path)
+        
         
         #-------------------------------------------------------------------
         #Phase 3
