@@ -230,7 +230,7 @@ class tool_path_obj:
                 
                 
             try:
-                self.chunk_size  = config["Settings"]["chunk_size"] if config["Settings"]["chunk_size"] or config["Settings"]["chunk_size"] == "" else chunk_size_default
+                self.chunk_size  = config["Settings"]["rRNA_chunk_size"] if config["Settings"]["rRNA_chunk_size"] or config["Settings"]["rRNA_chunk_size"] == "" else chunk_size_default
             except KeyError:
                 self.chunk_size = chunk_size_default
                 
