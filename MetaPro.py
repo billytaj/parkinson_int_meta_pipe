@@ -494,36 +494,44 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 concurrent_job_count = 0
                 batch_count = 0
                 for item in os.listdir(split_path):
-                    job_submitted = False
-                    while(not job_submitted):
-                        if(len(mp_store) < Infernal_job_limit):
-                            if(mem_checker(Infernal_mem_threshold)):
-                                #print(dt.today(), "barrnap looking at:", item)
-                                inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
-                                #print("rRNA filter inner name:", inner_name)
-                                
-                                process = mp.Process(
-                                    target=commands.launch_only,
-                                    args=(
-                                        rRNA_filter_label,
-                                        commands.create_rRNA_filter_barrnap_command("rRNA_filter", section, item, vector_filter_label),
-                                        True,
-                                        inner_name
+                    root_name = item.split(".")[0]
+                    barrnap_final_file = root_name + "_barrnap_mRNA.fastq"
+                    barrnap_final_file_path = os.path.join(barrnap_path, barrnap_final_file)
+                    if(os.path.exists(barrnap_final_file_path)):
+                        print(dt.today(), "barrnap already run.  skipping:", item)
+                        continue
+                    
+                    else:
+                        job_submitted = False
+                        while(not job_submitted):
+                            if(len(mp_store) < Infernal_job_limit):
+                                if(mem_checker(Infernal_mem_threshold)):
+                                    #print(dt.today(), "barrnap looking at:", item)
+                                    inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
+                                    #print("rRNA filter inner name:", inner_name)
+                                    
+                                    process = mp.Process(
+                                        target=commands.launch_only,
+                                        args=(
+                                            rRNA_filter_label,
+                                            commands.create_rRNA_filter_barrnap_command("rRNA_filter", section, item, vector_filter_label),
+                                            True,
+                                            inner_name
+                                        )
                                     )
-                                )
-                                process.start()
-                                mp_store.append(process)
-                                print(dt.today(), "launching barrnap job:", inner_name)
-                                job_submitted = True
+                                    process.start()
+                                    mp_store.append(process)
+                                    print(dt.today(), "launching barrnap job:", inner_name)
+                                    job_submitted = True
+                                else:
+                                    print(dt.today(), "mem limit reached.  holding here:", inner_name)
+                                    time.sleep(5)
+                                    
                             else:
-                                print(dt.today(), "mem limit reached.  holding here:", inner_name)
-                                time.sleep(5)
-                                
-                        else:
-                            print(dt.today(), "concurrent Barrnap jobs at its limit")
-                            for p_item in mp_store:
-                                p_item.join()
-                            mp_store[:] = []  # clear the list
+                                print(dt.today(), "concurrent Barrnap jobs at its limit")
+                                for p_item in mp_store:
+                                    p_item.join()
+                                mp_store[:] = []  # clear the list
                         
                 print(dt.today(), "final batch: barrnap")
                 for p_item in mp_store:
@@ -546,35 +554,42 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 concurrent_job_count = 0
                 batch_count = 0
                 #these jobs now have to be launched in segments
-                for item in os.listdir(split_path):
-                
-                    job_submitted = False
-                    while(not job_submitted):
-                        if(len(mp_store) < Infernal_job_limit):
-                            if(mem_checker(Infernal_mem_threshold)):
-                                inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
-                                print("rRNA filter inner name:", inner_name)
-                                
-                                process = mp.Process(
-                                    target=commands.launch_only,
-                                    args=(
-                                        rRNA_filter_label,
-                                        commands.create_rRNA_filter_infernal_command("rRNA_filter", section, item, vector_filter_label),
-                                        True,
-                                        inner_name
+                for item in os.listdir(split_path):                    
+                    root_name = item.split(".")[0]
+                    infernal_out_file = root_name + ".infernal_out"
+                    infernal_out_path = os.path.join(infernal_path, infernal_out_file)
+                    if(os.path.exists(infernal_out_path)):
+                        print(dt.today(), "Infernal already ran on this sample.  skipping", item)
+                        continue
+                    
+                    else:
+                        job_submitted = False
+                        while(not job_submitted):
+                            if(len(mp_store) < Infernal_job_limit):
+                                if(mem_checker(Infernal_mem_threshold)):
+                                    inner_name = "rRNA_filter_infernal_" + item.split(".")[0]
+                                    print("rRNA filter inner name:", inner_name)
+                                    
+                                    process = mp.Process(
+                                        target=commands.launch_only,
+                                        args=(
+                                            rRNA_filter_label,
+                                            commands.create_rRNA_filter_infernal_command("rRNA_filter", section, item, vector_filter_label),
+                                            True,
+                                            inner_name
+                                        )
                                     )
-                                )
-                                mp_store.append(process)
-                                process.start()
-                                job_submitted = True
+                                    mp_store.append(process)
+                                    process.start()
+                                    job_submitted = True
+                                else:
+                                    print(dt.today(), "mem limit reached for Infernal.  pausing here")
+                                    time.sleep(5)
                             else:
-                                print(dt.today(), "mem limit reached for Infernal.  pausing here")
-                                time.sleep(5)
-                        else:
-                            print(dt.today(), "concurrent Infernal job limit reached")
-                            for p_item in mp_store:
-                                p_item.join()
-                            mp_store[:] = []  # clear the list
+                                print(dt.today(), "concurrent Infernal job limit reached")
+                                for p_item in mp_store:
+                                    p_item.join()
+                                mp_store[:] = []  # clear the list
                         
                             
                 print(dt.today(), "final batch: infernal")
