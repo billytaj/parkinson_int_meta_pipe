@@ -198,6 +198,12 @@ class tool_path_obj:
         
         delete_all_default = "no"
         
+        rRNA_job_delay_default = 5
+        BWA_job_delay_default = 5
+        BLAT_job_delay_default = 5
+        DIAMOND_job_delay_default = 5
+        DETECT_job_delay_default = 5
+        
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
             self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
@@ -329,6 +335,36 @@ class tool_path_obj:
                 self.keep_outputs = config["Settings"]["keep_outputs"] if config["Settings"]["keep_outputs"] or config["Settings"]["keep_outputs"] == "" else keep_outputs_default
             except KeyError:
                 self.keep_outputs = keep_outputs_default
+            
+            #------------------------------------------------------------------------
+            try:
+                self.rRNA_job_delay = config["Settings"]["rRNA_job_delay"] if config["Settings"]["rRNA_job_delay"] or config["Settings"]["rRNA_job_delay"] == "" else rRNA_job_delay_default
+            except KeyError:
+                self.rRNA_job_delay = rRNA_job_delay_default
+                
+            try:
+                self.BWA_job_delay = config["Settings"]["BWA_job_delay"] if config["Settings"]["BWA_job_delay"] or config["Settings"]["BWA_job_delay"] == "" else BWA_job_delay_default
+            except KeyError:
+                self.BWA_job_delay = BWA_job_delay_default
+                
+            try:
+                self.BLAT_job_delay = config["Settings"]["BLAT_job_delay"] if config["Settings"]["BLAT_job_delay"] or config["Settings"]["BLAT_job_delay"] == "" else BLAT_job_delay_default
+            except KeyError:
+                self.BLAT_job_delay = BLAT_job_delay_default
+                
+            try:
+                self.DIAMOND_job_delay = config["Settings"]["DIAMOND_job_delay"] if config["Settings"]["DIAMOND_job_delay"] or config["Settings"]["DIAMOND_job_delay"] == "" else DIAMOND_job_delay_default
+            except KeyError:
+                self.DIAMOND_job_delay = DIAMOND_job_delay_default
+                
+            try:
+                self.DETECT_job_delay = config["Settings"]["DETECT_job_delay"] if config["Settings"]["DETECT_job_delay"] or config["Settings"]["DETECT_job_delay"] == "" else DETECT_job_delay
+            except KeyError:
+                self.DETECT_job_delay = DETECT_job_delay_default
+                
+                
+                
+                
              
         else:
             self.target_rank = "genus"
@@ -361,3 +397,10 @@ class tool_path_obj:
             self.keep_TA = keep_TA_default
             self.keep_EC = keep_EC_default
             self.keep_outputs = keep_outputs_default
+            
+            self.rRNA_job_delay = rRNA_job_delay_default
+            self.BWA_job_delay = BWA_job_delay_default
+            self.BLAT_job_delay = BLAT_job_delay_default
+            self.DIAMOND_job_delay = DIAMOND_job_delay_default
+            self.DETECT_job_delay = DETECT_job_delay_default
+            

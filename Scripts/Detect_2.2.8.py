@@ -481,6 +481,8 @@ if __name__=="__main__":
     
     parser.add_argument("--mem_limit", type = int, help = "percentage of memory to maintain during the run")
     
+    parser.add_argument("--job_delay", tye = int, help = "time (seconds) to wait in between parallel jobs")
+    
     args = parser.parse_args()
     script_path = args.db if args.db else os.path.dirname(os.path.realpath(__file__))
 
@@ -491,6 +493,7 @@ if __name__=="__main__":
     blastp = args.blastp if args.blastp else "blastp"
     needle = args.needle if args.needle else "needle"
     DETECT_mem_limit = int(args.mem_limit) if args.mem_limit else 50
+    DETECT_job_delay = int(args.job_delay) if args.job_delay else 5
     
     print(dt.today(), "mem limit used:", DETECT_mem_limit, "%")
     
@@ -571,35 +574,36 @@ if __name__=="__main__":
         
     #    if verbose: 
     #        print( "[DETECT]: Analyzing {} ({}/{}) ...".format(seq.name(), i + 1, len(sequences)))
-
-        
-        if(mem_checker(DETECT_mem_limit) or process_counter < n_count):
-            identification = Identification(seq.name())
-            process = mp.Process(
-                target = main_loop,
-                args = (seq, blast_db,num_threads, e_value, bit_score, uniprot_df, blastp, needle, dump_dir, top_pred_flag, fbeta_flag, script_path, final_dict)
-            )
-            process.start()
-            process_list.append(process)
-            process_counter += 1
-            true_job_count += 1
-            
-            if(true_job_count % 100 == 0):
-                print(dt.today(), true_job_count, "jobs launched!")
-            #print(dt.today(), process_counter, " process launch!")
-        else:
-            if(process_counter >= n_count):
-                print(dt.today(), "process launch paused due to cpu limit")
-            if(~mem_checker(DETECT_mem_limit)):
-                print(dt.today(), "mem limit reached")
+        job_submitted = False
+        while (not job_submitted):
+            if(process_counter < n_count):
+                if(mem_checker(DETECT_mem_limit)):
+                    identification = Identification(seq.name())
+                    process = mp.Process(
+                        target = main_loop,
+                        args = (seq, blast_db,num_threads, e_value, bit_score, uniprot_df, blastp, needle, dump_dir, top_pred_flag, fbeta_flag, script_path, final_dict)
+                    )
+                    process.start()
+                    process_list.append(process)
+                    process_counter += 1
+                    true_job_count += 1
+                    job_submitted = True
+                    if(true_job_count % 100 == 0):
+                        print(dt.today(), true_job_count, "jobs launched!")
+                    #print(dt.today(), process_counter, " process launch!")
+                else:
+                    print(dt.today(), "mem limit reached")
+                    time.sleep(DETECT_job_delay)
                 
-            for item in process_list:
-                item.join()
-            process_list[:] = []
-            process_counter = 0
+            else:
+                print(dt.today(), "process launch paused due to cpu limit")
+                for item in process_list:
+                    item.join()
+                process_list[:] = []
+                process_counter = 0
             
-            outer_dict = merge_dicts(outer_dict, final_dict) #merge the 2
-            final_dict = mp.Manager().dict()    #empty it. start a new collection
+        outer_dict = merge_dicts(outer_dict, final_dict) #merge the 2
+        final_dict = mp.Manager().dict()    #empty it. start a new collection
             
     #======================================================================
     # Final sync

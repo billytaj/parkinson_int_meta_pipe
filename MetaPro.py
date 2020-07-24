@@ -209,6 +209,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     keep_EC                 = paths.keep_EC
     keep_outputs            = paths.keep_outputs
     
+    #------------------------------------------------------------------------
+    rRNA_job_delay      = paths.rRNA_job_delay
+    BWA_job_delay       = paths.BWA_job_delay
+    BLAT_job_delay      = paths.BLAT_job_delay
+    DIAMOND_job_delay   = paths.DIAMOND_job_delay
+    DETECT_job_delay    = paths.DETECT_job_delay
+    
     print("============================================================")
     print("data cleaner options:")
     print("keep all:", keep_all)
@@ -226,6 +233,20 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("keep EC:", keep_EC)
     print("keep outputs:", keep_outputs)
     print("===============================================")
+    print("Job delay options:")
+    print("rRNA job delay:", rRNA_job_delay)
+    print("BWA job delay:", BWA_job_delay)
+    print("BLAT job delay:", BLAT_job_delay)
+    print("DIAMOND job delay:", DIAMOND_job_delay)
+    print("DETECT job delay:", DETECT_job_delay)
+    print("=================================================")
+    print("memory thresholds")
+    print("rRNA mem threshold:", Infernal_mem_threshold)
+    print("BWA mem threshold:", BWA_mem_threshold)
+    print("BLAT mem threshold:", BLAT_mem_threshold)
+    print("DIAMOND mem threshold:", DIAMOND_mem_threshold)
+    print("DETECT mem threshold:", DETECT_mem_threshold)
+    
     
     
     if not single_path == "":
