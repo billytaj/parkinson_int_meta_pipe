@@ -261,7 +261,7 @@ class tool_path_obj:
                 self.DETECT_job_limit = DETECT_job_limit_default
             
             try:
-                self.Infernal_job_limit = config["Settings"]["Infernal_job_limit"] if config["Settings"]["Infernal_job_limit"] or config["Settings"]["Infernal_job_limit"] == "" else Infernal_job_limit_default
+                self.Infernal_job_limit = config["Settings"]["rRNA_job_limit"] if config["Settings"]["rRNA_job_limit"] or config["Settings"]["rRNA_job_limit"] == "" else Infernal_job_limit_default
             except KeyError:
                 self.Infernal_job_limit = Infernal_job_limit_default
             
@@ -380,7 +380,7 @@ class tool_path_obj:
             self.BWA_job_limit = BWA_job_limit_default
             self.BLAT_job_limit = BLAT_job_limit_default
             self.DIAMOND_job_limit = DIAMOND_job_limit_default
-            self.DIAMOND_job_limit = DETECT_job_limit_default
+            self.DETECT_job_limit = DETECT_job_limit_default
             self.Infernal_job_limit = Infernal_job_limit_default
             
             self.keep_all = keep_all_default

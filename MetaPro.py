@@ -193,6 +193,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     BLAT_job_limit = int(paths.BLAT_job_limit)
     DIAMOND_job_limit = int(paths.DIAMOND_job_limit)
     Infernal_job_limit = int(paths.Infernal_job_limit)
+    DETECT_job_limit = int(paths.DETECT_job_limit)
     
     #-----------------------------------------------------
     keep_all                = paths.keep_all
@@ -247,9 +248,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("BLAT mem threshold:", BLAT_mem_threshold)
     print("DIAMOND mem threshold:", DIAMOND_mem_threshold)
     print("DETECT mem threshold:", DETECT_mem_threshold)
+    print("======================================================")
+    print("rRNA job limit:", Infernal_job_limit)
+    print("BWA job limit:", BWA_job_limit)
+    print("BLAT job limit:", BLAT_job_limit)
+    print("DIAMOND job limit:", DIAMOND_job_limit)
+    print("DETECT job limit:", DETECT_job_limit)
     
     
-    
+    print("---------------------------------")
     if not single_path == "":
         read_mode = "single"
         quality_encoding = determine_encoding(single_path)
@@ -545,9 +552,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                     mp_store.append(process)
                                     print(dt.today(), "launching barrnap job:", inner_name)
                                     job_submitted = True
+                                    print(dt.today(), inner_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                                 else:
-                                    print(dt.today(), "mem limit reached.  holding here:", inner_name)
-                                    time.sleep(5)
+                                    print(dt.today(), "mem limit reached.  holding here:", inner_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                                    time.sleep(rRNA_job_delay)
                                     
                             else:
                                 print(dt.today(), "concurrent Barrnap jobs at its limit")
@@ -604,6 +612,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                     mp_store.append(process)
                                     process.start()
                                     job_submitted = True
+                                    print(dt.today(), inner_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                                 else:
                                     print(dt.today(), "mem limit reached for Infernal.  pausing here")
                                     time.sleep(5)
@@ -795,12 +804,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                 mp_store.append(bwa_process)
                                 job_submitted = True
                                 print(dt.today(), "submitted:", job_name)
-                                time.sleep(5) #placed here so the process has some time to get started.
+                                time.sleep(BWA_job_delay) #placed here so the process has some time to get started.
                                 
                             else:               
                                 print(dt.today(), "mem has reached a limit.  waiting:", job_name, "available mem:", psu.virtual_memory().available / (1024*1024*1000), "GB")
                                 
-                                time.sleep(5)
+                                time.sleep(BWA_job_delay)
                         else:
                             print(dt.today(), "Too many BWA jobs launched.  Capped at:", BWA_job_limit, "waiting for jobs to finish before launching more")
                             for item in mp_store:
@@ -826,7 +835,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 job_submitted = False
                 while(not job_submitted):
                     if(len(mp_store) < BWA_job_limit):
-                        if(mem_checker(10)):
+                        if(mem_checker(BWA_mem_threshold)):
                             print(dt.today(), "BWA PP mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
                             BWA_pp_process = mp.Process(target = commands.create_and_launch,
                                 args = (
@@ -840,9 +849,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             mp_store.append(BWA_pp_process)
                             job_submitted = True
                             print(dt.today(), "submitted:", job_name)
-                            time.sleep(1)
+                            
                         else:
-                            time.sleep(5)
+                            time.sleep(BWA_job_delay)
                             print(dt.today(), "BWA pp mem busy:", psu.virtual_memory().available / (1024*1024*1000), "GB")
                     else:
                         print(dt.today(), "too many BWA pp jobs launched.  capped at:", BWA_job_limit, "waiting for jobs to finish before launching more")
@@ -932,7 +941,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                             print(dt.today(), job_name, "submitted: mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                                         else:
                                             print(dt.today(), "too many BLAT jobs. waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                                            time.sleep(5)
+                                            time.sleep(BLAT_job_delay)
                                     else:
                                         print(dt.today(), "too many BLAT jobs running. Capped at:", paths.BLAT_job_limit , "OS will complain about Error 24. waiting for jobs to finish before launching more")
                                         for item in mp_store:
@@ -1003,7 +1012,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 job_submitted = False
                 while(not job_submitted):
                     if(len(mp_store) < BLAT_job_limit):
-                        if(mem_checker(10)):
+                        if(mem_checker(BLAT_mem_threshold)):
                             Blat_pp_process = mp.Process(target = commands.create_and_launch,
                                 args=(
                                     gene_annotation_BLAT_label,
@@ -1015,11 +1024,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             Blat_pp_process.start()
                             mp_store.append(Blat_pp_process)
                             print(dt.today(), job_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(1)
                             job_submitted = True
                         else:
                             print(dt.today(), job_name, "waiting. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(5)
+                            time.sleep(BLAT_job_delay)
                     else:
                         print(dt.today(), "too many BLAT pp jobs running.  capped at:", BLAT_job_limit, "waiting for jobs to finish before launching more")
                         for item in mp_store:
