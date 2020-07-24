@@ -481,7 +481,7 @@ if __name__=="__main__":
     
     parser.add_argument("--mem_limit", type = int, help = "percentage of memory to maintain during the run")
     
-    parser.add_argument("--job_delay", tye = int, help = "time (seconds) to wait in between parallel jobs")
+    parser.add_argument("--job_delay", type = int, help = "time (seconds) to wait in between parallel jobs")
     
     args = parser.parse_args()
     script_path = args.db if args.db else os.path.dirname(os.path.realpath(__file__))

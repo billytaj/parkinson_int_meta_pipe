@@ -2329,9 +2329,9 @@ class mt_pipe_commands:
         detect_protein += " --blastp " + self.tool_path_obj.Blastp
         detect_protein += " --needle " + self.tool_path_obj.Needle
         detect_protein += " --dump_dir " + detect_folder 
-        detect_protein += " --n_count" + " " + self.tool_path_obj.DETECT_job_limit
-        detect_protein += " --mem_limit" + " " + self.tool_path_obj.DETECT_mem_threshold 
-        detect_protein += " --job_delay" + " " + self.tool_path_obj.DETECT_job_delay
+        detect_protein += " --n_count" + " " + str(self.tool_path_obj.DETECT_job_limit)
+        detect_protein += " --mem_limit" + " " + str(self.tool_path_obj.DETECT_mem_threshold) 
+        detect_protein += " --job_delay" + " " + str(self.tool_path_obj.DETECT_job_delay)
         detect_protein += " >> " + os.path.join(detect_folder, "detect_out.txt") + " 2>&1"
 
         COMMANDS_DETECT = [
