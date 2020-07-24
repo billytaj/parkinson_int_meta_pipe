@@ -576,7 +576,7 @@ if __name__=="__main__":
     #        print( "[DETECT]: Analyzing {} ({}/{}) ...".format(seq.name(), i + 1, len(sequences)))
         job_submitted = False
         while (not job_submitted):
-            if(process_counter < n_count):
+            if(len(process_list) < n_count):
                 if(mem_checker(DETECT_mem_limit)):
                     identification = Identification(seq.name())
                     process = mp.Process(
