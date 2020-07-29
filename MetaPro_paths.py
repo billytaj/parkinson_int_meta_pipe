@@ -173,6 +173,7 @@ class tool_path_obj:
         DIAMOND_mem_default = 50 #60GB
         DETECT_mem_default = 50
         Infernal_mem_default = 50
+        Barrnap_mem_default = 50
         
         chunk_size_default = 10000
         BWA_job_limit_default = 80
@@ -180,6 +181,7 @@ class tool_path_obj:
         DIAMOND_job_limit_default = 80
         DETECT_job_limit_default = 1000
         Infernal_job_limit_default = 1000
+        Barrnap_job_limit_default = 1000
         
         keep_all_default = "yes"
         keep_quality_default = "no"
@@ -198,7 +200,8 @@ class tool_path_obj:
         
         delete_all_default = "no"
         
-        rRNA_job_delay_default = 5
+        Barrnap_job_delay_default = 5
+        Infernal_job_delay_default = 5
         BWA_job_delay_default = 5
         BLAT_job_delay_default = 5
         DIAMOND_job_delay_default = 5
@@ -234,6 +237,13 @@ class tool_path_obj:
             except KeyError:
                 self.Infernal_mem_threshold = Infernal_mem_default
                 
+            try:
+                self.Barrnap_mem_threshold = config["Settings"]["Barrnap_mem_threshold"] if config["Settings"]["Barrnap_mem_threshold"] or config["Settings"]["Barrnap_mem_threshold"] == "" else Barrnap_mem_default
+            except KeyError:
+                self.Barrnap_mem_threshold = Barrnap_mem_default
+                
+            #-----------------------------------------------------------------------------------------------    
+                
                 
             try:
                 self.chunk_size  = config["Settings"]["rRNA_chunk_size"] if config["Settings"]["rRNA_chunk_size"] or config["Settings"]["rRNA_chunk_size"] == "" else chunk_size_default
@@ -261,9 +271,14 @@ class tool_path_obj:
                 self.DETECT_job_limit = DETECT_job_limit_default
             
             try:
-                self.Infernal_job_limit = config["Settings"]["rRNA_job_limit"] if config["Settings"]["rRNA_job_limit"] or config["Settings"]["rRNA_job_limit"] == "" else Infernal_job_limit_default
+                self.Infernal_job_limit = config["Settings"]["Infernal_job_limit"] if config["Settings"]["Infernal_job_limit"] or config["Settings"]["Infernal_job_limit"] == "" else Infernal_job_limit_default
             except KeyError:
                 self.Infernal_job_limit = Infernal_job_limit_default
+                
+            try:
+                self.Barrnap_job_limit = config["Settings"]["Barrnap_job_limit"] if config["Settings"]["Barrnap_job_limit"] or config["Settings"]["Barrnap_job_limit"] == "" else Barrnap_job_limit_default
+            except KeyError:
+                self.Barrnap_job_limit = Barrnap_job_limit_default
             
             #------------------------------------------------------------------------------------------------
             try:
@@ -338,9 +353,14 @@ class tool_path_obj:
             
             #------------------------------------------------------------------------
             try:
-                self.rRNA_job_delay = config["Settings"]["rRNA_job_delay"] if config["Settings"]["rRNA_job_delay"] or config["Settings"]["rRNA_job_delay"] == "" else rRNA_job_delay_default
+                self.Infernal_job_delay = config["Settings"]["Infernal_job_delay"] if config["Settings"]["Infernal_job_delay"] or config["Settings"]["Infernal_job_delay"] == "" else Infernal_job_delay_default
             except KeyError:
-                self.rRNA_job_delay = rRNA_job_delay_default
+                self.Infernal_job_delay = Infernal_job_delay_default
+                
+            try:
+                self.Barrnap_job_delay = config["Settings"]["Barrnap_job_delay"] if config["Settings"]["Barrnap_job_delay"] or config["Settings"]["Barrnap_job_delay"] == "" else Barrnap_job_delay_default
+            except KeyError:
+                self.Barrnap_job_delay = Barrnap_job_delay_default
                 
             try:
                 self.BWA_job_delay = config["Settings"]["BWA_job_delay"] if config["Settings"]["BWA_job_delay"] or config["Settings"]["BWA_job_delay"] == "" else BWA_job_delay_default

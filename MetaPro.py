@@ -187,12 +187,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     BLAT_mem_threshold = paths.BLAT_mem_threshold
     DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
     Infernal_mem_threshold = paths.Infernal_mem_threshold
+    Barrnap_mem_threshold = paths.Barrnap_mem_threshold
     DETECT_mem_threshold = paths.DETECT_mem_threshold
     
     BWA_job_limit = int(paths.BWA_job_limit)
     BLAT_job_limit = int(paths.BLAT_job_limit)
     DIAMOND_job_limit = int(paths.DIAMOND_job_limit)
     Infernal_job_limit = int(paths.Infernal_job_limit)
+    Barrnap_job_limit = int(paths.Barrnap_job_limit)
     DETECT_job_limit = int(paths.DETECT_job_limit)
     
     #-----------------------------------------------------
@@ -212,11 +214,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     keep_outputs            = paths.keep_outputs
     
     #------------------------------------------------------------------------
-    rRNA_job_delay      = paths.rRNA_job_delay
-    BWA_job_delay       = paths.BWA_job_delay
-    BLAT_job_delay      = paths.BLAT_job_delay
-    DIAMOND_job_delay   = paths.DIAMOND_job_delay
-    DETECT_job_delay    = paths.DETECT_job_delay
+    Infernal_job_delay      = paths.Infernal_job_delay
+    Barrnap_job_delay       = paths.Barrnap_job_delay
+    BWA_job_delay           = paths.BWA_job_delay
+    BLAT_job_delay          = paths.BLAT_job_delay
+    DIAMOND_job_delay       = paths.DIAMOND_job_delay
+    DETECT_job_delay        = paths.DETECT_job_delay
     
     print("============================================================")
     print("data cleaner options:")
@@ -236,20 +239,23 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("keep outputs:", keep_outputs)
     print("===============================================")
     print("Job delay options:")
-    print("rRNA job delay:", rRNA_job_delay)
+    print("Infernal job delay:", Infernal_job_delay)
+    print("Barrnap job delay:", Barrnap_job_delay)
     print("BWA job delay:", BWA_job_delay)
     print("BLAT job delay:", BLAT_job_delay)
     print("DIAMOND job delay:", DIAMOND_job_delay)
     print("DETECT job delay:", DETECT_job_delay)
     print("=================================================")
     print("memory thresholds")
-    print("rRNA mem threshold:", Infernal_mem_threshold)
+    print("Barrnap mem threshold:", Barrnap_mem_threshold)
+    print("Infernal mem threshold:", Infernal_mem_threshold)
     print("BWA mem threshold:", BWA_mem_threshold)
     print("BLAT mem threshold:", BLAT_mem_threshold)
     print("DIAMOND mem threshold:", DIAMOND_mem_threshold)
     print("DETECT mem threshold:", DETECT_mem_threshold)
     print("======================================================")
-    print("rRNA job limit:", Infernal_job_limit)
+    print("Barrnap job limit:", Barrnap_job_limit)
+    print("Infernal job limit:", Infernal_job_limit)
     print("BWA job limit:", BWA_job_limit)
     print("BLAT job limit:", BLAT_job_limit)
     print("DIAMOND job limit:", DIAMOND_job_limit)
@@ -517,24 +523,34 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             split_path = os.path.join(rRNA_filter_path, "data", section + "_fastq")
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_barrnap")
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal") 
-
+            job_marker_path = os.path.join(output_folder, rRNA_filter_label, "data", "jobs")
+            
             #if not check_where_resume(job_label = None, full_path = barrnap_path, dep_job_path = vector_path):
             if check_bypass_log(output_folder_path, rRNA_filter_barrnap_label + "_" + section):
                 concurrent_job_count = 0
                 batch_count = 0
                 for item in os.listdir(split_path):
                     root_name = item.split(".")[0]
-                    barrnap_final_file = root_name + "_barrnap_mRNA.fastq"
-                    barrnap_final_file_path = os.path.join(barrnap_path, barrnap_final_file)
-                    if(os.path.exists(barrnap_final_file_path)):
+                    barrnap_out_file = os.path.join(barrnap_path, root_name + ".barrnap_out")
+                    barrnap_final_file_path = os.path.join(barrnap_path, root_name + "_barrnap_mRNA.fastq")
+                    barrnap_out_file_size = 0
+                    job_marker = os.path.join(job_marker_path, root_name + "_barrnap")
+                    
+                    if(os.path.exists(barrnap_out_file)):
+                        barrnap_out_file_size = os.stat(barrnap_out_file).st_size
+                
+                    if(os.path.exists(barrnap_final_file_path) and (barrnap_out_file_size > 0) and os.path.exists(job_marker)):
                         print(dt.today(), "barrnap already run.  skipping:", item)
                         continue
                     
                     else:
+                        #print(barrnap_out_file, "file size:", barrnap_out_file_size)
+                        #time.sleep(5)
+                        print("no marker found for:", root_name + "_barrnap", " -> launching")
                         job_submitted = False
                         while(not job_submitted):
-                            if(len(mp_store) < Infernal_job_limit):
-                                if(mem_checker(Infernal_mem_threshold)):
+                            if(len(mp_store) < Barrnap_job_limit):
+                                if(mem_checker(Barrnap_mem_threshold)):
                                     #print(dt.today(), "barrnap looking at:", item)
                                     inner_name = "rRNA_filter_barrnap_" + item.split(".")[0]
                                     #print("rRNA filter inner name:", inner_name)
@@ -555,7 +571,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                     print(dt.today(), inner_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                                 else:
                                     print(dt.today(), "mem limit reached.  holding here:", inner_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                                    time.sleep(rRNA_job_delay)
+                                    time.sleep(Barrnap_job_delay)
                                     
                             else:
                                 print(dt.today(), "concurrent Barrnap jobs at its limit")
@@ -615,7 +631,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                     print(dt.today(), inner_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                                 else:
                                     print(dt.today(), "mem limit reached for Infernal.  pausing here")
-                                    time.sleep(5)
+                                    time.sleep(Infernal_job_delay)
                             else:
                                 print(dt.today(), "concurrent Infernal job limit reached")
                                 for p_item in mp_store:

@@ -931,6 +931,7 @@ class mt_pipe_commands:
         dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
+        jobs_folder         = os.path.join(data_folder, "jobs")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
@@ -950,35 +951,36 @@ class mt_pipe_commands:
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
-
-        convert_fastq_to_fasta = ">&2 echo " + " converting " + category + " file to fasta | "
+        self.make_folder(jobs_folder)
+        
+        convert_fastq_to_fasta = ">&2 echo " + " converting " + file_name + " file to fasta | "
         convert_fastq_to_fasta += self.tool_path_obj.vsearch
         convert_fastq_to_fasta += " --fastq_filter " + fastq_seqs
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str
         convert_fastq_to_fasta += " --fastaout " + fasta_seqs
 
-        Barrnap_archaea = ">&2 echo running Barrnap on " + category + " file: arc | "
+        Barrnap_archaea = ">&2 echo running Barrnap on " + file_name + " file: arc | "
         Barrnap_archaea += self.tool_path_obj.Barrnap
         Barrnap_archaea += " --quiet --reject 0.01 --kingdom " + "arc"
         Barrnap_archaea += " --threads " + self.Threads_str
         Barrnap_archaea += " " + fasta_seqs
         Barrnap_archaea += " >> " + Barrnap_out
 
-        Barrnap_bacteria = ">&2 echo Running Barrnap on " + category + " file:  bac | "
+        Barrnap_bacteria = ">&2 echo Running Barrnap on " + file_name + " file:  bac | "
         Barrnap_bacteria += self.tool_path_obj.Barrnap
         Barrnap_bacteria += " --quiet --reject 0.01 --kingdom " + "bac"
         Barrnap_bacteria += " --threads " + self.Threads_str
         Barrnap_bacteria += " " + fasta_seqs
         Barrnap_bacteria += " >> " + Barrnap_out
 
-        Barrnap_eukaryote = ">&2 echo Running Barrnap on " + category + " file: euk | "
+        Barrnap_eukaryote = ">&2 echo Running Barrnap on " + file_name + " file: euk | "
         Barrnap_eukaryote += self.tool_path_obj.Barrnap
         Barrnap_eukaryote += " --quiet --reject 0.01 --kingdom " + "euk"
         Barrnap_eukaryote += " --threads " + self.Threads_str
         Barrnap_eukaryote += " " + fasta_seqs
         Barrnap_eukaryote += " >> " + Barrnap_out
 
-        Barrnap_mitochondria = ">&2 echo Running Barrnap on " + category + "file: mito | " 
+        Barrnap_mitochondria = ">&2 echo Running Barrnap on " + file_name + "file: mito | " 
         Barrnap_mitochondria += self.tool_path_obj.Barrnap
         Barrnap_mitochondria += " --quiet --reject 0.01 --kingdom " + "mito"
         Barrnap_mitochondria += " --threads " + self.Threads_str
@@ -994,7 +996,9 @@ class mt_pipe_commands:
         Barrnap_pp += rRNA_folder + " "
         Barrnap_pp += file_name + "_barrnap"
         
-        
+        make_marker = ">&2 echo " + file_name + "_barrnap Marking job completed | " 
+        make_marker += "touch" + " " 
+        make_marker += os.path.join(jobs_folder, file_name + "_barrnap")
 
         
         
@@ -1005,7 +1009,8 @@ class mt_pipe_commands:
             Barrnap_bacteria,
             Barrnap_eukaryote,
             Barrnap_mitochondria,
-            Barrnap_pp#,
+            Barrnap_pp,
+            make_marker
             #convert_fastq_to_fasta_barrnap#,
             #infernal_command,
             #rRNA_filtration
@@ -1035,7 +1040,7 @@ class mt_pipe_commands:
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
         
-        convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + category + " | "
+        convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
         convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
         convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fastq")
         convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
@@ -1051,7 +1056,7 @@ class mt_pipe_commands:
         infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += os.path.join(Barrnap_out_folder, file_name + "_barrnap.fasta")
 
-        rRNA_filtration = ">&2 echo " + str(dt.today()) + " Getting the actual reads out of Infernal: " + category + " | "
+        rRNA_filtration = ">&2 echo " + str(dt.today()) + " Getting the actual reads out of Infernal: " + file_name + " | "
         rRNA_filtration += self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "

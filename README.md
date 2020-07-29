@@ -6,7 +6,7 @@ on Paired and Single Reads of FASTQ data.
 # How to install
 ---
 This package is meant to work in conjunction with Docker/Singularity.  All of the prerequisite tools, including the pipeline code
-is delivered via the Docker Hub. https://hub.docker.com/r/billyc59/parkinson_pipeline/
+is delivered via the Docker Hub. https://hub.docker.com/r/parkinsonlab/metapro/
 Alternatively, individual parts of the pipeline are avaiable from this Github repository.
 
 Therefore, to use this pipeline, Docker (https://www.docker.com/) or Singularity (https://www.sylabs.io/guides/2.6/user-guide/) is needed.
@@ -29,6 +29,11 @@ Output_Folder is where the user would indicate to the pipeline where you want th
 
 * Threads
 Threads is the number of threads that the pipeline is allowed to use.  The pipeline is dependent on threads and parallelization to operate efficiently
+
+## Configuration File
+---
+The configuration file is an essential portion of MetaPro's operation.  It governs the internal settings, and tool paths 
+that MetaPro will use in the analysis of the sample data.
 
 ## Sequences
 ---
