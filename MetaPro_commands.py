@@ -980,7 +980,7 @@ class mt_pipe_commands:
         Barrnap_eukaryote += " " + fasta_seqs
         Barrnap_eukaryote += " >> " + Barrnap_out
 
-        Barrnap_mitochondria = ">&2 echo Running Barrnap on " + file_name + "file: mito | " 
+        Barrnap_mitochondria = ">&2 echo Running Barrnap on " + file_name + " file: mito | " 
         Barrnap_mitochondria += self.tool_path_obj.Barrnap
         Barrnap_mitochondria += " --quiet --reject 0.01 --kingdom " + "mito"
         Barrnap_mitochondria += " --threads " + self.Threads_str
