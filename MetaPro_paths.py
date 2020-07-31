@@ -418,7 +418,8 @@ class tool_path_obj:
             self.keep_EC = keep_EC_default
             self.keep_outputs = keep_outputs_default
             
-            self.rRNA_job_delay = rRNA_job_delay_default
+            self.Infernal_job_delay = Infernal_job_delay_default
+            self.Barrnap_job_delay = Barrnap_job_delay_default
             self.BWA_job_delay = BWA_job_delay_default
             self.BLAT_job_delay = BLAT_job_delay_default
             self.DIAMOND_job_delay = DIAMOND_job_delay_default
