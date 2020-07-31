@@ -214,12 +214,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     keep_outputs            = paths.keep_outputs
     
     #------------------------------------------------------------------------
-    Infernal_job_delay      = paths.Infernal_job_delay
-    Barrnap_job_delay       = paths.Barrnap_job_delay
-    BWA_job_delay           = paths.BWA_job_delay
-    BLAT_job_delay          = paths.BLAT_job_delay
-    DIAMOND_job_delay       = paths.DIAMOND_job_delay
-    DETECT_job_delay        = paths.DETECT_job_delay
+    Infernal_job_delay      = int(paths.Infernal_job_delay)
+    Barrnap_job_delay       = int(paths.Barrnap_job_delay)
+    BWA_job_delay           = int(paths.BWA_job_delay)
+    BLAT_job_delay          = int(paths.BLAT_job_delay)
+    DIAMOND_job_delay       = int(paths.DIAMOND_job_delay)
+    DETECT_job_delay        = int(paths.DETECT_job_delay)
     
     print("============================================================")
     print("data cleaner options:")
