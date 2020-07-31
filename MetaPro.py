@@ -183,12 +183,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     no_host = args_pack["no_host"]
     verbose_mode = args_pack["verbose_mode"]
     rRNA_chunks = paths.chunk_size
-    BWA_mem_threshold = paths.BWA_mem_threshold
-    BLAT_mem_threshold = paths.BLAT_mem_threshold
-    DIAMOND_mem_threshold = paths.DIAMOND_mem_threshold
-    Infernal_mem_threshold = paths.Infernal_mem_threshold
-    Barrnap_mem_threshold = paths.Barrnap_mem_threshold
-    DETECT_mem_threshold = paths.DETECT_mem_threshold
+    BWA_mem_threshold = int(paths.BWA_mem_threshold)
+    BLAT_mem_threshold = int(paths.BLAT_mem_threshold)
+    DIAMOND_mem_threshold = int(paths.DIAMOND_mem_threshold)
+    Infernal_mem_threshold = int(paths.Infernal_mem_threshold)
+    Barrnap_mem_threshold = int(paths.Barrnap_mem_threshold)
+    DETECT_mem_threshold = int(paths.DETECT_mem_threshold)
     
     BWA_job_limit = int(paths.BWA_job_limit)
     BLAT_job_limit = int(paths.BLAT_job_limit)
