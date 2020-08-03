@@ -1537,6 +1537,11 @@ class mt_pipe_commands:
             data_change_contig += os.path.join(final_folder, "pair_1.fastq") + " "
             data_change_contig += os.path.join(final_folder, "repop_to_contigs_pair_1.tsv")
             
+        move_gene_report = ">&2 echo moving gene report | "
+        move_gene_report += "cp" + " "
+        move_gene_report += os.path.join(mgm_folder, "gene_report.txt") + " "
+        move_gene_report += os.path.join(final_folder, "gene_report.txt") 
+            
 
         if self.read_mode == "single":
             COMMANDS_Assemble = [
@@ -1550,7 +1555,8 @@ class mt_pipe_commands:
                 contig_duplicate_remover_singletons,
                 map_read_contig,
                 copy_singletons,
-                copy_contigs#, 
+                copy_contigs,
+                move_gene_report
                 #data_change_contig
             ]
         elif self.read_mode == "paired":
@@ -1572,7 +1578,8 @@ class mt_pipe_commands:
                 map_read_contig,
                 copy_contigs,
                 singleton_assembly_filter,
-                sort_paired#,
+                sort_paired,
+                move_gene_report
                 #data_change_contig
             ]
 
@@ -2111,7 +2118,7 @@ class mt_pipe_commands:
         dep_0_path = os.path.join(self.Output_Path, dep_0_name, "final_results")
         dep_1_path = os.path.join(self.Output_Path, dep_1_name, "final_results")
         dep_2_path = os.path.join(self.Output_Path, dep_2_name, "final_results")
-        dep_3_path = os.path.join(self.Output_Path, dep_3_name)
+        dep_3_path = os.path.join(self.Output_Path, dep_3_name, "final_results")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)

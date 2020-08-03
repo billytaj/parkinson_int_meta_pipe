@@ -411,7 +411,9 @@ if __name__ == "__main__":
     export_path             = sys.argv[6]
     #diamond_proteins_file   = sys.argv[5]
     
-    gene_report_path = os.path.join(assemble_path, "data", "1_mgm", "gene_report.txt")
+    #gene_report_path = os.path.join(assemble_path, "data", "1_mgm", "gene_report.txt")
+    gene_report_path = os.path.join(assemble_path, "gene_report.txt")
+    
     contig_map_path = os.path.join(bwa_path, "contig_map.tsv")
     
     gene_segment_dict = import_gene_report(gene_report_path)

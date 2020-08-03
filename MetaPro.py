@@ -821,7 +821,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                                 
                                 mp_store.append(bwa_process)
                                 job_submitted = True
-                                print(dt.today(), "submitted:", job_name)
+                                print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
                                 time.sleep(BWA_job_delay) #placed here so the process has some time to get started.
                                 
                             else:               
@@ -866,7 +866,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             BWA_pp_process.start()
                             mp_store.append(BWA_pp_process)
                             job_submitted = True
-                            print(dt.today(), "submitted:", job_name)
+                            print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
+                            time.sleep(BWA_job_delay)
                             
                         else:
                             time.sleep(BWA_job_delay)
@@ -1008,7 +1009,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         )
                         process.start()
                         mp_store.append(process)
+                        print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
                         job_submitted = True
+                        time.sleep(BLAT_job_delay)
                     else:
                         print(dt.today(), "too many BLAT cat commands running.  capped at:", BLAT_job_limit, "waiting for jobs to finish before launching more")
                         for item in mp_store:
@@ -1043,6 +1046,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             mp_store.append(Blat_pp_process)
                             print(dt.today(), job_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                             job_submitted = True
+                            time.sleep(BLAT_job_delay)
                         else:
                             print(dt.today(), job_name, "waiting. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                             time.sleep(BLAT_job_delay)
@@ -1110,11 +1114,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             mp_store.append(DIAMOND_process)
                             print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
                             job_submitted = True
-                            time.sleep(5) #it's enough time for the process to eat some memory.
+                            time.sleep(DIAMOND_job_delay) #it's enough time for the process to eat some memory.
                             
                         else:
                             print(dt.today(), "DIAMOND: we've reached the mem limit. waiting:", job_name)
-                            time.sleep(5)
+                            time.sleep(DIAMOND_job_delay)
                         
                     else:
                         print(dt.today(), "Too many DIAMOND jobs running.  capped at:", DIAMOND_job_limit, "waiting for jobs to finish before launching more")
@@ -1142,7 +1146,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 job_submitted = False
                 while(not job_submitted):
                     if(len(mp_store) < DIAMOND_job_limit):
-                        if(mem_checker(10)):
+                        if(mem_checker(DIAMOND_mem_threshold)):
                             DIAMOND_pp_process = mp.Process(target = commands.create_and_launch,
                                 args=(
                                     gene_annotation_DIAMOND_label,
@@ -1155,11 +1159,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             mp_store.append(DIAMOND_pp_process)
                             job_submitted = True
                             print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(1)
+                            time.sleep(DIAMOND_job_delay)
                         else:
                             
                             print(dt.today(), job_name, "waiting.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(5)
+                            time.sleep(DIAMOND_job_delay)
                     else:
                         print(dt.today(), "too many DIAMOND pp jobs running.  capped at:", DIAMOND_job_limit, "waiting for jobs to finish before launching more")
                         for item in mp_store:
