@@ -520,9 +520,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #-------------------------------------------------------------------------------------------------
         # BARRNAP
         for section in reversed(sections):  
+            #convert data to fasta, then run barrnap separately, then cat the barrnap, then run barrnap PP
             #split the data, if necessary.
             #initial split -> by lines.  we can do both
             split_path = os.path.join(rRNA_filter_path, "data", section + "_fastq")
+            fasta_path = os.path.join(rRNA_filter_path, "data", section + "_fasta")
             barrnap_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_barrnap")
             infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal") 
             job_marker_path = os.path.join(output_folder, rRNA_filter_label, "data", "jobs")
@@ -533,7 +535,46 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 batch_count = 0
                 for item in os.listdir(split_path):
                     root_name = item.split(".")[0]
-                    barrnap_out_file = os.path.join(barrnap_path, root_name + ".barrnap_out")
+                    barrnap_arc_out_file = os.path.join(barrnap_path, root_name + "_arc.barrnap_out")
+                    barrnap_bac_out_file = os.path.join(barrnap_path, root_name + "_bac.barrnap_out")
+                    barrnap_euk_out_file = os.path.join(barrnap_path, root_name + "_euk.barrnap_out")
+                    barrnap_mit_out_file = os.path.join(barrnap_path, root_name + "_mit.barrnap_out")
+                    fasta_file = os.path.join(fasta_path, root_name + ".fasta")
+                    
+                    fasta_out_size = os.stat(fasta_file) if (os.path.exists(fasta_file)) else 0
+                    if(fasta_out_size > 0):
+                        print(dt.today(), item, "already converted to fasta.  skipping")
+                        continue
+                    else:
+                        job_submitted = False
+                        while(not job_submitted):
+                            if(len(mp_store) < Barrnap_job_limit):
+                                if(mem_checker(Barrnap_mem_threshold)):
+                                    inner_name = "rRNA_filter_fq_to_fa_" + root_name
+                                    process = mp.Process(
+                                        target = commands.launch_only,
+                                        args = 
+                    
+                    
+                    
+                    
+                    barrnap_arc_out_size = os.stat(barrnap_arc_out_file).st_size if (os.path.exists(barrnap_arc_out_file)) else 0
+                    
+                    if(barrnap_arc_out_size > 0):
+                        print(dt.today(), "barrnap arc already run.  skipping:", item) 
+                        continue
+                    else:
+                        job_submitted = False
+                        while(not job_submitted):
+                            if(len(mp_store) < Barrnap_job_limit):
+                                if(mem_checker(Barrnap_mem_threshold)):
+                                    inner_name = "rRNA_filter_barrnap_arc_" + root_name
+                                    process = mp.Process(
+                                        target = commands.launch_only,
+                                        args = (
+                                            rRNA_filter_label, 
+                                            commands.create_
+                    
                     barrnap_final_file_path = os.path.join(barrnap_path, root_name + "_barrnap_mRNA.fastq")
                     barrnap_out_file_size = 0
                     job_marker = os.path.join(job_marker_path, root_name + "_barrnap")
