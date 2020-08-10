@@ -174,6 +174,36 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
     else:
         print("doesn't exist: running")
         return False
+        
+        
+def launch_only_with_hold(mp_store, mem_threshold, job_limit, job_delay, inner_name, command):
+    #launch a job in launch-only mode
+    if(fasta_out_size > 0):
+        print(dt.today(), item, "already converted to fasta.  skipping")
+        continue
+    else:
+        job_submitted = False
+        while(not job_submitted):
+            if(len(mp_store) < Barrnap_job_limit):
+                if(mem_checker(Barrnap_mem_threshold)):
+                    process = mp.Process(
+                        target = commands.launch_only,
+                        args = (command)
+                    )
+                    process.start()
+                    mp_store.append(process)
+                    print(dt.today(), inner_name, "job submitted.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                    job_submitted = True
+                else:
+                    print(dt.today(), inner_name, "Pausing. mem limit reached:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                    time.sleep(job_delay)
+            else:
+                print(dt.today(), "job limit reached.  waiting for queue to flush")
+                for item in mp_store:
+                    item.join()
+                mp_store[:] = []
+                
+    
 
 
 
@@ -318,6 +348,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     vector_filter_label                     = "vector_read_filter"
     rRNA_filter_label                       = "rRNA_filter"
     rRNA_filter_split_label                 = "rRNA_filter_split"
+    rRNA_filter_convert_label               = "rRNA_filter_convert"
     rRNA_filter_barrnap_label               = "rRNA_filter_barrnap"
     rRNA_filter_infernal_label              = "rRNA_filter_infernal"
     rRNA_filter_post_label                  = "rRNA_filter_post"
@@ -498,12 +529,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 inner_name = "rRNA_filter_prep_" + section
                 process = mp.Process(
                     target = commands.launch_only,
-                    args = (
-                        rRNA_filter_label,
-                        commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks),
-                        True,
-                        inner_name
-                    )
+                    args = (commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks))
                 )
         
                 process.start()
@@ -516,7 +542,24 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             if check_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + element):
                 write_to_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + element)
             
-        
+        #-------------------------------------------------------------------------------------------------
+        # Convert fastq segments to fasta
+        for section in reversed(sections):
+            split_path = os.path.join(rRNA_filter_path, "data", section + "_fastq")
+            fasta_path = os.path.join(rRNA_filter_path, "data", section + "_fasta")
+            if check_bypass_log(output_folder_path, 
+            fasta_out_size = os.stat(fasta_file) if (os.path.exists(fasta_file)) else 0
+            if(fasta_out_size > 0):
+                print(dt.today(), item, "already converted to fasta.  skipping")
+                continue
+            else:
+                inner_name = root_name + "_convert_to_fasta"
+                launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands.create_rRNA_filter_convert_fastq_command(rRNA_filter, section, fastq_file))
+                
+            
+            
+                    
+        sys.exit("shrimpy")
         #-------------------------------------------------------------------------------------------------
         # BARRNAP
         for section in reversed(sections):  
@@ -540,23 +583,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     barrnap_euk_out_file = os.path.join(barrnap_path, root_name + "_euk.barrnap_out")
                     barrnap_mit_out_file = os.path.join(barrnap_path, root_name + "_mit.barrnap_out")
                     fasta_file = os.path.join(fasta_path, root_name + ".fasta")
-                    
-                    fasta_out_size = os.stat(fasta_file) if (os.path.exists(fasta_file)) else 0
-                    if(fasta_out_size > 0):
-                        print(dt.today(), item, "already converted to fasta.  skipping")
-                        continue
-                    else:
-                        job_submitted = False
-                        while(not job_submitted):
-                            if(len(mp_store) < Barrnap_job_limit):
-                                if(mem_checker(Barrnap_mem_threshold)):
-                                    inner_name = "rRNA_filter_fq_to_fa_" + root_name
-                                    process = mp.Process(
-                                        target = commands.launch_only,
-                                        args = 
+                    fastq_file = os.path.join(split_path, root_name + ".fastq")
                     
                     
-                    
+                
                     
                     barrnap_arc_out_size = os.stat(barrnap_arc_out_file).st_size if (os.path.exists(barrnap_arc_out_file)) else 0
                     

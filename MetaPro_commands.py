@@ -100,7 +100,7 @@ class mt_pipe_commands:
         else:
             print("not running job.  run_job set to False")
     
-    def launch_only(self, job_name, command_list, run_job=False, inner_name=None):
+    def launch_only(self, command_list):
         #just launch the job.  Don't make a script file.
         for command_item in command_list:
             try:
