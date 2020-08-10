@@ -1066,8 +1066,8 @@ class mt_pipe_commands:
         
         
         
-    def create_rRNA_filter_barrnap_cat_command(self, stage_name, category, fastq_name, dependency_name):
-        dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
+    def create_rRNA_filter_barrnap_cat_command(self, stage_name, category, fastq_name):
+        #this is expected to run on each sample split
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         jobs_folder         = os.path.join(data_folder, "jobs")
