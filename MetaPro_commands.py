@@ -6,7 +6,7 @@ import os
 import os.path
 import MetaPro_paths as mpp
 import subprocess as sp
-
+import time
 from datetime import datetime as dt
 
 class mt_pipe_commands:
@@ -100,16 +100,28 @@ class mt_pipe_commands:
         else:
             print("not running job.  run_job set to False")
     
-    def launch_only(self, command_list):
+    def launch_only(self, command_list, command_list_length):
         #just launch the job.  Don't make a script file.
-        for command_item in command_list:
+        #print(dt.today(), "inside launch_only:", len(command_list))
+        
+        if(command_list_length == 1):
+            #print("0th item:", command_list[0])
             try:
-                os.system(command_item)
+                os.system(command_list[0])
             except sp.CalledProcessError as e:
                 return_code = e.returncode
                 if return_code != 1:
                     raise
-            
+        else:
+        
+            for command_item in command_list:
+                try:
+                    os.system(command_item)
+                except sp.CalledProcessError as e:
+                    return_code = e.returncode
+                    if return_code != 1:
+                        raise
+                
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
         data_folder                 = os.path.join(subfolder, "data")
@@ -257,7 +269,7 @@ class mt_pipe_commands:
         cdhit_paired = ">&2 echo remove duplicates from paired | "
         cdhit_paired += self.tool_path_obj.cdhit_dup
         cdhit_paired += "-i"    + " " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
-        cdhit_paired += "-i2"   + " " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + 
+        cdhit_paired += "-i2"   + " " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
         cdhit_paired += "-o"    + " " + os.path.join(cdhit_folder, "pair_1_unique.fastq") + " "
         cdhit_paired += "-o2"   + " " + os.path.join(cdhit_folder, "pair_2_unique.fastq")
 
@@ -966,8 +978,6 @@ class mt_pipe_commands:
         Barrnap_mit_out     = os.path.join(Barrnap_out_folder, file_name + "_mit.barrnap_out")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
         
-        fastq_seqs          = os.path.join(fastq_folder, fastq_name)
-        
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
         self.make_folder(fasta_folder)
@@ -997,7 +1007,6 @@ class mt_pipe_commands:
         file_name           = fastq_name.split(".")[0]
         Barrnap_bac_out     = os.path.join(Barrnap_out_folder, file_name + "_bac.barrnap_out")
         
-        fastq_seqs          = os.path.join(fastq_folder, fastq_name)        
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
         self.make_folder(fasta_folder)
@@ -1020,8 +1029,6 @@ class mt_pipe_commands:
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         file_name           = fastq_name.split(".")[0]
         Barrnap_euk_out     = os.path.join(Barrnap_out_folder, file_name + "_euk.barrnap_out")
-        
-        fastq_seqs          = os.path.join(fastq_folder, fastq_name)        
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
         self.make_folder(fasta_folder)
@@ -1045,8 +1052,6 @@ class mt_pipe_commands:
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         file_name           = fastq_name.split(".")[0]
         Barrnap_mit_out     = os.path.join(Barrnap_out_folder, file_name + "_mit.barrnap_out")
-        
-        fastq_seqs          = os.path.join(fastq_folder, fastq_name)        
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
         self.make_folder(fasta_folder)
@@ -1083,9 +1088,6 @@ class mt_pipe_commands:
         Barrnap_euk_out     = os.path.join(Barrnap_out_folder, file_name + "_euk.barrnap_out")
         Barrnap_mit_out     = os.path.join(Barrnap_out_folder, file_name + "_mit.barrnap_out")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
-        
-        fastq_seqs          = os.path.join(fastq_folder, fastq_name)
-        
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
 
@@ -1121,9 +1123,7 @@ class mt_pipe_commands:
         return [cat_command, rm_arc, rm_bac, rm_euk, rm_mit]
         
         
-    def create_rRNA_filter_barrnap_pp_command(self, stage_name, category,
-    
-        dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
+    def create_rRNA_filter_barrnap_pp_command(self, stage_name, category, fastq_name):
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         jobs_folder         = os.path.join(data_folder, "jobs")
@@ -1153,7 +1153,7 @@ class mt_pipe_commands:
         Barrnap_pp += self.tool_path_obj.barrnap_post + " "
         Barrnap_pp += Barrnap_out + " "
         Barrnap_pp += fastq_seqs + " "
-        Barrnap_pp += Barrnap_out_folder + " "
+        Barrnap_pp += mRNA_folder + " "
         Barrnap_pp += rRNA_folder + " "
         Barrnap_pp += file_name + "_barrnap"
         
@@ -1161,16 +1161,16 @@ class mt_pipe_commands:
         make_marker += "touch" + " " 
         make_marker += os.path.join(jobs_folder, file_name + "_barrnap")
         
+        return [Barrnap_pp, make_marker]
         
-
-    def create_rRNA_filter_infernal_command(self, stage_name, category, fastq_name, dependency_name):
-    
-        dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
+        
+    def create_rRNA_filter_infernal_prep_command(self, stage_name, category, fastq_name):
+        #expecting full file name in fastq_name
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
-        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
+        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap_mRNA_fasta")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
         mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
         rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
@@ -1185,28 +1185,61 @@ class mt_pipe_commands:
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
+        self.make_folder(Barrnap_out_folder)
         
         convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
         convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
-        convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fastq")
+        convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(mRNA_folder, fastq_name)
         convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
-        convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, file_name + "_barrnap.fasta")
+        convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, file_name + ".fasta")
+        
+        return [convert_fastq_to_fasta_barrnap]
+
+    def create_rRNA_filter_infernal_command(self, stage_name, category, fastq_name, dependency_name):
+    
+        dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        fasta_folder        = os.path.join(data_folder, category + "_fasta")
+        fastq_folder        = os.path.join(data_folder, category + "_fastq")
+        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap_mRNA_fasta")
+        infernal_out_folder = os.path.join(data_folder, category + "_infernal")
+        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
+        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
+        file_name           = fastq_name.split(".")[0]
+        Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
+        infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
+        
+        fastq_seqs          = os.path.join(fastq_folder, fastq_name)
+        
+        fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
+
+        self.make_folder(infernal_out_folder)
+        self.make_folder(mRNA_folder)
+        self.make_folder(rRNA_folder)
+        self.make_folder(Barrnap_out_folder)
+        
+        convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
+        convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
+        convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(mRNA_folder, file_name + "_barrnap_mRNA.fastq")
+        convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
+        convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fasta")
 
         infernal_command = ">&2 echo " + str(dt.today()) + " running infernal on " + file_name + " file | "
-        infernal_command += self.tool_path_obj.Infernalmem
+        infernal_command += self.tool_path_obj.Infernal
         infernal_command += " -o /dev/null --tblout "
         infernal_command += infernal_out
         #infernal_command += " --cpu " + self.Threads_str -> lined nerf'd because infernal's parallelism is not good
         infernal_command += " --cpu 1"
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
-        infernal_command += os.path.join(Barrnap_out_folder, file_name + "_barrnap.fasta")
+        infernal_command += os.path.join(mRNA_folder, file_name + "_barrnap_mRNA.fasta")
 
         rRNA_filtration = ">&2 echo " + str(dt.today()) + " Getting the actual reads out of Infernal: " + file_name + " | "
         rRNA_filtration += self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
-        rRNA_filtration += os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fastq") + " "
+        rRNA_filtration += os.path.join(mRNA_folder, file_name + "_barrnap_mRNA.fastq") + " "
         rRNA_filtration += mRNA_folder + " "
         rRNA_filtration += rRNA_folder + " "
         rRNA_filtration += file_name + "_infernal"
