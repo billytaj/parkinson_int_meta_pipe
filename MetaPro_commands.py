@@ -1161,7 +1161,7 @@ class mt_pipe_commands:
         make_marker += "touch" + " " 
         make_marker += os.path.join(jobs_folder, file_name + "_barrnap")
         
-        return [Barrnap_pp, make_marker]
+        return [Barrnap_pp + " && " + make_marker]
         
         
     def create_rRNA_filter_infernal_prep_command(self, stage_name, category, fastq_name):
@@ -1230,7 +1230,7 @@ class mt_pipe_commands:
         make_marker += "touch" + " " 
         make_marker += os.path.join(jobs_folder, file_name + "_infernal")
         
-        COMMANDS_infernal = [infernal_command, make_marker]
+        COMMANDS_infernal = [infernal_command + " && " + make_marker]
         return COMMANDS_infernal
 
     def create_rRNA_filter_splitter_command(self, stage_name, category, file_name):
@@ -1263,21 +1263,22 @@ class mt_pipe_commands:
     def create_rRNA_filter_post_command(self, dependency_stage_name, stage_name):
         # rRNA filtration orphaned some reads in the pairs.  We need to refilter the singletons.
         # Cat then refilter
-        dep_folder              = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
-        subfolder               = os.path.join(self.Output_Path, stage_name)
-        data_folder             = os.path.join(subfolder, "data")
-        pre_filter_folder       = os.path.join(data_folder, "0_pre_singletons")
-        pre_filter_mRNA_folder  = os.path.join(pre_filter_folder, "mRNA")
-        pre_filter_rRNA_folder  = os.path.join(pre_filter_folder, "rRNA")
-        singletons_mRNA_folder  = os.path.join(data_folder, "singletons_mRNA")
-        singletons_rRNA_folder  = os.path.join(data_folder, "singletons_rRNA")
-        pair_1_mRNA_folder      = os.path.join(data_folder, "pair_1_mRNA")
-        pair_1_rRNA_folder      = os.path.join(data_folder, "pair_1_rRNA")
-        pair_2_mRNA_folder      = os.path.join(data_folder, "pair_2_mRNA")
-        pair_2_rRNA_folder      = os.path.join(data_folder, "pair_2_rRNA")
-        final_folder            = os.path.join(subfolder, "final_results")
-        final_mRNA_folder       = os.path.join(final_folder, "mRNA")
-        final_rRNA_folder       = os.path.join(final_folder, "rRNA")
+        dep_folder                  = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        subfolder                   = os.path.join(self.Output_Path, stage_name)
+        data_folder                 = os.path.join(subfolder, "data")
+        pre_filter_folder           = os.path.join(data_folder, "0_pre_singletons")
+        pre_filter_mRNA_folder      = os.path.join(pre_filter_folder, "mRNA")
+        pre_filter_rRNA_folder      = os.path.join(pre_filter_folder, "rRNA")
+        singletons_mRNA_folder      = os.path.join(data_folder, "singletons_mRNA")
+        singletons_rRNA_folder      = os.path.join(data_folder, "singletons_rRNA")
+        pair_1_mRNA_folder          = os.path.join(data_folder, "pair_1_mRNA")
+        pair_1_barrnap_mRNA_folder  = 
+        pair_1_rRNA_folder          = os.path.join(data_folder, "pair_1_rRNA")
+        pair_2_mRNA_folder          = os.path.join(data_folder, "pair_2_mRNA")
+        pair_2_rRNA_folder          = os.path.join(data_folder, "pair_2_rRNA")
+        final_folder                = os.path.join(subfolder, "final_results")
+        final_mRNA_folder           = os.path.join(final_folder, "mRNA")
+        final_rRNA_folder           = os.path.join(final_folder, "rRNA")
 
         self.make_folder(pre_filter_folder)
         self.make_folder(pre_filter_mRNA_folder)

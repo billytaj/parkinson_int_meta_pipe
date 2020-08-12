@@ -720,15 +720,18 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
 
             if check_bypass_log(output_folder_path, rRNA_filter_infernal_label + "_" + section):
                 for item in os.listdir(barrnap_mRNA_fasta_path):
+                    #using a job marker is ineffective.  The marker will still write 
                     root_name = item.split("_barrnap_mRNA")[0]
                     marker_path = os.path.join(output_folder_path, rRNA_filter_label, "data", "jobs")
                     marker_file = os.path.join(marker_path, root_name + "_infernal")
+                    
                     if(os.path.exists(marker_file)):
                         print(dt.today(), "infernal already run. skipping:", root_name + "_infernal")
                         continue
                     else:
                         inf_command = commands.create_rRNA_filter_infernal_command("rRNA_filter", section, root_name)
                         inner_name = "rRNA_filter_infernal_" + root_name
+                        print("inf command:", inf_command)
                         launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, inf_command)
                         
                         
