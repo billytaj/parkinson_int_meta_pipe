@@ -11,11 +11,16 @@ import pandas as pd
 def extract_rRNA_ID(inf_file):
     ID_list = set()
     inf_list = open(inf_file, mode='r')
-    
+    line_count = 0
     for item in inf_list:
+        line_count += 1
         if(not item.startswith("#")):
             # needs the @ at the start, for a match with the FASTQ's IDs
+            fastq_list = item.split()
+            #if(len(fastq_list) < 2):
+            print("count:", line_count, "fastq id split:", fastq_list)
             fastq_id = item.split()[2]
+            
             #print("FASTQ ID located:", fastq_id)
             ID_list.add("@" + fastq_id)
         elif(len(item) == 2):

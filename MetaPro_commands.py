@@ -1195,9 +1195,8 @@ class mt_pipe_commands:
         
         return [convert_fastq_to_fasta_barrnap]
 
-    def create_rRNA_filter_infernal_command(self, stage_name, category, fastq_name, dependency_name):
+    def create_rRNA_filter_infernal_command(self, stage_name, category, file_name):
     
-        dep_loc             = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
@@ -1206,24 +1205,16 @@ class mt_pipe_commands:
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
         mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
         rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
-        file_name           = fastq_name.split(".")[0]
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
-        
-        fastq_seqs          = os.path.join(fastq_folder, fastq_name)
-        
-        fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
+        jobs_folder         = os.path.join(data_folder, "jobs")
 
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(rRNA_folder)
         self.make_folder(Barrnap_out_folder)
+        self.make_folder(jobs_folder)
         
-        convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
-        convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
-        convert_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(mRNA_folder, file_name + "_barrnap_mRNA.fastq")
-        convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
-        convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fasta")
 
         infernal_command = ">&2 echo " + str(dt.today()) + " running infernal on " + file_name + " file | "
         infernal_command += self.tool_path_obj.Infernal
@@ -1233,24 +1224,41 @@ class mt_pipe_commands:
         infernal_command += " --cpu 1"
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
-        infernal_command += os.path.join(mRNA_folder, file_name + "_barrnap_mRNA.fasta")
+        infernal_command += os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fasta")
 
+        make_marker = ">&2 echo " + file_name + "_infernal Marking job completed | " 
+        make_marker += "touch" + " " 
+        make_marker += os.path.join(jobs_folder, file_name + "_infernal")
+        
+        COMMANDS_infernal = [infernal_command, make_marker]
+        return COMMANDS_infernal
+
+    def create_rRNA_filter_splitter_command(self, stage_name, category, file_name):
+    
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        fasta_folder        = os.path.join(data_folder, category + "_fasta")
+        fastq_folder        = os.path.join(data_folder, category + "_fastq")
+        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap_mRNA_fasta")
+        infernal_out_folder = os.path.join(data_folder, category + "_infernal")
+        mRNA_barrnap_folder = os.path.join(data_folder, category + "_mRNA")
+        mRNA_infernal_folder= os.path.join(data_folder, category + "_infernal_mRNA")
+        rRNA_folder         = os.path.join(data_folder, category + "_infernal_rRNA")
+        infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
+        
+        self.make_folder(mRNA_infernal_folder)
+        self.make_folder(rRNA_folder)
+        
         rRNA_filtration = ">&2 echo " + str(dt.today()) + " Getting the actual reads out of Infernal: " + file_name + " | "
         rRNA_filtration += self.tool_path_obj.Python + " "
         rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
         rRNA_filtration += infernal_out + " "
-        rRNA_filtration += os.path.join(mRNA_folder, file_name + "_barrnap_mRNA.fastq") + " "
-        rRNA_filtration += mRNA_folder + " "
+        rRNA_filtration += os.path.join(mRNA_barrnap_folder, file_name + "_barrnap_mRNA.fastq") + " "
+        rRNA_filtration += mRNA_infernal_folder + " "
         rRNA_filtration += rRNA_folder + " "
         rRNA_filtration += file_name + "_infernal"
         
-        COMMANDS_infernal = [
-            convert_fastq_to_fasta_barrnap,
-            infernal_command,
-            rRNA_filtration
-        ]
-        return COMMANDS_infernal
-
+        return [rRNA_filtration]
 
     def create_rRNA_filter_post_command(self, dependency_stage_name, stage_name):
         # rRNA filtration orphaned some reads in the pairs.  We need to refilter the singletons.
