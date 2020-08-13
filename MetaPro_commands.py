@@ -932,10 +932,6 @@ class mt_pipe_commands:
         jobs_folder         = os.path.join(data_folder, "jobs")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
-        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
-        infernal_out_folder = os.path.join(data_folder, category + "_infernal")
-        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
-        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
         file_name           = fastq_name.split(".")[0]
         
         fastq_seqs          = os.path.join(fastq_folder, fastq_name)
@@ -943,11 +939,7 @@ class mt_pipe_commands:
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
         self.make_folder(fasta_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(infernal_out_folder)
-        self.make_folder(mRNA_folder)
-        self.make_folder(rRNA_folder)
-        self.make_folder(jobs_folder)
+
         
         convert_fastq_to_fasta = ">&2 echo " + " converting " + file_name + " file to fasta | "
         convert_fastq_to_fasta += self.tool_path_obj.vsearch
@@ -968,9 +960,6 @@ class mt_pipe_commands:
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
-        infernal_out_folder = os.path.join(data_folder, category + "_infernal")
-        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
-        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
         file_name           = fastq_name.split(".")[0]
         Barrnap_arc_out     = os.path.join(Barrnap_out_folder, file_name + "_arc.barrnap_out")
         Barrnap_bac_out     = os.path.join(Barrnap_out_folder, file_name + "_bac.barrnap_out")
@@ -982,10 +971,7 @@ class mt_pipe_commands:
 
         self.make_folder(fasta_folder)
         self.make_folder(Barrnap_out_folder)
-        self.make_folder(infernal_out_folder)
-        self.make_folder(mRNA_folder)
-        self.make_folder(rRNA_folder)
-        self.make_folder(jobs_folder)
+
      
         Barrnap_archaea = ">&2 echo running Barrnap on " + file_name + " file: arc | "
         Barrnap_archaea += self.tool_path_obj.Barrnap
@@ -1080,8 +1066,6 @@ class mt_pipe_commands:
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
-        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
-        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
         file_name           = fastq_name.split(".")[0]
         Barrnap_arc_out     = os.path.join(Barrnap_out_folder, file_name + "_arc.barrnap_out")
         Barrnap_bac_out     = os.path.join(Barrnap_out_folder, file_name + "_bac.barrnap_out")
@@ -1094,8 +1078,6 @@ class mt_pipe_commands:
         self.make_folder(fasta_folder)
         self.make_folder(Barrnap_out_folder)
         self.make_folder(infernal_out_folder)
-        self.make_folder(mRNA_folder)
-        self.make_folder(rRNA_folder)
         self.make_folder(jobs_folder)
         
         #combine the arc, bac, euk, mit files into 1
@@ -1131,8 +1113,8 @@ class mt_pipe_commands:
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
-        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
-        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
+        mRNA_folder         = os.path.join(data_folder, category + "_barrnap_mRNA")
+        rRNA_folder         = os.path.join(data_folder, category + "_barrnap_other")
         file_name           = fastq_name.split(".")[0]
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
         
@@ -1172,8 +1154,7 @@ class mt_pipe_commands:
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap_mRNA_fasta")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
-        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
-        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
+        mRNA_folder         = os.path.join(data_folder, category + "_barrnap_mRNA")
         file_name           = fastq_name.split(".")[0]
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
@@ -1184,7 +1165,6 @@ class mt_pipe_commands:
 
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
-        self.make_folder(rRNA_folder)
         self.make_folder(Barrnap_out_folder)
         
         convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
@@ -1203,15 +1183,13 @@ class mt_pipe_commands:
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap_mRNA_fasta")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
-        mRNA_folder         = os.path.join(data_folder, category + "_mRNA")
-        rRNA_folder         = os.path.join(data_folder, category + "_rRNA")
+        mRNA_folder         = os.path.join(data_folder, category + "_barrnap_mRNA")
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
         jobs_folder         = os.path.join(data_folder, "jobs")
 
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
-        self.make_folder(rRNA_folder)
         self.make_folder(Barrnap_out_folder)
         self.make_folder(jobs_folder)
         
@@ -1233,8 +1211,10 @@ class mt_pipe_commands:
         COMMANDS_infernal = [infernal_command + " && " + make_marker]
         return COMMANDS_infernal
 
-    def create_rRNA_filter_splitter_command(self, stage_name, category, file_name):
     
+    def create_rRNA_filter_splitter_command(self, stage_name, category, file_name):
+    #file name expected to have no extensions.  eg: pair_1_0
+    #expected to be called for each category (pair1, singletons).  not pair 2.  paired data is handled in combination
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
@@ -1246,176 +1226,116 @@ class mt_pipe_commands:
         rRNA_folder         = os.path.join(data_folder, category + "_infernal_rRNA")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
         
+        
+        file_name_code = file_name.split("_")[-1]
         self.make_folder(mRNA_infernal_folder)
         self.make_folder(rRNA_folder)
-        
-        rRNA_filtration = ">&2 echo " + str(dt.today()) + " Getting the actual reads out of Infernal: " + file_name + " | "
-        rRNA_filtration += self.tool_path_obj.Python + " "
-        rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
-        rRNA_filtration += infernal_out + " "
-        rRNA_filtration += os.path.join(mRNA_barrnap_folder, file_name + "_barrnap_mRNA.fastq") + " "
-        rRNA_filtration += mRNA_infernal_folder + " "
-        rRNA_filtration += rRNA_folder + " "
-        rRNA_filtration += file_name + "_infernal"
-        
+        if(category == "pair_1"):
+            
+            infernal_mRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_mRNA")
+            infernal_mRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_mRNA")
+            
+            infernal_rRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_other")
+            infernal_rRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_other")
+            
+            self.make_folder(infernal_mRNA_pair_1_folder)
+            self.make_folder(infernal_mRNA_pair_2_folder)
+            self.make_folder(infernal_rRNA_pair_1_folder)
+            self.make_folder(infernal_rRNA_pair_2_folder)
+            
+            
+            rRNA_filtration = ">&2 echo extracting mRNA with infernal report: " + file_name + " | "
+            rRNA_filtration += self.tool_path_obj.Python + " "
+            rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
+            rRNA_filtration += "AND" + " "
+            rRNA_filtration += "paired" + " "
+            rRNA_filtration += os.path.join(infernal_out_folder, "pair_1_" + file_name_code + ".infernal_out") + " "
+            rRNA_filtration += os.path.join(infernal_out_folder, "pair_2_" + file_name_code + ".infernal_out") + " "
+            rRNA_filtration += os.path.join(data_folder, "pair_1_fastq", "pair_1_" + file_name_code + ".fastq") + " "
+            rRNA_filtration += os.path.join(data_folder, "pair_2_fastq", "pair_2_" + file_name_code + ".fastq") + " "
+            rRNA_filtration += os.path.join(infernal_mRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_mRNA.fastq") + " "
+            rRNA_filtration += os.path.join(infernal_mRNA_pair_2_folder, "pair_2_" + file_name_code + "_infernal_mRNA.fastq") + " "
+            rRNA_filtration += os.path.join(infernal_rRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_other.fastq") + " "
+            rRNA_filtration += os.path.join(infernal_rRNA_pair_2_folder, "pair_2_" + file_name_code + "_infernal_other.fastq")
+            
+            
+            
+        elif(category == "singletons"):    
+            infernal_mRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_mRNA")
+            infernal_rRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_rRNA")
+            
+            self.make_folder(infernal_mRNA_singletons_folder)
+            self.make_folder(infernal_rRNA_singletons_folder)
+            
+            rRNA_filtration = ">&2 echo extracting mRNA with infernal report: " + file_name + " | "
+            rRNA_filtration += self.tool_path_obj.Python + " "
+            rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
+            rRNA_filtration += "AND" + " "
+            rRNA_filtration += "single" + " "
+            rRNA_filtration += os.path.join(infernal_out_folder, "singletons_" + file_name_code + ".infernal_out") + " "
+            rRNA_filtration += os.path.join(data_folder, "singletons_fastq", "singletons_" + file_name_code + ".fastq") + " "
+            rRNA_filtration += os.path.join(infernal_mRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_mRNA.fastq") + " "
+            rRNA_filtration += os.path.join(infernal_rRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_rRNA.fastq")
+            
+        else:
+            rRNA_filtration = ">&2 echo rRNA filtration ignored for pair 2 data: " + file_name
         return [rRNA_filtration]
-
-    def create_rRNA_filter_post_command(self, dependency_stage_name, stage_name):
-        # rRNA filtration orphaned some reads in the pairs.  We need to refilter the singletons.
-        # Cat then refilter
-        dep_folder                  = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+    
+    
+    
+    def create_rRNA_filter_final_cat_command(self, stage_name, category):
+        # 
+        # Cat then final filter.  
+        # operates in sections
         subfolder                   = os.path.join(self.Output_Path, stage_name)
         data_folder                 = os.path.join(subfolder, "data")
-        pre_filter_folder           = os.path.join(data_folder, "0_pre_singletons")
-        pre_filter_mRNA_folder      = os.path.join(pre_filter_folder, "mRNA")
-        pre_filter_rRNA_folder      = os.path.join(pre_filter_folder, "rRNA")
-        singletons_mRNA_folder      = os.path.join(data_folder, "singletons_mRNA")
-        singletons_rRNA_folder      = os.path.join(data_folder, "singletons_rRNA")
-        pair_1_mRNA_folder          = os.path.join(data_folder, "pair_1_mRNA")
-        pair_1_barrnap_mRNA_folder  = 
-        pair_1_rRNA_folder          = os.path.join(data_folder, "pair_1_rRNA")
-        pair_2_mRNA_folder          = os.path.join(data_folder, "pair_2_mRNA")
-        pair_2_rRNA_folder          = os.path.join(data_folder, "pair_2_rRNA")
+        
+        
+        
+        infernal_mRNA_folder        = os.path.join(data_folder, category + "_infernal_mRNA")
+        infernal_rRNA_folder        = os.path.join(data_folder, category + "_infernal_rRNA")
+        barrnap_rRNA_folder         = os.path.join(data_folder, category + "_barrnap_rRNA")
+        
+        merged_infernal_mRNA_folder = os.path.join(data_folder, category + "_infernal_merged_mRNA")
+        merged_infernal_rRNA_folder = os.path.join(data_folder, category + "_infernal_merged_rRNA")
+        merged_barrnap_rRNA_folder  = os.path.join(data_folder, category + "_barrnap_merged_rRNA")
         final_folder                = os.path.join(subfolder, "final_results")
-        final_mRNA_folder           = os.path.join(final_folder, "mRNA")
         final_rRNA_folder           = os.path.join(final_folder, "rRNA")
+        final_mRNA_folder           = os.path.join(final_folder, "mRNA")
+        
+        merged_infernal_rRNA_file   = os.path.join(merged_infernal_rRNA_folder, category + ".fastq")
+        merged_barrnap_rRNA_file    = os.path.join(merged_barrnap_rRNA_folder, category + ".fastq")
+        
+        
+        cat_infernal_mRNA = ">&2 echo merging mRNA | "
+        cat_infernal_mRNA += "for f in" + " "
+        cat_infernal_mRNA += infernal_mRNA_folder
+        cat_infernal_mRNA += "/* do cat \"$f\" >>" + " "
+        cat_infernal_mRNA += os.path.join(merged_infernal_mRNA_folder, category + ".fastq")
+        cat_infernal_mRNA += "; done"
 
-        self.make_folder(pre_filter_folder)
-        self.make_folder(pre_filter_mRNA_folder)
-        self.make_folder(pre_filter_rRNA_folder)
-        self.make_folder(final_folder)
-        self.make_folder(final_mRNA_folder)
-        self.make_folder(final_rRNA_folder)
+        cat_barrnap_rRNA = ">&2 echo merging barrnap rRNA | "
+        cat_barrnap_rRNA += "for f in" + " "
+        cat_barrnap_rRNA += barrnap_rRNA_folder
+        cat_barrnap_rRNA += "/* do cat \"$f\" >>" + " "
+        cat_barrnap_rRNA += os.path.join(merged_barrnap_rRNA_folder, category + ".fastq")
+        
+        cat_infernal_rRNA = ">&2 echo merging infernal rRNA | " 
+        cat_infernal_rRNA += "for f in" + " "
+        cat_infernal_rRNA += infernal_rRNA_folder
+        cat_infernal_rRNA += "/* do cat \"$f\" >>" + " " 
+        cat_infernal_rRNA += os.path.join(merged_infernal_rRNA_folder, category + ".fastq")
 
-        if self.read_mode == "single":
-            cat_singletons_mRNA = "for f in" + " "
-            cat_singletons_mRNA += singletons_mRNA_folder 
-            cat_singletons_mRNA += "/*; do cat \"$f\" >>" + " " 
-            cat_singletons_mRNA += os.path.join(final_mRNA_folder, "singletons.fastq") 
-            cat_singletons_mRNA += "; done"
-            
-            
-            #cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(final_rRNA_folder, "singletons.fastq")
-            cat_singletons_rRNA = "for f in" + " "
-            cat_singletons_rRNA += singletons_rRNA_folder
-            cat_singletons_rRNA += "/*; do cat \"$f\" >>" + " "
-            cat_singletons_rRNA += os.path.join(final_rRNA_folder, "singletons.fastq")
-            cat_singletons_rRNA += "; done"
-            
-            
-        elif self.read_mode == "paired":
-            #cat_singletons_mRNA = "cat " + singletons_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
-            #cat_singletons_rRNA = "cat " + singletons_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
-            cat_singletons_mRNA = "for f in" + " "
-            cat_singletons_mRNA += singletons_mRNA_folder
-            cat_singletons_mRNA += "/*; do cat \"$f\" >>" + " "
-            cat_singletons_mRNA += os.path.join(pre_filter_mRNA_folder, "singletons.fastq")
-            cat_singletons_mRNA += "; done"
-            
-            cat_singletons_rRNA = "for f in" + " "
-            cat_singletons_rRNA += singletons_rRNA_folder
-            cat_singletons_rRNA += "/*; do cat \"$f\" >>" + " "
-            cat_singletons_rRNA += os.path.join(pre_filter_rRNA_folder, "singletons.fastq")
-            cat_singletons_rRNA += "; done"
-            
-            
-
-        #cat_pair_1_mRNA = "cat " + pair_1_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
-        #cat_pair_1_rRNA = "cat " + pair_1_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
-        cat_pair_1_mRNA = "for f in" + " "
-        cat_pair_1_mRNA += pair_1_mRNA_folder 
-        cat_pair_1_mRNA += "/*; do cat \"$f\" >>" + " "
-        cat_pair_1_mRNA += os.path.join(pre_filter_mRNA_folder, "pair_1.fastq")
-        cat_pair_1_mRNA += "; done"
-        
-        cat_pair_1_rRNA = "for f in" + " "
-        cat_pair_1_rRNA += pair_1_rRNA_folder 
-        cat_pair_1_rRNA += "/*; do cat \"$f\" >>" + " "
-        cat_pair_1_rRNA += os.path.join(pre_filter_rRNA_folder, "pair_1.fastq")
-        cat_pair_1_rRNA += "; done"
-        
-        #cat_pair_2_mRNA = "cat " + pair_2_mRNA_folder + "/* 1>>" + os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
-        #cat_pair_2_rRNA = "cat " + pair_2_rRNA_folder + "/* 1>>" + os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
-
-        cat_pair_2_mRNA = "for f in" + " "
-        cat_pair_2_mRNA += pair_2_mRNA_folder 
-        cat_pair_2_mRNA += "/*; do cat \"$f\" >>" + " "
-        cat_pair_2_mRNA += os.path.join(pre_filter_mRNA_folder, "pair_2.fastq")
-        cat_pair_2_mRNA += "; done"
-        
-        cat_pair_2_rRNA = "for f in" + " "
-        cat_pair_2_rRNA += pair_2_rRNA_folder 
-        cat_pair_2_rRNA += "/*; do cat \"$f\" >>" + " "
-        cat_pair_2_rRNA += os.path.join(pre_filter_rRNA_folder, "pair_2.fastq")
-        cat_pair_2_rRNA += "; done"
+        cat_rRNA = ">&2 echo merging both rRNA | " 
+        cat_rRNA = "cat" + " "
+        cat_rRNA += merged_infernal_rRNA_file + " "
+        cat_rRNA += merged_barrnap_rRNA_file + " "
+        cat_rRNA += ">>" + " "
+        cat_rRNA += os.path.join(final_rRNA_folder, category + "_other.fastq")
         
         
-
-
-        singleton_mRNA_filter = ">&2 echo " + str(dt.today()) + " filtering mRNA for singletons | "
-        singleton_mRNA_filter += self.tool_path_obj.Python + " "
-        singleton_mRNA_filter += self.tool_path_obj.orphaned_read_filter + " "
-        singleton_mRNA_filter += os.path.join(pre_filter_mRNA_folder, "pair_1.fastq") + " "
-        singleton_mRNA_filter += os.path.join(pre_filter_mRNA_folder, "pair_2.fastq") + " "
-        singleton_mRNA_filter += os.path.join(pre_filter_mRNA_folder, "singletons.fastq") + " "
-        singleton_mRNA_filter += os.path.join(final_mRNA_folder, "pair_1.fastq") + " "
-        singleton_mRNA_filter += os.path.join(final_mRNA_folder, "pair_2.fastq") + " "
-        singleton_mRNA_filter += os.path.join(final_mRNA_folder, "singletons.fastq")
-
-        singleton_rRNA_filter = ">&2 echo " + str(dt.today()) + " filtering rRNA for singletons | "
-        singleton_rRNA_filter += self.tool_path_obj.Python + " "
-        singleton_rRNA_filter += self.tool_path_obj.orphaned_read_filter + " "
-        singleton_rRNA_filter += os.path.join(pre_filter_rRNA_folder, "pair_1.fastq") + " "
-        singleton_rRNA_filter += os.path.join(pre_filter_rRNA_folder, "pair_2.fastq") + " "
-        singleton_rRNA_filter += os.path.join(pre_filter_rRNA_folder, "singletons.fastq") + " "
-        singleton_rRNA_filter += os.path.join(final_rRNA_folder, "pair_1.fastq") + " "
-        singleton_rRNA_filter += os.path.join(final_rRNA_folder, "pair_2.fastq") + " "
-        singleton_rRNA_filter += os.path.join(final_rRNA_folder, "singletons.fastq")
         
-        # data_change_rRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal rRNA | "
-        # data_change_rRNA += self.tool_path_obj.Python + " "
-        # data_change_rRNA += self.tool_path_obj.data_change_metrics + " "
-        # if(self.read_mode == "single"):
-            # data_change_rRNA += os.path.join(dep_folder, "singletons.fastq") + " "
-            # data_change_rRNA += os.path.join(final_rRNA_folder, "singletons.fastq") + " "
-            # data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_singletons.tsv")
-        # elif(self.read_mode == "paired"):
-            # data_change_rRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
-            # data_change_rRNA += os.path.join(final_rRNA_folder, "pair_1.fastq") + " "
-            # data_change_rRNA += os.path.join(final_folder, "vector_to_rRNA_pair_1.tsv")
-        
-        # data_change_mRNA = ">&2 echo scanning for relative change between vector filter and rRNA removal mRNA | "
-        # data_change_mRNA += self.tool_path_obj.Python + " "
-        # data_change_mRNA += self.tool_path_obj.data_change_metrics + " "
-        # if(self.read_mode == "single"):
-            # data_change_mRNA += os.path.join(dep_folder, "singletons.fastq") + " "
-            # data_change_mRNA += os.path.join(final_mRNA_folder, "singletons.fastq") + " "
-            # data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_singletons.tsv")
-        # elif(self.read_mode == "paired"):
-            # data_change_mRNA += os.path.join(dep_folder, "pair_1.fastq") + " "
-            # data_change_mRNA += os.path.join(final_mRNA_folder, "pair_1.fastq") + " "
-            # data_change_mRNA += os.path.join(final_folder, "vector_to_mRNA_pair_1.tsv")
-        
-        if self.read_mode == "single":
-            COMMANDS_rRNA_post = [
-                cat_singletons_mRNA,
-                cat_singletons_rRNA#,
-                #data_change_mRNA,
-                #data_change_rRNA
-            ]
-        elif self.read_mode == "paired":
-            COMMANDS_rRNA_post = [
-                cat_singletons_mRNA,
-                cat_singletons_rRNA,
-                cat_pair_1_mRNA,
-                cat_pair_1_rRNA,
-                cat_pair_2_mRNA,
-                cat_pair_2_rRNA,
-                singleton_mRNA_filter,
-                singleton_rRNA_filter#,
-                #data_change_mRNA,
-                #data_change_rRNA
-            ]
+        COMMANDS_rRNA_post = [cat_infernal_mRNA + " && " + cat_infernal_rRNA + " && " + cat_barrnap_rRNA + " && " + cat_rRNA]
 
         return COMMANDS_rRNA_post
 
