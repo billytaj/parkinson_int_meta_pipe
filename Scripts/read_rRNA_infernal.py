@@ -69,8 +69,8 @@ if __name__ == "__main__":
     
     if(data_flag == "paired"):
         
-        pair_1_id_list = import_infernal_rRNA(pair_1_in_file)
-        pair_2_id_list = import_infernal_rRNA(pair_2_in_file)
+        pair_1_id_list = import_infernal_rRNA(pair_1_inf_file)
+        pair_2_id_list = import_infernal_rRNA(pair_2_inf_file)
         
         pair_1_raw_df = import_fastq(pair_1_raw_file)
         pair_2_raw_df = import_fastq(pair_2_raw_file)
