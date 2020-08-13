@@ -1232,6 +1232,9 @@ class mt_pipe_commands:
         self.make_folder(rRNA_folder)
         if(category == "pair_1"):
             
+            infernal_pair_1_out_folder = os.path.join(data_folder, "pair_1_infernal")
+            infernal_pair_2_out_folder = os.path.join(data_folder, "pair_2_infernal")
+            
             infernal_mRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_mRNA")
             infernal_mRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_mRNA")
             
@@ -1249,8 +1252,8 @@ class mt_pipe_commands:
             rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
             rRNA_filtration += "AND" + " "
             rRNA_filtration += "paired" + " "
-            rRNA_filtration += os.path.join(infernal_out_folder, "pair_1_" + file_name_code + ".infernal_out") + " "
-            rRNA_filtration += os.path.join(infernal_out_folder, "pair_2_" + file_name_code + ".infernal_out") + " "
+            rRNA_filtration += os.path.join(infernal_pair_1_out_folder, "pair_1_" + file_name_code + ".infernal_out") + " "
+            rRNA_filtration += os.path.join(infernal_pair_2_out_folder, "pair_2_" + file_name_code + ".infernal_out") + " "
             rRNA_filtration += os.path.join(data_folder, "pair_1_fastq", "pair_1_" + file_name_code + ".fastq") + " "
             rRNA_filtration += os.path.join(data_folder, "pair_2_fastq", "pair_2_" + file_name_code + ".fastq") + " "
             rRNA_filtration += os.path.join(infernal_mRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_mRNA.fastq") + " "

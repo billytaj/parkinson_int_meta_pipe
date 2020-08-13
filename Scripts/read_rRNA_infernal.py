@@ -18,7 +18,7 @@ def import_infernal_rRNA(inf_file):
             # needs the @ at the start, for a match with the FASTQ's IDs
             fastq_list = item.split()
             #if(len(fastq_list) < 2):
-            print("count:", line_count, "fastq id split:", fastq_list)
+            #print("count:", line_count, "fastq id split:", fastq_list)
             fastq_id = item.split()[2]
             
             #print("FASTQ ID located:", fastq_id)
