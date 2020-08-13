@@ -85,8 +85,8 @@ if __name__ == "__main__":
         pair_1_accepted_df = pair_1_raw_df[~pair_1_raw_df["ID"].isin(common_id_list)]
         pair_2_accepted_df = pair_2_raw_df[~pair_2_raw_df["ID"].isin(common_id_list)]
         
-        pair_1_accepted_size = pair_1_accepted_df.shape()[0]
-        pair_1_raw_size = pair_1_raw_df.shape()[0]
+        pair_1_accepted_size = pair_1_accepted_df.shape[0]
+        pair_1_raw_size = pair_1_raw_df.shape[0]
         print(pair_1_accepted_size, "vs:", len(common_id_list))
         
         pair_1_rejected_df = pair_1_raw_df[pair_1_raw_df["ID"].isin(common_id_list)]
