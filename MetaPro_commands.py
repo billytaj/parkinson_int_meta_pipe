@@ -965,7 +965,6 @@ class mt_pipe_commands:
         Barrnap_bac_out     = os.path.join(Barrnap_out_folder, file_name + "_bac.barrnap_out")
         Barrnap_euk_out     = os.path.join(Barrnap_out_folder, file_name + "_euk.barrnap_out")
         Barrnap_mit_out     = os.path.join(Barrnap_out_folder, file_name + "_mit.barrnap_out")
-        infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
         
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
@@ -1265,7 +1264,7 @@ class mt_pipe_commands:
             
         elif(category == "singletons"):    
             infernal_mRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_mRNA")
-            infernal_rRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_rRNA")
+            infernal_rRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_other")
             
             self.make_folder(infernal_mRNA_singletons_folder)
             self.make_folder(infernal_rRNA_singletons_folder)
@@ -1296,14 +1295,14 @@ class mt_pipe_commands:
         
         
         infernal_mRNA_folder        = os.path.join(data_folder, category + "_infernal_mRNA")
-        infernal_rRNA_folder        = os.path.join(data_folder, category + "_infernal_rRNA")
-        barrnap_rRNA_folder         = os.path.join(data_folder, category + "_barrnap_rRNA")
+        infernal_rRNA_folder        = os.path.join(data_folder, category + "_infernal_other")
+        barrnap_rRNA_folder         = os.path.join(data_folder, category + "_barrnap_other")
         
         #merged_infernal_mRNA_folder = os.path.join(data_folder, category + "_infernal_merged_mRNA")
-        merged_infernal_rRNA_folder = os.path.join(data_folder, category + "_infernal_merged_rRNA")
-        merged_barrnap_rRNA_folder  = os.path.join(data_folder, category + "_barrnap_merged_rRNA")
+        merged_infernal_rRNA_folder = os.path.join(data_folder, category + "_infernal_merged_other")
+        merged_barrnap_rRNA_folder  = os.path.join(data_folder, category + "_barrnap_merged_other")
         final_folder                = os.path.join(subfolder, "final_results")
-        final_rRNA_folder           = os.path.join(final_folder, "rRNA")
+        final_rRNA_folder           = os.path.join(final_folder, "other")
         final_mRNA_folder           = os.path.join(final_folder, "mRNA")
         
         merged_infernal_rRNA_file   = os.path.join(merged_infernal_rRNA_folder, category + ".fastq")
@@ -1320,21 +1319,23 @@ class mt_pipe_commands:
         cat_infernal_mRNA = ">&2 echo merging mRNA | "
         cat_infernal_mRNA += "for f in" + " "
         cat_infernal_mRNA += infernal_mRNA_folder
-        cat_infernal_mRNA += "/* do cat \"$f\" >>" + " "
+        cat_infernal_mRNA += "/*; do cat \"$f\" >>" + " "
         cat_infernal_mRNA += os.path.join(final_mRNA_folder, category + ".fastq")
         cat_infernal_mRNA += "; done"
 
         cat_barrnap_rRNA = ">&2 echo merging barrnap rRNA | "
         cat_barrnap_rRNA += "for f in" + " "
         cat_barrnap_rRNA += barrnap_rRNA_folder
-        cat_barrnap_rRNA += "/* do cat \"$f\" >>" + " "
+        cat_barrnap_rRNA += "/*; do cat \"$f\" >>" + " "
         cat_barrnap_rRNA += os.path.join(merged_barrnap_rRNA_folder, category + ".fastq")
+        cat_barrnap_rRNA += "; done"
         
         cat_infernal_rRNA = ">&2 echo merging infernal rRNA | " 
         cat_infernal_rRNA += "for f in" + " "
         cat_infernal_rRNA += infernal_rRNA_folder
-        cat_infernal_rRNA += "/* do cat \"$f\" >>" + " " 
+        cat_infernal_rRNA += "/*; do cat \"$f\" >>" + " " 
         cat_infernal_rRNA += os.path.join(merged_infernal_rRNA_folder, category + ".fastq")
+        cat_infernal_rRNA += "; done"
 
         cat_rRNA = ">&2 echo merging both rRNA | " 
         cat_rRNA = "cat" + " "
@@ -1342,7 +1343,7 @@ class mt_pipe_commands:
         cat_rRNA += merged_barrnap_rRNA_file + " "
         cat_rRNA += ">>" + " "
         cat_rRNA += os.path.join(final_rRNA_folder, category + "_other.fastq")
-        
+        cat_rRNA += "; done"
         
         
         
@@ -1922,7 +1923,7 @@ class mt_pipe_commands:
         data_folder = os.path.join(subfolder, "data")
         dep_loc     = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         blat_folder = os.path.join(data_folder, "0_blat")
-
+        jobs_folder = os.path.join(data_folder, "jobs")
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_folder)
@@ -1933,6 +1934,10 @@ class mt_pipe_commands:
         blat_command += os.path.join(dep_loc, section + ".fasta")
         blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
         blat_command += os.path.join(blat_folder, section + "_" + fasta + ".blatout")
+
+        make_marker = ">&2 echo " + file_name + "_barrnap Marking job completed | " 
+        make_marker += "touch" + " " 
+        make_marker += os.path.join(jobs_folder, file_name + "_barrnap")
 
         return [blat_command]
         

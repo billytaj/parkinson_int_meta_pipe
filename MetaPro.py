@@ -771,9 +771,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
         for section in reversed(sections):
             if check_bypass_log(output_folder_path, rRNA_filter_post_label + "_" + section):
-                print(dt.today(), "now running rRNA filter post")
+                print(dt.today(), "now running rRNA filter post:", section)
+                
                 inner_name = "rRNA_post_cat"
                 command_list = commands.create_rRNA_filter_final_cat_command("rRNA_filter", section)
+                print("command list:", command_list)
                 launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, command_list)
                 
         for p_item in mp_store:
