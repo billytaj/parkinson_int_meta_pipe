@@ -731,7 +731,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     else:
                         inf_command = commands.create_rRNA_filter_infernal_command("rRNA_filter", section, root_name)
                         inner_name = "rRNA_filter_infernal_" + root_name
-                        print("inf command:", inf_command)
                         launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, inf_command)
                         
                         
@@ -754,9 +753,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         else:
                             inner_name = "rRNA_filter_infernal_splitter_" + root_name
                             command_list = commands.create_rRNA_filter_splitter_command("rRNA_filter", section, root_name)
+                            print(command_list)
                             launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, command_list)
-                            
-                            print("command:", command_list)
                             
                     print(dt.today(), "final batch: infernal splitter")
                     for p_item in mp_store:

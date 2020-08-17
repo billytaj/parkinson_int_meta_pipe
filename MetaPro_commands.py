@@ -817,54 +817,7 @@ class mt_pipe_commands:
 
         return COMMANDS_vector
 
-    #oct 31, 2019: dep'd function.  we now split on constant chunksize, not constant chunks
-    # def create_rRNA_filter_prep_command(self, stage_name, file_split_count, dependency_name, operating_mode = "single"):
-        # # split data into mRNA and rRNA so we can focus on the mRNA for the remainder of the analysis steps
-        # dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
-        # subfolder               = os.path.join(self.Output_Path, stage_name)
-        # data_folder             = os.path.join(subfolder, "data")
-        # singleton_split_folder  = os.path.join(data_folder, "singletons", "singletons_fastq")
-        
-        # self.make_folder(subfolder)
-        # self.make_folder(data_folder)
-        # self.make_folder(singleton_split_folder)
-                
-        # file_splitter_singletons = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-        # file_splitter_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
-        # file_splitter_singletons += os.path.join(singleton_split_folder, "singletons") + " "
-        # file_splitter_singletons += str(file_split_count)
-        
-        # file_splitter_pair_1 = None
-        # file_splitter_pair_2 = None
-        
-        # if(operating_mode == "paired"):
-            # pair_1_split_folder     = os.path.join(data_folder, "pair_1", "pair_1_fastq")
-            # pair_2_split_folder     = os.path.join(data_folder, "pair_2", "pair_2_fastq")
-            # self.make_folder(pair_1_split_folder)
-            # self.make_folder(pair_2_split_folder)        
-
-            # file_splitter_pair_1 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-            # file_splitter_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
-            # file_splitter_pair_1 += os.path.join(pair_1_split_folder, "pair_1") + " "
-            # file_splitter_pair_1 += str(file_split_count)
-
-            # file_splitter_pair_2 = self.tool_path_obj.Python + " " + self.tool_path_obj.File_splitter + " "
-            # file_splitter_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
-            # file_splitter_pair_2 += os.path.join(pair_2_split_folder, "pair_2") + " "
-            # file_splitter_pair_2 += str(file_split_count)
-            
-        # if self.read_mode == "single":
-            # COMMANDS_rRNA_prep = [
-                # file_splitter_singletons
-            # ]
-        # elif self.read_mode == "paired":
-            # COMMANDS_rRNA_prep = [
-                # file_splitter_singletons,
-                # file_splitter_pair_1,
-                # file_splitter_pair_2
-            # ]
-        # #print(dt.today(), COMMANDS_rRNA_prep)
-        # return COMMANDS_rRNA_prep
+   
         
     def create_rRNA_filter_prep_command_2nd_split(self, stage_name, category, file_to_split, split_count):
         #this splits a file into separate-but-equal portions 
@@ -1228,7 +1181,6 @@ class mt_pipe_commands:
         
         file_name_code = file_name.split("_")[-1]
         self.make_folder(mRNA_infernal_folder)
-        self.make_folder(rRNA_folder)
         if(category == "pair_1"):
             
             infernal_pair_1_out_folder = os.path.join(data_folder, "pair_1_infernal")
@@ -1791,11 +1743,12 @@ class mt_pipe_commands:
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         bwa_folder      = os.path.join(data_folder, "1_bwa")
-        
+        jobs_folder     = os.path.join(data_folder, "jobs")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(bwa_folder)
+        self.make_folder(jobs_folder)
 
         file_tag = os.path.basename(query_file)
         file_tag = os.path.splitext(file_tag)[0]
@@ -1808,56 +1761,16 @@ class mt_pipe_commands:
         bwa_job += self.tool_path_obj.SAMTOOLS + " view "
         bwa_job += "> " + os.path.join(bwa_folder, file_tag + ".sam")
         
+        make_marker = ">&2 echo marking BWA job complete: " + file_tag + " | "
+        make_marker += "touch" + " "
+        make_marker += os.path.join(jobs_folder, file_tag + "_bwa")
 
         COMMANDS_BWA = [
-            bwa_job
+            bwa_job + " && " + make_marker
         ]
 
         return COMMANDS_BWA
 
-
-    def create_BWA_pp_command(self, stage_name, dependency_stage_name):
-        subfolder       = os.path.join(self.Output_Path, stage_name)
-        data_folder     = os.path.join(subfolder, "data")
-        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
-        bwa_folder      = os.path.join(data_folder, "0_bwa")
-        final_folder    = os.path.join(subfolder, "final_results")
-
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(bwa_folder)
-        self.make_folder(final_folder)
-
-        map_read_bwa = ">&2 echo map read bwa v2 | "
-        map_read_bwa += self.tool_path_obj.Python + " "
-        map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
-        map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
-        map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
-        map_read_bwa += os.path.join(final_folder, "gene_map.tsv") + " "  # OUT
-        map_read_bwa += os.path.join(dep_loc, "contigs.fasta") + " "  # IN
-        map_read_bwa += os.path.join(bwa_folder, "contigs.sam") + " "  # IN
-        map_read_bwa += os.path.join(final_folder, "contigs.fasta") + " "  # OUT
-        map_read_bwa += os.path.join(dep_loc, "singletons.fastq") + " "  # IN
-        map_read_bwa += os.path.join(bwa_folder, "singletons.sam") + " "  # IN
-        map_read_bwa += os.path.join(final_folder, "singletons.fasta")  # OUT
-        if self.read_mode == "paired":
-            map_read_bwa += " " + os.path.join(dep_loc, "pair_1.fastq") + " "  # IN
-            map_read_bwa += os.path.join(bwa_folder, "pair_1.sam") + " "  # IN
-            map_read_bwa += os.path.join(final_folder, "pair_1.fasta") + " "  # OUT
-            map_read_bwa += os.path.join(dep_loc, "pair_2.fastq") + " "  # IN
-            map_read_bwa += os.path.join(bwa_folder, "pair_2.sam") + " "  # IN
-            map_read_bwa += os.path.join(final_folder, "pair_2.fasta")  # OUT
-
-        copy_contig_map = ">&2 echo copy contig map | "
-        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
-
-        COMMANDS_Annotate_BWA = [
-            map_read_bwa,
-            copy_contig_map
-        ]
-
-        return COMMANDS_Annotate_BWA
-        
         
     def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
         sample_root_name = os.path.basename(query_file)
@@ -1871,11 +1784,13 @@ class mt_pipe_commands:
         split_folder    = os.path.join(data_folder, "0_read_split")
         final_folder    = os.path.join(subfolder, "final_results")
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(bwa_folder)
         self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
         
         reads_in    = query_file
         bwa_in      = os.path.join(bwa_folder, sample_root_name + ".sam")
@@ -1892,10 +1807,12 @@ class mt_pipe_commands:
         map_read_bwa += bwa_in + " "
         map_read_bwa += reads_out
         
-        
+        make_marker = ">&2 echo bwa pp complete: " + sample_root_name + " | " 
+        make_marker += "touch" + " " 
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_bwa_pp")
 
         COMMANDS_Annotate_BWA = [
-            map_read_bwa,
+            map_read_bwa + " && " + make_marker
             #copy_contig_map
         ]
         return COMMANDS_Annotate_BWA
@@ -1918,29 +1835,6 @@ class mt_pipe_commands:
         
         return [copy_contig_map]
 
-    def create_BLAT_annotate_command(self, stage_name, dependency_stage_name, section, fasta):
-        subfolder   = os.path.join(self.Output_Path, stage_name)
-        data_folder = os.path.join(subfolder, "data")
-        dep_loc     = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
-        blat_folder = os.path.join(data_folder, "0_blat")
-        jobs_folder = os.path.join(data_folder, "jobs")
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(blat_folder)
-
-        blat_command = ">&2 echo BLAT annotation for " + section + " " + fasta + " | "
-        blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
-        blat_command += self.tool_path_obj.DNA_DB_Split + fasta + " "
-        blat_command += os.path.join(dep_loc, section + ".fasta")
-        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
-        blat_command += os.path.join(blat_folder, section + "_" + fasta + ".blatout")
-
-        make_marker = ">&2 echo " + file_name + "_barrnap Marking job completed | " 
-        make_marker += "touch" + " " 
-        make_marker += os.path.join(jobs_folder, file_name + "_barrnap")
-
-        return [blat_command]
-        
     def create_BLAT_annotate_command_v2(self, stage_name, query_file, fasta_db):
         #takes in a sample query file (expecting a segment of the whole GA data, after BWA
         sample_root_name = os.path.basename(query_file)
@@ -1949,10 +1843,12 @@ class mt_pipe_commands:
         subfolder   = os.path.join(self.Output_Path, stage_name)
         data_folder = os.path.join(subfolder, "data")
         blat_folder = os.path.join(data_folder, "0_blat")
-
+        jobs_folder = os.path.join(data_folder, "jobs")
+        
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_folder)
+        self.make_folder(jobs_folder)
 
         blat_command = ">&2 echo BLAT annotation for " + sample_root_name + " " + fasta_db + " | "
         blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
@@ -1961,27 +1857,16 @@ class mt_pipe_commands:
         blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
         blat_command += os.path.join(blat_folder, sample_root_name + "_" + fasta_db + ".blatout")
         
+        make_marker = ">&2 echo marking BLAT job complete: " + sample_root_name + " | " 
+        make_marker += "touch" + " "
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_blat")
+        
         if(os.path.getsize(query_file) > 0):
-            return [blat_command]
+            return [blat_command + " && " + make_marker]
         else:
             dummy_blat_command = ">&2 echo Not running BLAT command on empty file: " + query_file
             return [dummy_blat_command]
         
-        
-
-    def create_BLAT_cat_command(self, stage_name, section):
-        # this is meant to be called for each section: contigs, singletons, pair_1, pair_2
-        subfolder           = os.path.join(self.Output_Path, stage_name)
-        data_folder         = os.path.join(subfolder, "data")
-        blat_folder         = os.path.join(data_folder, "0_blat")
-        blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
-
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(blat_merge_folder)
-
-        cat_command = "cat " + os.path.join(blat_folder, section + "*.blatout") + " > " + os.path.join(blat_merge_folder, section + ".blatout")
-        return [cat_command]
         
     def create_BLAT_cat_command_v2(self, stage_name, query_file):
         sample_root_name = os.path.basename(query_file)
@@ -2005,52 +1890,7 @@ class mt_pipe_commands:
             #cleanup_command
         ]
         
-        
 
-    def create_BLAT_pp_command(self, stage_name, dependency_stage_name):
-        # this call is meant to be run after the BLAT calls have been completed.
-        subfolder           = os.path.join(self.Output_Path, stage_name)
-        data_folder         = os.path.join(subfolder, "data")
-        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
-        blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
-        final_folder        = os.path.join(subfolder, "final_results")
-
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(final_folder)
-
-        blat_pp = ">&2 echo BLAT post-processing | "
-        blat_pp += self.tool_path_obj.Python + " "
-        blat_pp += self.tool_path_obj.Map_reads_gene_BLAT + " "
-        blat_pp += self.tool_path_obj.DNA_DB + " "
-        blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
-        blat_pp += os.path.join(dep_loc, "gene_map.tsv") + " "
-        blat_pp += os.path.join(final_folder, "genes.fna") + " "
-        blat_pp += os.path.join(final_folder, "gene_map.tsv") + " "
-        blat_pp += os.path.join(final_folder, "genes.fna") + " "
-        blat_pp += os.path.join(dep_loc, "contigs.fasta") + " "
-        blat_pp += os.path.join(blat_merge_folder, "contigs.blatout") + " "
-        blat_pp += os.path.join(final_folder, "contigs.fasta") + " "
-        blat_pp += os.path.join(dep_loc, "singletons.fasta") + " "
-        blat_pp += os.path.join(blat_merge_folder, "singletons.blatout") + " "
-        blat_pp += os.path.join(final_folder, "singletons.fasta")
-        if self.read_mode == "paired":
-            blat_pp += " " + os.path.join(dep_loc, "pair_1.fasta") + " "
-            blat_pp += os.path.join(blat_merge_folder, "pair_1.blatout") + " "
-            blat_pp += os.path.join(final_folder, "pair_1.fasta") + " "
-            blat_pp += os.path.join(dep_loc, "pair_2.fasta") + " "
-            blat_pp += os.path.join(blat_merge_folder, "pair_2.blatout") + " "
-            blat_pp += os.path.join(final_folder, "pair_2.fasta")
-
-        copy_contig_map = ">&2 echo copy contig map | "
-        copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
-
-        COMMANDS_Annotate_BLAT_Post = [
-            blat_pp,
-            copy_contig_map
-        ]
-
-        return COMMANDS_Annotate_BLAT_Post
 
     def create_BLAT_pp_command_v2(self, stage_name, query_file, dependency_stage_name):
         # this call is meant to be run after the BLAT calls have been completed.
@@ -2063,11 +1903,13 @@ class mt_pipe_commands:
         blat_folder         = os.path.join(data_folder, "1_blat_merge")
         final_folder        = os.path.join(subfolder, "final_results")
         dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
+        jobs_folder         = os.path.join(data_folder, "jobs")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_folder)
         self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
 
         blat_pp = ">&2 echo BLAT post-processing | "
         blat_pp += self.tool_path_obj.Python + " "
@@ -2080,11 +1922,11 @@ class mt_pipe_commands:
         blat_pp += os.path.join(blat_folder, sample_root_name + ".blatout") + " "
         blat_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "
         
+        make_marker = ">&2 echo BLAT pp complete: " + sample_root_name + " | "
+        make_marker += "touch" + " " 
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_blat_pp")
 
-
-        COMMANDS_Annotate_BLAT_Post = [
-            blat_pp
-        ]
+        COMMANDS_Annotate_BLAT_Post = [blat_pp + " && " + make_marker]
 
         return COMMANDS_Annotate_BLAT_Post
 
@@ -2105,30 +1947,7 @@ class mt_pipe_commands:
         return [copy_contig_map]
 
 
-    def create_DIAMOND_annotate_command(self, stage_name, dependency_stage_name, section):
-        subfolder           = os.path.join(self.Output_Path, stage_name)
-        data_folder         = os.path.join(subfolder, "data")
-        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
-        diamond_folder      = os.path.join(data_folder, "0_diamond")
-        section_folder      = os.path.join(data_folder, section)
-        section_temp_folder = os.path.join(section_folder, "temp")
 
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(diamond_folder)
-        self.make_folder(section_folder)
-        self.make_folder(section_temp_folder)
-
-        diamond_annotate = ">&2 echo gene annotate DIAMOND " + section + " | "
-        diamond_annotate += self.tool_path_obj.DIAMOND
-        diamond_annotate += " blastx -p " + self.Threads_str
-        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
-        diamond_annotate += " -q " + os.path.join(dep_loc, section + ".fasta")
-        diamond_annotate += " -o " + os.path.join(diamond_folder, section + ".dmdout")
-        diamond_annotate += " -f 6 -t " + section_temp_folder
-        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
-
-        return [diamond_annotate]
         
     def create_DIAMOND_annotate_command_v2(self, stage_name, query_file):
         sample_root_name = os.path.basename(query_file)
@@ -2139,13 +1958,15 @@ class mt_pipe_commands:
         #dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         diamond_folder      = os.path.join(data_folder, "0_diamond")
         main_temp_folder    = os.path.join(data_folder, sample_root_name + "_diamond_temp")
-        temp_folder =       os.path.join(main_temp_folder, "temp")
+        temp_folder         = os.path.join(main_temp_folder, "temp")
+        jobs_folder         = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(diamond_folder)
         self.make_folder(main_temp_folder)
         self.make_folder(temp_folder)
+        self.make_folder(jobs_folder)
         
         diamond_annotate = ">&2 echo gene annotate DIAMOND " + sample_root_name + " | "
         diamond_annotate += self.tool_path_obj.DIAMOND
@@ -2156,50 +1977,14 @@ class mt_pipe_commands:
         diamond_annotate += " -f 6 -t " + temp_folder #section_temp_folder
         diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
 
-        return [diamond_annotate]
+        make_marker = ">&2 echo DIAMOND complete: " + sample_root_name + " | "
+        make_marker += "touch" + " "
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond")
+
+        return [diamond_annotate + " && " + make_marker]
 
 
-    def create_DIAMOND_pp_command(self, stage_name, dependency_0_stage_name):
-        # the command just calls the merger program
-        subfolder       = os.path.join(self.Output_Path, stage_name)
-        data_folder     = os.path.join(subfolder, "data")
-        dep_loc_0       = os.path.join(self.Output_Path, dependency_0_stage_name, "final_results")  # implied to be blat pp
-        diamond_folder  = os.path.join(data_folder, "0_diamond/")
-        final_folder    = os.path.join(subfolder, "final_results")
-
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(final_folder)
-
-        diamond_pp = ">&2 echo DIAMOND post process | "
-        diamond_pp += self.tool_path_obj.Python + " "
-        diamond_pp += self.tool_path_obj.Map_reads_prot_DMND + " "
-        diamond_pp += self.tool_path_obj.Prot_DB_reads + " "  # IN
-        diamond_pp += os.path.join(dep_loc_0, "contig_map.tsv") + " "  # IN
-        diamond_pp += os.path.join(dep_loc_0, "gene_map.tsv") + " "  # IN
-        diamond_pp += os.path.join(final_folder, "gene_map.tsv") + " "  # OUT
-        diamond_pp += os.path.join(dep_loc_0, "genes.fna") + " "  # IN
-        diamond_pp += os.path.join(final_folder, "proteins.faa") + " "  # OUT
-        diamond_pp += os.path.join(dep_loc_0, "contigs.fasta") + " "  # IN
-        diamond_pp += os.path.join(diamond_folder, "contigs.dmdout") + " "  # IN
-        diamond_pp += os.path.join(final_folder, "contigs.fasta") + " "  # OUT
-        diamond_pp += os.path.join(dep_loc_0, "singletons.fasta") + " "  # IN
-        diamond_pp += os.path.join(diamond_folder, "singletons.dmdout") + " "  # IN
-        diamond_pp += os.path.join(final_folder, "singletons.fasta")  # OUT
-        if self.read_mode == "paired":
-            diamond_pp += " " + os.path.join(dep_loc_0, "pair_1.fasta") + " "  # IN
-            diamond_pp += os.path.join(diamond_folder, "pair_1.dmdout") + " "  # IN
-            diamond_pp += os.path.join(final_folder, "pair_1.fasta") + " "  # OUT
-            diamond_pp += os.path.join(dep_loc_0, "pair_2.fasta") + " "  # IN
-            diamond_pp += os.path.join(diamond_folder, "pair_2.dmdout") + " "  # IN
-            diamond_pp += os.path.join(final_folder, "pair_2.fasta")  # OUT
-
-        COMMANDS_Annotate_Diamond_Post = [
-            diamond_pp
-        ]
-
-        return COMMANDS_Annotate_Diamond_Post
-        
+   
     def create_DIAMOND_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
     
         sample_root_name = os.path.basename(query_file)
@@ -2210,10 +1995,12 @@ class mt_pipe_commands:
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be blat pp
         diamond_folder  = os.path.join(data_folder, "0_diamond/")
         final_folder    = os.path.join(subfolder, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
 
         diamond_pp = ">&2 echo DIAMOND post process | "
         diamond_pp += self.tool_path_obj.Python + " "
@@ -2227,9 +2014,12 @@ class mt_pipe_commands:
         diamond_pp += os.path.join(diamond_folder, sample_root_name + ".dmdout") + " "  # IN
         diamond_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "     # OUT
         
+        make_marker = ">&2 echo diamond pp complete: " + sample_root_name + " | "
+        make_marker += "touch" + " "
+        make_marker += os.path.join(jobs_folder, sample_root_name)
 
         COMMANDS_Annotate_Diamond_Post = [
-            diamond_pp
+            diamond_pp + " && " + make_marker
         ]
 
         return COMMANDS_Annotate_Diamond_Post 
@@ -2237,17 +2027,18 @@ class mt_pipe_commands:
 
 
     def create_GA_final_merge_command(self, current_stage_name, dep_0_name, dep_1_name, dep_2_name, dep_3_name):
-        subfolder = os.path.join(self.Output_Path, current_stage_name)
-        data_folder = os.path.join(subfolder, "data")
-        final_folder = os.path.join(subfolder, "final_results")
-        dep_0_path = os.path.join(self.Output_Path, dep_0_name, "final_results")
-        dep_1_path = os.path.join(self.Output_Path, dep_1_name, "final_results")
-        dep_2_path = os.path.join(self.Output_Path, dep_2_name, "final_results")
-        dep_3_path = os.path.join(self.Output_Path, dep_3_name, "final_results")
+        subfolder       = os.path.join(self.Output_Path, current_stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        final_folder    = os.path.join(subfolder, "final_results")
+        dep_0_path      = os.path.join(self.Output_Path, dep_0_name, "final_results")
+        dep_1_path      = os.path.join(self.Output_Path, dep_1_name, "final_results")
+        dep_2_path      = os.path.join(self.Output_Path, dep_2_name, "final_results")
+        dep_3_path      = os.path.join(self.Output_Path, dep_3_name, "final_results")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
         
         final_merge = self.tool_path_obj.Python + " "
         final_merge += self.tool_path_obj.GA_final_merge + " "
@@ -2257,6 +2048,7 @@ class mt_pipe_commands:
         final_merge += dep_2_path + " "
         final_merge += data_folder + " "
         final_merge += final_folder
+        
         
         COMMANDS_ga_final_merge = [
             final_merge
