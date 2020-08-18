@@ -392,56 +392,44 @@ class mt_pipe_commands:
         samtools_host_singletons_bam_to_fastq += os.path.join(host_removal_folder, "singletons_no_host.bam")
 
         # bwa hr pair 1 only
-        bwa_hr_pair_1 = ">&2 echo bwa pair host remove | "
-        bwa_hr_pair_1 += self.tool_path_obj.BWA + " mem -t "
-        bwa_hr_pair_1 += self.Threads_str + " "
-        bwa_hr_pair_1 += Host_Contaminants + " "
-        bwa_hr_pair_1 += os.path.join(quality_folder, "pair_1.fastq")
-        bwa_hr_pair_1 += " > " + os.path.join(host_removal_folder, "pair_1_no_host.sam")
+        if(self.read_mode == "paired"):
+        
+        bwa_hr_paired = ">&2 echo bwa host-removal on paired | " 
+        bwa_hr_paired += self.tool_path_obj.BWA + " "
+        bwa_hr_paired += "mem" + " "  + "-t" + " " + self.Threads_str + " "
+        bwa_hr_paired += Host_Contaminants + " "
+        bwa_hr_paired += os.path.join(quality_folder, "pair_1.fastq") + " "
+        bwa_hr_paired += os.path.join(quality_folder, "pair_2.fastq") + " "
+        bwa_hr_paired += ">" + " "
+        bwa_hr_paired += os.path.join(host_removal_folder, "paired_on_host.sam")
+        
+       
 
-        # separating bwa results back into paired reads
-        samtools_host_pair_1_sam_to_bam = ">&2 echo convert pair host files pt1 | "
-        samtools_host_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + os.path.join(
-            host_removal_folder, "pair_1_no_host.sam")
-        samtools_host_pair_1_sam_to_bam += " > " + os.path.join(host_removal_folder, "pair_1_no_host.bam")
+        samtools_host_paired_convert = ">&2 echo get host out of sam | "
+        samtools_host_paired_convert += self.tool_path_obj.SAMTOOLS + " "
+        samtools_host_paired_convert += "view -bs" + " "
+        samtools_host_paired_convert += os.path.join(host_removal_folder, "paired_on_host.sam") + " "
+        samtools_host_paired_convert += ">" +  " "
+        samtools_host_paired_convert += os.path.join(host_removal_folder, "paired_on_host.bam")
 
-        # stuff that doesn't match with the host
-        samtools_no_host_pair_1_bam_to_fastq = ">&2 echo convert pair host files pt2 | "
-        samtools_no_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_host_pair_1_bam_to_fastq += " -0 " + os.path.join(host_removal_folder, "pair_1_no_host.fastq") + " " # out
-        samtools_no_host_pair_1_bam_to_fastq += os.path.join(host_removal_folder, "pair_1_no_host.bam")  # in
-
-        # stuff that matches with the host (why keep it?  request from john)
-        samtools_host_pair_1_bam_to_fastq = ">&2 echo convert pair host files pt3 | "
-        samtools_host_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_host_pair_1_bam_to_fastq += " -0 " + os.path.join(host_removal_folder, "pair_1_host_only.fastq") + " "
-        samtools_host_pair_1_bam_to_fastq += os.path.join(host_removal_folder, "pair_1_no_host.bam")
-
-        # bwa hr pair 1 only
-        bwa_hr_pair_2 = ">&2 echo bwa pair host remove | "
-        bwa_hr_pair_2 += self.tool_path_obj.BWA + " mem -t "
-        bwa_hr_pair_2 += self.Threads_str + " "
-        bwa_hr_pair_2 += Host_Contaminants + " "
-        bwa_hr_pair_2 += os.path.join(quality_folder, "pair_2.fastq")
-        bwa_hr_pair_2 += " > " + os.path.join(host_removal_folder, "pair_2_no_host.sam")
-
-        # separating bwa results back into paired reads
-        samtools_host_pair_2_sam_to_bam = ">&2 echo convert pair host files pt1 | "
-        samtools_host_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS " + os.path.join(
-            host_removal_folder, "pair_2_no_host.sam")
-        samtools_host_pair_2_sam_to_bam += " > " + os.path.join(host_removal_folder, "pair_2_no_host.bam")
-
-        # stuff that doesn't match with the host
-        samtools_no_host_pair_2_bam_to_fastq = ">&2 echo convert pair host files pt2 | "
-        samtools_no_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_host_pair_2_bam_to_fastq += " -0 " + os.path.join(host_removal_folder, "pair_2_no_host.fastq") + " " # out
-        samtools_no_host_pair_2_bam_to_fastq += os.path.join(host_removal_folder, "pair_2_no_host.bam")  # in
-
-        # stuff that matches with the host (why keep it?  request from john)
-        samtools_host_pair_2_bam_to_fastq = ">&2 echo convert pair host files pt3 | "
-        samtools_host_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_host_pair_2_bam_to_fastq += " -0 " + os.path.join(host_removal_folder, "pair_2_host_only.fastq") + " "
-        samtools_host_pair_2_bam_to_fastq += os.path.join(host_removal_folder, "pair_2_no_host.bam")
+        samtools_paired_no_host_export = ">&2 echo SAMTOOLS getting no-host reads out of paired | " 
+        samtools_paired_no_host_export += self.tool_path_obj.SAMTOOLS + " " 
+        samtools_paired_no_host_export += "fastq -n -f 4" + " "
+        samtools_paired_no_host_export += "-1" + " "
+        samtools_paired_no_host_export += os.path.join(host_removal_folder, "pair_1_no_host.fastq") + " "
+        samtools_paired_no_host_export += "-2" + " "
+        samtools_paired_no_host_export += os.path.join(host_removal_folder, "pair_2_no_host.fastq") + " "
+        samtools_paired_no_host_export += os.path.join(host_removal_folder, "paired_on_host.bam")
+        
+        samtools_paired_host_export = ">&2 echo SAMTOOLS getting host reads out of paired | "
+        samtools_paired_host_export += self.tool_path_obj.SAMTOOLS + " "
+        samtools_paired_host_export += "fastq -n -F 4" + " "
+        samtools_paired_host_export += "-1" + " "
+        samtools_paired_host_export += os.path.join(host_removal_folderk "pair_1_host_only.fastq") + " "
+        samtools_paired_host_export += "-2" + " "
+        samtools_paired_host_export += os.path.join(host_removal_folder, "pair_2_host_only.fastq") + " "
+        samtools_paired_host_export += os.path.join(host_removal_folder, "paired_on_host.bam")
+        
 
         # blat prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "

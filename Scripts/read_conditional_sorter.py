@@ -1,6 +1,5 @@
 #This script is meant to sort the paired reads into sections, based on its mismatch.
-#there's an 
-#This script replaces the orphanizer.  
+#Its logic is based on pre-and-post data
 
 import pandas as pd
 from datetime import datetime as dt
@@ -25,8 +24,8 @@ def import_fastq(read_file):
 
 if __name__ == "__main__":
 
-    pair_1_in_file = sys.argv[1]        #the post-filter data
-    pair_2_in_file = sys.argv[2]        #IN
+    pair_1_post_file = sys.argv[1]      #the post-filter reads.  Reads purged of whatever it was supposed to purge
+    pair_2_post_file = sys.argv[2]      #IN
     
     pair_1_raw_file = sys.argv[3]       #the input data, to populate
     pair_2_raw_file = sys.argv[4]       #IN
@@ -34,8 +33,8 @@ if __name__ == "__main__":
     pair_1_accepted_file = sys.argv[5]  #the read files that get accepted
     pair_2_accepted_file = sys.argv[6]  #OUT
     
-    pair_1_rejected_file = sys.argv[7]    #the read files that get rejected 
-    pair_2_rejected_file = sys.argv[8]    #OUT
+    pair_1_rejected_file = sys.argv[7]  #the read files that get rejected 
+    pair_2_rejected_file = sys.argv[8]  #OUT
     
     operating_mode  = sys.argv[9]       #option: either OR (loose), or AND (tight, conservative)
     
