@@ -61,9 +61,9 @@ if __name__ == "__main__":
         pair_2_raw_df = import_fastq(pair_2_raw_file)
         
         #grab the list of reads based off of our filter rules: logic OR if its to be loose (because we take the inverse), or logic AND if we're being conversative
-        if(operating_mode == "OR"):
+        if(operating_mode == "low"):
             common_list = list(set(pair_1_blat_list) & set(pair_2_blat_list))
-        elif(operating_mode == "AND"):
+        elif(operating_mode == "high" or operating_mode == "HIGH"):
             common_list = list(set(pair_1_blat_list + pair_2_blat_list))
             
         pair_1_accepted_df = pair_1_raw_df[~pair_1_raw_df["ID"].isin(common_list)]
@@ -89,13 +89,13 @@ if __name__ == "__main__":
     elif(data_style == "single"):
         singletons_raw_seqs = sys.argv[3]
         singletons_blat     = sys.argv[4]
-        singletons_accepted = sys.argv[5]
-        singletons_rejected = sys.argv[6]
+        singletons_accepted = sys.argv[5] #data that passes through the filter
+        singletons_rejected = sys.argv[6] #data that gets caught by the filter
         
         singletons_blat_list = import_blat(singletons_blat)
         singletons_raw_df = import_fastq(singletons_raw_seqs)
         
-        singletons_accepted_df = singletons_raw_df[~singletons_raw_df["ID"].isin(singletons_blat_list)]
+        singletons_accepted_df = singletons_raw_df[~singletons_raw_df["ID"].isin(singletons_blat_list)] 
         singletons_rejected_df = singletons_raw_df[singletons_raw_df["ID"].isin(singletons_blat_list)]
         
         singletons_accepted_df.to_csv(singletons_accepted, sep = "\n", mode = "w", header = False, index = False, quoting = 3)

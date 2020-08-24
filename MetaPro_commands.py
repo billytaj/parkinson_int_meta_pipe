@@ -477,25 +477,33 @@ class mt_pipe_commands:
         # HR BLAT
         hr_singletons = ">&2 echo BLAT contaminant singletons | "
         hr_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
+        hr_singletons += "single" +  " "
+        hr_singletons += self.tool_path_obj.filter_stringency + " "
         hr_singletons += os.path.join(host_removal_folder, "singletons_no_host.fastq") + " "  # in
         hr_singletons += os.path.join(host_removal_folder, "singletons_no_host.blatout") + " "  # in
         hr_singletons += os.path.join(blat_hr_folder, "singletons_no_host.fastq") + " "  # out
         hr_singletons += os.path.join(blat_hr_folder, "singletons_host_only.fastq")  # out
 
-        hr_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
-        hr_pair_1 += self.tool_path_obj.Python + " "
-        hr_pair_1 += self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        hr_pair_1 += os.path.join(host_removal_folder, "pair_1_no_host.fastq") + " "
-        hr_pair_1 += os.path.join(host_removal_folder, "pair_1_no_host.blatout") + " "
-        hr_pair_1 += os.path.join(blat_hr_folder, "pair_1_no_host.fastq") + " "
-        hr_pair_1 += os.path.join(blat_hr_folder, "pair_1_host_only.fastq")
+        hr_paired = ">&2 echo BLAT contaminant paired | "
+        hr_paired += self.tool_path_obj.Python + " "
+        hr_paired += self.tool_path_obj.BLAT_Contaminant_Filter + " "
+        hr_paired += "paired" + " "
+        hr_paired += self.tool_path_obj.filter_stringency + " "
+        hr_paired += os.path.join(host_removal_folder, "pair_1_no_host.fastq") + " "
+        hr_paired += os.path.join(host_removal_folder, "pair_2_no_host.fastq") + " "
+        hr_paired += os.path.join(host_removal_folder, "pair_1_no_host.blatout") + " "
+        hr_paired += os.path.join(host_removal_folder, "pair_2_no_host.blatout") + " "
+        hr_paired += os.path.join(blat_hr_folder, "pair_1_no_host.fastq") + " "
+        hr_paired += os.path.join(blat_hr_folder, "pair_2_no_host.fastq") + " "
+        hr_paired += os.path.join(blat_hr_folder, "pair_1_host_only.fastq")
+        hr_paired += os.path.join(blat_hr_folder, "pair_2_host_only.fastq")
+        
 
-        hr_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
-        hr_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        hr_pair_2 += os.path.join(host_removal_folder, "pair_2_no_host.fastq") + " "
-        hr_pair_2 += os.path.join(host_removal_folder, "pair_2_no_host.blatout") + " "
-        hr_pair_2 += os.path.join(blat_hr_folder, "pair_2_no_host.fastq") + " "
-        hr_pair_2 += os.path.join(blat_hr_folder, "pair_2_host_only.fastq")
+        
+        #-----------------------------
+        #orphan correction
+        
+        
 
         copy_singletons = "cp " + os.path.join(blat_hr_folder, "singletons_no_host.fastq") + " "
         copy_singletons += os.path.join(final_folder, "singletons.fastq")
@@ -506,17 +514,7 @@ class mt_pipe_commands:
         copy_pair_2 = "cp " + os.path.join(blat_hr_folder, "pair_2_no_host.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
         
-        data_change_host = ">&2 echo Scanning for relative change in host filtering | " 
-        data_change_host += self.tool_path_obj.Python + " "
-        data_change_host += self.tool_path_obj.data_change_metrics + " "
-        if(self.read_mode == "single"):
-            data_change_host += os.path.join(quality_folder, "singletons.fastq") + " "
-            data_change_host += os.path.join(final_folder, "singletons.fastq") + " "
-            data_change_host += os.path.join(final_folder, "qual_to_host_singletons.tsv")
-        elif(self.read_mode == "paired"):
-            data_change_host += os.path.join(quality_folder, "pair_1.fastq") + " "
-            data_change_host += os.path.join(final_folder, "pair_1.fastq") + " "
-            data_change_host += os.path.join(final_folder, "qual_to_host_pair_1.tsv")
+        
         
 
         if self.read_mode == "single":
@@ -532,8 +530,7 @@ class mt_pipe_commands:
                 vsearch_filter_3,
                 blat_hr_singletons,
                 hr_singletons,
-                copy_singletons#,
-                #data_change_host
+                copy_singletons
             ]
         elif self.read_mode == "paired":
             COMMANDS_host = [
@@ -560,12 +557,10 @@ class mt_pipe_commands:
                 blat_hr_pair_1,
                 blat_hr_pair_2,
                 hr_singletons,
-                hr_pair_1,
-                hr_pair_2,
+                hr_paired,
                 copy_singletons,
                 copy_pair_1,
-                copy_pair_2#,
-                #data_change_host
+                copy_pair_2
             ]
 
         return COMMANDS_host
@@ -603,67 +598,52 @@ class mt_pipe_commands:
         bwa_vr_singletons += os.path.join(dependency_folder, "singletons.fastq")
         bwa_vr_singletons += " > " + os.path.join(vector_removal_folder, "singletons_no_vectors.sam")
 
-        samtools_no_vector_singletons_sam_to_bam = ">&2 echo samtools vector oprhans pt 1 | "
-        samtools_no_vector_singletons_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS "
-        samtools_no_vector_singletons_sam_to_bam += os.path.join(vector_removal_folder, "singletons_no_vectors.sam")
-        samtools_no_vector_singletons_sam_to_bam += " > " + os.path.join(vector_removal_folder,
-                                                                         "singletons_no_vectors.bam")
+        samtools_no_vector_singletons_convert = ">&2 echo samtools vector oprhans pt 1 | "
+        samtools_no_vector_singletons_convert += self.tool_path_obj.SAMTOOLS + " view -bS "
+        samtools_no_vector_singletons_convert += os.path.join(vector_removal_folder, "singletons_no_vectors.sam")
+        samtools_no_vector_singletons_convert += " > " + os.path.join(vector_removal_folder, "singletons_no_vectors.bam")
 
-        samtools_no_vector_singletons_bam_to_fastq = ">&2 echo samtools vector singletons pt 2 | "
-        samtools_no_vector_singletons_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_vector_singletons_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
-                                                                            "singletons_no_vectors.fastq") + " "
-        samtools_no_vector_singletons_bam_to_fastq += os.path.join(vector_removal_folder, "singletons_no_vectors.bam")
+        samtools_no_vector_singletons_export = ">&2 echo samtools vector singletons pt 2 | "
+        samtools_no_vector_singletons_export += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
+        samtools_no_vector_singletons_export += " -0 " + os.path.join(vector_removal_folder, "singletons_no_vectors.fastq") + " "
+        samtools_no_vector_singletons_export += os.path.join(vector_removal_folder, "singletons_no_vectors.bam")
 
-        samtools_vector_singletons_bam_to_fastq = ">&2 echo samtools vector singletons pt 3 | "
-        samtools_vector_singletons_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_vector_singletons_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
-                                                                         "singletons_vectors_only.fastq") + " "
-        samtools_vector_singletons_bam_to_fastq += os.path.join(vector_removal_folder, "singletons_no_vectors.bam")
+        samtools_vector_singletons_export = ">&2 echo samtools vector singletons pt 3 | "
+        samtools_vector_singletons_export += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
+        samtools_vector_singletons_export += " -0 " + os.path.join(vector_removal_folder, "singletons_vectors_only.fastq") + " "
+        samtools_vector_singletons_export += os.path.join(vector_removal_folder, "singletons_no_vectors.bam")
 
-        bwa_vr_pair_1 = ">&2 echo bwa vector pair | "
-        bwa_vr_pair_1 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_vr_pair_1 += Vector_Contaminants + " "
-        bwa_vr_pair_1 += os.path.join(dependency_folder, "pair_1.fastq") + " "
-        bwa_vr_pair_1 += " > " + os.path.join(vector_removal_folder, "pair_1_no_vectors.sam")
+        bwa_vr_paired = ">&2 echo bwa vector pair | "
+        bwa_vr_paired += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
+        bwa_vr_paired += Vector_Contaminants + " "
+        bwa_vr_paired += os.path.join(dependency_folder, "pair_1.fastq") + " "
+        bwa_vr_paired += os.path.join(dependency_folder, "pair_2.fastq") + " "
+        bwa_vr_paired += " > " + os.path.join(vector_removal_folder, "paired_on_vectors.sam")
 
-        bwa_vr_pair_2 = ">&2 echo bwa vector pair | "
-        bwa_vr_pair_2 += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_vr_pair_2 += Vector_Contaminants + " "
-        bwa_vr_pair_2 += os.path.join(dependency_folder, "pair_2.fastq") + " "
-        bwa_vr_pair_2 += " > " + os.path.join(vector_removal_folder, "pair_2_no_vectors.sam")
+        samtools_vr_paired_convert = ">&2 echo samtools vector paired convert | "
+        samtools_vr_paired_convert += self.tool_path_obj.SAMTOOLS + " " 
+        samtools_vr_paired_convert += "view -bS" + " "
+        samtools_vr_paired_convert += os.path.join(vector_removal_folder, "paired_on_vectors.sam") + " "
+        samtools_vr_paired_convert += ">" + " " 
+        samtools_vr_paired_convert += os.path.join(vector_removal_folder, "paired_on_vectors.bam")
 
-        samtools_vr_pair_1_sam_to_bam = ">&2 echo samtools vector pair pt 1 | "
-        samtools_vr_pair_1_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS "
-        samtools_vr_pair_1_sam_to_bam += os.path.join(vector_removal_folder, "pair_1_no_vectors.sam")
-        samtools_vr_pair_1_sam_to_bam += " > " + os.path.join(vector_removal_folder, "pair_1_no_vectors.bam")
+        samtools_no_vector_paired_export = ">&2 echo samtools vector paired pass-export | "
+        samtools_no_vector_paired_export += self.tool_path_obj.SAMTOOLS + " "
+        samtools_no_vector_paired_export += "fastq -n -f 4" + " "
+        samtools_no_vector_paired_export += "-1" + " " 
+        samtools_no_vector_paired_export += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
+        samtools_no_vector_paired_export += "-2" + " " 
+        samtools_no_vector_paired_export += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
+        samtools_no_vector_paired_export += os.path.join(vector_removal_folder, "paired_on_vectors.bam")
 
-        samtools_no_vector_pair_1_bam_to_fastq = ">&2 echo samtools vector pair pt 2 | "
-        samtools_no_vector_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_vector_pair_1_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
-                                                                        "pair_1_no_vectors.fastq")
-        samtools_no_vector_pair_1_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_1_no_vectors.bam")
-
-        samtools_vector_pair_1_bam_to_fastq = ">&2 echo samtools vector pair pt 3 | "
-        samtools_vector_pair_1_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_vector_pair_1_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq")
-        samtools_vector_pair_1_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_1_no_vectors.bam")
-
-        samtools_vr_pair_2_sam_to_bam = ">&2 echo samtools vector pair pt 1 | "
-        samtools_vr_pair_2_sam_to_bam += self.tool_path_obj.SAMTOOLS + " view -bS "
-        samtools_vr_pair_2_sam_to_bam += os.path.join(vector_removal_folder, "pair_2_no_vectors.sam")
-        samtools_vr_pair_2_sam_to_bam += " > " + os.path.join(vector_removal_folder, "pair_2_no_vectors.bam")
-
-        samtools_no_vector_pair_2_bam_to_fastq = ">&2 echo samtools vector pair pt 2 | "
-        samtools_no_vector_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -f 4"
-        samtools_no_vector_pair_2_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder,
-                                                                        "pair_2_no_vectors.fastq")
-        samtools_no_vector_pair_2_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_2_no_vectors.bam")
-
-        samtools_vector_pair_2_bam_to_fastq = ">&2 echo samtools vector pair pt 3 | "
-        samtools_vector_pair_2_bam_to_fastq += self.tool_path_obj.SAMTOOLS + " fastq -n -F 4"
-        samtools_vector_pair_2_bam_to_fastq += " -0 " + os.path.join(vector_removal_folder, "pair_2_vectors_only.fastq")
-        samtools_vector_pair_2_bam_to_fastq += " " + os.path.join(vector_removal_folder, "pair_2_no_vectors.bam")
+        samtools_vector_paired_export = ">&2 echo samtools vector paired fail-export | "
+        samtools_vector_paired_export += self.tool_path_obj.SAMTOOLS + " "
+        samtools_vector_paired_export += "fastq -n -F 4" + " "
+        samtools_vector_paired_export += "-1" + " " 
+        samtools_vector_paired_export += os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq") + " "
+        samtools_vector_paired_export += "-2" + " "
+        samtools_vector_paired_export += os.path.join(vector_removal_folder, "pair_2_vectors_only.fastq") + " "
+        samtools_vector_paired_export += os.path.join(vector_removal_folder, "paired_on_vectors.bam")
 
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
         make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + Vector_Contaminants + " -dbtype nucl"
@@ -708,30 +688,27 @@ class mt_pipe_commands:
         blat_vr_pair_2 += " -fine -q=rna -t=dna -out=blast8 -threads=" + self.Threads_str + " "
         blat_vr_pair_2 += os.path.join(vector_removal_folder, "pair_2_no_vectors.blatout")
 
-        blat_containment_vector_singletons = ">&2 echo BLAT contaminant singletons | "
-        blat_containment_vector_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        blat_containment_vector_singletons += os.path.join(vector_removal_folder,
-                                                           "singletons_no_vectors.fastq") + " "  # in
-        blat_containment_vector_singletons += os.path.join(vector_removal_folder,
-                                                           "singletons_no_vectors.blatout") + " "  # in
-        blat_containment_vector_singletons += os.path.join(blat_containment_vector_folder,
-                                                           "singletons_no_vectors.fastq") + " "  # out
-        blat_containment_vector_singletons += os.path.join(blat_containment_vector_folder,
-                                                           "singletons_vectors_only.fastq")  # out
+        blat_filter_vector_singletons = ">&2 echo BLAT contaminant singletons | "
+        blat_filter_vector_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
+        blat_filter_vector_singletons += "single" + " "
+        blat_filter_vector_singletons += self.tool_path_obj.filter_stringency + " "
+        blat_filter_vector_singletons += os.path.join(vector_removal_folder, "singletons_no_vectors.fastq") + " "  # in
+        blat_filter_vector_singletons += os.path.join(vector_removal_folder, "singletons_no_vectors.blatout") + " "  # in
+        blat_filter_vector_singletons += os.path.join(blat_containment_vector_folder, "singletons_no_vectors.fastq") + " "  # out
+        blat_filter_vector_singletons += os.path.join(blat_containment_vector_folder, "singletons_vectors_only.fastq")  # out
 
-        blat_containment_vector_pair_1 = ">&2 echo BLAT contaminant pair 1 | "
-        blat_containment_vector_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        blat_containment_vector_pair_1 += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
-        blat_containment_vector_pair_1 += os.path.join(vector_removal_folder, "pair_1_no_vectors.blatout") + " "
-        blat_containment_vector_pair_1 += os.path.join(blat_containment_vector_folder, "pair_1_no_vectors.fastq") + " "
-        blat_containment_vector_pair_1 += os.path.join(blat_containment_vector_folder, "pair_1_vectors_only.fastq")
-
-        blat_containment_vector_pair_2 = ">&2 echo BLAT contaminant pair 2 | "
-        blat_containment_vector_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
-        blat_containment_vector_pair_2 += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
-        blat_containment_vector_pair_2 += os.path.join(vector_removal_folder, "pair_2_no_vectors.blatout") + " "
-        blat_containment_vector_pair_2 += os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
-        blat_containment_vector_pair_2 += os.path.join(blat_containment_vector_folder, "pair_2_vectors_only.fastq")
+        blat_filter_vector_paired = ">&2 echo BLAT contaminant pair 1 | "
+        blat_filter_vector_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.BLAT_Contaminant_Filter + " "
+        blat_filter_vector_paired += "paired" + " "
+        blat_filter_vector_paired += self.tool_path_obj.filter_stringency + " "
+        blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
+        blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
+        blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_1_no_vectors.blatout") + " "
+        blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_3_no_vectors.blatout") + " "
+        blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_1_no_vectors.fastq") + " "
+        blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
+        blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_1_vectors_only.fastq")
+        blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_2_vectors_only.fastq")
 
         copy_singletons = "cp " + os.path.join(blat_containment_vector_folder, "singletons_no_vectors.fastq") + " "
         copy_singletons += os.path.join(final_folder, "singletons.fastq")
@@ -742,33 +719,21 @@ class mt_pipe_commands:
         copy_pair_2 = "cp " + os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
         
-        data_change_vectors = ">&2 echo checking changes from host filter to vector filter | "
-        data_change_vectors += self.tool_path_obj.Python + " "
-        data_change_vectors += self.tool_path_obj.data_change_metrics + " "
-        if(self.read_mode == "single"):
-            data_change_vectors += os.path.join(dependency_folder, "singletons.fastq") + " "
-            data_change_vectors += os.path.join(final_folder, "singletons.fastq") + " "
-            data_change_vectors += os.path.join(final_folder, "host_to_vectors_singletons.tsv")
-        elif(self.read_mode == "paired"):
-            data_change_vectors += os.path.join(dependency_folder, "pair_1.fastq") + " "
-            data_change_vectors += os.path.join(final_folder, "pair_1.fastq") + " "
-            data_change_vectors += os.path.join(final_folder, "host_to_vectors_pair_1.tsv")
-
+        
         if self.read_mode == "single":
             COMMANDS_vector = [
                 copy_vector,
                 bwa_vr_prep,
                 samtools_vr_prep,
                 bwa_vr_singletons,
-                samtools_no_vector_singletons_sam_to_bam,
-                samtools_no_vector_singletons_bam_to_fastq,
-                samtools_vector_singletons_bam_to_fastq,
+                samtools_no_vector_singletons_convert,
+                samtools_no_vector_singletons_export,
+                samtools_vector_singletons_export,
                 make_blast_db_vector,
                 vsearch_filter_6,
                 blat_vr_singletons,
                 blat_containment_vector_singletons,
-                copy_singletons,
-                data_change_vectors
+                copy_singletons
             ]
         elif self.read_mode == "paired":
             COMMANDS_vector = [
@@ -776,17 +741,14 @@ class mt_pipe_commands:
                 bwa_vr_prep,
                 samtools_vr_prep,
                 bwa_vr_singletons,
-                samtools_no_vector_singletons_sam_to_bam,
-                samtools_no_vector_singletons_bam_to_fastq,
-                samtools_vector_singletons_bam_to_fastq,
+                samtools_no_vector_singletons_convert,
+                samtools_no_vector_singletons_export,
+                samtools_vector_singletons_export,
                 bwa_vr_pair_1,
                 bwa_vr_pair_2,
-                samtools_vr_pair_1_sam_to_bam,
-                samtools_no_vector_pair_1_bam_to_fastq,
-                samtools_vector_pair_1_bam_to_fastq,
-                samtools_vr_pair_2_sam_to_bam,
-                samtools_no_vector_pair_2_bam_to_fastq,
-                samtools_vector_pair_2_bam_to_fastq,
+                samtools_vr_paired_convert,
+                samtools_no_vector_paired_export,
+                samtools_vector_paired_export,
                 make_blast_db_vector,
                 vsearch_filter_6,
                 vsearch_filter_7,
@@ -794,13 +756,11 @@ class mt_pipe_commands:
                 blat_vr_singletons,
                 blat_vr_pair_1,
                 blat_vr_pair_2,
-                blat_containment_vector_singletons,
-                blat_containment_vector_pair_1,
-                blat_containment_vector_pair_2,
+                blat_filter_vector_singletons,
+                blat_filter_vector_paired,
                 copy_singletons,
                 copy_pair_1,
-                copy_pair_2,
-                data_change_vectors
+                copy_pair_2
             ]
 
         return COMMANDS_vector
@@ -1365,15 +1325,14 @@ class mt_pipe_commands:
         repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_2 += os.path.join(hq_path, "pair_2_match.fastq") + " "
         repop_pair_2 += os.path.join(dep_loc, "mRNA", "pair_2.fastq") + " "
-        repop_pair_2 += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
+        repop_pair_2 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_2 += os.path.join(repop_folder, "pair_2.fastq")
 
-        repop_pair_2_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
         repop_pair_2_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
         repop_pair_2_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_2_rRNA += os.path.join(hq_path, "pair_2_match.fastq") + " "
         repop_pair_2_rRNA += os.path.join(dep_loc, "rRNA", "pair_2.fastq") + " "
-        repop_pair_2_rRNA += os.path.join(cluster_path, "pair_2_unique.fastq.clstr") + " "
+        repop_pair_2_rRNA += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_2_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq")
 
         singleton_repop_filter = ">&2 echo filtering mRNA for new singletons | "
@@ -1396,36 +1355,12 @@ class mt_pipe_commands:
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq")
         
-        data_change_repop_rRNA = ">&2 echo scanning for changes from rRNA filter to repop rRNA | "
-        data_change_repop_rRNA += self.tool_path_obj.Python + " "
-        data_change_repop_rRNA += self.tool_path_obj.data_change_metrics + " "
-        if(self.read_mode == "single"):
-            data_change_repop_rRNA += os.path.join(dep_loc, "singletons.fastq") + " "
-            data_change_repop_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq") + " "
-            data_change_repop_rRNA += os.path.join(final_folder, "rRNA_filter_to_repop_rRNA_singletons.tsv")
-        elif(self.read_mode == "paired"):
-            data_change_repop_rRNA += os.path.join(dep_loc, "pair_1.fastq") + " "
-            data_change_repop_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
-            data_change_repop_rRNA += os.path.join(final_folder, "rRNA_filter_to_repop_rRNA_pair_1.tsv")
-            
-        data_change_repop_mRNA = ">&2 echo scanning for changes from rRNA filter to repop mRNA | "
-        data_change_repop_mRNA += self.tool_path_obj.Python + " "
-        data_change_repop_mRNA += self.tool_path_obj.data_change_metrics + " "
-        if(self.read_mode == "single"):
-            data_change_repop_mRNA += os.path.join(dep_loc, "singletons.fastq") + " "
-            data_change_repop_mRNA += os.path.join(final_folder, "singletons.fastq") + " "
-            data_change_repop_mRNA += os.path.join(final_folder, "rRNA_filter_to_repop_mRNA_singletons.tsv")
-        elif(self.read_mode == "paired"):
-            data_change_repop_mRNA += os.path.join(dep_loc, "pair_1.fastq") + " "
-            data_change_repop_mRNA += os.path.join(final_folder, "pair_1.fastq") + " "
-            data_change_repop_mRNA += os.path.join(final_folder, "rRNA_filter_to_repop_mRNA_pair_1.tsv")    
+
 
         if self.read_mode == "single":
             COMMANDS_Repopulate = [
                 repop_singletons,
-                repop_singletons_rRNA#,
-                #data_change_repop_mRNA,
-                #data_change_repop_rRNA
+                repop_singletons_rRNA
             ]
         elif self.read_mode == "paired":
             COMMANDS_Repopulate = [
@@ -1436,9 +1371,7 @@ class mt_pipe_commands:
                 repop_pair_2,
                 repop_pair_2_rRNA,
                 singleton_repop_filter,
-                singleton_repop_filter_rRNA#,
-                #data_change_repop_mRNA,
-                #data_change_repop_rRNA
+                singleton_repop_filter_rRNA
             ]
 
         return COMMANDS_Repopulate
@@ -1450,9 +1383,12 @@ class mt_pipe_commands:
         spades_folder       = os.path.join(data_folder, "0_spades")
         mgm_folder          = os.path.join(data_folder, "1_mgm")
         bwa_folder          = os.path.join(data_folder, "2_bwa_align")
-        sam_trimmer_folder  = os.path.join(data_folder, "3_clean_sam")
-        mapped_reads_folder = os.path.join(data_folder, "4_mapped_reads")
+        mapped_reads_folder = os.path.join(data_folder, "3_mapped_reads")
+        
+        #sam_trimmer_folder  = os.path.join(data_folder, "3_clean_sam")
+        #mapped_reads_folder = os.path.join(data_folder, "4_mapped_reads")
         final_folder        = os.path.join(subfolder, "final_results")
+        
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1500,103 +1436,65 @@ class mt_pipe_commands:
         
         
         # Build a report of what was consumed by contig transmutation (assemble/disassemble)
-        bwa_pair_1_contigs = ">&2 echo BWA pair contigs | "
-        bwa_pair_1_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
+        bwa_paired_contigs = ">&2 echo BWA pair contigs | "
+        bwa_paired_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
         #bwa_pair_1_contigs += final_contigs + " "
-        bwa_pair_1_contigs += original_contigs + " "
-        bwa_pair_1_contigs += os.path.join(dep_loc, "pair_1.fastq")
-        bwa_pair_1_contigs += " > " + os.path.join(bwa_folder, "pair_1.sam")
-
-        bwa_pair_2_contigs = ">&2 echo BWA pair contigs | "
-        bwa_pair_2_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        #bwa_pair_2_contigs += final_contigs + " "
-        bwa_pair_2_contigs += original_contigs + " "
-        bwa_pair_2_contigs += os.path.join(dep_loc, "pair_2.fastq")
-        bwa_pair_2_contigs += " > " + os.path.join(bwa_folder, "pair_2.sam")
+        bwa_paired_contigs += original_contigs + " "
+        bwa_paired_contigs += os.path.join(dep_loc, "pair_1.fastq") + " "
+        bwa_paired_contigs += os.path.join(dep_loc, "pair_2.fastq") + " "
+        bwa_paired_contigs += ">" + " " 
+        bwa_paired_contigs += os.path.join(bwa_folder, "paired_on_contigs.sam")
 
         bwa_singletons_contigs = ">&2 echo BWA singleton contigs | "
         bwa_singletons_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        #bwa_singletons_contigs += final_contigs + " "
         bwa_singletons_contigs += original_contigs + " "
         bwa_singletons_contigs += os.path.join(dep_loc, "singletons.fastq")
-        bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons.sam")
-
-        sam_trimmer_singletons = ">&2 echo cleaning up singletons sam | "
-        sam_trimmer_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.sam_trimmer + " "
-        sam_trimmer_singletons += os.path.join(bwa_folder, "singletons.sam") + " "
-        sam_trimmer_singletons += os.path.join(sam_trimmer_folder, "singletons.sam")
-
-        sam_trimmer_pair_1 = ">&2 echo cleaning up pair 1 sam | "
-        sam_trimmer_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.sam_trimmer + " "
-        sam_trimmer_pair_1 += os.path.join(bwa_folder, "pair_1.sam") + " "
-        sam_trimmer_pair_1 += os.path.join(sam_trimmer_folder, "pair_1.sam")
-
-        sam_trimmer_pair_2 = ">&2 echo cleaning up pair 2 sam | "
-        sam_trimmer_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.sam_trimmer + " "
-        sam_trimmer_pair_2 += os.path.join(bwa_folder, "pair_2.sam") + " "
-        sam_trimmer_pair_2 += os.path.join(sam_trimmer_folder, "pair_2.sam")
-
-        contig_duplicate_remover_singletons = ">&2 echo Removing consumed contigs from data | "
-        contig_duplicate_remover_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.contig_duplicate_remover + " "
-        contig_duplicate_remover_singletons += os.path.join(dep_loc, "singletons.fastq") + " "
-        contig_duplicate_remover_singletons += os.path.join(sam_trimmer_folder, "singletons.sam") + " "
-        contig_duplicate_remover_singletons += mapped_reads_folder
-
-        contig_duplicate_remover_pair_1 = ">&2 echo Removing consumed contigs from data | "
-        contig_duplicate_remover_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.contig_duplicate_remover + " "
-        contig_duplicate_remover_pair_1 += os.path.join(dep_loc, "pair_1.fastq") + " "
-        contig_duplicate_remover_pair_1 += os.path.join(sam_trimmer_folder, "pair_1.sam") + " "
-        contig_duplicate_remover_pair_1 += mapped_reads_folder
-
-        contig_duplicate_remover_pair_2 = ">&2 echo Removing consumed contigs from data | "
-        contig_duplicate_remover_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.contig_duplicate_remover + " "
-        contig_duplicate_remover_pair_2 += os.path.join(dep_loc, "pair_2.fastq") + " "
-        contig_duplicate_remover_pair_2 += os.path.join(sam_trimmer_folder, "pair_2.sam") + " "
-        contig_duplicate_remover_pair_2 += mapped_reads_folder
+        bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons_on_contigs.sam")
+        
+        
+        samtools_no_contig_paired_convert = ">&2 echo get contigs out of paired | " 
+        samtools_no_contig_paired_convert += self.tool_path_obj.SAMTOOLS + " "
+        samtools_no_contig_paired_convert += "view -bs" + " "
+        samtools_no_contig_paired_convert += os.path.join(bwa_folder, "paired_on_contigs.sam") + " "
+        samtools_no_contig_paired_convert += ">" + " "
+        samtools_no_contig_paired_convert += os.path.join(bwa_folder, "paired_on_contigs.bam")
+        
+        samtools_no_contig_singletons_convert = ">&2 echo get contigs out of singletons | "
+        samtools_no_contig_singletons_convert += self.tool_path_obj.SAMTOOLS + " "
+        samtools_no_contig_singletons_convert += "view -bs" + " "
+        samtools_no_contig_singletons_convert += os.path.join(bwa_folder, "singletons_on_contigs.sam") + " "
+        samtools_no_contig_singletons_convert += ">" + " "
+        samtools_no_contig_singletons_convert += os.path.join(bwa_folder, "singletons_on_contigs.bam")
+        
+        
+        samtools_no_contig_paired_export = ">&2 echo samtools contig paired pass-export | "
+        samtools_no_contig_paired_export += self.tool_path_obj.SAMTOOLS + " "
+        samtools_no_contig_paired_export += "fastq -n -f 4" + " "
+        samtools_no_contig_paired_export += "-1" + " " 
+        samtools_no_contig_paired_export += os.path.join(final_folder, "pair_1.fastq") + " "
+        samtools_no_contig_paired_export += "-2" + " " 
+        samtools_no_contig_paired_export += os.path.join(final_folder, "pair_2.fastq") + " "
+        samtools_no_contig_paired_export += os.path.join(bwa_folder, "paired_on_contigs.bam")
+        
+        samtools_no_contig_singletons_export = ">&2 echo Samtools contig singletons pass-export | "
+        samtools_no_contig_singletons_export += self.tool_path_obj.SAMTOOLS + " "
+        samtools_no_contig_singletons_export += "fastq -n -f 4" + " "
+        samtools_no_contig_singletons_export += "-0" + " "
+        samtools_no_contig_singletons_export += os.path.join(final_folder, "singletons.fastq") + " "
+        samtools_no_contig_singletons_export += os.path.join(bwa_folder, "singletons_on_contigs.bam")
 
         map_read_contig = ">&2 echo map read contig v2 | "
-        map_read_contig += self.tool_path_obj.Python + " " + self.tool_path_obj.map_contig + " "
+        map_read_contig += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_contig + " "
         map_read_contig += os.path.join(final_folder, "contig_map.tsv") + " "
-        map_read_contig += os.path.join(sam_trimmer_folder, "singletons.sam")
+        map_read_contig += os.path.join(bwa_folder, "singletons_on_contigs.sam")
         if self.read_mode == "paired":
-            map_read_contig += " " + os.path.join(sam_trimmer_folder, "pair_1.sam")
-            map_read_contig += " " + os.path.join(sam_trimmer_folder, "pair_2.sam")
+            map_read_contig += " " + os.path.join(bwa_folder, "paired_on_contigs.sam")
 
         copy_singletons = ">&2 echo Copying singletons to final folder | "
         copy_singletons += "cp " + os.path.join(mapped_reads_folder, "singletons.fastq") + " " + final_folder
 
         copy_contigs = ">&2 echo Copying contigs to final folder | "
         copy_contigs += "cp " + final_contigs + " " + final_folder
-
-        singleton_assembly_filter = ">&2 echo filtering paired reads for singletons | "
-        singleton_assembly_filter += self.tool_path_obj.Python + " "
-        singleton_assembly_filter += self.tool_path_obj.orphaned_read_filter + " "
-        singleton_assembly_filter += os.path.join(mapped_reads_folder, "pair_1.fastq") + " "
-        singleton_assembly_filter += os.path.join(mapped_reads_folder, "pair_2.fastq") + " "
-        singleton_assembly_filter += os.path.join(mapped_reads_folder, "singletons.fastq") + " "
-        singleton_assembly_filter += os.path.join(final_folder, "pair_1.fastq") + " "
-        singleton_assembly_filter += os.path.join(final_folder, "pair_2.fastq") + " "
-        singleton_assembly_filter += os.path.join(final_folder, "singletons.fastq") + " "
-
-        sort_paired = ">&2 echo sorting paired reads | "
-        sort_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        sort_paired += os.path.join(final_folder, "pair_1.fastq") + " "
-        sort_paired += os.path.join(final_folder, "pair_1_sorted.fastq") + " | "
-        sort_paired += self.tool_path_obj.Python + " " + self.tool_path_obj.sort_reads + " "
-        sort_paired += os.path.join(final_folder, "pair_2.fastq") + " "
-        sort_paired += os.path.join(final_folder, "pair_2_sorted.fastq")
-        
-        data_change_contig = ">&2 echo checking relative change in data between repop and contig assembly | "
-        data_change_contig += self.tool_path_obj.Python + " "
-        data_change_contig += self.tool_path_obj.data_change_metrics + " "
-        if(self.read_mode == "single"):
-            data_change_contig += os.path.join(dep_loc, "singletons.fastq") + " "
-            data_change_contig += os.path.join(final_folder, "singletons.fastq") + " "
-            data_change_contig += os.path.join(final_folder, "repop_to_contigs_singletons.tsv")
-        elif(self.read_mode == "paired"):
-            data_change_contig += os.path.join(dep_loc, "pair_1.fastq") + " "
-            data_change_contig += os.path.join(final_folder, "pair_1.fastq") + " "
-            data_change_contig += os.path.join(final_folder, "repop_to_contigs_pair_1.tsv")
             
         move_gene_report = ">&2 echo moving gene report | "
         move_gene_report += "cp" + " "
@@ -1606,42 +1504,36 @@ class mt_pipe_commands:
 
         if self.read_mode == "single":
             COMMANDS_Assemble = [
-                spades,
-                spades_rename,
-                disassemble_contigs,
-                remove_whitespace,
-                bwa_index,
-                bwa_singletons_contigs,
-                sam_trimmer_singletons,
-                contig_duplicate_remover_singletons,
-                map_read_contig,
-                copy_singletons,
-                copy_contigs,
+                spades + " && " + 
+                spades_rename + " && " +
+                disassemble_contigs + " && " +
+                remove_whitespace + " && " +
+                bwa_index + " && " +
+                bwa_singletons_contigs + " && " +
+                samtools_no_contig_singletons_convert + " && " +
+                samtools_no_contig_singletons_export + " && " + 
+                map_read_contig + " && " +
+                copy_singletons + " && " +
+                copy_contigs + " && " +
                 move_gene_report
-                #data_change_contig
             ]
         elif self.read_mode == "paired":
             COMMANDS_Assemble = [
-                spades,
-                spades_rename,
-                disassemble_contigs,
-                remove_whitespace,
-                bwa_index,
-                bwa_pair_1_contigs,
-                bwa_pair_2_contigs,
-                bwa_singletons_contigs,
-                sam_trimmer_singletons,
-                sam_trimmer_pair_1,
-                sam_trimmer_pair_2,
-                contig_duplicate_remover_singletons,
-                contig_duplicate_remover_pair_1,
-                contig_duplicate_remover_pair_2,
-                map_read_contig,
-                copy_contigs,
-                singleton_assembly_filter,
-                sort_paired,
+                spades + " && " +
+                spades_rename + " && " +
+                disassemble_contigs + " && " +
+                remove_whitespace + " && " +
+                bwa_index + " && " +
+                bwa_paired_contigs + " && " +
+                bwa_singletons_contigs + " && " +
+                samtools_no_contig_paired_convert + " && " + 
+                samtools_no_contig_singletons_convert + " && " +
+                samtools_no_contig_paired_export + " && " + 
+                samtools_no_contig_singletons_export + " && " + 
+                map_read_contig + " && " +
+                copy_contigs + " && " +
+                singleton_assembly_filter + " && " +
                 move_gene_report
-                #data_change_contig
             ]
 
         return COMMANDS_Assemble
