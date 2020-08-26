@@ -430,8 +430,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     quality_end = time.time()
     print("quality filter:", '%1.1f' % (quality_end - quality_start - (cleanup_quality_end - cleanup_quality_start)), "s")
     print("quality filter cleanup:", '%1.1f' %(cleanup_quality_end - cleanup_quality_start), "s")
-    
 
+    
     # The host read filter stage
     if not no_host:
         host_start = time.time()

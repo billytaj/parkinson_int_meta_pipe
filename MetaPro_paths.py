@@ -166,6 +166,7 @@ class tool_path_obj:
         self.convert_contig_segments    = os.path.join(script_path, "output_convert_gene_map_contig_segments.py")
         self.output_filter_taxa         = os.path.join(script_path, "output_filter_taxa.py")
         self.output_filter_ECs          = os.path.join(script_path, "output_filter_ECs.py")
+        self.bwa_read_sorter            = os.path.join(script_path, "bwa_read_sorter.py")
         #--------------------------------------------------
         # miscellaneous values
         BWA_mem_default = 50

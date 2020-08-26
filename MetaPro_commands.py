@@ -267,7 +267,7 @@ class mt_pipe_commands:
 
         # remove duplicates in the pairs
         cdhit_paired = ">&2 echo remove duplicates from paired | "
-        cdhit_paired += self.tool_path_obj.cdhit_dup
+        cdhit_paired += self.tool_path_obj.cdhit_dup + " "
         cdhit_paired += "-i"    + " " + os.path.join(orphan_read_filter_folder, "pair_1_match.fastq") + " "
         cdhit_paired += "-i2"   + " " + os.path.join(orphan_read_filter_folder, "pair_2_match.fastq") + " "
         cdhit_paired += "-o"    + " " + os.path.join(cdhit_folder, "pair_1_unique.fastq") + " "
@@ -328,17 +328,15 @@ class mt_pipe_commands:
                 vsearch_filter_2,
                 orphan_read_filter,
                 cdhit_singletons,
-                cdhit_pair_1,
-                cdhit_pair_2,
+                cdhit_paired,
                 copy_singletons,
                 copy_pair_1,
                 copy_pair_2,
                 copy_duplicate_singletons,
                 copy_singletons_cluster,
                 copy_pair_1_match,
-                copy_pair_1_cluster,
-                copy_pair_2_match,
-                copy_pair_2_cluster
+                copy_paired_cluster,
+                copy_pair_2_match
             ]
 
         return COMMANDS_qual
@@ -391,8 +389,7 @@ class mt_pipe_commands:
         samtools_host_singletons_bam_to_fastq += os.path.join(host_removal_folder, "singletons_host_only.fastq") + " "
         samtools_host_singletons_bam_to_fastq += os.path.join(host_removal_folder, "singletons_no_host.bam")
 
-        # bwa hr pair 1 only
-        if(self.read_mode == "paired"):
+
         
         bwa_hr_paired = ">&2 echo bwa host-removal on paired | " 
         bwa_hr_paired += self.tool_path_obj.BWA + " "
@@ -403,33 +400,18 @@ class mt_pipe_commands:
         bwa_hr_paired += ">" + " "
         bwa_hr_paired += os.path.join(host_removal_folder, "paired_on_host.sam")
         
-       
-
-        samtools_host_paired_convert = ">&2 echo get host out of sam | "
-        samtools_host_paired_convert += self.tool_path_obj.SAMTOOLS + " "
-        samtools_host_paired_convert += "view -bs" + " "
-        samtools_host_paired_convert += os.path.join(host_removal_folder, "paired_on_host.sam") + " "
-        samtools_host_paired_convert += ">" +  " "
-        samtools_host_paired_convert += os.path.join(host_removal_folder, "paired_on_host.bam")
-
-        samtools_paired_no_host_export = ">&2 echo SAMTOOLS getting no-host reads out of paired | " 
-        samtools_paired_no_host_export += self.tool_path_obj.SAMTOOLS + " " 
-        samtools_paired_no_host_export += "fastq -n -f 4" + " "
-        samtools_paired_no_host_export += "-1" + " "
-        samtools_paired_no_host_export += os.path.join(host_removal_folder, "pair_1_no_host.fastq") + " "
-        samtools_paired_no_host_export += "-2" + " "
-        samtools_paired_no_host_export += os.path.join(host_removal_folder, "pair_2_no_host.fastq") + " "
-        samtools_paired_no_host_export += os.path.join(host_removal_folder, "paired_on_host.bam")
-        
-        samtools_paired_host_export = ">&2 echo SAMTOOLS getting host reads out of paired | "
-        samtools_paired_host_export += self.tool_path_obj.SAMTOOLS + " "
-        samtools_paired_host_export += "fastq -n -F 4" + " "
-        samtools_paired_host_export += "-1" + " "
-        samtools_paired_host_export += os.path.join(host_removal_folderk "pair_1_host_only.fastq") + " "
-        samtools_paired_host_export += "-2" + " "
-        samtools_paired_host_export += os.path.join(host_removal_folder, "pair_2_host_only.fastq") + " "
-        samtools_paired_host_export += os.path.join(host_removal_folder, "paired_on_host.bam")
-        
+        bwa_hr_filter_paired = ">&2 echo BWA host-removal PP on paired | "
+        bwa_hr_filter_paired += self.tool_path_obj.Python + " "
+        bwa_hr_filter_paired += self.tool_path_obj.bwa_read_sorter + " "
+        bwa_hr_filter_paired += "paired" + " "
+        bwa_hr_filter_paired += self.tool_path_obj.filter_stringency + " "
+        bwa_hr_filter_paired += os.path.join(host_removal_folder, "paired_on_host.sam") + " "
+        bwa_hr_filter_paired += os.path.join(quality_folder, "pair_1.fastq") + " "
+        bwa_hr_filter_paired += os.path.join(quality_folder, "pair_2.fastq") + " "
+        bwa_hr_filter_paired += os.path.join(host_removal_folder, "pair_1_no_host.fastq") + " "
+        bwa_hr_filter_paired += os.path.join(host_removal_folder, "pair_2_no_host.fastq") + " "
+        bwa_hr_filter_paired += os.path.join(host_removal_folder, "pair_1_host_only.fastq") + " "
+        bwa_hr_filter_paired += os.path.join(host_removal_folder, "pair_2_host_only.fastq")
 
         # blat prep
         make_blast_db_host = ">&2 echo Make BLAST db for host contaminants | "
@@ -495,7 +477,7 @@ class mt_pipe_commands:
         hr_paired += os.path.join(host_removal_folder, "pair_2_no_host.blatout") + " "
         hr_paired += os.path.join(blat_hr_folder, "pair_1_no_host.fastq") + " "
         hr_paired += os.path.join(blat_hr_folder, "pair_2_no_host.fastq") + " "
-        hr_paired += os.path.join(blat_hr_folder, "pair_1_host_only.fastq")
+        hr_paired += os.path.join(blat_hr_folder, "pair_1_host_only.fastq") + " "
         hr_paired += os.path.join(blat_hr_folder, "pair_2_host_only.fastq")
         
 
@@ -541,14 +523,8 @@ class mt_pipe_commands:
                 samtools_hr_singletons_sam_to_bam,
                 samtools_no_host_singletons_bam_to_fastq,
                 samtools_host_singletons_bam_to_fastq,
-                bwa_hr_pair_1,
-                samtools_host_pair_1_sam_to_bam,
-                samtools_no_host_pair_1_bam_to_fastq,
-                samtools_host_pair_1_bam_to_fastq,
-                bwa_hr_pair_2,
-                samtools_host_pair_2_sam_to_bam,
-                samtools_no_host_pair_2_bam_to_fastq,
-                samtools_host_pair_2_bam_to_fastq,
+                bwa_hr_paired,
+                bwa_hr_filter_paired,
                 make_blast_db_host,
                 vsearch_filter_3,
                 vsearch_filter_4,
@@ -744,8 +720,7 @@ class mt_pipe_commands:
                 samtools_no_vector_singletons_convert,
                 samtools_no_vector_singletons_export,
                 samtools_vector_singletons_export,
-                bwa_vr_pair_1,
-                bwa_vr_pair_2,
+                bwa_vr_paired,
                 samtools_vr_paired_convert,
                 samtools_no_vector_paired_export,
                 samtools_vector_paired_export,
@@ -766,45 +741,7 @@ class mt_pipe_commands:
         return COMMANDS_vector
 
    
-        
-    def create_rRNA_filter_prep_command_2nd_split(self, stage_name, category, file_to_split, split_count):
-        #this splits a file into separate-but-equal portions 
-        #dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
-        subfolder               = os.path.join(self.Output_Path, stage_name)
-        data_folder             = os.path.join(subfolder, "data")
-        second_split_folder     = os.path.join(data_folder, category, category + "_second_split_fastq")
-        
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(second_split_folder)
-        
-        #remove_other_file = ">&2 echo removing previous split | "
-        #remove_other_file += "rm" + " "
-        #remove_other_file += split_folder + "*"
-        
-        
-        base_name = os.path.basename(file_to_split)
-        real_base = os.path.splitext(base_name)[0]
-        second_output_path = os.path.join(second_split_folder, real_base)
-        #this operates on fastq.  Jul 8, 2020: fastq split now done on constant chunksize
-        split_data = ">&2 echo splitting data into chunks: " + category + " | "
-        split_data += self.tool_path_obj.Python + " "
-        split_data += self.tool_path_obj.File_splitter + " "
-        split_data += file_to_split + " "
-        #split_data += file_to_split.split(".")[0] + " "
-        split_data += second_output_path + " "
-        split_data += str(split_count)
-        
-        print("-----------------")
-        print(dt.today(), file_to_split)
-        print(dt.today(), file_to_split.split(".")[0])
-        print(dt.today(), "output path FROM COMMANDS second split:", second_output_path)
-        COMMANDS_2nd_split = [
-            split_data
-        ]
-        
-        return COMMANDS_2nd_split
-        
+
         
         
     def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, chunks):
