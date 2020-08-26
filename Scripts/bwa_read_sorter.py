@@ -117,6 +117,13 @@ if __name__ == "__main__":
         print("P2 | raw:", p2_total_reads, "host:", p2_reject_reads, "no-host:", p2_pass_reads, "diff:", p2_total_reads - p2_pass_reads - p2_reject_reads)
             
         print(dt.today(), "paired: exporting reads")
+        
+        pair_1_filter_pass["ID"] = "@" + pair_1_filter_pass["ID"]
+        pair_2_filter_pass["ID"] = "@" + pair_2_filter_pass["ID"]
+        
+        pair_1_filter_reject["ID"] = "@" + pair_1_filter_reject["ID"]
+        pair_2_filter_reject["ID"] = "@" + pair_2_filter_reject["ID"]
+        
         pair_1_filter_pass.to_csv(pair_1_pass, sep = "\n", mode = "w", header = False, index = False, quoting = 3)
         pair_2_filter_pass.to_csv(pair_2_pass, sep = "\n", mode = "w", header = False, index = False, quoting = 3)
         
