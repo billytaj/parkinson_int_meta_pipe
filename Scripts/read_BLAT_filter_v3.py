@@ -61,19 +61,27 @@ if __name__ == "__main__":
         pair_2_raw_df = import_fastq(pair_2_raw_file)
         
         #grab the list of reads based off of our filter rules: logic OR if its to be loose (because we take the inverse), or logic AND if we're being conversative
+        #BLAT looks for the stuff we want filtered.  in instances where 1 read is filtered, and the other isn't: low stringency lets the filtered read go.  high stringency arrests the unfiltered read
+        common_list = []
         if(operating_mode == "low"):
-            common_list = list(set(pair_1_blat_list) & set(pair_2_blat_list))
+            common_list = list(set(pair_1_blat_list).intersection(set(pair_2_blat_list)))
         elif(operating_mode == "high" or operating_mode == "HIGH"):
-            common_list = list(set(pair_1_blat_list + pair_2_blat_list))
+            common_list = list(set().union(pair_1_blat_list,pair_2_blat_list))
+            
+        print("pair 1 blat:", len(pair_1_blat_list), "pair 2 blat:", len(pair_2_blat_list), "common:", len(common_list))
             
         pair_1_accepted_df = pair_1_raw_df[~pair_1_raw_df["ID"].isin(common_list)]
         pair_2_accepted_df = pair_2_raw_df[~pair_2_raw_df["ID"].isin(common_list)]
         
-        pair_1_accepted_id = sorted(pair_1_accepted_df["ID"].to_list())
-        pair_2_accepted_id = sorted(pair_2_accepted_df["ID"].to_list())
+        pair_1_accepted_id = sorted(pair_1_accepted_df["ID"].tolist())
+        pair_2_accepted_id = sorted(pair_2_accepted_df["ID"].tolist())
         
-        if(pair_1_accepted_id != pair_2_accepted_df):
+        
+        
+        if(pair_1_accepted_id != pair_2_accepted_id):
             sys.exit("accepted DFs do not all have the same ID.  there's a problem with the data")
+        else:
+            print(dt.today(), "BLAT filtering OK.  pair 1 IDs match pair 2")
         
         pair_1_rejected_df = pair_1_raw_df[pair_1_raw_df["ID"].isin(common_list)]
         pair_2_rejected_df = pair_2_raw_df[pair_2_raw_df["ID"].isin(common_list)]

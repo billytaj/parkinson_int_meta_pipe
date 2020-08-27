@@ -208,7 +208,7 @@ class tool_path_obj:
         DIAMOND_job_delay_default = 5
         DETECT_job_delay_default = 5
         
-        filter_stringency_default = "conservative"
+        filter_stringency_default = "high"
         
         
         if config:
