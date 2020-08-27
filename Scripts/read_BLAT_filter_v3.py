@@ -112,5 +112,8 @@ if __name__ == "__main__":
         singletons_accepted_df = singletons_raw_df[~singletons_raw_df["ID"].isin(singletons_blat_list)] 
         singletons_rejected_df = singletons_raw_df[singletons_raw_df["ID"].isin(singletons_blat_list)]
         
+        singletons_accepted_df["ID"] = "@" + singletons_accepted_df["ID"]
+        singletons_rejected_df["ID"] = "@" + singletons_rejected_df["ID"]
+        
         singletons_accepted_df.to_csv(singletons_accepted, sep = "\n", mode = "w", header = False, index = False, quoting = 3)
         singletons_rejected_df.to_csv(singletons_rejected, sep = "\n", mode = "w", header = False, index = False, quoting = 3)

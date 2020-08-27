@@ -142,6 +142,10 @@ if __name__ == "__main__":
         print(dt.today(), "dividing singletons")
         singletons_filter_pass = singletons_df[singletons_df["ID"].isin(no_hit_list)]
         singletons_filter_reject = singletons_df[singletons_df["ID"].isin(hit_list)]
+        
+        singletons_filter_pass["ID"] = "@" + singletons_filter_pass["ID"]
+        singletons_filter_reject["ID"] = "@" + singletons_filter_reject["ID"]
+        
         print(dt.today(), "exporting singletons")
         singletons_filter_pass.to_csv(singletons_pass, sep = "\n", mode = "w", header = False, index = False, quoting = 3)
         singletons_filter_reject.to_csv(singletons_reject, sep = "\n", mode = "w", header = False, index = False, quoting = 3)
