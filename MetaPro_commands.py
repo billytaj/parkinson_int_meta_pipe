@@ -596,30 +596,19 @@ class mt_pipe_commands:
         bwa_vr_paired += os.path.join(dependency_folder, "pair_2.fastq") + " "
         bwa_vr_paired += " > " + os.path.join(vector_removal_folder, "paired_on_vectors.sam")
 
-        samtools_vr_paired_convert = ">&2 echo samtools vector paired convert | "
-        samtools_vr_paired_convert += self.tool_path_obj.SAMTOOLS + " " 
-        samtools_vr_paired_convert += "view -bS" + " "
-        samtools_vr_paired_convert += os.path.join(vector_removal_folder, "paired_on_vectors.sam") + " "
-        samtools_vr_paired_convert += ">" + " " 
-        samtools_vr_paired_convert += os.path.join(vector_removal_folder, "paired_on_vectors.bam")
+        bwa_vr_filter_paired = ">&2 echo BWA vector filter on paired | "
+        bwa_vr_filter_paired += self.tool_path_obj.Python + " "
+        bwa_vr_filter_paired += self.tool_path_obj.bwa_read_sorter + " "
+        bwa_vr_filter_paired += "paired" + " "
+        bwa_vr_filter_paired += self.tool_path_obj.filter_stringency + " "
+        bwa_vr_filter_paired += os.path.join(vector_removal_folder, "paired_on_vectors.sam") + " "
+        bwa_vr_filter_paired += os.path.join(dependency_folder, "pair_1.fastq") + " "
+        bwa_vr_filter_paired += os.path.join(dependency_folder, "pair_2.fastq") + " "
+        bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
+        bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
+        bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq") + " "
+        bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq")
 
-        samtools_no_vector_paired_export = ">&2 echo samtools vector paired pass-export | "
-        samtools_no_vector_paired_export += self.tool_path_obj.SAMTOOLS + " "
-        samtools_no_vector_paired_export += "fastq -n -f 4" + " "
-        samtools_no_vector_paired_export += "-1" + " " 
-        samtools_no_vector_paired_export += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
-        samtools_no_vector_paired_export += "-2" + " " 
-        samtools_no_vector_paired_export += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
-        samtools_no_vector_paired_export += os.path.join(vector_removal_folder, "paired_on_vectors.bam")
-
-        samtools_vector_paired_export = ">&2 echo samtools vector paired fail-export | "
-        samtools_vector_paired_export += self.tool_path_obj.SAMTOOLS + " "
-        samtools_vector_paired_export += "fastq -n -F 4" + " "
-        samtools_vector_paired_export += "-1" + " " 
-        samtools_vector_paired_export += os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq") + " "
-        samtools_vector_paired_export += "-2" + " "
-        samtools_vector_paired_export += os.path.join(vector_removal_folder, "pair_2_vectors_only.fastq") + " "
-        samtools_vector_paired_export += os.path.join(vector_removal_folder, "paired_on_vectors.bam")
 
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
         make_blast_db_vector += self.tool_path_obj.Makeblastdb + " -in " + Vector_Contaminants + " -dbtype nucl"
@@ -721,9 +710,7 @@ class mt_pipe_commands:
                 samtools_no_vector_singletons_export,
                 samtools_vector_singletons_export,
                 bwa_vr_paired,
-                samtools_vr_paired_convert,
-                samtools_no_vector_paired_export,
-                samtools_vector_paired_export,
+                bwa_vr_filter_paired, 
                 make_blast_db_vector,
                 vsearch_filter_6,
                 vsearch_filter_7,
