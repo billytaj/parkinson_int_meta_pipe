@@ -87,6 +87,12 @@ if __name__ == "__main__":
         pair_2_rejected_df = pair_2_raw_df[pair_2_raw_df["ID"].isin(common_list)]
         
         # export it
+        
+        pair_1_accepted_df["ID"] = "@" + pair_1_accepted_df["ID"]
+        pair_2_accepted_df["ID"] = "@" + pair_2_accepted_df["ID"]
+        pair_1_rejected_df["ID"] = "@" + pair_1_rejected_df["ID"]
+        pair_2_rejected_df["ID"] = "@" + pair_2_rejected_df["ID"]
+
         pair_1_accepted_df.to_csv(pair_1_accepted, sep = "\n", mode = "w", header = False, index = False, quoting = 3)
         pair_2_accepted_df.to_csv(pair_2_accepted, sep = "\n", mode = "w", header = False, index = False, quoting = 3)
         
