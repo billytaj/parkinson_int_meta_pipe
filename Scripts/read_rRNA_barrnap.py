@@ -5,7 +5,7 @@ import pandas as pd
 import time
 
 #This module takes in the Output report of the barrnap tool, and the fastq it scanned.
-#The goal is to bisect the fastq into 2 piles:  entries with IDs that were located by Infernal (rRNA)
+#The goal is to bisect the fastq into 2 piles:  entries with IDs that were located by Barrnap (rRNA)
 #-> and entries that weren't (mRNA), and then export them
 
 def extract_rRNA_ID(barrnap_file):

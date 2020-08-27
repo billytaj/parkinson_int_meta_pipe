@@ -136,11 +136,11 @@ class tool_path_obj:
         self.duplicate_repopulate       = os.path.join(script_path, "read_repopulation.py")
         self.orphaned_read_filter       = os.path.join(script_path, "read_orphan.py")
         self.remove_tag                 = os.path.join(script_path, "read_remove_tag.py")
-        self.BLAT_Contaminant_Filter    = os.path.join(script_path, "read_BLAT_filter.py")
+        self.BLAT_Contaminant_Filter    = os.path.join(script_path, "read_BLAT_filter_v3.py")
         self.File_splitter              = os.path.join(script_path, "read_split.py")
         self.barrnap_post               = os.path.join(script_path, "read_rRNA_barrnap.py")
         self.rRNA_filter                = os.path.join(script_path, "read_rRNA_infernal.py")
-        self.map_contig                 = os.path.join(script_path, "assembly_map.py")
+        self.Map_contig                 = os.path.join(script_path, "assembly_map.py")
         self.contig_duplicate_remover   = os.path.join(script_path, "assembly_deduplicate.py")
         self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA_generic.py")
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT_generic.py")
@@ -166,6 +166,7 @@ class tool_path_obj:
         self.convert_contig_segments    = os.path.join(script_path, "output_convert_gene_map_contig_segments.py")
         self.output_filter_taxa         = os.path.join(script_path, "output_filter_taxa.py")
         self.output_filter_ECs          = os.path.join(script_path, "output_filter_ECs.py")
+        self.bwa_read_sorter            = os.path.join(script_path, "bwa_read_sorter.py")
         #--------------------------------------------------
         # miscellaneous values
         BWA_mem_default = 50
@@ -206,6 +207,9 @@ class tool_path_obj:
         BLAT_job_delay_default = 5
         DIAMOND_job_delay_default = 5
         DETECT_job_delay_default = 5
+        
+        filter_stringency_default = "high"
+        
         
         if config:
             self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
@@ -382,7 +386,11 @@ class tool_path_obj:
             except KeyError:
                 self.DETECT_job_delay = DETECT_job_delay_default
                 
-                
+            #--------------------------------------------------------------------------------------
+            try:
+                self.filter_stringency = config["Settings"]["filter_stringency"] if config["Settings"]["filter_stringency"] or config["Settings"]["filter_stringency"] == "" else filter_stringency_default
+            except KeyError:
+                self.filter_stringency = filter_stringency_default
                 
                 
              
@@ -424,4 +432,6 @@ class tool_path_obj:
             self.BLAT_job_delay = BLAT_job_delay_default
             self.DIAMOND_job_delay = DIAMOND_job_delay_default
             self.DETECT_job_delay = DETECT_job_delay_default
+            
+            self.filter_stringency = filter_stringency_default
             
