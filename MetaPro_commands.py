@@ -669,10 +669,10 @@ class mt_pipe_commands:
         blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
         blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
         blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_1_no_vectors.blatout") + " "
-        blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_3_no_vectors.blatout") + " "
+        blat_filter_vector_paired += os.path.join(vector_removal_folder, "pair_2_no_vectors.blatout") + " "
         blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_1_no_vectors.fastq") + " "
         blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
-        blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_1_vectors_only.fastq")
+        blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_1_vectors_only.fastq") + " "
         blat_filter_vector_paired += os.path.join(blat_containment_vector_folder, "pair_2_vectors_only.fastq")
 
         copy_singletons = "cp " + os.path.join(blat_containment_vector_folder, "singletons_no_vectors.fastq") + " "
