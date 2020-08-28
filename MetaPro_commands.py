@@ -47,7 +47,7 @@ class mt_pipe_commands:
         if not (os.path.exists(folder_path)):
             os.makedirs(folder_path)
 
-    def create_and_launch(self, job_name, command_list, run_job=False, inner_name=None):#, work_in_background=False):
+    def create_and_launch(self, job_folder, inner_name, command_list):
         # create the pbs job, and launch items
         # job name: string tag for export file name
         # command list:  list of command statements for writing
@@ -58,47 +58,21 @@ class mt_pipe_commands:
         # docker mode: single cpu
         # no ID, no sbatch.  just run the command
         
-        shell_script_full_path = os.path.join(self.Output_Path, job_name, job_name + ".sh")
-        
-        #sys.stdout = open(shell_script_full_path + ".out", "w")
-        tool_output_path = os.path.join(self.Output_Path, job_name, job_name + "_tool_output.txt")
-        if inner_name is not None:
-            shell_script_full_path = os.path.join(self.Output_Path, job_name, inner_name + ".sh")
-            tool_output_path = os.path.join(self.Output_Path, job_name, inner_name + "_tool_output.txt")
+        shell_script_full_path = os.path.join(self.Output_Path, job_folder, inner_name + ".sh")
+
         with open(shell_script_full_path, "w") as PBS_script_out:
             for item in command_list:
                 PBS_script_out.write(item + "\n")
             PBS_script_out.close()
-        if run_job:
-            #if not work_in_background:
-            output = ""
-            try:
-                #output = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT)
-                #full_command = shell_script_full_path + " > " + shell_script_full_path + ".out 2&>1"
-                #out = sp.check_output(["sh", shell_script_full_path], stderr = sp.STDOUT) #, " > " + shell_script_full_path + ".out 2>&1"])#, stderr = sp.STDOUT)
-                #out = sp.getoutput(["sh", shell_script_full_path])
-                #out_file = shell_script_full_path + ".out"
-                #with open(out_file, "w") as job_out:
-                #    for item in out:
-                #        job_out.write(item + "\n")
-                sp.check_output(["sh", shell_script_full_path])#, stderr = sp.STDOUT)
-            except sp.CalledProcessError as e:
-                return_code = e.returncode
-                if return_code != 1:
-                    raise
-            #with open(tool_output_path, "w") as tool_output:
-            #    for line in output:
-            #        tool_output.write(line + "\n")
-            # else:
-                # try:
-                    # process_id = sp.Popen(["sh", shell_script_full_path], stderr = sp.STDOUT)
-                    # return process_id
-                # except sp.CalledProcessError as e:
-                    # return_code = e.returncode
-                    # if return_code != 1:
-                        # raise
-        else:
-            print("not running job.  run_job set to False")
+        #if not work_in_background:
+        output = ""
+        try:
+            sp.check_output(["sh", shell_script_full_path])#, stderr = sp.STDOUT)
+        except sp.CalledProcessError as e:
+            return_code = e.returncode
+            if return_code != 1:
+                raise
+
     
     def launch_only(self, command_list, command_list_length):
         #just launch the job.  Don't make a script file.
@@ -1510,37 +1484,6 @@ class mt_pipe_commands:
         
         return COMMANDS_GA_prep_fasta
 
-    def create_BWA_annotate_command(self, stage_name, dependency_stage_name, section):
-        # meant to be called multiple times: section -> contigs, singletons, pair_1, pair_2
-        subfolder       = os.path.join(self.Output_Path, stage_name)
-        data_folder     = os.path.join(subfolder, "data")
-        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
-        bwa_folder      = os.path.join(data_folder, "0_bwa")
-        final_folder    = os.path.join(subfolder, "final_results")
-
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(bwa_folder)
-        self.make_folder(final_folder)
-
-        if section == "contigs":
-            section_file = section + ".fasta"
-        else:
-            section_file = section + ".fastq"
-
-        bwa_job = ">&2 echo BWA on " + section + " | "
-        bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_job += self.tool_path_obj.DNA_DB + " "
-        bwa_job += os.path.join(dep_loc, section_file) + " | "
-        bwa_job += self.tool_path_obj.SAMTOOLS + " view "
-        bwa_job += "> " + os.path.join(bwa_folder, section + ".sam")
-        
-
-        COMMANDS_BWA = [
-            bwa_job
-        ]
-
-        return COMMANDS_BWA
 
     def create_BWA_annotate_command_v2(self, stage_name, query_file):
         # meant to be called multiple times: query file is a split file
@@ -1680,17 +1623,21 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         blat_folder         = os.path.join(data_folder, "0_blat")
         blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
+        jobs_folder         = os.path.join(data_folder, "jobs")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(blat_merge_folder)
+        self.make_folder(jobs_folder)
 
-        #cat_command = "cat " + os.path.join(blat_folder, sample_root_name + "*.blatout") + " > " + os.path.join(blat_merge_folder, sample_root_name + ".blatout")
         cat_command = "for f in " + os.path.join(blat_folder, sample_root_name + "_*.blatout") + ";  do cat $f >> " + os.path.join(blat_merge_folder, sample_root_name + ".blatout") + " && rm $f; done"
-        #cleanup_command = "rm " + os.path.join(blat_folder, sample_root_name + "*.blatout")
-        cleanup_command = "for f in " + os.path.join(blat_folder, sample_root_name + "_*.blatout") + "; do rm $f; done"
+        
+        make_marker = ">&2 echo completed BLAT cat: " + sample_root_name + " | " 
+        make_marker += "touch" + " "
+        make_marker += (os.path.join(jobs_folder, sample_root_name + "_blat_cat")
+        
         return [
-            cat_command
+            cat_command + " && " + make_marker
             #cleanup_command
         ]
         
@@ -1739,16 +1686,22 @@ class mt_pipe_commands:
         data_folder     = os.path.join(subfolder, "data")
         final_folder    = os.path.join(subfolder, "final_results")
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        #self.make_folder(bwa_folder)
+        self.make_folder(jobs_folder)
         self.make_folder(final_folder)
+        
     
         copy_contig_map = ">&2 echo copy contig map | "
         copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
         
-        return [copy_contig_map]
+        make_marker = ">&2 echo copy contig map done | "
+        make_marker += "touch" + " "
+        make_marker += os.path.join(jobs_folder, "blat_copy_contig_map")
+        
+        return [copy_contig_map + " && " + make_marker]
 
 
 
@@ -1820,7 +1773,7 @@ class mt_pipe_commands:
         
         make_marker = ">&2 echo diamond pp complete: " + sample_root_name + " | "
         make_marker += "touch" + " "
-        make_marker += os.path.join(jobs_folder, sample_root_name)
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond_pp")
 
         COMMANDS_Annotate_Diamond_Post = [
             diamond_pp + " && " + make_marker
@@ -1853,9 +1806,13 @@ class mt_pipe_commands:
         final_merge += data_folder + " "
         final_merge += final_folder
         
+        make_marker = ">&2 echo GA final merge | "
+        make_marker += "touch" + " "
+        make_marker += os.path.join(jobs_folder, "GA_final_merge")
+        
         
         COMMANDS_ga_final_merge = [
-            final_merge
+            final_merge + " && " + make_marker
         ]
         
         return COMMANDS_ga_final_merge
