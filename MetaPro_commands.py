@@ -1017,7 +1017,6 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
-        Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap_mRNA_fasta")
         infernal_out_folder = os.path.join(data_folder, category + "_infernal")
         mRNA_barrnap_folder = os.path.join(data_folder, category + "_mRNA")
         mRNA_infernal_folder= os.path.join(data_folder, category + "_infernal_mRNA")
@@ -1038,11 +1037,15 @@ class mt_pipe_commands:
             infernal_rRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_other")
             infernal_rRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_other")
             
+            Barrnap_pair_1_out_folder = os.path.join(data_folder, "pair_1_barrnap")
+            Barrnap_pair_2_out_folder = os.path.join(data_folder, "pair_2_barrnap")
+            
             self.make_folder(infernal_mRNA_pair_1_folder)
             self.make_folder(infernal_mRNA_pair_2_folder)
             self.make_folder(infernal_rRNA_pair_1_folder)
             self.make_folder(infernal_rRNA_pair_2_folder)
-            
+            self.make_folder(Barrnap_pair_1_out_folder)
+            self.make_folder(Barrnap_pair_2_out_folder)
             
             rRNA_filtration = ">&2 echo extracting mRNA with infernal report: " + file_name + " | "
             rRNA_filtration += self.tool_path_obj.Python + " "
@@ -1051,6 +1054,8 @@ class mt_pipe_commands:
             rRNA_filtration += "paired" + " "
             rRNA_filtration += os.path.join(infernal_pair_1_out_folder, "pair_1_" + file_name_code + ".infernal_out") + " "
             rRNA_filtration += os.path.join(infernal_pair_2_out_folder, "pair_2_" + file_name_code + ".infernal_out") + " "
+            rRNA_filtration += os.path.join(Barrnap_pair_1_out_folder, "pair_1_" + file_name_code + ".barrnap_out") + " "
+            rRNA_filtration += os.path.join(Barrnap_pair_2_out_folder, "pair_2_" + file_name_code + ".barrnap_out") + " "
             rRNA_filtration += os.path.join(data_folder, "pair_1_fastq", "pair_1_" + file_name_code + ".fastq") + " "
             rRNA_filtration += os.path.join(data_folder, "pair_2_fastq", "pair_2_" + file_name_code + ".fastq") + " "
             rRNA_filtration += os.path.join(infernal_mRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_mRNA.fastq") + " "
@@ -1073,6 +1078,7 @@ class mt_pipe_commands:
             rRNA_filtration += "AND" + " "
             rRNA_filtration += "single" + " "
             rRNA_filtration += os.path.join(infernal_out_folder, "singletons_" + file_name_code + ".infernal_out") + " "
+            rRNA_filtration += os.path.join(Barrnap_out_folder, "singletons_" + file_name_code + ".barrnap_out") + " "
             rRNA_filtration += os.path.join(data_folder, "singletons_fastq", "singletons_" + file_name_code + ".fastq") + " "
             rRNA_filtration += os.path.join(infernal_mRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_mRNA.fastq") + " "
             rRNA_filtration += os.path.join(infernal_rRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_rRNA.fastq")
