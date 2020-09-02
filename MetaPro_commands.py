@@ -1288,7 +1288,7 @@ class mt_pipe_commands:
         mgm_folder          = os.path.join(data_folder, "1_mgm")
         bwa_folder          = os.path.join(data_folder, "2_bwa_align")
         mapped_reads_folder = os.path.join(data_folder, "3_mapped_reads")
-        
+        consumed_folder     = os.path.join(data_folder, "4_reads_in_contigs")
         #sam_trimmer_folder  = os.path.join(data_folder, "3_clean_sam")
         #mapped_reads_folder = os.path.join(data_folder, "4_mapped_reads")
         final_folder        = os.path.join(subfolder, "final_results")
@@ -1298,8 +1298,9 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(spades_folder)
         self.make_folder(bwa_folder)
-        self.make_folder(sam_trimmer_folder)
-        self.make_folder(mapped_reads_folder)
+        self.make_folder(consumed_folder)
+        #self.make_folder(sam_trimmer_folder)
+        #self.make_folder(mapped_reads_folder)
         self.make_folder(mgm_folder)
         self.make_folder(final_folder)
 
@@ -1355,30 +1356,26 @@ class mt_pipe_commands:
         bwa_singletons_contigs += os.path.join(dep_loc, "singletons.fastq")
         bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons_on_contigs.sam")
         
-        
-        samtools_no_contig_paired_convert = ">&2 echo get contigs out of paired | " 
-        samtools_no_contig_paired_convert += self.tool_path_obj.SAMTOOLS + " "
-        samtools_no_contig_paired_convert += "view -bs" + " "
-        samtools_no_contig_paired_convert += os.path.join(bwa_folder, "paired_on_contigs.sam") + " "
-        samtools_no_contig_paired_convert += ">" + " "
-        samtools_no_contig_paired_convert += os.path.join(bwa_folder, "paired_on_contigs.bam")
+        bwa_sort_paired = ">&2 echo bwa sort paired | " 
+        bwa_sort_paired += self.tool_path_obj.Python + " "
+        bwa_sort_paired += self.tool_path_obj.bwa_read_sorter + " "
+        bwa_sort_paired += "paired" + " "
+        bwa_sort_paired += self.tool_path_obj.filter_stringency + " "
+        bwa_sort_paired += os.path.join(bwa_folder, "paired_on_contigs.sam") + " "
+        bwa_sort_paired += os.path.join(dep_loc, "pair_1.fastq") + " "
+        bwa_sort_paired += os.path.join(dep_loc, "pair_2.fastq") + " "
+        bwa_sort_paired += os.path.join(final_folder, "pair_1.fastq") + " "
+        bwa_sort_paired += os.path.join(final_folder, "pair_2.fastq") + " "
+        bwa_sort_paired += os.path.join(consumed_folder, "pair_1.fastq") + " "
+        bwa_sort_paired += os.path.join(consumed_folder, "pair_2.fastq")
         
         samtools_no_contig_singletons_convert = ">&2 echo get contigs out of singletons | "
         samtools_no_contig_singletons_convert += self.tool_path_obj.SAMTOOLS + " "
-        samtools_no_contig_singletons_convert += "view -bs" + " "
+        samtools_no_contig_singletons_convert += "view -bS" + " "
         samtools_no_contig_singletons_convert += os.path.join(bwa_folder, "singletons_on_contigs.sam") + " "
         samtools_no_contig_singletons_convert += ">" + " "
         samtools_no_contig_singletons_convert += os.path.join(bwa_folder, "singletons_on_contigs.bam")
         
-        
-        samtools_no_contig_paired_export = ">&2 echo samtools contig paired pass-export | "
-        samtools_no_contig_paired_export += self.tool_path_obj.SAMTOOLS + " "
-        samtools_no_contig_paired_export += "fastq -n -f 4" + " "
-        samtools_no_contig_paired_export += "-1" + " " 
-        samtools_no_contig_paired_export += os.path.join(final_folder, "pair_1.fastq") + " "
-        samtools_no_contig_paired_export += "-2" + " " 
-        samtools_no_contig_paired_export += os.path.join(final_folder, "pair_2.fastq") + " "
-        samtools_no_contig_paired_export += os.path.join(bwa_folder, "paired_on_contigs.bam")
         
         samtools_no_contig_singletons_export = ">&2 echo Samtools contig singletons pass-export | "
         samtools_no_contig_singletons_export += self.tool_path_obj.SAMTOOLS + " "
@@ -1394,9 +1391,7 @@ class mt_pipe_commands:
         if self.read_mode == "paired":
             map_read_contig += " " + os.path.join(bwa_folder, "paired_on_contigs.sam")
 
-        copy_singletons = ">&2 echo Copying singletons to final folder | "
-        copy_singletons += "cp " + os.path.join(mapped_reads_folder, "singletons.fastq") + " " + final_folder
-
+        
         copy_contigs = ">&2 echo Copying contigs to final folder | "
         copy_contigs += "cp " + final_contigs + " " + final_folder
             
@@ -1417,7 +1412,6 @@ class mt_pipe_commands:
                 samtools_no_contig_singletons_convert + " && " +
                 samtools_no_contig_singletons_export + " && " + 
                 map_read_contig + " && " +
-                copy_singletons + " && " +
                 copy_contigs + " && " +
                 move_gene_report
             ]
@@ -1430,13 +1424,11 @@ class mt_pipe_commands:
                 bwa_index + " && " +
                 bwa_paired_contigs + " && " +
                 bwa_singletons_contigs + " && " +
-                samtools_no_contig_paired_convert + " && " + 
+                bwa_sort_paired + " && " + 
                 samtools_no_contig_singletons_convert + " && " +
-                samtools_no_contig_paired_export + " && " + 
                 samtools_no_contig_singletons_export + " && " + 
                 map_read_contig + " && " +
                 copy_contigs + " && " +
-                singleton_assembly_filter + " && " +
                 move_gene_report
             ]
 
@@ -1640,7 +1632,7 @@ class mt_pipe_commands:
         
         make_marker = ">&2 echo completed BLAT cat: " + sample_root_name + " | " 
         make_marker += "touch" + " "
-        make_marker += (os.path.join(jobs_folder, sample_root_name + "_blat_cat")
+        make_marker += (os.path.join(jobs_folder, sample_root_name + "_blat_cat"))
         
         return [
             cat_command + " && " + make_marker
@@ -1797,6 +1789,7 @@ class mt_pipe_commands:
         dep_1_path      = os.path.join(self.Output_Path, dep_1_name, "final_results")
         dep_2_path      = os.path.join(self.Output_Path, dep_2_name, "final_results")
         dep_3_path      = os.path.join(self.Output_Path, dep_3_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)

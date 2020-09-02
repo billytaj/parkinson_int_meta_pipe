@@ -228,7 +228,7 @@ def launch_and_create_with_hold(mp_store, mem_threshold, job_limit, job_delay, j
             if(mem_checker(mem_threshold)):
                 process = mp.Process(
                     target = command_obj.create_and_launch,
-                    args = (job_location, job_name, command, True, job_name)
+                    args = (job_location, job_name, command)
                 )
                 process.start()
                 mp_store.append(process)
@@ -266,12 +266,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     Barrnap_job_limit = int(paths.Barrnap_job_limit)
     DETECT_job_limit = int(paths.DETECT_job_limit)
     
-    Infernal_job_delay      = int(paths.Infernal_job_delay)
-    Barrnap_job_delay       = int(paths.Barrnap_job_delay)
-    BWA_job_delay           = int(paths.BWA_job_delay)
-    BLAT_job_delay          = int(paths.BLAT_job_delay)
-    DIAMOND_job_delay       = int(paths.DIAMOND_job_delay)
-    DETECT_job_delay        = int(paths.DETECT_job_delay)
+    Infernal_job_delay      = float(paths.Infernal_job_delay)
+    Barrnap_job_delay       = float(paths.Barrnap_job_delay)
+    BWA_job_delay           = float(paths.BWA_job_delay)
+    BLAT_job_delay          = float(paths.BLAT_job_delay)
+    DIAMOND_job_delay       = float(paths.DIAMOND_job_delay)
+    DETECT_job_delay        = float(paths.DETECT_job_delay)
     
     #-----------------------------------------------------
     keep_all                = paths.keep_all
@@ -933,7 +933,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA_pp" + "_" + file_tag
                 marker_name = file_tag + "_bwa_pp"
-                marker_path = os.path.join(
+                marker_path = os.path.join(GA_BWA_path, "data", "jobs", marker_name)
                 if(os.path.exists(marker_path)):
                     print(dt.today(), "skipping:", marker_name)
                     continue
@@ -947,7 +947,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         mp_store[:] = []
 
         command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label)
-        launch_and_create_simple(GA_BWA_label + "_copy_contig_map", commands, command_list)
+        launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
         
         
         write_to_bypass_log(output_folder_path, GA_BWA_pp_label)
@@ -1057,7 +1057,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             print(dt.today(), "skipping:", marker_name)
         else:
             command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label)
-            launch_and_create_simple(job_name, commands, command_list)
+            launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
         
         write_to_bypass_log(output_folder_path, GA_BLAT_pp_label)
 
@@ -1148,11 +1148,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         marker_path = os.path.join(GA_FINAL_MERGE_path, "data", "jobs", "GA_final_merge")
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping: GA final merge")
-            continue
         else:
             command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label)
             job_name = "GA_final_merge"
-            launch_and_create_simple(job_name, commands, command_list)
+            launch_and_create_simple(GA_final_merge_label, job_name, commands, command_list)
         
         #check if all_proteins.faa was generated
         all_proteins_path = os.path.join(output_folder_path, GA_final_merge_label, "final_results", "all_proteins.faa")
