@@ -31,6 +31,11 @@ def mem_checker(threshold):
 def make_folder(folder_path):
     if not (os.path.exists(folder_path)):
         os.makedirs(folder_path)
+        
+def delete_folder_simple(folder_path):
+    if(os.path.exists(folder_path)):
+        print(dt.today(), "Deleting:", folder_path)
+        shutil.rmtree(folder_path)
 
 def delete_folder(folder_path):
     if (os.path.exists(os.path.join(folder_path, "data"))):
@@ -175,17 +180,27 @@ def check_where_resume(job_label=None, full_path=None, dep_job_path=None, file_c
         print("doesn't exist: running")
         return False
 
-def launch_job_simple(job_label, command_obj, commands):
+def launch_and_create_simple(job_location, job_label, command_obj, commands):
     #just launches a job.  no multi-process.
     process = mp.Process(
         target=command_obj.create_and_launch,
-        args=(job_label,commands,True)
+        args=(job_location, job_label,commands)
     )
     process.start()
     process.join()
-        
-        
-def launch_only_with_hold(mp_store, mem_threshold, job_limit, job_delay, inner_name, command_obj, command):
+
+def launch_and_create_with_mp_store(job_location, job_label, mp_store, command_obj, commands):
+    #just launches a job.  no multi-process.
+    process = mp.Process(
+        target=command_obj.create_and_launch,
+        args=(job_location, job_label, commands)
+    )
+    process.start()
+    mp_store.append(process)
+
+
+
+def launch_only_with_hold(mp_store, mem_threshold, job_limit, job_delay, job_name, command_obj, command):
     #launch a job in launch-only mode
     job_submitted = False
     while(not job_submitted):
@@ -197,10 +212,10 @@ def launch_only_with_hold(mp_store, mem_threshold, job_limit, job_delay, inner_n
                 )
                 process.start()
                 mp_store.append(process)
-                print(dt.today(), inner_name, "job submitted.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                print(dt.today(), job_name, "job submitted.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                 job_submitted = True
             else:
-                print(dt.today(), inner_name, "Pausing. mem limit reached:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                print(dt.today(), job_name, "Pausing. mem limit reached:", psu.virtual_memory().available/(1024*1024*1000), "GB")
                 time.sleep(job_delay)
         else:
             print(dt.today(), "job limit reached.  waiting for queue to flush")
@@ -209,6 +224,30 @@ def launch_only_with_hold(mp_store, mem_threshold, job_limit, job_delay, inner_n
             mp_store[:] = []
     time.sleep(job_delay)
     
+
+def launch_and_create_with_hold(mp_store, mem_threshold, job_limit, job_delay, job_location, job_name, command_obj, command):
+    #launch a job in launch-with-create mode
+    job_submitted = False
+    while(not job_submitted):
+        if(len(mp_store) < job_limit):
+            if(mem_checker(mem_threshold)):
+                process = mp.Process(
+                    target = command_obj.create_and_launch,
+                    args = (job_location, job_name, command)
+                )
+                process.start()
+                mp_store.append(process)
+                print(dt.today(), job_name, "job submitted.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                job_submitted = True
+            else:
+                print(dt.today(), job_name, "Pausing. mem limit reached:", psu.virtual_memory().available/(1024*1024*1000), "GB")
+                time.sleep(job_delay)
+        else:
+            print(dt.today(), "job limit reached.  waiting for queue to flush")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+    time.sleep(job_delay)
 
 
 
@@ -232,12 +271,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     Barrnap_job_limit = int(paths.Barrnap_job_limit)
     DETECT_job_limit = int(paths.DETECT_job_limit)
     
-    Infernal_job_delay      = int(paths.Infernal_job_delay)
-    Barrnap_job_delay       = int(paths.Barrnap_job_delay)
-    BWA_job_delay           = int(paths.BWA_job_delay)
-    BLAT_job_delay          = int(paths.BLAT_job_delay)
-    DIAMOND_job_delay       = int(paths.DIAMOND_job_delay)
-    DETECT_job_delay        = int(paths.DETECT_job_delay)
+    Infernal_job_delay      = float(paths.Infernal_job_delay)
+    Barrnap_job_delay       = float(paths.Barrnap_job_delay)
+    BWA_job_delay           = float(paths.BWA_job_delay)
+    BLAT_job_delay          = float(paths.BLAT_job_delay)
+    DIAMOND_job_delay       = float(paths.DIAMOND_job_delay)
+    DETECT_job_delay        = float(paths.DETECT_job_delay)
     
     #-----------------------------------------------------
     keep_all                = paths.keep_all
@@ -364,15 +403,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     repop_job_label                         = "duplicate_repopulation"
     assemble_contigs_label                  = "assemble_contigs"
     destroy_contigs_label                   = "destroy_contigs"
-    gene_annotation_BWA_label               = "gene_annotation_BWA"
-    gene_annotation_BWA_pp_label            = "gene_annotation_BWA_pp"
-    gene_annotation_BLAT_label              = "gene_annotation_BLAT"
-    gene_annotation_BLAT_cleanup_label      = "gene_annotation_BLAT_cleanup"
-    gene_annotation_BLAT_cat_label          = "gene_annotation_BLAT_cat"
-    gene_annotation_BLAT_pp_label           = "gene_annotation_BLAT_pp"
-    gene_annotation_DIAMOND_label           = "gene_annotation_DIAMOND"
-    gene_annotation_DIAMOND_pp_label        = "gene_annotation_DIAMOND_pp"
-    gene_annotation_final_merge_label       = "gene_annotation_FINAL_MERGE"
+    GA_BWA_label                            = "GA_BWA"
+    GA_BWA_pp_label                         = "GA_BWA_pp"
+    GA_BLAT_label                           = "GA_BLAT"
+    GA_BLAT_cleanup_label                   = "GA_BLAT_cleanup"
+    GA_BLAT_cat_label                       = "GA_BLAT_cat"
+    GA_BLAT_pp_label                        = "GA_BLAT_pp"
+    GA_DIAMOND_label                        = "GA_DIAMOND"
+    GA_DIAMOND_pp_label                     = "GA_DIAMOND_pp"
+    GA_final_merge_label                    = "GA_FINAL_MERGE"
     taxon_annotation_label                  = "taxonomic_annotation"
     ec_annotation_label                     = "enzyme_annotation"
     ec_annotation_detect_label              = "enzyme_annotation_detect"
@@ -405,20 +444,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # The subprocess is created from the commands object
 
     # The quality filter stage
+    #------------------------------------------------------------------------------
     quality_start = time.time()
     quality_path = os.path.join(output_folder_path, quality_filter_label)
     #if not check_where_resume(quality_path):
     if check_bypass_log(output_folder, quality_filter_label):
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                quality_filter_label,
-                commands.create_quality_control_command(quality_filter_label),
-                True
-            )
-        )
-        process.start()  # start the multiprocess
-        process.join()  # wait for it to end
+        command_list = commands.create_quality_control_command(quality_filter_label)
+        job_name = quality_filter_label
+        launch_and_create_simple(quality_filter_label, job_name, commands, command_list) 
         write_to_bypass_log(output_folder_path, quality_filter_label)
         cleanup_quality_start = time.time()
         if(keep_all == "no" and keep_quality == "no"):
@@ -433,21 +466,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
 
     
     # The host read filter stage
+    #-------------------------------------------------------------------------
     if not no_host:
         host_start = time.time()
         host_path = os.path.join(output_folder_path, host_filter_label)
         #if not check_where_resume(host_path, None, quality_path):
         if check_bypass_log(output_folder_path, host_filter_label):
-            process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    host_filter_label,
-                    commands.create_host_filter_command(host_filter_label, quality_filter_label),
-                    True
-                )
-            )
-            process.start()  # start the multiprocess
-            process.join()  # wait for it to end
+            job_name = host_filter_label
+            command_list = commands.create_host_filter_command(host_filter_label, quality_filter_label)
+            launch_and_create_simple(host_filter_label, job_name, commands, command_list)
+            
             write_to_bypass_log(output_folder_path, host_filter_label)
             cleanup_host_start = time.time()
             if(keep_all == "no" and keep_host == "no"):
@@ -468,17 +496,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     if no_host:
         #get dep args from quality filter
         #if not check_where_resume(vector_path, None, quality_path):
-        if check_bypass_log(output_folder_path, host_filter_label):
-            process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    vector_filter_label,
-                    commands.create_vector_filter_command(vector_filter_label, quality_filter_label),
-                    True
-                )
-            )
-            process.start()  # start the multiprocess
-            process.join()  # wait for it to end
+        if check_bypass_log(output_folder_path, host_filter_label):        
+            job_name = vector_filter_label
+            command_list = commands.create_vector_filter_command(vector_filter_label, quality_filter_label)
+            launch_and_create_simple(vector_filter_label, job_name, commands, command_list)
             write_to_bypass_log(output_folder_path, vector_filter_label)
             cleanup_vector_start = time.time()
             if(keep_all == "no" and keep_vector == "no"):
@@ -491,16 +512,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #get the dep args from host filter
         #if not check_where_resume(vector_path, None, host_path):
         if check_bypass_log(output_folder_path, vector_filter_label):
-            process = mp.Process(
-                target=commands.create_and_launch,
-                args=(
-                    vector_filter_label,
-                    commands.create_vector_filter_command(vector_filter_label, host_filter_label),
-                    True
-                )
-            )
-            process.start()  # start the multiprocess
-            process.join()  # wait for it to end
+            job_name = vector_filter_label
+            command_list = commands.create_vector_filter_command(vector_filter_label, host_filter_label)
+            launch_and_create_simple(vector_filter_label, job_name, commands, command_list)
+            
             write_to_bypass_log(output_folder_path, vector_filter_label)
             cleanup_vector_start = time.time()
             if(keep_all == "no" and keep_vector == "no"):
@@ -535,15 +550,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             #if not check_where_resume(job_label = None, full_path = second_split_path, dep_job_path = vector_path):
             if check_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + section):
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
-                inner_name = "rRNA_filter_prep_" + section
-                filter_prep_command = commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks)
-                process = mp.Process(
-                    target = commands.launch_only,
-                    args = (filter_prep_command, len(filter_prep_command))
-                )
-        
-                process.start()
-                mp_store.append(process)
+                job_name = "rRNA_filter_prep_" + section
+                command_list = commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks)
+                launch_and_create_with_mp_store(rRNA_filter_label, job_name, mp_store, commands, command_list)
         for item in mp_store:
             item.join()
         mp_store[:] = []
@@ -567,8 +576,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         print(dt.today(), item, "already converted to fasta.  skipping")
                         continue
                     else:
-                        inner_name = root_name + "_convert_to_fasta"
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands, commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq"))
+                        job_name = root_name + "_convert_to_fasta"
+                        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq")
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                         
                 write_to_bypass_log(output_folder_path, rRNA_filter_convert_label + "_" + section)
             
@@ -612,30 +622,34 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         print(dt.today(), "barrnap arc already run.  skipping:", item) 
                         continue
                     else:
-                        inner_name = root_name + "_barrnap_arc"
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands, commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name))
+                        job_name = root_name + "_barrnap_arc"
+                        command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                         
                         
                     if(barrnap_bac_out_size > 0):
                         print(dt.today(), "barrnap bac already run.  skipping:", item) 
                         continue
                     else:
-                        inner_name = root_name + "_barrnap_bac"
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands, commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name))
+                        job_name = root_name + "_barrnap_bac"
+                        command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                         
                     if(barrnap_euk_out_size > 0):
                         print(dt.today(), "barrnap euk already run.  skipping:", item) 
                         continue
                     else:
-                        inner_name = root_name + "_barrnap_euk"
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands, commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name))
+                        job_name = root_name + "_barrnap_euk"
+                        command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                         
                     if(barrnap_mit_out_size > 0):
                         print(dt.today(), "barrnap mit already run.  skipping:", item) 
                         continue
                     else:
-                        inner_name = root_name + "_barrnap_mit"
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands, commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name))
+                        job_name = root_name + "_barrnap_mit"
+                        command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                 print(dt.today(), "waiting for Barrnap jobs to finish")
                 for item in mp_store:
                     item.join()
@@ -655,8 +669,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             print(dt.today(), "barrnap already merged. skipping:", item)
                             continue
                         else:
-                            inner_name = root_name + "_barrnap_cat"
-                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands, commands.create_rRNA_filter_barrnap_cat_command("rRNA_filter", section, root_name))
+                            job_name = root_name + "_barrnap_cat"
+                            command_list = commands.create_rRNA_filter_barrnap_cat_command("rRNA_filter", section, root_name)
+                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                 print(dt.today(), "waiting for Barrnap pp to finish")
                 for item in mp_store:
                     item.join()
@@ -675,8 +690,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             print(dt.today(), "barrnap pp already run.  skipping:", item)
                             continue
                         else:
-                            inner_name = root_name + "_barrnap_pp"
-                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, inner_name, commands, commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", section, root_name + ".fastq"))
+                            job_name = root_name + "_barrnap_pp"
+                            command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", section, root_name + ".fastq")
+                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                     
                     print(dt.today(), "waiting for Barrnap pp to finish")
                     for item in mp_store:
@@ -708,8 +724,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             continue
                         
                         else:
-                            inner_name = "rRNA_filter_infernal_prep_" + root_name
-                            launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", section, item))
+                            job_name = "rRNA_filter_infernal_prep_" + root_name
+                            command_list = commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", section, item)
+                            launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
                     
                 print(dt.today(), "final batch: infernal prep")
                 for p_item in mp_store:
@@ -730,8 +747,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         continue
                     else:
                         inf_command = commands.create_rRNA_filter_infernal_command("rRNA_filter", section, root_name)
-                        inner_name = "rRNA_filter_infernal_" + root_name
-                        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, inf_command)
+                        job_name = "rRNA_filter_infernal_" + root_name
+                        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, inf_command)
                         
                         
                 print(dt.today(), "final batch: infernal")
@@ -751,10 +768,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                             print("file size:", splitter_out_file_size, "file:", splitter_out_file)
                             continue
                         else:
-                            inner_name = "rRNA_filter_infernal_splitter_" + root_name
+                            job_name = "rRNA_filter_infernal_splitter_" + root_name
                             command_list = commands.create_rRNA_filter_splitter_command("rRNA_filter", section, root_name)
                             print(command_list)
-                            launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, command_list)
+                            launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
                             
                     print(dt.today(), "final batch: infernal splitter")
                     for p_item in mp_store:
@@ -771,10 +788,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             if check_bypass_log(output_folder_path, rRNA_filter_post_label + "_" + section):
                 print(dt.today(), "now running rRNA filter post:", section)
                 
-                inner_name = "rRNA_post_cat"
+                job_name = "rRNA_post_cat"
                 command_list = commands.create_rRNA_filter_final_cat_command("rRNA_filter", section)
                 print("command list:", command_list)
-                launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, inner_name, commands, command_list)
+                launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
                 
         for p_item in mp_store:
             p_item.join()
@@ -785,6 +802,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         write_to_bypass_log(output_folder_path, rRNA_filter_label)
         cleanup_rRNA_filter_start = time.time()
+        delete_folder_simple(marker_path)
         if(keep_all == "no" and keep_rRNA == "no"):
             delete_folder(rRNA_filter_path)
         elif(keep_all == "compress" or keep_rRNA == "compress"):
@@ -796,66 +814,60 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("rRNA filter:", '%1.1f' % (rRNA_filter_end - rRNA_filter_start - (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start)), "s")
     print("rRNA filter cleanup:", '%1.1f' % (cleanup_rRNA_filter_end - cleanup_rRNA_filter_start), "s")
     
-    sys.exit("honey butter")
-    
+
     #---------------------------------------------------------------------------------------------------------------------
     # Duplicate repopulation
     repop_start = time.time()
     repop_job_path = os.path.join(output_folder_path, repop_job_label)
     #if not check_where_resume(repop_job_path, None, rRNA_filter_path):
     if check_bypass_log(output_folder_path, repop_job_label):
-        launch_job_simple(repop_job_label, commands, commands.create_repop_command(repop_job_label, quality_filter_label, rRNA_filter_label))
+        job_name = repop_job_label
+        command_list = commands.create_repop_command(repop_job_label, quality_filter_label, rRNA_filter_label)
+        launch_and_create_simple(repop_job_label, job_name, commands, command_list)
     
         write_to_bypass_log(output_folder_path, repop_job_label)
         
-    cleanup_repop_start = time.time()
-    if(keep_all == "no" and keep_repop == "no"):
-        delete_folder(repop_job_path)
-    elif(keep_all == "compress" or keep_repop == "compress"):
-        compress_folder(repop_job_path)
-        delete_folder(repop_job_path)
-    cleanup_repop_end = time.time()
+        cleanup_repop_start = time.time()
+        if(keep_all == "no" and keep_repop == "no"):
+            delete_folder(repop_job_path)
+        elif(keep_all == "compress" or keep_repop == "compress"):
+            compress_folder(repop_job_path)
+            delete_folder(repop_job_path)
+        cleanup_repop_end = time.time()
+        
     repop_end = time.time()
     print("repop:", '%1.1f' % (repop_end - repop_start - (cleanup_repop_end - cleanup_repop_start)), "s")
     print("repop cleanup:", '%1.1f' % (cleanup_repop_end - cleanup_repop_start), "s")
+
     # -------------------------------------------------------------
-    
-    # ----------------------------------------
     # Assemble contigs
     assemble_contigs_start = time.time()
     assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
     
     
     #if not check_where_resume(assemble_contigs_path, None, repop_job_path):
+    
     if check_bypass_log(output_folder_path, assemble_contigs_label):
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                assemble_contigs_label,
-                commands.create_assemble_contigs_command(assemble_contigs_label, repop_job_label),
-                True
-            )
-        )
-        process.start()
-        process.join()
-        
+        job_name = assemble_contigs_label
+        command_list = commands.create_assemble_contigs_command(assemble_contigs_label, repop_job_label)
+        launch_and_create_simple(assemble_contigs_label, job_name, commands, command_list)
         mgm_file = os.path.join(assemble_contigs_path, "data", "1_mgm", "gene_report.txt")
         if(os.path.exists(mgm_file)):
             write_to_bypass_log(output_folder_path, assemble_contigs_label)
         else:
             sys.exit("mgm did not run.  look into it.  pipeline stopping here")
         
+        cleanup_assemble_contigs_start = time.time()
+        
+        assemble_contigs_data_path = os.path.join(assemble_contigs_path, "data")
+        if(keep_all == "no" and keep_assemble_contigs == "no"):
+            delete_folder(assemble_contigs_data_path)
+        elif(keep_all == "compress" or keep_assemble_contigs == "compress"):
+            compress_folder(assemble_contigs_path)
+            delete_folder(assemble_contigs_data_path)
+        cleanup_assemble_contigs_end = time.time()
         
         
-       
-    cleanup_assemble_contigs_start = time.time()
-    assemble_contigs_data_path = os.path.join(assemble_contigs_path, "data")
-    if(keep_all == "no" and keep_assemble_contigs == "no"):
-        delete_folder(assemble_contigs_data_path)
-    elif(keep_all == "compress" or keep_assemble_contigs == "compress"):
-        compress_folder(assemble_contigs_path)
-        delete_folder(assemble_contigs_data_path)
-    cleanup_assemble_contigs_end = time.time()
     assemble_contigs_end = time.time()
     print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
     print("assemble contigs cleanup:", '%1.1f' % (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start), "s")
@@ -865,17 +877,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # BWA gene annotation
     
     
-    
-    
     GA_BWA_start = time.time()
-    gene_annotation_BWA_path = os.path.join(output_folder_path, gene_annotation_BWA_label)
-    #if not check_where_resume(gene_annotation_BWA_path, None, assemble_contigs_path):
-    if check_bypass_log(output_folder_path, gene_annotation_BWA_label):
+    GA_BWA_path = os.path.join(output_folder_path, GA_BWA_label)
+    #if not check_where_resume(GA_BWA_path, None, assemble_contigs_path):
+    if check_bypass_log(output_folder_path, GA_BWA_label):
         process = mp.Process(
             target = commands.create_and_launch, 
             args = (
-                gene_annotation_BWA_label, 
-                commands.create_split_ga_fasta_data_command(gene_annotation_BWA_label, assemble_contigs_label, "contigs"),
+                GA_BWA_label, 
+                commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs"),
                 True, 
                 "GA_prep_split_contigs"
             )
@@ -885,18 +895,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         sections = ["singletons"]
         if(read_mode == "paired"):
             sections.extend(["pair_1", "pair_2"])
-        for section in sections:    
-            process = mp.Process(
-                target = commands.create_and_launch, 
-                args = (
-                    gene_annotation_BWA_label, 
-                    commands.create_split_ga_fastq_data_command(gene_annotation_BWA_label, assemble_contigs_label, section),
-                    True,
-                    "GA_prep_split_" + section
-                )
-            )
-            process.start()
-            mp_store.append(process)
+        for section in sections: 
+            job_name = "GA_prep_split_" + section
+            command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section)
+            launch_and_create_with_mp_store(GA_BWA_label, job_name, mp_store, commands, command_list)
         
         for item in mp_store:
             item.join()
@@ -907,118 +909,69 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
         for section in sections:
-            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
                 job_submitted = False
-                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section, split_sample))
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))
                 print("split sample:", full_sample_path)
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA" + "_" + file_tag
-                BWA_output_name = file_tag + ".sam"
-                BWA_output_path = os.path.join(gene_annotation_BWA_path, "data", "1_bwa", BWA_output_name)
+                BWA_marker_name = file_tag + "_bwa"
+                BWA_marker_path = os.path.join(GA_BWA_path, "data", "jobs", BWA_marker_name)
                 #this checker assumes that BWA only exports a file when it's finished running
-                if(os.path.exists(BWA_output_path)):
+                if(os.path.exists(BWA_marker_path)):
+                    print(dt.today(), "skipping:", BWA_marker_name)
                     continue
                 else:
-                    while(not job_submitted): 
-                        if(len(mp_store) < BWA_job_limit):
-                            if(mem_checker(BWA_mem_threshold)):
-                                print(dt.today(), "mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
-                                
-                                bwa_process = mp.Process(
-                                    target = commands.create_and_launch, 
-                                    args = (gene_annotation_BWA_label, commands.create_BWA_annotate_command_v2(gene_annotation_BWA_label, full_sample_path), True, job_name)
-                                )
-                                bwa_process.start()
-                                
-                                mp_store.append(bwa_process)
-                                job_submitted = True
-                                print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                                time.sleep(BWA_job_delay) #placed here so the process has some time to get started.
-                                
-                            else:               
-                                print(dt.today(), "mem has reached a limit.  waiting:", job_name, "available mem:", psu.virtual_memory().available / (1024*1024*1000), "GB")
-                                
-                                time.sleep(BWA_job_delay)
-                        else:
-                            print(dt.today(), "Too many BWA jobs launched.  Capped at:", BWA_job_limit, "waiting for jobs to finish before launching more")
-                            for item in mp_store:
-                                item.join()
-                            mp_store[:] = []
+                    command_list = commands.create_BWA_annotate_command_v2(GA_BWA_label, full_sample_path)
+                    launch_and_create_with_hold(mp_store, BWA_mem_threshold, BWA_job_limit, BWA_job_delay, GA_BWA_label, job_name, commands, command_list)
+
         print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
         for item in mp_store:
             item.join()
         mp_store[:] = []
         
-        write_to_bypass_log(output_folder_path, gene_annotation_BWA_label)
+        write_to_bypass_log(output_folder_path, GA_BWA_label)
             
-    if check_bypass_log(output_folder_path, gene_annotation_BWA_pp_label):
+    if check_bypass_log(output_folder_path, GA_BWA_pp_label):
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
         for section in sections:
-            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section)):
-                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "data", "0_read_split", section, split_sample))
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BWA_pp" + "_" + file_tag
-                job_submitted = False
-                while(not job_submitted):
-                    if(len(mp_store) < BWA_job_limit):
-                        if(mem_checker(BWA_mem_threshold)):
-                            print(dt.today(), "BWA PP mem ok:", psu.virtual_memory().available / (1024*1024*1000), "GB")
-                            BWA_pp_process = mp.Process(target = commands.create_and_launch,
-                                args = (
-                                    gene_annotation_BWA_label, 
-                                    commands.create_BWA_pp_command_v2(gene_annotation_BWA_label, assemble_contigs_label, full_sample_path),
-                                    True,
-                                    job_name
-                                )
-                            )
-                            BWA_pp_process.start()
-                            mp_store.append(BWA_pp_process)
-                            job_submitted = True
-                            print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(BWA_job_delay)
-                            
-                        else:
-                            time.sleep(BWA_job_delay)
-                            print(dt.today(), "BWA pp mem busy:", psu.virtual_memory().available / (1024*1024*1000), "GB")
-                    else:
-                        print(dt.today(), "too many BWA pp jobs launched.  capped at:", BWA_job_limit, "waiting for jobs to finish before launching more")
-                        for item in mp_store:
-                            item.join()
-                        mp_store[:] = []
-                        
+                marker_name = file_tag + "_bwa_pp"
+                marker_path = os.path.join(GA_BWA_path, "data", "jobs", marker_name)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_name)
+                    continue
+                else:
+                    command_list = commands.create_BWA_pp_command_v2(GA_BWA_label, assemble_contigs_label, full_sample_path)
+                    launch_and_create_with_hold(mp_store, BWA_mem_threshold, BWA_job_limit, BWA_job_delay, GA_BWA_label, job_name, commands, command_list)
                         
         print(dt.today(), "all BWA PP jobs submitted.  waiting for sync")            
         for item in mp_store:
             item.join()
         mp_store[:] = []
 
-        
-        process = mp.Process(
-            target = commands.create_and_launch,
-            args = (
-                gene_annotation_BWA_label, commands.create_BWA_copy_contig_map_command(gene_annotation_BWA_label, assemble_contigs_label),
-                True,
-                "GA_copy_contigs"
-            )
-        )
-        process.start()
-        process.join()
+        command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label)
+        launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
         
         
-        write_to_bypass_log(output_folder_path, gene_annotation_BWA_pp_label)
+        write_to_bypass_log(output_folder_path, GA_BWA_pp_label)
         
-    cleanup_GA_BWA_start = time.time()
-    gene_annotation_BWA_data_path = os.path.join(gene_annotation_BWA_path, "data")
-    if(keep_all == "no" and keep_GA_BWA == "no"):
-        delete_folder(gene_annotation_BWA_data_path)
-    elif(keep_all == "compress" or keep_GA_BWA == "compress"):
-        compress_folder(gene_annotation_BWA_path)
-        delete_folder(gene_annotation_BWA_data_path)
-    cleanup_GA_BWA_end = time.time()
+        cleanup_GA_BWA_start = time.time()
+        delete_folder_simple(marker_path)
+        GA_BWA_data_path = os.path.join(GA_BWA_path, "data")
+        if(keep_all == "no" and keep_GA_BWA == "no"):
+            delete_folder(GA_BWA_data_path)
+        elif(keep_all == "compress" or keep_GA_BWA == "compress"):
+            compress_folder(GA_BWA_path)
+            delete_folder(GA_BWA_data_path)
+        cleanup_GA_BWA_end = time.time()
     GA_BWA_end = time.time()
     print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
     print("GA BWA cleanup:", '%1.1f' % (cleanup_GA_BWA_end - cleanup_GA_BWA_start), "s")
@@ -1026,9 +979,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # ------------------------------------------------
     # BLAT gene annotation
     GA_BLAT_start = time.time()
-    gene_annotation_BLAT_path = os.path.join(output_folder_path, gene_annotation_BLAT_label)
-    #if not check_where_resume(gene_annotation_BLAT_path, None, gene_annotation_BWA_path):
-    if check_bypass_log(output_folder_path, gene_annotation_BLAT_label):
+    GA_BLAT_path = os.path.join(output_folder_path, GA_BLAT_label)
+
+    if check_bypass_log(output_folder_path, GA_BLAT_label):
         
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
@@ -1037,161 +990,96 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         missed_jobs_list = []
         
         for section in sections:
-            for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
                 if(split_sample.endswith(".fasta")):
                     file_tag = os.path.basename(split_sample)
                     file_tag = os.path.splitext(file_tag)[0]
-                    full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
+                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
                     for fasta_db in os.listdir(paths.DNA_DB_Split):
                         if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                             job_name = "BLAT_" + file_tag + "_" + fasta_db
-                            blat_output_name = file_tag + "_" + fasta_db + ".blatout"
-                            blat_output_path = os.path.join(gene_annotation_BLAT_path, "data", "0_blat", blat_output_name)
+                            blat_marker_name = file_tag + "_blat_" + fasta_db
+                            blat_marker_path = os.path.join(GA_BLAT_path, "data", "jobs", blat_marker_name)
                             #This checker assume BLAT only exports a file when it's finished running
-                            if(os.path.exists(blat_output_path)):
-                                #print(dt.today(), "BLAT job ran already, skipping:", blat_output_name)
+                            if(os.path.exists(blat_marker_path)):
+                                print(dt.today(), "BLAT job ran already, skipping:", blat_marker_name)
                                 continue
                             else:
-                                job_submitted = False
-                                
-                                while(not job_submitted):
-                                    if(len(mp_store) < BLAT_job_limit):
-                                        if(mem_checker(BLAT_mem_threshold)):
-                                            #why this? because we have too many BLAT jobs, and the deletion of those shellscript files added too much of a delay.
-                                            BLAT_process = mp.Process(target = commands.launch_only,#commands.create_and_launch,
-                                                args=(
-                                                    gene_annotation_BLAT_label,
-                                                    commands.create_BLAT_annotate_command_v2(gene_annotation_BLAT_label, full_sample_path, fasta_db),
-                                                    True,
-                                                    job_name
-                                                )
-                                            )
-                                            BLAT_process.start()
-                                            mp_store.append(BLAT_process)
-                                            job_submitted = True
-                                            print(dt.today(), job_name, "submitted: mem ok:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                                        else:
-                                            print(dt.today(), "too many BLAT jobs. waiting:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                                            time.sleep(BLAT_job_delay)
-                                    else:
-                                        print(dt.today(), "too many BLAT jobs running. Capped at:", paths.BLAT_job_limit , "OS will complain about Error 24. waiting for jobs to finish before launching more")
-                                        for item in mp_store:
-                                            item.join()
-                                        mp_store[:] = []
+                                command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db)
+                                launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                            
                                 
         print(dt.today(), "final BLAT job removal")
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        #for item in os.listdir(gene_annotation_BLAT_path):
-        #    if(item.endswith(".ffn.sh")):
-        #        if(os.path.exists(item)):
-        #            os.remove(item)
+
+     
+        write_to_bypass_log(output_folder_path, GA_BLAT_label)
+        
 
         
-        write_to_bypass_log(output_folder_path, gene_annotation_BLAT_label)
-        
-    #retired    
-    #if check_bypass_log(output_folder_path, gene_annotation_BLAT_cleanup_label):
-    #    for item in os.listdir(gene_annotation_BLAT_path):
-    #        if(item.endswith(".ffn.sh")):
-    #            job_path = os.path.join(gene_annotation_BLAT_path, item)
-    #            os.remove(job_path)
-    #    write_to_bypass_log(output_folder_path, gene_annotation_BLAT_cleanup_label)
-        
-    if check_bypass_log(output_folder_path, gene_annotation_BLAT_cat_label):
-        for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+    if check_bypass_log(output_folder_path, GA_BLAT_cat_label):
+        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
-                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
                 job_name = file_tag + "_cat"
                 
-                job_submitted = False
-                while(not job_submitted):
-                    if(len(mp_store) < BLAT_job_limit):
-                        process = mp.Process(
-                            target=commands.create_and_launch,
-                            args=(
-                                gene_annotation_BLAT_label,
-                                commands.create_BLAT_cat_command_v2(gene_annotation_BLAT_label, full_sample_path),
-                                True,
-                                job_name
-                            )
-                        )
-                        process.start()
-                        mp_store.append(process)
-                        print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                        job_submitted = True
-                        time.sleep(BLAT_job_delay)
-                    else:
-                        print(dt.today(), "too many BLAT cat commands running.  capped at:", BLAT_job_limit, "waiting for jobs to finish before launching more")
-                        for item in mp_store:
-                            item.join()
-                        mp_store[:] = []
-            
+                marker_name = file_tag + "_blat_cat"
+                marker_path = os.path.join(GA_BLAT_path, "data", "jobs", marker_name)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_name)
+                    continue
+                else:
+                    command_list = commands.create_BLAT_cat_command_v2(GA_BLAT_label, full_sample_path)
+                    launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        write_to_bypass_log(output_folder_path, gene_annotation_BLAT_cat_label)
+        write_to_bypass_log(output_folder_path, GA_BLAT_cat_label)
     
-    if check_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label):
-        for split_sample in os.listdir(os.path.join(gene_annotation_BWA_path, "final_results")):
+    if check_bypass_log(output_folder_path, GA_BLAT_pp_label):
+        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "BLAT_" + file_tag + "_pp"
-                full_sample_path = os.path.join(os.path.join(gene_annotation_BWA_path, "final_results", split_sample))
-                job_submitted = False
-                while(not job_submitted):
-                    if(len(mp_store) < BLAT_job_limit):
-                        if(mem_checker(BLAT_mem_threshold)):
-                            Blat_pp_process = mp.Process(target = commands.create_and_launch,
-                                args=(
-                                    gene_annotation_BLAT_label,
-                                    commands.create_BLAT_pp_command_v2(gene_annotation_BLAT_label, full_sample_path, gene_annotation_BWA_label),
-                                    True,
-                                    job_name
-                                )
-                            )
-                            Blat_pp_process.start()
-                            mp_store.append(Blat_pp_process)
-                            print(dt.today(), job_name, "submitted. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            job_submitted = True
-                            time.sleep(BLAT_job_delay)
-                        else:
-                            print(dt.today(), job_name, "waiting. mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(BLAT_job_delay)
-                    else:
-                        print(dt.today(), "too many BLAT pp jobs running.  capped at:", BLAT_job_limit, "waiting for jobs to finish before launching more")
-                        for item in mp_store:
-                            item.join()
-                        mp_store[:] = []
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                marker_name = file_tag + "_blat_pp"
+                marker_path = os.path.join(GA_BLAT_path, "data", "jobs", marker_name)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_name)
+                    continue
+                else:
+                    command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label)
+                    launch_and_create_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                
                         
         print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []
- 
-        process = mp.Process(
-            target = commands.create_and_launch,
-            args = (
-                gene_annotation_BLAT_label, commands.create_BLAT_copy_contig_map_command(gene_annotation_BLAT_label, gene_annotation_BWA_label),
-                True,
-                "GA_BLAT_copy_contigs"
-            )
-        )
-        process.start()
-        process.join()
+        job_name = "GA_BLAT_copy_contigs"
+        marker_name = "blat_copy_contig_map"
+        marker_path = os.path.join(GA_BLAT_path, "data", "jobs", marker_name)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_name)
+        else:
+            command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label)
+            launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
         
-        write_to_bypass_log(output_folder_path, gene_annotation_BLAT_pp_label)
+        write_to_bypass_log(output_folder_path, GA_BLAT_pp_label)
 
     cleanup_GA_BLAT_start = time.time()
+    delete_folder_simple(marker_path)
     if(keep_all == "no" and keep_GA_BLAT == "no"):
-        delete_folder(gene_annotation_BLAT_path)
+        delete_folder(GA_BLAT_path)
     elif(keep_all == "compress" or keep_GA_BLAT == "compress"):
-        compress_folder(gene_annotation_BLAT_path)
-        delete_folder(gene_annotation_BLAT_path)
+        compress_folder(GA_BLAT_path)
+        delete_folder(GA_BLAT_path)
     cleanup_GA_BLAT_end = time.time()
     GA_BLAT_end = time.time()
     print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start - (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start)), "s")
@@ -1200,129 +1088,89 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # ------------------------------------------------------
     # Diamond gene annotation
     GA_DIAMOND_start = time.time()
-    gene_annotation_DIAMOND_path = os.path.join(output_folder_path, gene_annotation_DIAMOND_label)
-    GA_DIAMOND_tool_output_path = os.path.join(gene_annotation_DIAMOND_path, "data", "0_diamond")
-    #if not check_where_resume(None, GA_DIAMOND_tool_output_path, gene_annotation_BLAT_path, file_check_bypass = True):
-    if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_label):
-        for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
+    GA_DIAMOND_path = os.path.join(output_folder_path, GA_DIAMOND_label)
+    GA_DIAMOND_tool_output_path = os.path.join(GA_DIAMOND_path, "data", "0_diamond")
+    #if not check_where_resume(None, GA_DIAMOND_tool_output_path, GA_BLAT_path, file_check_bypass = True):
+    if check_bypass_log(output_folder_path, GA_DIAMOND_label):
+        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "DIAMOND_" + file_tag
-                full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
-                job_submitted = False
-                while(not job_submitted):
-                    if(len(mp_store) < DIAMOND_job_limit):
-                        if(mem_checker(DIAMOND_mem_threshold)):
-                            DIAMOND_process = mp.Process(target = commands.create_and_launch,
-                                args=(
-                                    gene_annotation_DIAMOND_label,
-                                    commands.create_DIAMOND_annotate_command_v2(gene_annotation_DIAMOND_label, full_sample_path),
-                                    True,
-                                    job_name
-                                )
-                            )
-                            DIAMOND_process.start()
-                            mp_store.append(DIAMOND_process)
-                            print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            job_submitted = True
-                            time.sleep(DIAMOND_job_delay) #it's enough time for the process to eat some memory.
-                            
-                        else:
-                            print(dt.today(), "DIAMOND: we've reached the mem limit. waiting:", job_name)
-                            time.sleep(DIAMOND_job_delay)
-                        
-                    else:
-                        print(dt.today(), "Too many DIAMOND jobs running.  capped at:", DIAMOND_job_limit, "waiting for jobs to finish before launching more")
-                        for item in mp_store:
-                            item.join()
-                        mp_store[:] = []
-        
-
+                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                marker_name = file_tag + "_diamond"
+                marker_path = os.path.join(GA_DIAMOND_path, "data", "jobs", marker_name)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_path)
+                    continue
+                else:
+                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path)
+                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, job_name, commands, command_list)
+                
         print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_label)
+        write_to_bypass_log(output_folder_path, GA_DIAMOND_label)
         
-    #if not check_where_resume(gene_annotation_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
-    if check_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label):
+    #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
+    if check_bypass_log(output_folder_path, GA_DIAMOND_pp_label):
         DIAMOND_pp_Pool = mp.Pool(int(real_thread_count / 2))
         print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
-        for split_sample in os.listdir(os.path.join(gene_annotation_BLAT_path, "final_results")):
+        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 job_name = "DIAMOND_pp_" + file_tag
-                full_sample_path = os.path.join(os.path.join(gene_annotation_BLAT_path, "final_results", split_sample))
-                job_submitted = False
-                while(not job_submitted):
-                    if(len(mp_store) < DIAMOND_job_limit):
-                        if(mem_checker(DIAMOND_mem_threshold)):
-                            DIAMOND_pp_process = mp.Process(target = commands.create_and_launch,
-                                args=(
-                                    gene_annotation_DIAMOND_label,
-                                    commands.create_DIAMOND_pp_command_v2(gene_annotation_DIAMOND_label, gene_annotation_BLAT_label, full_sample_path),
-                                    True,
-                                    job_name
-                                )
-                            )
-                            DIAMOND_pp_process.start()
-                            mp_store.append(DIAMOND_pp_process)
-                            job_submitted = True
-                            print(dt.today(), "Submitted:", job_name, psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(DIAMOND_job_delay)
-                        else:
-                            
-                            print(dt.today(), job_name, "waiting.  mem:", psu.virtual_memory().available/(1024*1024*1000), "GB")
-                            time.sleep(DIAMOND_job_delay)
-                    else:
-                        print(dt.today(), "too many DIAMOND pp jobs running.  capped at:", DIAMOND_job_limit, "waiting for jobs to finish before launching more")
-                        for item in mp_store:
-                            item.join()
-                        mp_store[:] = []
-                    
-                    
+                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                marker_name = file_tag + "_diamond_pp"
+                marker_path = os.path.join(GA_DIAMOND_path, "data", "jobs", marker_name)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_name)
+                    continue
+                else:
+                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path)
+                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, job_name, commands, command_list)
+                                    
         print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []
                 
             
-        write_to_bypass_log(output_folder_path, gene_annotation_DIAMOND_pp_label)
+        write_to_bypass_log(output_folder_path, GA_DIAMOND_pp_label)
     
         
     
-    cleanup_GA_DIAMOND_start = time.time()
-    if(keep_all == "no" and keep_GA_DIAMOND == "no"):
-        delete_folder(gene_annotation_DIAMOND_path)
-    elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
-        compress_folder(gene_annotation_DIAMOND_path)
-        delete_folder(gene_annotation_DIAMOND_path)
-    cleanup_GA_DIAMOND_end = time.time()
+        cleanup_GA_DIAMOND_start = time.time()
+        delete_folder_simple(marker_path)
+        if(keep_all == "no" and keep_GA_DIAMOND == "no"):
+            delete_folder(GA_DIAMOND_path)
+        elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
+            compress_folder(GA_DIAMOND_path)
+            delete_folder(GA_DIAMOND_path)
+        cleanup_GA_DIAMOND_end = time.time()
     GA_DIAMOND_end = time.time()
     print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
     print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
     
     
     GA_final_merge_start = time.time()
-    gene_annotation_FINAL_MERGE_path = os.path.join(output_folder_path, gene_annotation_final_merge_label)
-    if check_bypass_log(output_folder_path, gene_annotation_final_merge_label):
-        final_merge_process = mp.Process(
-            target = commands.create_and_launch, 
-            args = (
-                gene_annotation_final_merge_label,
-                commands.create_GA_final_merge_command(gene_annotation_final_merge_label, gene_annotation_BWA_label, gene_annotation_BLAT_label, gene_annotation_DIAMOND_label, assemble_contigs_label),
-                True, 
-                "GA_final_merge"
-            )
-        )
-        final_merge_process.start()
-        final_merge_process.join()
+    GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
+    if check_bypass_log(output_folder_path, GA_final_merge_label):
+        marker_name = "GA_final_merge"
+        marker_path = os.path.join(GA_FINAL_MERGE_path, "data", "jobs", "GA_final_merge")
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping: GA final merge")
+        else:
+            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label)
+            job_name = "GA_final_merge"
+            launch_and_create_simple(GA_final_merge_label, job_name, commands, command_list)
+        
         #check if all_proteins.faa was generated
-        all_proteins_path = os.path.join(output_folder_path, gene_annotation_final_merge_label, "final_results", "all_proteins.faa")
+        all_proteins_path = os.path.join(output_folder_path, GA_final_merge_label, "final_results", "all_proteins.faa")
         if(os.path.getsize(all_proteins_path) > 0):
-            write_to_bypass_log(output_folder_path, gene_annotation_final_merge_label)
+            write_to_bypass_log(output_folder_path, GA_final_merge_label)
             print(dt.today(), "All_proteins.faa is OK.  Continuing")
         else:
             sys.exit("GA final merge failed.  proteins weren't translated")
@@ -1330,27 +1178,21 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_final_merge_end = time.time()
     print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")
     if(keep_all == "no" and keep_GA_final == "no"):
-        delete_folder(gene_annotation_FINAL_MERGE_path)
+        delete_folder(GA_FINAL_MERGE_path)
     elif(keep_all == "compress" or keep_GA_final == "compress"):
-        compress_folder(gene_annotation_FINAL_MERGE_path)
-        delete_folder(gene_annotation_FINAL_MERGE_path)
+        compress_folder(GA_FINAL_MERGE_path)
+        delete_folder(GA_FINAL_MERGE_path)
     
     # ------------------------------------------------------
     # Taxonomic annotation
     TA_start = time.time()
     taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
-    #if not check_where_resume(taxon_annotation_path, None, gene_annotation_DIAMOND_path):
+    #if not check_where_resume(taxon_annotation_path, None, GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, taxon_annotation_label):
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                taxon_annotation_label,
-                commands.create_taxonomic_annotation_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, gene_annotation_final_merge_label),
-                True
-            )
-        )
-        process.start()
-        process.join()
+        command_list = commands.create_taxonomic_annotation_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, GA_final_merge_label),
+        job_name = taxon_annotation_label
+        launch_and_create_simple(job_name, commands, command_list)
+        
         write_to_bypass_log(output_folder_path, taxon_annotation_label)
     cleanup_TA_start = time.time()
     if(keep_all == "no" and keep_TA == "no"):
@@ -1364,36 +1206,31 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("TA cleanup:", '%1.1f' % (cleanup_TA_end - cleanup_TA_start), "s")
     
     
-    
-    
-    
-    
-    
     # ------------------------------------------------------
     # Detect EC annotation
-    EC_process_list = []
+   
     
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     EC_start = time.time()
     #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
-    #if not check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path):
+    #if not check_where_resume(ec_annotation_path, None, GA_DIAMOND_path):
     #if check_bypass_log(output_folder_path, ec_annotation_label):
     EC_DETECT_start = time.time()
     ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
-    #if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = gene_annotation_DIAMOND_path):
+    #if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, ec_annotation_detect_label):
-        inner_name = "ec_detect"
+        job_name = "ec_detect"
         process = mp.Process(
             target = commands.create_and_launch,
             args = (
                 ec_annotation_label, 
-                commands.create_EC_DETECT_command(ec_annotation_label, gene_annotation_final_merge_label),
+                commands.create_EC_DETECT_command(ec_annotation_label, GA_final_merge_label),
                 True,
-                inner_name
+                job_name
             )
         )
         process.start()
-        EC_process_list.append(process)
+        mp_store.append(process)
         #process.join()
         
     EC_DETECT_end = time.time()
@@ -1404,20 +1241,19 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     EC_PRIAM_start = time.time()
     
     ec_priam_path = os.path.join(ec_annotation_path, "data", "1_priam")
-    #if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = gene_annotation_DIAMOND_path):
+    #if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, ec_annotation_priam_label):
-        inner_name = "ec_priam"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                ec_annotation_label,
-                commands.create_EC_PRIAM_command(ec_annotation_label, gene_annotation_final_merge_label),
-                True,
-                inner_name
-            )
-        )
-        process.start()
-        EC_process_list.append(process)
+        
+        if(os.path.exists(ec_priam_path)):
+            print(dt.today(), "starting with a fresh PRIAM run")
+            os.remove(ec_priam_path)
+            
+        job_name = "ec_priam"
+        command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label)
+        
+        launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
+        
+      
         #process.join()
     EC_PRIAM_end = time.time()
     print("EC PRIAM:", '%1.1f' % (EC_PRIAM_end - EC_PRIAM_start), "s")
@@ -1425,26 +1261,26 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # DIAMOND EC annotation 
     EC_DIAMOND_start = time.time()
     ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
-    #if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = gene_annotation_DIAMOND_path):
+    #if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
-        inner_name = "ec_diamond"
+        job_name = "ec_diamond"
         process = mp.Process(
             target = commands.create_and_launch, 
             args = (
                 ec_annotation_label,
-                commands.create_EC_DIAMOND_command(ec_annotation_label, gene_annotation_final_merge_label),
+                commands.create_EC_DIAMOND_command(ec_annotation_label, GA_final_merge_label),
                 True,
-                inner_name
+                job_name
             )
         )
         process.start()
-        EC_process_list.append(process)
+        mp_store.append(process)
         #process.join()
     EC_DIAMOND_end = time.time()
     
-    for item in EC_process_list:
+    for item in mp_store:
         item.join()
-    EC_process_list[:] = []
+    mp_store[:] = []
     
     ec_detect_out = os.path.join(ec_detect_path, "proteins.fbeta")
     ec_priam_out = os.path.join(ec_priam_path, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt")
@@ -1462,16 +1298,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     #----------------------------------------------------------------------
     # EC post process
     EC_post_start = time.time()
-    #if not (check_where_resume(ec_annotation_path, None, gene_annotation_DIAMOND_path)):
+    #if not (check_where_resume(ec_annotation_path, None, GA_DIAMOND_path)):
     if check_bypass_log(output_folder_path, ec_annotation_pp_label):
-        inner_name = "ec_post"
+        job_name = "ec_post"
         process = mp.Process(
             target=commands.create_and_launch,
             args=(
                 ec_annotation_label,
-                commands.create_EC_postprocess_command(ec_annotation_label, gene_annotation_final_merge_label),
+                commands.create_EC_postprocess_command(ec_annotation_label, GA_final_merge_label),
                 True,
-                inner_name
+                job_name
             )
         )
         process.start()
@@ -1515,13 +1351,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     if check_bypass_log(output_folder, output_label):
         #phase 0
         if check_bypass_log(output_folder, output_taxa_table_label):
-            inner_name = output_taxa_table_label
+            job_name = output_taxa_table_label
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
                     commands.create_output_taxa_table_v2_command(output_label, assemble_contigs_label, taxon_annotation_label),
                     True,
-                    inner_name
+                    job_name
                 )
             )
             process.start()
@@ -1539,13 +1375,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
         #phase 1
         if check_bypass_log(output_folder, output_copy_gene_map_label):
-            inner_name = output_copy_gene_map_label
+            job_name = output_copy_gene_map_label
             process = mp.Process(
                     target = commands.create_and_launch, 
                     args = (output_label, 
-                        commands.create_output_copy_gene_map_command(output_label, gene_annotation_final_merge_label),
+                        commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label),
                         True, 
-                        inner_name
+                        job_name
                     )
                 )
             process.start()
@@ -1554,13 +1390,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             
         
         if check_bypass_log(output_folder, output_contig_stats_label):
-            inner_name = output_contig_stats_label
+            job_name = output_contig_stats_label
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
                     commands.create_output_contig_stats_command(output_label, assemble_contigs_label),
                     True,
-                    inner_name
+                    job_name
                 )
             )
             process.start()
@@ -1570,39 +1406,39 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             
         if not(no_host):
             if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
-                inner_name = output_unique_hosts_singletons_label
+                job_name = output_unique_hosts_singletons_label
                 process = mp.Process(
                     target = commands.create_and_launch,
                     args = (output_label, 
                         commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label),
                         True,
-                        inner_name
+                        job_name
                     )
                 )
                 process.start()
                 mp_store.append(process)
             if(read_mode == "paired"):
                 if check_bypass_log(output_folder, output_unique_hosts_pair_1_label):
-                    inner_name = output_unique_hosts_pair_1_label
+                    job_name = output_unique_hosts_pair_1_label
                     process = mp.Process(
                         target = commands.create_and_launch,
                         args = (output_label,
                             commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label),
                             True,
-                            inner_name
+                            job_name
                         )
                     )
                     process.start()
                     mp_store.append(process)
                     
                 if check_bypass_log(output_folder, output_unique_hosts_pair_2_label):
-                    inner_name = output_unique_hosts_pair_2_label
+                    job_name = output_unique_hosts_pair_2_label
                     process = mp.Process(
                         target = commands.create_and_launch,
                         args = (output_label,
                             commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label),
                             True,
-                            inner_name
+                            job_name
                         )
                     )
                     process.start()
@@ -1626,26 +1462,26 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #Phase 2
         if not(no_host):
             if check_bypass_log(output_folder, output_combine_hosts_label):
-                inner_name = output_combine_hosts_label
+                job_name = output_combine_hosts_label
                 process = mp.Process(
                     target = commands.create_and_launch,
                     args = (output_label,
                         commands.create_output_combine_hosts_command(output_label),
                         True,
-                        inner_name
+                        job_name
                     )
                 )
                 process.start()
                 mp_store.append(process)
             
         if check_bypass_log(output_folder, output_clean_EC_label):
-            inner_name = output_clean_EC_label
+            job_name = output_clean_EC_label
             process = mp.Process(
                 target = commands.create_and_launch, 
                 args = (output_label, 
                     commands.create_output_clean_ec_report_command(output_label, ec_annotation_label),
                     True,
-                    inner_name
+                    job_name
                 )
             )
             process.start()
@@ -1663,39 +1499,39 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #-------------------------------------------------------------------
         #Phase 3
         if check_bypass_log(output_folder, output_read_count_label):
-            inner_name = output_read_count_label
+            job_name = output_read_count_label
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
-                    commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, gene_annotation_final_merge_label, ec_annotation_label),
+                    commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, GA_final_merge_label, ec_annotation_label),
                     True,
-                    inner_name
+                    job_name
                 )
             )
             process.start()
             mp_store.append(process)
             
         if check_bypass_log(output_folder, output_network_gen_label):
-            inner_name = output_network_gen_label
+            job_name = output_network_gen_label
             process = mp.Process(
                     target = commands.create_and_launch, 
                     args = (
                         output_label, 
-                        commands.create_output_network_generation_command(output_label, gene_annotation_final_merge_label, taxon_annotation_label, ec_annotation_label),
+                        commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label),
                         True, 
-                        inner_name
+                        job_name
                     )
                 )
             process.start()
             mp_store.append(process)
         if check_bypass_log(output_folder, output_per_read_scores_label):
-            inner_name = output_per_read_scores_label
+            job_name = output_per_read_scores_label
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
                     commands.create_output_per_read_scores_command(output_label, quality_filter_label),
                     True, 
-                    inner_name
+                    job_name
                 )
             )
             process.start()
@@ -1711,13 +1547,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #------------------------------------------------------------------------------------------------
         # Phase 4
         if check_bypass_log(output_folder, output_ec_heatmap_label):
-            inner_name = output_ec_heatmap_label
+            job_name = output_ec_heatmap_label
             process = mp.Process(
                 target = commands.create_and_launch,
                 args = (output_label,
                     commands.create_output_EC_heatmap_command(output_label),
                     True,
-                    inner_name
+                    job_name
                 )
             )
             process.start()
