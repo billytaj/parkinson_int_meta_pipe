@@ -31,6 +31,11 @@ def mem_checker(threshold):
 def make_folder(folder_path):
     if not (os.path.exists(folder_path)):
         os.makedirs(folder_path)
+        
+def delete_folder_simple(folder_path):
+    if(os.path.exists(folder_path)):
+        print(dt.today(), "Deleting:", folder_path)
+        shutil.rmtree(folder_path)
 
 def delete_folder(folder_path):
     if (os.path.exists(os.path.join(folder_path, "data"))):
@@ -797,6 +802,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         write_to_bypass_log(output_folder_path, rRNA_filter_label)
         cleanup_rRNA_filter_start = time.time()
+        delete_folder_simple(marker_path)
         if(keep_all == "no" and keep_rRNA == "no"):
             delete_folder(rRNA_filter_path)
         elif(keep_all == "compress" or keep_rRNA == "compress"):
@@ -821,13 +827,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
         write_to_bypass_log(output_folder_path, repop_job_label)
         
-    cleanup_repop_start = time.time()
-    if(keep_all == "no" and keep_repop == "no"):
-        delete_folder(repop_job_path)
-    elif(keep_all == "compress" or keep_repop == "compress"):
-        compress_folder(repop_job_path)
-        delete_folder(repop_job_path)
-    cleanup_repop_end = time.time()
+        cleanup_repop_start = time.time()
+        if(keep_all == "no" and keep_repop == "no"):
+            delete_folder(repop_job_path)
+        elif(keep_all == "compress" or keep_repop == "compress"):
+            compress_folder(repop_job_path)
+            delete_folder(repop_job_path)
+        cleanup_repop_end = time.time()
+        
     repop_end = time.time()
     print("repop:", '%1.1f' % (repop_end - repop_start - (cleanup_repop_end - cleanup_repop_start)), "s")
     print("repop cleanup:", '%1.1f' % (cleanup_repop_end - cleanup_repop_start), "s")
@@ -839,6 +846,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     
     #if not check_where_resume(assemble_contigs_path, None, repop_job_path):
+    
     if check_bypass_log(output_folder_path, assemble_contigs_label):
         job_name = assemble_contigs_label
         command_list = commands.create_assemble_contigs_command(assemble_contigs_label, repop_job_label)
@@ -849,14 +857,17 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         else:
             sys.exit("mgm did not run.  look into it.  pipeline stopping here")
         
-    cleanup_assemble_contigs_start = time.time()
-    assemble_contigs_data_path = os.path.join(assemble_contigs_path, "data")
-    if(keep_all == "no" and keep_assemble_contigs == "no"):
-        delete_folder(assemble_contigs_data_path)
-    elif(keep_all == "compress" or keep_assemble_contigs == "compress"):
-        compress_folder(assemble_contigs_path)
-        delete_folder(assemble_contigs_data_path)
-    cleanup_assemble_contigs_end = time.time()
+        cleanup_assemble_contigs_start = time.time()
+        
+        assemble_contigs_data_path = os.path.join(assemble_contigs_path, "data")
+        if(keep_all == "no" and keep_assemble_contigs == "no"):
+            delete_folder(assemble_contigs_data_path)
+        elif(keep_all == "compress" or keep_assemble_contigs == "compress"):
+            compress_folder(assemble_contigs_path)
+            delete_folder(assemble_contigs_data_path)
+        cleanup_assemble_contigs_end = time.time()
+        
+        
     assemble_contigs_end = time.time()
     print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
     print("assemble contigs cleanup:", '%1.1f' % (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start), "s")
@@ -952,14 +963,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         write_to_bypass_log(output_folder_path, GA_BWA_pp_label)
         
-    cleanup_GA_BWA_start = time.time()
-    GA_BWA_data_path = os.path.join(GA_BWA_path, "data")
-    if(keep_all == "no" and keep_GA_BWA == "no"):
-        delete_folder(GA_BWA_data_path)
-    elif(keep_all == "compress" or keep_GA_BWA == "compress"):
-        compress_folder(GA_BWA_path)
-        delete_folder(GA_BWA_data_path)
-    cleanup_GA_BWA_end = time.time()
+        cleanup_GA_BWA_start = time.time()
+        delete_folder_simple(marker_path)
+        GA_BWA_data_path = os.path.join(GA_BWA_path, "data")
+        if(keep_all == "no" and keep_GA_BWA == "no"):
+            delete_folder(GA_BWA_data_path)
+        elif(keep_all == "compress" or keep_GA_BWA == "compress"):
+            compress_folder(GA_BWA_path)
+            delete_folder(GA_BWA_data_path)
+        cleanup_GA_BWA_end = time.time()
     GA_BWA_end = time.time()
     print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
     print("GA BWA cleanup:", '%1.1f' % (cleanup_GA_BWA_end - cleanup_GA_BWA_start), "s")
@@ -986,15 +998,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     for fasta_db in os.listdir(paths.DNA_DB_Split):
                         if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                             job_name = "BLAT_" + file_tag + "_" + fasta_db
-                            blat_marker_name = file_tag + "_blat"
+                            blat_marker_name = file_tag + "_blat_" + fasta_db
                             blat_marker_path = os.path.join(GA_BLAT_path, "data", "jobs", blat_marker_name)
                             #This checker assume BLAT only exports a file when it's finished running
                             if(os.path.exists(blat_marker_path)):
-                                print(dt.today(), "BLAT job ran already, skipping:", blat_output_name)
+                                print(dt.today(), "BLAT job ran already, skipping:", blat_marker_name)
                                 continue
                             else:
                                 command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db)
-                                launch_and_create_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                                launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
                             
                                 
         print(dt.today(), "final BLAT job removal")
@@ -1022,7 +1034,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     command_list = commands.create_BLAT_cat_command_v2(GA_BLAT_label, full_sample_path)
-                    launch_and_create_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                    launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
                 
         for item in mp_store:
             item.join()
@@ -1062,6 +1074,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, GA_BLAT_pp_label)
 
     cleanup_GA_BLAT_start = time.time()
+    delete_folder_simple(marker_path)
     if(keep_all == "no" and keep_GA_BLAT == "no"):
         delete_folder(GA_BLAT_path)
     elif(keep_all == "compress" or keep_GA_BLAT == "compress"):
@@ -1129,13 +1142,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
         
     
-    cleanup_GA_DIAMOND_start = time.time()
-    if(keep_all == "no" and keep_GA_DIAMOND == "no"):
-        delete_folder(GA_DIAMOND_path)
-    elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
-        compress_folder(GA_DIAMOND_path)
-        delete_folder(GA_DIAMOND_path)
-    cleanup_GA_DIAMOND_end = time.time()
+        cleanup_GA_DIAMOND_start = time.time()
+        delete_folder_simple(marker_path)
+        if(keep_all == "no" and keep_GA_DIAMOND == "no"):
+            delete_folder(GA_DIAMOND_path)
+        elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
+            compress_folder(GA_DIAMOND_path)
+            delete_folder(GA_DIAMOND_path)
+        cleanup_GA_DIAMOND_end = time.time()
     GA_DIAMOND_end = time.time()
     print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
     print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")

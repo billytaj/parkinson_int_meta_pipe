@@ -1602,9 +1602,9 @@ class mt_pipe_commands:
         blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
         blat_command += os.path.join(blat_folder, sample_root_name + "_" + fasta_db + ".blatout")
         
-        make_marker = ">&2 echo marking BLAT job complete: " + sample_root_name + " | " 
+        make_marker = ">&2 echo marking BLAT job complete: " + sample_root_name + "_" + fasta_db + " | " 
         make_marker += "touch" + " "
-        make_marker += os.path.join(jobs_folder, sample_root_name + "_blat")
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_blat_" + fasta_db)
         
         if(os.path.getsize(query_file) > 0):
             return [blat_command + " && " + make_marker]
