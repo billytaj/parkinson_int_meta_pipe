@@ -36,6 +36,7 @@ def delete_folder_simple(folder_path):
     if(os.path.exists(folder_path)):
         print(dt.today(), "Deleting:", folder_path)
         shutil.rmtree(folder_path)
+        print(dt.today(), "finished deleting:", folder_path)
 
 def delete_folder(folder_path):
     if (os.path.exists(os.path.join(folder_path, "data"))):
@@ -532,8 +533,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # ----------------------------------------------
     # rRNA removal stage
     rRNA_filter_start = time.time()
-
     rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
+    jobs_folder = os.path.join(rRNA_filter_path, "data", "jobs")
     #if not check_where_resume(rRNA_filter_path, None, vector_path):
     if check_bypass_log(output_folder_path, rRNA_filter_label): 
         sections = ["singletons"]
@@ -802,7 +803,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         write_to_bypass_log(output_folder_path, rRNA_filter_label)
         cleanup_rRNA_filter_start = time.time()
-        delete_folder_simple(marker_path)
+        delete_folder_simple(jobs_folder)
         if(keep_all == "no" and keep_rRNA == "no"):
             delete_folder(rRNA_filter_path)
         elif(keep_all == "compress" or keep_rRNA == "compress"):
@@ -818,7 +819,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     #---------------------------------------------------------------------------------------------------------------------
     # Duplicate repopulation
     repop_start = time.time()
-    repop_job_path = os.path.join(output_folder_path, repop_job_label)
+    repop_path = os.path.join(output_folder_path, repop_job_label)
     #if not check_where_resume(repop_job_path, None, rRNA_filter_path):
     if check_bypass_log(output_folder_path, repop_job_label):
         job_name = repop_job_label
@@ -829,10 +830,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         cleanup_repop_start = time.time()
         if(keep_all == "no" and keep_repop == "no"):
-            delete_folder(repop_job_path)
+            delete_folder(repop_path)
         elif(keep_all == "compress" or keep_repop == "compress"):
             compress_folder(repop_job_path)
-            delete_folder(repop_job_path)
+            delete_folder(repop_path)
         cleanup_repop_end = time.time()
         
     repop_end = time.time()
@@ -879,6 +880,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     GA_BWA_start = time.time()
     GA_BWA_path = os.path.join(output_folder_path, GA_BWA_label)
+    jobs_folder = os.path.join(GA_BWA_path, "data", "jobs")
     #if not check_where_resume(GA_BWA_path, None, assemble_contigs_path):
     if check_bypass_log(output_folder_path, GA_BWA_label):
         process = mp.Process(
@@ -980,6 +982,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # BLAT gene annotation
     GA_BLAT_start = time.time()
     GA_BLAT_path = os.path.join(output_folder_path, GA_BLAT_label)
+    jobs_folder = os.path.join(GA_BLAT_path, "data", "jobs")
 
     if check_bypass_log(output_folder_path, GA_BLAT_label):
         
@@ -1055,7 +1058,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label)
-                    launch_and_create_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                    launch_and_create_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, GA_BLAT_label, job_name, commands, command_list)
                 
                         
         print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
@@ -1065,7 +1068,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         job_name = "GA_BLAT_copy_contigs"
         marker_name = "blat_copy_contig_map"
         marker_path = os.path.join(GA_BLAT_path, "data", "jobs", marker_name)
-        if(os.path.exists(marker_path)):
+        if(os.path.exists()):
             print(dt.today(), "skipping:", marker_name)
         else:
             command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label)
@@ -1074,7 +1077,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, GA_BLAT_pp_label)
 
     cleanup_GA_BLAT_start = time.time()
-    delete_folder_simple(marker_path)
+    delete_folder_simple(jobs_folder)
     if(keep_all == "no" and keep_GA_BLAT == "no"):
         delete_folder(GA_BLAT_path)
     elif(keep_all == "compress" or keep_GA_BLAT == "compress"):
@@ -1105,7 +1108,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path)
-                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, job_name, commands, command_list)
+                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                 
         print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
         for item in mp_store:
@@ -1130,7 +1133,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path)
-                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, job_name, commands, command_list)
+                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                                     
         print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
         for item in mp_store:
