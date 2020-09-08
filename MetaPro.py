@@ -185,7 +185,7 @@ def launch_and_create_simple(job_location, job_label, command_obj, commands):
     #just launches a job.  no multi-process.
     process = mp.Process(
         target=command_obj.create_and_launch,
-        args=(job_location, job_label,commands)
+        args=(job_location, job_label, commands)
     )
     process.start()
     process.join()
@@ -873,7 +873,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("assemble contigs:", '%1.1f' % (assemble_contigs_end - assemble_contigs_start - (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start)), "s")    
     print("assemble contigs cleanup:", '%1.1f' % (cleanup_assemble_contigs_end - cleanup_assemble_contigs_start), "s")
 
-    
+
     # ----------------------------------------------
     # BWA gene annotation
     
@@ -883,17 +883,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     jobs_folder = os.path.join(GA_BWA_path, "data", "jobs")
     #if not check_where_resume(GA_BWA_path, None, assemble_contigs_path):
     if check_bypass_log(output_folder_path, GA_BWA_label):
-        process = mp.Process(
-            target = commands.create_and_launch, 
-            args = (
-                GA_BWA_label, 
-                commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs"),
-                True, 
-                "GA_prep_split_contigs"
-            )
-        )
-        process.start()
-        mp_store.append(process)
+    
+        job_name = "GA_prep_split_contigs"
+        command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs")
+        launch_and_create_with_mp_store(GA_BWA_label, job_name, mp_store, commands, command_list)
+        
+        
         sections = ["singletons"]
         if(read_mode == "paired"):
             sections.extend(["pair_1", "pair_2"])
@@ -905,6 +900,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
+        
         
         #-------------------------------------------------------------------------
         sections = ["contigs", "singletons"]

@@ -671,7 +671,7 @@ class mt_pipe_commands:
                 make_blast_db_vector,
                 vsearch_filter_6,
                 blat_vr_singletons,
-                blat_containment_vector_singletons,
+                blat_filter_vector_singletons,
                 copy_singletons
             ]
         elif self.read_mode == "paired":
@@ -1068,6 +1068,8 @@ class mt_pipe_commands:
         elif(category == "singletons"):    
             infernal_mRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_mRNA")
             infernal_rRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_other")
+            Barrnap_singletons_out_folder   = os.path.join(data_folder, "singletons_barrnap")
+            infernal_singletons_out_folder  = os.path.join(data_folder, "singletons_infernal")
             
             self.make_folder(infernal_mRNA_singletons_folder)
             self.make_folder(infernal_rRNA_singletons_folder)
@@ -1078,7 +1080,7 @@ class mt_pipe_commands:
             rRNA_filtration += "AND" + " "
             rRNA_filtration += "single" + " "
             rRNA_filtration += os.path.join(infernal_out_folder, "singletons_" + file_name_code + ".infernal_out") + " "
-            rRNA_filtration += os.path.join(Barrnap_out_folder, "singletons_" + file_name_code + ".barrnap_out") + " "
+            rRNA_filtration += os.path.join(Barrnap_singletons_out_folder, "singletons_" + file_name_code + ".barrnap_out") + " "
             rRNA_filtration += os.path.join(data_folder, "singletons_fastq", "singletons_" + file_name_code + ".fastq") + " "
             rRNA_filtration += os.path.join(infernal_mRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_mRNA.fastq") + " "
             rRNA_filtration += os.path.join(infernal_rRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_rRNA.fastq")
@@ -1444,7 +1446,7 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(split_folder)
         
-        split_fastq = ">&2 echo splitting fastq for " + category + " | "
+        split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
         split_fastq += "split -l " + str(int(self.chunk_size) * 4) + " "        
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
         split_fastq += "--additional-suffix .fastq" + " "
