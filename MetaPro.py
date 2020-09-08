@@ -962,7 +962,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         write_to_bypass_log(output_folder_path, GA_BWA_pp_label)
         
         cleanup_GA_BWA_start = time.time()
-        delete_folder_simple(marker_path)
+        delete_folder_simple(jobs_folder)
         GA_BWA_data_path = os.path.join(GA_BWA_path, "data")
         if(keep_all == "no" and keep_GA_BWA == "no"):
             delete_folder(GA_BWA_data_path)
