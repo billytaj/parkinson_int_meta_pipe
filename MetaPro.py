@@ -1064,7 +1064,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         job_name = "GA_BLAT_copy_contigs"
         marker_name = "blat_copy_contig_map"
         marker_path = os.path.join(GA_BLAT_path, "data", "jobs", marker_name)
-        if(os.path.exists()):
+        if(os.path.exists(marker_path)):
             print(dt.today(), "skipping:", marker_name)
         else:
             command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label)

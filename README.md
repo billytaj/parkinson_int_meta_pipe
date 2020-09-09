@@ -115,7 +115,7 @@ In an effort to save computational resources, the pipeline will shut itself down
 # Increasing performance
 ---
 ## Operating mode
-The pipeline operates in a Singularity machine.  As of writing (Sept 28, 2018), Singularity does not support multi-machine parallelism.  This pipeline does not utilize MPI, but instead strives to use all the cores made available by the singularity machine through the Python Multiprocessing module.  To increase the performance of the pipeline, more cores should be given to the host machine, and increasing the number of cores the pipeline is allowed to use.
+MetaPro runs in a Singularity instance.  As of writing (Sept 28, 2018), Singularity does not support multi-machine parallelism.  This pipeline does not utilize MPI, but instead strives to use all the cores made available by the singularity machine through the Python Multiprocessing module.  To increase the performance of the pipeline, more cores should be given to the host machine, and increasing the number of cores the pipeline is allowed to use.
 
 ## Verbose-mode
 ---
