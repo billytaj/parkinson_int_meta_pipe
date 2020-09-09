@@ -937,8 +937,8 @@ class mt_pipe_commands:
         Barrnap_pp += rRNA_folder + " "
         Barrnap_pp += file_name + "_barrnap"
         
-        make_marker = ">&2 echo " + file_name + "_barrnap Marking job completed | " 
-        make_marker += "touch" + " " 
+        #make_marker = ">&2 echo " + file_name + "_barrnap Marking job completed | " 
+        make_marker = "touch" + " " 
         make_marker += os.path.join(jobs_folder, file_name + "_barrnap")
         
         return [Barrnap_pp + " && " + make_marker]
@@ -1002,8 +1002,8 @@ class mt_pipe_commands:
         infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fasta")
 
-        make_marker = ">&2 echo " + file_name + "_infernal Marking job completed | " 
-        make_marker += "touch" + " " 
+        #make_marker = ">&2 echo " + file_name + "_infernal Marking job completed | " 
+        make_marker = "touch" + " " 
         make_marker += os.path.join(jobs_folder, file_name + "_infernal")
         
         COMMANDS_infernal = [infernal_command + " && " + make_marker]
@@ -1508,8 +1508,8 @@ class mt_pipe_commands:
         bwa_job += self.tool_path_obj.SAMTOOLS + " view "
         bwa_job += "> " + os.path.join(bwa_folder, file_tag + ".sam")
         
-        make_marker = ">&2 echo marking BWA job complete: " + file_tag + " | "
-        make_marker += "touch" + " "
+        #make_marker = ">&2 echo marking BWA job complete: " + file_tag + " | "
+        make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, file_tag + "_bwa")
 
         COMMANDS_BWA = [
@@ -1604,8 +1604,8 @@ class mt_pipe_commands:
         blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
         blat_command += os.path.join(blat_folder, sample_root_name + "_" + fasta_db + ".blatout")
         
-        make_marker = ">&2 echo marking BLAT job complete: " + sample_root_name + "_" + fasta_db + " | " 
-        make_marker += "touch" + " "
+        #make_marker = ">&2 echo marking BLAT job complete: " + sample_root_name + "_" + fasta_db + " | " 
+        make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, sample_root_name + "_blat_" + fasta_db)
         
         if(os.path.getsize(query_file) > 0):
@@ -1734,8 +1734,8 @@ class mt_pipe_commands:
         diamond_annotate += " -f 6 -t " + temp_folder #section_temp_folder
         diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
 
-        make_marker = ">&2 echo DIAMOND complete: " + sample_root_name + " | "
-        make_marker += "touch" + " "
+        #make_marker = ">&2 echo marking DIAMOND complete: " + sample_root_name + " | "
+        make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond")
 
         return [diamond_annotate + " && " + make_marker]

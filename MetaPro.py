@@ -1089,6 +1089,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     GA_DIAMOND_start = time.time()
     GA_DIAMOND_path = os.path.join(output_folder_path, GA_DIAMOND_label)
     GA_DIAMOND_tool_output_path = os.path.join(GA_DIAMOND_path, "data", "0_diamond")
+    jobs_folder = os.path.join(GA_DIAMOND_path, "data", "jobs")
     #if not check_where_resume(None, GA_DIAMOND_tool_output_path, GA_BLAT_path, file_check_bypass = True):
     if check_bypass_log(output_folder_path, GA_DIAMOND_label):
         for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
@@ -1142,7 +1143,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
     
         cleanup_GA_DIAMOND_start = time.time()
-        delete_folder_simple(marker_path)
+        delete_folder_simple(jobs_folder)
         if(keep_all == "no" and keep_GA_DIAMOND == "no"):
             delete_folder(GA_DIAMOND_path)
         elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
