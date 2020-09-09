@@ -1,20 +1,16 @@
 import os.path
 from configparser import ConfigParser, ExtendedInterpolation
 
-
-    
-    
-
-
 class tool_path_obj:
-    def value_assignment(self, config_section, var_name, default):
+    def value_assignment(self, config, config_section, var_name, default):
         value = ""
+        
         try:
             value = config[config_section][var_name] if config[config_section][var_name] or config[config_section][var_name] == "" else default
         except KeyError:
             value = default
         
-    return value
+        return value
 
     def __init__ (self, config_path):
 
@@ -225,59 +221,59 @@ class tool_path_obj:
         
         
         if config:
-            self.target_rank                = self.value_assignment("Settings", "target_rank", "genus")
-            self.adapterremoval_minlength   = self.value_assignment("Settings", "AdapterRemoval_minlength", 30)
-            self.show_unclassified          = self.value_assignment("Settings", "Show_unclassified", "No")
-            self.RPKM_cutoff                = self.value_assignment("Settings", "RPKM_cutoff", 0.01)
+            self.target_rank                = self.value_assignment(config, "Settings", "target_rank", "genus")
+            self.adapterremoval_minlength   = self.value_assignment(config, "Settings", "AdapterRemoval_minlength", 30)
+            self.show_unclassified          = self.value_assignment(config, "Settings", "Show_unclassified", "No")
+            self.RPKM_cutoff                = self.value_assignment(config, "Settings", "RPKM_cutoff", 0.01)
             #-----------------------------------------------------------------------------------------------    
             
-            self.BWA_mem_threshold          = self.value_assignment("Settings", "BWA_mem_threshold", BWA_mem_default)
-            self.BLAT_mem_threshold         = self.value_assignment("Settings", "BLAT_mem_threshold", "BLAT_mem_default)
-            self.DIAMOND_mem_threshold      = self.value_assignment("Settings", "DIAMOND_mem_threshold", DIAMOND_mem_default)
-            self.DETECT_mem_threshold       = self.value_assignment("Settings", "DETECT_mem_threshold", DETECT_mem_default)
-            self.Infernal_mem_threshold     = self.value_assignment("Settings", "Infernal_mem_threshold", Infernal_mem_default)
-            self.Barrnap_mem_threshold      = self.value_assignment("Settings", "Barrnap_mem_threshold", Barrnap_mem_default)
+            self.BWA_mem_threshold          = self.value_assignment(config, "Settings", "BWA_mem_threshold", BWA_mem_default)
+            self.BLAT_mem_threshold         = self.value_assignment(config, "Settings", "BLAT_mem_threshold", BLAT_mem_default)
+            self.DIAMOND_mem_threshold      = self.value_assignment(config, "Settings", "DIAMOND_mem_threshold", DIAMOND_mem_default)
+            self.DETECT_mem_threshold       = self.value_assignment(config, "Settings", "DETECT_mem_threshold", DETECT_mem_default)
+            self.Infernal_mem_threshold     = self.value_assignment(config, "Settings", "Infernal_mem_threshold", Infernal_mem_default)
+            self.Barrnap_mem_threshold      = self.value_assignment(config, "Settings", "Barrnap_mem_threshold", Barrnap_mem_default)
                 
             #-----------------------------------------------------------------------------------------------    
             
-            self.chunk_size                 = self.value_assignment("Settings", "data_chunk_size", chunk_size_default)
-            self.BWA_job_limit              = self.value_assignment("Settings", "BWA_job_limit", BWA_job_limit_default)
-            self.BLAT_job_limit             = self.value_assignment("Settings", "BLAT_job_limit", BLAT_job_limit_default)
-            self.DIAMOND_job_limit          = self.value_assignment("Settings", "DIAMOND_job_limit", DIAMOND_job_limit_default)
-            self.DETECT_job_limit           = self.value_assignment("Settings", "DETECT_job_limit", DETECT_job_limit_default)
-            self.Infernal_job_limit         = self.value_assignment("Settings", "Infernal_job_limit", Infernal_job_limit_default)
-            self.Barrnap_job_limit          = self.value_assignment("Settings", "Barrnap_job_limit", Barrnap_job_limit_default)
+            self.chunk_size                 = self.value_assignment(config, "Settings", "data_chunk_size", chunk_size_default)
+            self.BWA_job_limit              = self.value_assignment(config, "Settings", "BWA_job_limit", BWA_job_limit_default)
+            self.BLAT_job_limit             = self.value_assignment(config, "Settings", "BLAT_job_limit", BLAT_job_limit_default)
+            self.DIAMOND_job_limit          = self.value_assignment(config, "Settings", "DIAMOND_job_limit", DIAMOND_job_limit_default)
+            self.DETECT_job_limit           = self.value_assignment(config, "Settings", "DETECT_job_limit", DETECT_job_limit_default)
+            self.Infernal_job_limit         = self.value_assignment(config, "Settings", "Infernal_job_limit", Infernal_job_limit_default)
+            self.Barrnap_job_limit          = self.value_assignment(config, "Settings", "Barrnap_job_limit", Barrnap_job_limit_default)
             
             #------------------------------------------------------------------------------------------------
-            self.keep_all                   = self.value_assignment("Settings", "keep_all", keep_all_default)
-            self.keep_quality               = self.value_assignment("Settings", "keep_quality", keep_quality_default)
-            self.keep_host                  = self.value_assignment("Settings", "keep_host", keep_host_default)
-            self.keep_vector                = self.value_assignment("Settings", "keep_vector", keep_vector_default)
-            self.keep_rRNA                  = self.value_assignment("Settings", "keep_rRNA", keep_rRNA_default)
-            self.keep_repop                 = self.value_assignment("Settings", "keep_repop", keep_repop_default)
-            self.keep_assemble_contigs      = self.value_assignment("Settings", "keep_assemble_contigs", keep_assemble_contigs_default)
-            self.keep_GA_BWA                = self.value_assignment("Settings", "keep_GA_BWA", keep_GA_BWA_default)
-            self.keep_GA_BLAT               = self.value_assignment("Settings", "keep_GA_BLAT", keep_GA_BLAT_default)
-            self.keep_GA_DIAMOND            = self.value_assignment("Settings", "keep_GA_DIAMOND", keep_GA_DIAMOND_default)
-            self.keep_GA_final              = self.value_assignment("Settings", "keep_GA_final", keep_GA_final_default)
-            self.keep_TA                    = self.value_assignment("Settings", "keep_TA", keep_TA_default)
-            self.keep_EC                    = self.value_assignment("Settings", "keep_EC", keep_EC_default)
-            self.keep_outputs               = self.value_assignment("Settings", "keep_outputs", keep_outputs_default)
+            self.keep_all                   = self.value_assignment(config, "Settings", "keep_all", keep_all_default)
+            self.keep_quality               = self.value_assignment(config, "Settings", "keep_quality", keep_quality_default)
+            self.keep_host                  = self.value_assignment(config, "Settings", "keep_host", keep_host_default)
+            self.keep_vector                = self.value_assignment(config, "Settings", "keep_vector", keep_vector_default)
+            self.keep_rRNA                  = self.value_assignment(config, "Settings", "keep_rRNA", keep_rRNA_default)
+            self.keep_repop                 = self.value_assignment(config, "Settings", "keep_repop", keep_repop_default)
+            self.keep_assemble_contigs      = self.value_assignment(config, "Settings", "keep_assemble_contigs", keep_assemble_contigs_default)
+            self.keep_GA_BWA                = self.value_assignment(config, "Settings", "keep_GA_BWA", keep_GA_BWA_default)
+            self.keep_GA_BLAT               = self.value_assignment(config, "Settings", "keep_GA_BLAT", keep_GA_BLAT_default)
+            self.keep_GA_DIAMOND            = self.value_assignment(config, "Settings", "keep_GA_DIAMOND", keep_GA_DIAMOND_default)
+            self.keep_GA_final              = self.value_assignment(config, "Settings", "keep_GA_final", keep_GA_final_default)
+            self.keep_TA                    = self.value_assignment(config, "Settings", "keep_TA", keep_TA_default)
+            self.keep_EC                    = self.value_assignment(config, "Settings", "keep_EC", keep_EC_default)
+            self.keep_outputs               = self.value_assignment(config, "Settings", "keep_outputs", keep_outputs_default)
             
   
             #------------------------------------------------------------------------
             
-            self.Infernal_job_delay         = self.value_assignment("Settings", "Infernal_job_delay", Infernal_job_delay_default)
-            self.Barrnap_job_delay          = self.value_assignment("Settings", "Barrnap_job_delay", Infernal_job_delay_default)
-            self.BWA_job_delay              = self.value_assignment("Settings", "BWA_job_delay", Infernal_job_delay_default)
-            self.BLAT_job_delay             = self.value_assignment("Settings", "BLAT_job_delay", Infernal_job_delay_default)
-            self.DIAMOND_job_delay          = self.value_assignment("Settings", "DIAMOND_job_delay", Infernal_job_delay_default)
-            self.DETECT_job_delay           = self.value_assignment("Settings", "DETECT_job_delay", Infernal_job_delay_default)
+            self.Infernal_job_delay         = self.value_assignment(config, "Settings", "Infernal_job_delay", Infernal_job_delay_default)
+            self.Barrnap_job_delay          = self.value_assignment(config, "Settings", "Barrnap_job_delay", Infernal_job_delay_default)
+            self.BWA_job_delay              = self.value_assignment(config, "Settings", "BWA_job_delay", Infernal_job_delay_default)
+            self.BLAT_job_delay             = self.value_assignment(config, "Settings", "BLAT_job_delay", Infernal_job_delay_default)
+            self.DIAMOND_job_delay          = self.value_assignment(config, "Settings", "DIAMOND_job_delay", Infernal_job_delay_default)
+            self.DETECT_job_delay           = self.value_assignment(config, "Settings", "DETECT_job_delay", Infernal_job_delay_default)
             
             
             #--------------------------------------------------------------------------------------
             
-            self.filter_stringency          = self.value_assignment("Settings", "filter_stringency", filter_stringency_default)
+            self.filter_stringency          = self.value_assignment(config, "Settings", "filter_stringency", filter_stringency_default)
 
     
                 
