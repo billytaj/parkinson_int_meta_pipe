@@ -1,7 +1,21 @@
 import os.path
 from configparser import ConfigParser, ExtendedInterpolation
 
+
+    
+    
+
+
 class tool_path_obj:
+    def value_assignment(self, config_section, var_name, default):
+        value = ""
+        try:
+            value = config[config_section][var_name] if config[config_section][var_name] or config[config_section][var_name] == "" else default
+        except KeyError:
+            value = default
+        
+    return value
+
     def __init__ (self, config_path):
 
         if config_path:
@@ -176,7 +190,7 @@ class tool_path_obj:
         Infernal_mem_default = 50
         Barrnap_mem_default = 50
         
-        chunk_size_default = 10000
+        chunk_size_default = 50000
         BWA_job_limit_default = 80
         BLAT_job_limit_default = 80
         DIAMOND_job_limit_default = 80
@@ -199,7 +213,6 @@ class tool_path_obj:
         keep_EC_default = "no"
         keep_outputs_default = "no"
         
-        delete_all_default = "no"
         
         Barrnap_job_delay_default = 5
         Infernal_job_delay_default = 5
@@ -212,186 +225,61 @@ class tool_path_obj:
         
         
         if config:
-            self.target_rank                = config["Settings"]["Target_Rank"]                 if config["Settings"]["Target_Rank"]                or config["Settings"]["Target_Rank"]                == "" else "genus"
-            self.adapterremoval_minlength   = config["Settings"]["AdapterRemoval_minlength"]    if config["Settings"]["AdapterRemoval_minlength"]   or config["Settings"]["AdapterRemoval_minlength"]   == "" else 30
-            self.show_unclassified          = config["Settings"]["Show_unclassified"]           if config["Settings"]["Show_unclassified"]          or config["Settings"]["Show_unclassified"]          == "" else "No"
-            self.rpkm_cutoff                = config["Settings"]["RPKM_cutoff"]                 if config["Settings"]["RPKM_cutoff"]                or config["Settings"]["RPKM_cutoff"]                == "" else 0.01
-            try:
-                self.BWA_mem_threshold = config["Settings"]["BWA_mem_threshold"] if config["Settings"]["BWA_mem_threshold"] or config["Settings"]["BWA_mem_threshold"]  == "" else BWA_mem_default
-            except KeyError:
-                self.BWA_mem_threshold = BWA_mem_default
-                
-            try:
-                self.BLAT_mem_threshold = config["Settings"]["BLAT_mem_threshold"] if config["Settings"]["BLAT_mem_threshold"] or config["Settings"]["BLAT_mem_threshold"] == "" else BLAT_mem_default
-            except KeyError:
-                self.BLAT_mem_threshold = BLAT_mem_default  
-                
-            try:
-                self.DIAMOND_mem_threshold  = config["Settings"]["DIAMOND_mem_threshold"] if config["Settings"]["DIAMOND_mem_threshold"] or config["Settings"]["DIAMOND_mem_threshold"] == "" else DIAMOND_mem_default
-            except KeyError:
-                self.DIAMOND_mem_threshold = DIAMOND_mem_default
-                
-            try:
-                self.DETECT_mem_threshold = config["Settings"]["DETECT_mem_threshold"] if config["Settings"]["DETECT_mem_threshold"] or config["Settings"]["DETECT_mem_threshold"] == "" else DETECT_mem_default
-            except KeyError:
-                self.DETECT_mem_threshold = DETECT_mem_default
+            self.target_rank                = self.value_assignment("Settings", "target_rank", "genus")
+            self.adapterremoval_minlength   = self.value_assignment("Settings", "AdapterRemoval_minlength", 30)
+            self.show_unclassified          = self.value_assignment("Settings", "Show_unclassified", "No")
+            self.RPKM_cutoff                = self.value_assignment("Settings", "RPKM_cutoff", 0.01)
+            #-----------------------------------------------------------------------------------------------    
             
-            try:
-                self.Infernal_mem_threshold = config["Settings"]["Infernal_mem_threshold"] if config["Settings"]["Infernal_mem_threshold"] or config["Settings"]["Infernal_mem_threshold"] == "" else Infernal_mem_default
-            except KeyError:
-                self.Infernal_mem_threshold = Infernal_mem_default
-                
-            try:
-                self.Barrnap_mem_threshold = config["Settings"]["Barrnap_mem_threshold"] if config["Settings"]["Barrnap_mem_threshold"] or config["Settings"]["Barrnap_mem_threshold"] == "" else Barrnap_mem_default
-            except KeyError:
-                self.Barrnap_mem_threshold = Barrnap_mem_default
+            self.BWA_mem_threshold          = self.value_assignment("Settings", "BWA_mem_threshold", BWA_mem_default)
+            self.BLAT_mem_threshold         = self.value_assignment("Settings", "BLAT_mem_threshold", "BLAT_mem_default)
+            self.DIAMOND_mem_threshold      = self.value_assignment("Settings", "DIAMOND_mem_threshold", DIAMOND_mem_default)
+            self.DETECT_mem_threshold       = self.value_assignment("Settings", "DETECT_mem_threshold", DETECT_mem_default)
+            self.Infernal_mem_threshold     = self.value_assignment("Settings", "Infernal_mem_threshold", Infernal_mem_default)
+            self.Barrnap_mem_threshold      = self.value_assignment("Settings", "Barrnap_mem_threshold", Barrnap_mem_default)
                 
             #-----------------------------------------------------------------------------------------------    
-                
-                
-            try:
-                self.chunk_size  = config["Settings"]["rRNA_chunk_size"] if config["Settings"]["rRNA_chunk_size"] or config["Settings"]["rRNA_chunk_size"] == "" else chunk_size_default
-            except KeyError:
-                self.chunk_size = chunk_size_default
-                
-            try:
-                self.BWA_job_limit  = config["Settings"]["BWA_job_limit"] if config["Settings"]["BWA_job_limit"] or config["Settings"]["BWA_job_limit"] == "" else BWA_job_limit_default
-            except KeyError:
-                self.BWA_job_limit = BWA_job_limit_default
-                
-            try:
-                self.BLAT_job_limit  = config["Settings"]["BLAT_job_limit"] if config["Settings"]["BLAT_job_limit"] or config["Settings"]["BLAT_job_limit"] == "" else BLAT_job_limit_default
-            except KeyError:
-                self.BLAT_job_limit = BLAT_job_limit_default
             
-            try:
-                self.DIAMOND_job_limit  = config["Settings"]["DIAMOND_job_limit"] if config["Settings"]["DIAMOND_job_limit"] or config["Settings"]["DIAMOND_job_limit"] == "" else DIAMOND_job_limit_default
-            except KeyError:
-                self.DIAMOND_job_limit = DIAMOND_job_limit_default
-                
-            try:
-                self.DETECT_job_limit = config["Settings"]["DETECT_job_limit"] if config["Settings"]["DETECT_job_limit"] or config["Settings"]["DETECT_job_limit"] == "" else DETECT_job_limit_default
-            except KeyError:
-                self.DETECT_job_limit = DETECT_job_limit_default
-            
-            try:
-                self.Infernal_job_limit = config["Settings"]["Infernal_job_limit"] if config["Settings"]["Infernal_job_limit"] or config["Settings"]["Infernal_job_limit"] == "" else Infernal_job_limit_default
-            except KeyError:
-                self.Infernal_job_limit = Infernal_job_limit_default
-                
-            try:
-                self.Barrnap_job_limit = config["Settings"]["Barrnap_job_limit"] if config["Settings"]["Barrnap_job_limit"] or config["Settings"]["Barrnap_job_limit"] == "" else Barrnap_job_limit_default
-            except KeyError:
-                self.Barrnap_job_limit = Barrnap_job_limit_default
+            self.chunk_size                 = self.value_assignment("Settings", "data_chunk_size", chunk_size_default)
+            self.BWA_job_limit              = self.value_assignment("Settings", "BWA_job_limit", BWA_job_limit_default)
+            self.BLAT_job_limit             = self.value_assignment("Settings", "BLAT_job_limit", BLAT_job_limit_default)
+            self.DIAMOND_job_limit          = self.value_assignment("Settings", "DIAMOND_job_limit", DIAMOND_job_limit_default)
+            self.DETECT_job_limit           = self.value_assignment("Settings", "DETECT_job_limit", DETECT_job_limit_default)
+            self.Infernal_job_limit         = self.value_assignment("Settings", "Infernal_job_limit", Infernal_job_limit_default)
+            self.Barrnap_job_limit          = self.value_assignment("Settings", "Barrnap_job_limit", Barrnap_job_limit_default)
             
             #------------------------------------------------------------------------------------------------
-            try:
-                self.keep_all = config["Settings"]["keep_all"] if config["Settings"]["keep_all"] or config["Settings"]["keep_all"] == "" else keep_all_default
-            except KeyError:
-                self.keep_all = keep_all_default
-                
-            try:
-                self.keep_quality = config["Settings"]["keep_quality"] if config["Settings"]["keep_quality"] or config["Settings"]["keep_quality"] == "" else keep_quality_default
-            except KeyError:
-                self.keep_quality = keep_quality_default
-                
-            try:
-                self.keep_host = config["Settings"]["keep_host"] if config["Settings"]["keep_host"] or config["Settings"]["keep_host"] == "" else keep_host_default
-            except KeyError:
-                self.keep_host = keep_host_default
-                    
-            try:
-                self.keep_vector = config["Settings"]["keep_vector"] if config["Settings"]["keep_vector"] or config["Settings"]["keep_vector"] == "" else keep_vector_default
-            except KeyError:
-                self.keep_vector = keep_vector_default
+            self.keep_all                   = self.value_assignment("Settings", "keep_all", keep_all_default)
+            self.keep_quality               = self.value_assignment("Settings", "keep_quality", keep_quality_default)
+            self.keep_host                  = self.value_assignment("Settings", "keep_host", keep_host_default)
+            self.keep_vector                = self.value_assignment("Settings", "keep_vector", keep_vector_default)
+            self.keep_rRNA                  = self.value_assignment("Settings", "keep_rRNA", keep_rRNA_default)
+            self.keep_repop                 = self.value_assignment("Settings", "keep_repop", keep_repop_default)
+            self.keep_assemble_contigs      = self.value_assignment("Settings", "keep_assemble_contigs", keep_assemble_contigs_default)
+            self.keep_GA_BWA                = self.value_assignment("Settings", "keep_GA_BWA", keep_GA_BWA_default)
+            self.keep_GA_BLAT               = self.value_assignment("Settings", "keep_GA_BLAT", keep_GA_BLAT_default)
+            self.keep_GA_DIAMOND            = self.value_assignment("Settings", "keep_GA_DIAMOND", keep_GA_DIAMOND_default)
+            self.keep_GA_final              = self.value_assignment("Settings", "keep_GA_final", keep_GA_final_default)
+            self.keep_TA                    = self.value_assignment("Settings", "keep_TA", keep_TA_default)
+            self.keep_EC                    = self.value_assignment("Settings", "keep_EC", keep_EC_default)
+            self.keep_outputs               = self.value_assignment("Settings", "keep_outputs", keep_outputs_default)
             
-            try:
-                self.keep_rRNA = config["Settings"]["keep_rRNA"] if config["Settings"]["keep_rRNA"] or config["Settings"]["keep_rRNA"] == "" else keep_rRNA_default
-            except KeyError:
-                self.keep_rRNA = keep_rRNA_default
-            
-            try:
-                self.keep_repop = config["Settings"]["keep_repop"] if config["Settings"]["keep_repop"] or config["Settings"]["keep_repop"] == "" else keep_repop_default
-            except KeyError:
-                self.keep_repop = keep_repop_default
-            
-            try:
-                self.keep_assemble_contigs = config["Settings"]["keep_assemble_contigs"] if config["Settings"]["keep_assemble_contigs"] or config["Settings"]["keep_assemble_contigs"] == "" else keep_assemble_contigs_default
-            except KeyError:
-                self.keep_assemble_contigs = keep_assemble_contigs_default
-            
-            try:
-                self.keep_GA_BWA = config["Settings"]["keep_GA_BWA"] if config["Settings"]["keep_GA_BWA"] or config["Settings"]["keep_GA_BWA"] == "" else keep_GA_BWA_default
-            except KeyError:
-                self.keep_GA_BWA = keep_GA_BWA_default
-            
-            try:
-                self.keep_GA_BLAT = config["Settings"]["keep_GA_BLAT"] if config["Settings"]["keep_GA_BLAT"] or config["Settings"]["keep_GA_BLAT"] == "" else keep_GA_BLAT_default
-            except KeyError:
-                self.keep_GA_BLAT = keep_GA_BLAT_default
-            
-            try:
-                self.keep_GA_DIAMOND = config["Settings"]["keep_GA_DIAMOND"] if config["Settings"]["keep_GA_DIAMOND"] or config["Settings"]["keep_GA_DIAMOND"] == "" else keep_GA_DIAMOND_default
-            except KeyError:
-                self.keep_GA_DIAMOND = keep_GA_DIAMOND_default
-                
-            try:
-                self.keep_GA_final = config["Settings"]["keep_GA_final"] if config["Settings"]["keep_GA_final"] or config["Settings"]["keep_GA_final"] == "" else keep_gene_annotation_FINAL_MERGE_default
-            except KeyError:
-                self.keep_GA_final = keep_GA_final_default    
-                
-            try:
-                self.keep_TA = config["Settings"]["keep_taxonomic_annotation"] if config["Settings"]["keep_taxonomic_annotation"] or config["Settings"]["keep_taxonomic_annotation"] == "" else keep_TA_default
-            except KeyError:
-                self.keep_TA = keep_TA_default    
-            
-            try:
-                self.keep_EC = config["Settings"]["keep_enzyme_annotation"] if config["Settings"]["keep_enzyme_annotation"] or config["Settings"]["keep_enzyme_annotation"] == "" else keep_EC_default
-            except KeyError:
-                self.keep_EC = keep_EC_default
-             
-            try:
-                self.keep_outputs = config["Settings"]["keep_outputs"] if config["Settings"]["keep_outputs"] or config["Settings"]["keep_outputs"] == "" else keep_outputs_default
-            except KeyError:
-                self.keep_outputs = keep_outputs_default
-            
+  
             #------------------------------------------------------------------------
-            try:
-                self.Infernal_job_delay = config["Settings"]["Infernal_job_delay"] if config["Settings"]["Infernal_job_delay"] or config["Settings"]["Infernal_job_delay"] == "" else Infernal_job_delay_default
-            except KeyError:
-                self.Infernal_job_delay = Infernal_job_delay_default
-                
-            try:
-                self.Barrnap_job_delay = config["Settings"]["Barrnap_job_delay"] if config["Settings"]["Barrnap_job_delay"] or config["Settings"]["Barrnap_job_delay"] == "" else Barrnap_job_delay_default
-            except KeyError:
-                self.Barrnap_job_delay = Barrnap_job_delay_default
-                
-            try:
-                self.BWA_job_delay = config["Settings"]["BWA_job_delay"] if config["Settings"]["BWA_job_delay"] or config["Settings"]["BWA_job_delay"] == "" else BWA_job_delay_default
-            except KeyError:
-                self.BWA_job_delay = BWA_job_delay_default
-                
-            try:
-                self.BLAT_job_delay = config["Settings"]["BLAT_job_delay"] if config["Settings"]["BLAT_job_delay"] or config["Settings"]["BLAT_job_delay"] == "" else BLAT_job_delay_default
-            except KeyError:
-                self.BLAT_job_delay = BLAT_job_delay_default
-                
-            try:
-                self.DIAMOND_job_delay = config["Settings"]["DIAMOND_job_delay"] if config["Settings"]["DIAMOND_job_delay"] or config["Settings"]["DIAMOND_job_delay"] == "" else DIAMOND_job_delay_default
-            except KeyError:
-                self.DIAMOND_job_delay = DIAMOND_job_delay_default
-                
-            try:
-                self.DETECT_job_delay = config["Settings"]["DETECT_job_delay"] if config["Settings"]["DETECT_job_delay"] or config["Settings"]["DETECT_job_delay"] == "" else DETECT_job_delay
-            except KeyError:
-                self.DETECT_job_delay = DETECT_job_delay_default
-                
+            
+            self.Infernal_job_delay         = self.value_assignment("Settings", "Infernal_job_delay", Infernal_job_delay_default)
+            self.Barrnap_job_delay          = self.value_assignment("Settings", "Barrnap_job_delay", Infernal_job_delay_default)
+            self.BWA_job_delay              = self.value_assignment("Settings", "BWA_job_delay", Infernal_job_delay_default)
+            self.BLAT_job_delay             = self.value_assignment("Settings", "BLAT_job_delay", Infernal_job_delay_default)
+            self.DIAMOND_job_delay          = self.value_assignment("Settings", "DIAMOND_job_delay", Infernal_job_delay_default)
+            self.DETECT_job_delay           = self.value_assignment("Settings", "DETECT_job_delay", Infernal_job_delay_default)
+            
+            
             #--------------------------------------------------------------------------------------
-            try:
-                self.filter_stringency = config["Settings"]["filter_stringency"] if config["Settings"]["filter_stringency"] or config["Settings"]["filter_stringency"] == "" else filter_stringency_default
-            except KeyError:
-                self.filter_stringency = filter_stringency_default
-                
+            
+            self.filter_stringency          = self.value_assignment("Settings", "filter_stringency", filter_stringency_default)
+
+    
                 
              
         else:

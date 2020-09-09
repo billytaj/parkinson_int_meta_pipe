@@ -66,7 +66,7 @@ A copy can be found here: http://rfam.xfam.org/
 The DNA DB is what we use to annotate the sequence data against.  We use the ChocoPhlAn database.
 A copy can be found at: http://huttenhower.sph.harvard.edu/humann2_data/chocophlan/chocophlan.tar.gz
 * DNA_DB_Split
-The ChocoPhlAn database is big.  We split it up and process the chunks simultaneously.  The pipeline will split it and dump the chunks at this location
+The ChocoPhlAn database too large for pBLAT to process.  We split it up and process the chunks simultaneously.  The pipeline will split it and dump the chunks at this location
 * Prot_DB
 The Prot_DB is the protein db.  We use the non-redundant database from NCBI.  It will need to be indexed by DIAMOND before usage. (see DIAMOND for more details: https://github.com/bbuchfink/diamond)
 It can be found here: ftp://ftp.ncbi.nlm.nih.gov/blast/db/
@@ -98,6 +98,10 @@ The database used by PRIAM.  To obtain this, the user needs to download a distri
 PRIAM can be downloaded here: http://priam.prabi.fr/
 * DetectDB
 Detect is an enzyme annotation tool. 
+
+## Settings
+---
+The optional settings are used by MetaPro to orchestrate the concurrency of the tools in action.
 
 
 # Important Features
