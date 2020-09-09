@@ -264,6 +264,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     Infernal_mem_threshold = int(paths.Infernal_mem_threshold)
     Barrnap_mem_threshold = int(paths.Barrnap_mem_threshold)
     DETECT_mem_threshold = int(paths.DETECT_mem_threshold)
+    filter_stringency = paths.filter_stringency
+    
     
     BWA_job_limit = int(paths.BWA_job_limit)
     BLAT_job_limit = int(paths.BLAT_job_limit)
@@ -337,7 +339,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("BLAT job limit:", BLAT_job_limit)
     print("DIAMOND job limit:", DIAMOND_job_limit)
     print("DETECT job limit:", DETECT_job_limit)
-    
+    print("===================================================")
+    print("Filter stringency:", filter_stringency)
+    print("Chunk size:", rRNA_chunks)
     
     print("---------------------------------")
     if not single_path == "":
