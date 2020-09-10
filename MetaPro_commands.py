@@ -581,7 +581,7 @@ class mt_pipe_commands:
         bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_1_no_vectors.fastq") + " "
         bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_2_no_vectors.fastq") + " "
         bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq") + " "
-        bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_1_vectors_only.fastq")
+        bwa_vr_filter_paired += os.path.join(vector_removal_folder, "pair_2_vectors_only.fastq")
 
 
         make_blast_db_vector = ">&2 echo BLAST make db vectors | "
