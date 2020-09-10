@@ -2005,10 +2005,13 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         detect_folder       = os.path.join(data_folder, "0_detect")
-
+        jobs_folder         = os.path.join(data_folder, "jobs")
+    
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(detect_folder)
+        self.make_folder(jobs_folder)
+        
         
         detect_protein = ">&2 echo running detect on split file | "
         detect_protein += self.tool_path_obj.Python + " "
@@ -2025,8 +2028,11 @@ class mt_pipe_commands:
         detect_protein += " --job_delay" + " " + str(self.tool_path_obj.DETECT_job_delay)
         detect_protein += " >> " + os.path.join(detect_folder, "detect_out.txt") + " 2>&1"
 
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "ec_detect")
+
         COMMANDS_DETECT = [
-            detect_protein
+            detect_protein + " && " + make_marker
         ]
 
         return COMMANDS_DETECT
@@ -2036,9 +2042,10 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
-        
+        self.jobs_folder    = os.path.join(data_folder, "jobs")
 
         self.make_folder(PRIAM_folder)
+        self.make_folder(jobs_folder)
         
 
         PRIAM_command = ">&2 echo running PRIAM | "
@@ -2051,9 +2058,12 @@ class mt_pipe_commands:
         PRIAM_command += " --np " + self.Threads_str
         PRIAM_command += " --bh --cc --cg --bp --bd "
         PRIAM_command += self.tool_path_obj.BLAST_dir
+        
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "ec_priam")
 
         COMMANDS_PRIAM = [
-            PRIAM_command
+            PRIAM_command + " && " + make_marker
         ]
 
         return COMMANDS_PRIAM
@@ -2064,8 +2074,10 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
+        jobs_folder         = os.path.join(data_folder, "jobs")
         
         self.make_folder(diamond_ea_folder)
+        self.make_folder(jobs_folder)
         
         diamond_ea_command = ">&2 echo running Diamond enzyme annotation | "
         diamond_ea_command += self.tool_path_obj.DIAMOND + " blastp"
@@ -2077,8 +2089,11 @@ class mt_pipe_commands:
         diamond_ea_command += " --evalue 0.0000000001"
         #diamond_ea_command += " --max-target-seqs 1"
         
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "ec_diamond")
+        
         COMMANDS_DIAMOND_EC = [
-            diamond_ea_command
+            diamond_ea_command + " && " + make_marker
         ]
         
         return COMMANDS_DIAMOND_EC
@@ -2091,8 +2106,10 @@ class mt_pipe_commands:
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
         diamond_ea_folder   = os.path.join(data_folder, "2_diamond")
         final_folder        = os.path.join(subfolder, "final_results")
-
+        jobs_folder         = os.path.join(data_folder, "jobs")
+        
         self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
         #combine_detect = "cat " + os.path.join(detect_folder, "protein_*.toppred")
         #combine_detect += " > " + os.path.join(detect_folder, "proteins.toppred")
 
@@ -2107,10 +2124,13 @@ class mt_pipe_commands:
         postprocess_command += self.tool_path_obj.enzyme_db + " "
         postprocess_command += os.path.join(final_folder, "proteins.ECs_All") + " "
         postprocess_command += os.path.join(final_folder, "lq_proteins.ECs_All")
+        
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "ec_post")
 
         COMMANDS_EC_Postprocess = [
             #combine_detect,
-            postprocess_command
+            postprocess_command + " && " + make_marker
         ]
 
         return COMMANDS_EC_Postprocess

@@ -1195,7 +1195,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     if check_bypass_log(output_folder_path, taxon_annotation_label):
         command_list = commands.create_taxonomic_annotation_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, GA_final_merge_label),
         job_name = taxon_annotation_label
-        launch_and_create_simple(job_name, commands, command_list)
+        launch_and_create_simple(taxon_annotation_label, job_name, commands, command_list)
         
         write_to_bypass_log(output_folder_path, taxon_annotation_label)
     cleanup_TA_start = time.time()
@@ -1223,19 +1223,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
     #if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, ec_annotation_detect_label):
-        job_name = "ec_detect"
-        process = mp.Process(
-            target = commands.create_and_launch,
-            args = (
-                ec_annotation_label, 
-                commands.create_EC_DETECT_command(ec_annotation_label, GA_final_merge_label),
-                True,
-                job_name
-            )
-        )
-        process.start()
-        mp_store.append(process)
-        #process.join()
+        marker_name = "ec_detect"
+        marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_name)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_name)
+        else:
+            job_name = "ec_detect"
+            command_list = commands.create_EC_DETECT_command(ec_annotation_label, GA_final_merge_label)
+            launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
+        
         
     EC_DETECT_end = time.time()
     print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
@@ -1247,15 +1243,18 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     ec_priam_path = os.path.join(ec_annotation_path, "data", "1_priam")
     #if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, ec_annotation_priam_label):
-        
-        if(os.path.exists(ec_priam_path)):
-            print(dt.today(), "starting with a fresh PRIAM run")
-            os.remove(ec_priam_path)
-            
-        job_name = "ec_priam"
-        command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label)
-        
-        launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
+        marker_name = "ec_priam"
+        marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_name)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_name)
+        else:
+            if(os.path.exists(ec_priam_path)):
+                print(dt.today(), "starting with a fresh PRIAM run")
+                os.remove(ec_priam_path)
+                
+            job_name = "ec_priam"
+            command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label)
+            launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
         
       
         #process.join()
@@ -1265,30 +1264,25 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # DIAMOND EC annotation 
     EC_DIAMOND_start = time.time()
     ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
-    #if not check_where_resume(job_label = None, full_path = ec_diamond_path, dep_job_path = GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
-        job_name = "ec_diamond"
-        process = mp.Process(
-            target = commands.create_and_launch, 
-            args = (
-                ec_annotation_label,
-                commands.create_EC_DIAMOND_command(ec_annotation_label, GA_final_merge_label),
-                True,
-                job_name
-            )
-        )
-        process.start()
-        mp_store.append(process)
-        #process.join()
+        marker_name = "ec_diamond"
+        marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_name)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_name)
+        else:
+            job_name = "ec_diamond"
+            command_list = commands.create_EC_DIAMOND_command(ec_annotation_label, GA_final_merge_label)
+            launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
+        
     EC_DIAMOND_end = time.time()
     
     for item in mp_store:
         item.join()
     mp_store[:] = []
     
-    ec_detect_out = os.path.join(ec_detect_path, "proteins.fbeta")
-    ec_priam_out = os.path.join(ec_priam_path, "PRIAM_proteins_priam", "ANNOTATION", "sequenceECs.txt")
-    ec_diamond_out = os.path.join(ec_diamond_path, "proteins.blastout")
+    ec_detect_out   = os.path.join(ec_annotation_path, "data", "jobs", "ec_detect")
+    ec_priam_out    = os.path.join(ec_annotation_path, "data", "jobs", "ec_priam")
+    ec_diamond_out  = os.path.join(ec_annotation_path, "data", "jobs", "ec_diamond")
     if check_bypass_log(output_folder_path, ec_annotation_detect_label):
         if(os.path.exists(ec_detect_out)):
             write_to_bypass_log(output_folder_path, ec_annotation_detect_label)
@@ -1304,19 +1298,20 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     EC_post_start = time.time()
     #if not (check_where_resume(ec_annotation_path, None, GA_DIAMOND_path)):
     if check_bypass_log(output_folder_path, ec_annotation_pp_label):
-        job_name = "ec_post"
-        process = mp.Process(
-            target=commands.create_and_launch,
-            args=(
-                ec_annotation_label,
-                commands.create_EC_postprocess_command(ec_annotation_label, GA_final_merge_label),
-                True,
-                job_name
-            )
-        )
-        process.start()
-        process.join()
-        write_to_bypass_log(output_folder_path, ec_annotation_pp_label)
+        
+        marker_name = "ec_post"
+        marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_name)
+        
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_name)
+        else:
+            job_name = "ec_post"
+            command_list = commands.create_EC_postprocess_command(ec_annotation_label, GA_final_merge_label)
+            launch_and_create_simple(ec_annotation_label, job_name, commands, command_list)
+        
+        if(os.path.exists(marker_path)):
+            write_to_bypass_log(output_folder_path, ec_annotation_pp_label)
+    
     cleanup_EC_start = time.time()
     if(keep_all == "no" and keep_EC == "no"):
         delete_folder(ec_annotation_path)
