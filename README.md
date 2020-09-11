@@ -102,7 +102,7 @@ Detect is an enzyme annotation tool.
 ## Settings
 ---
 The optional settings are used by MetaPro to orchestrate the concurrency of the tools in action.
-
+- 
 
 # Important Features
 ---

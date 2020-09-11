@@ -97,9 +97,9 @@ if __name__ == "__main__":
         pair_2_id_list += pair_2_barrnap_list
         
         #grab the common IDs.  They'll be the ones we want. The ones that meet the filter
-        if(operating_mode == "OR"):     #liberal:  only things that are included on both sides is rRNA
+        if(operating_mode == "low"):     #liberal:  only things that are included on both sides is rRNA
             common_id_list = list(set(pair_1_id_list).intersection(pair_2_id_list)) 
-        elif(operating_mode == "AND"):  #conservative: anything in this unioned list is rRNA
+        elif(operating_mode == "high"):  #conservative: anything in this unioned list is rRNA
             common_id_list = list(set().union(pair_1_id_list, pair_2_id_list))
         
         #if the read is not inside the rRNA list, we take it.
