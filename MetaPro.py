@@ -190,7 +190,7 @@ def launch_and_create_simple(job_location, job_label, command_obj, commands):
     process.start()
     process.join()
 
-def launch_and_create_with_mp_store(job_location, job_label, mp_store, command_obj, commands):
+def launch_and_create_with_mp_store(mp_store, job_location, job_label, command_obj, commands):
     #just launches a job.  no multi-process.
     process = mp.Process(
         target=command_obj.create_and_launch,
@@ -557,7 +557,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
                 job_name = "rRNA_filter_prep_" + section
                 command_list = commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks)
-                launch_and_create_with_mp_store(rRNA_filter_label, job_name, mp_store, commands, command_list)
+                launch_and_create_with_mp_store(mp_store, rRNA_filter_label, job_name, commands, command_list)
         for item in mp_store:
             item.join()
         mp_store[:] = []
@@ -890,7 +890,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
         job_name = "GA_prep_split_contigs"
         command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs")
-        launch_and_create_with_mp_store(GA_BWA_label, job_name, mp_store, commands, command_list)
+        launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
         
         
         sections = ["singletons"]
@@ -899,7 +899,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for section in sections: 
             job_name = "GA_prep_split_" + section
             command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section)
-            launch_and_create_with_mp_store(GA_BWA_label, job_name, mp_store, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
         
         for item in mp_store:
             item.join()
