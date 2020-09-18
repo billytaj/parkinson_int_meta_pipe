@@ -1319,7 +1319,7 @@ class mt_pipe_commands:
         # Build a report of what was consumed by contig transmutation (assemble/disassemble)
         bwa_paired_contigs = ">&2 echo BWA pair contigs | "
         bwa_paired_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_pair_1_contigs += final_contigs + " "
+        bwa_paired_contigs += final_contigs + " "
         #bwa_paired_contigs += original_contigs + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_1.fastq") + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_2.fastq") + " "
@@ -1419,9 +1419,11 @@ class mt_pipe_commands:
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
+        self.make_folder(jobs_folder)
         
         split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
         split_fastq += "split -l " + str(int(self.chunk_size) * 4) + " "        
@@ -1430,8 +1432,11 @@ class mt_pipe_commands:
         split_fastq += "-d" + " "
         split_fastq += os.path.join(split_folder, category + "_")
         
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "GA_split_fastq_" + category)
+        
         COMMANDS_GA_prep_fastq = [
-            split_fastq
+            split_fastq + " && " + make_marker
         ]
         
         return COMMANDS_GA_prep_fastq
@@ -1441,12 +1446,12 @@ class mt_pipe_commands:
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
         dep_folder      = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
-        
-        
+        self.make_folder(jobs_folder)
         
         split_fasta = ">&2 echo splitting fasta for " + category + " | "
         split_fasta += self.tool_path_obj.Python + " "    
@@ -1455,8 +1460,11 @@ class mt_pipe_commands:
         split_fasta += os.path.join(split_folder, category) + " "
         split_fasta += self.chunk_size
         
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "GA_split_fasta_" + category)
+        
         COMMANDS_GA_prep_fasta = [
-            split_fasta
+            split_fasta + " && " + make_marker
         ]
         
         return COMMANDS_GA_prep_fasta
