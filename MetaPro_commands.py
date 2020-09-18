@@ -1312,16 +1312,15 @@ class mt_pipe_commands:
         remove_whitespace += post_mgm_contig + " "
         remove_whitespace += final_contigs
         
-
-        #bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + final_contigs
-        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + original_contigs
+        #BWA-ing against the final contigs gives us a proper contig-segment -> read map. 
+        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + final_contigs
         
         
         # Build a report of what was consumed by contig transmutation (assemble/disassemble)
         bwa_paired_contigs = ">&2 echo BWA pair contigs | "
         bwa_paired_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        #bwa_pair_1_contigs += final_contigs + " "
-        bwa_paired_contigs += original_contigs + " "
+        bwa_pair_1_contigs += final_contigs + " "
+        #bwa_paired_contigs += original_contigs + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_1.fastq") + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_2.fastq") + " "
         bwa_paired_contigs += ">" + " " 
@@ -1329,7 +1328,8 @@ class mt_pipe_commands:
 
         bwa_singletons_contigs = ">&2 echo BWA singleton contigs | "
         bwa_singletons_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_singletons_contigs += original_contigs + " "
+        bwa_singletons_contigs += final_contigs + " "
+        #bwa_singletons_contigs += original_contigs + " "
         bwa_singletons_contigs += os.path.join(dep_loc, "singletons.fastq")
         bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons_on_contigs.sam")
         
@@ -1367,6 +1367,8 @@ class mt_pipe_commands:
         map_read_contig += os.path.join(bwa_folder, "singletons_on_contigs.sam")
         if self.read_mode == "paired":
             map_read_contig += " " + os.path.join(bwa_folder, "paired_on_contigs.sam")
+            
+            
 
         
         copy_contigs = ">&2 echo Copying contigs to final folder | "
