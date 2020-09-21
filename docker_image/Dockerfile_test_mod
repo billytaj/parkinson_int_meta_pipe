@@ -11,6 +11,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/p
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/patch_ga_merge/Config.ini /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/patch_ga_merge/Scripts/Detect_2.2.8.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/patch_ga_merge/Scripts/assembly_deduplicate.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/patch_ga_merge/Scripts/assembly_flush_bad_contigs.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/patch_ga_merge/Scripts/assembly_map.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/patch_ga_merge/Scripts/ea_combine_v4.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/patch_ga_merge/Scripts/ga_BLAT_generic.py /pipeline/Scripts

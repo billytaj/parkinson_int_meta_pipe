@@ -1298,6 +1298,7 @@ class mt_pipe_commands:
         post_mgm_contig     = os.path.join(mgm_folder, "disassembled_contigs.fasta")
         mgm_report          = os.path.join(mgm_folder, "gene_report.txt")
         final_contigs       = os.path.join(mgm_folder, "contigs.fasta")
+        contig_map          = os.path.join(final_folder, "contig_map.tsv")
         
         #-------------------------------------------------------
         #spades does too good of a job sometimes.  Disassemble it into genes.
@@ -1363,16 +1364,21 @@ class mt_pipe_commands:
 
         map_read_contig = ">&2 echo map read contig v2 | "
         map_read_contig += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_contig + " "
-        map_read_contig += os.path.join(final_folder, "contig_map.tsv") + " "
+        map_read_contig += contig_map + " "
         map_read_contig += os.path.join(bwa_folder, "singletons_on_contigs.sam")
         if self.read_mode == "paired":
             map_read_contig += " " + os.path.join(bwa_folder, "paired_on_contigs.sam")
             
             
-
+        flush_bad_contigs = ">&2 echo flush bad contigs | " 
+        flush_bad_contigs += self.tool_path_obj.Python + " "
+        flush_bad_contigs += self.tool_path_obj.flush_bad_contigs + " "
+        flush_bad_contigs += contig_map + " "
+        flush_bad_contigs += final_contigs + " "
+        flush_bad_contigs += os.path.join(final_folder, "contigs.fasta")
         
-        copy_contigs = ">&2 echo Copying contigs to final folder | "
-        copy_contigs += "cp " + final_contigs + " " + final_folder
+        #copy_contigs = ">&2 echo Copying contigs to final folder | "
+        #copy_contigs += "cp " + final_contigs + " " + final_folder
             
         move_gene_report = ">&2 echo moving gene report | "
         move_gene_report += "cp" + " "
@@ -1391,7 +1397,7 @@ class mt_pipe_commands:
                 samtools_no_contig_singletons_convert + " && " +
                 samtools_no_contig_singletons_export + " && " + 
                 map_read_contig + " && " +
-                copy_contigs + " && " +
+                flush_bad_contigs + " && " +
                 move_gene_report
             ]
         elif self.read_mode == "paired":
@@ -1407,7 +1413,7 @@ class mt_pipe_commands:
                 samtools_no_contig_singletons_convert + " && " +
                 samtools_no_contig_singletons_export + " && " + 
                 map_read_contig + " && " +
-                copy_contigs + " && " +
+                flush_bad_contigs + " && " +
                 move_gene_report
             ]
 

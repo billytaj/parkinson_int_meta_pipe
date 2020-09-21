@@ -7,7 +7,7 @@ from datetime import datetime as dt
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 import time
-
+import pandas as pd
 
 def export_proteins(diamond_proteins_file, gene_trans_dict, final_proteins):
     with open(diamond_proteins_file, "a") as diamond_proteins:
@@ -146,8 +146,9 @@ def concatenate_gene_maps_v2(path, gene_map_dict, context):
                 
 
     
-def merge_fastas(path_0, path_1, section, header, extension):
+def merge_fastas(path_0, path_1, section, header, extension, bypass_ID_check = True):
     #it's just a simple concatenation job. that also checks for duplicates
+    
     IDs_used = list()
     skip_this_line = False
     path_contents = os.listdir(path_0)
@@ -155,23 +156,45 @@ def merge_fastas(path_0, path_1, section, header, extension):
     with open(final_fasta_file, "w") as final_fasta:
         for content in path_contents:
             item = os.path.join(path_0, content)
-            #print("fasta merge:", item)
+            
             if(content.startswith(section)) and (content.endswith(extension)):
+                print("fasta merge:", item)
+                if(not bypass_ID_check):
+                    print(item, "bypassing ID check for merging raw data")
+                time_spent_checking = 0
+                time_writing = 0
+                IDs_skipped = False
+                ID_skip_count = 0
                 with open(item, "r") as sample_fasta:
                     for line in sample_fasta:
                         if(line.startswith(">")):
                             ID = line
-                            if(ID in IDs_used):
-                                skip_this_line = True
-                            else:
-                                IDs_used.append(ID)
-                                skip_this_line = False
-                                
-                        if not(skip_this_line):        
+                            start_time = time.time()
+                            if(bypass_ID_check):
+                                if(ID in IDs_used):
+                                    skip_this_line = True
+                                    IDs_skipped = True
+                                    ID_skip_count += 1
+                                    #print("ID skipped:", item)
+                                else:
+                                    IDs_used.append(ID)
+                                    skip_this_line = False
+                                end_time = time.time()
+                                check_time = end_time - start_time
+                                time_spent_checking += check_time
+                                #print("check time:", end_time - start_time)
+                        if not(skip_this_line):
+                            start_write = time.time()
                             final_fasta.write(line)
+                            end_write = time.time()
+                            time_writing = end_write - start_write
                         #else:
                         #    print(dt.today(), ID, "already written.  skipping")
-                            
+                print(item, "time spent checking for overlap:", time_spent_checking)
+                print(item, "time writing:", time_writing)
+                if(IDs_skipped):
+                    print(item, "IDs were skipped:", ID_skip_count)
+                print("==================================")
     print(dt.today(), "find it at:", final_fasta_file)
     return final_fasta_file
     
@@ -201,19 +224,21 @@ def make_merge_fasta_process(process_store, path_0, path_1, header, tail):
     section = ["pair_1", "pair_2", "contigs", "singletons"]
     
     for item in section:
-        merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
-        merge_process.start()
-        process_store.append(merge_process)
-        final_fasta_file = os.path.join(path_1, header + "_" + item + tail)
+        merge_fastas(path_0, path_1, item, header, tail)
+        #merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
+        #merge_process.start()
+        #process_store.append(merge_process)
+        #final_fasta_file = os.path.join(path_1, header + "_" + item + tail)
 
 def make_merge_leftover_fasta_process(process_store, path_0, path_1, header, tail):
     section = ["contigs", "singletons"]
     
     for item in section:
-        merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
-        merge_process.start()
-        process_store.append(merge_process)
-        final_fasta_file = os.path.join(path_1, header + "_" + item + tail)
+        merge_fastas(path_0, path_1, item, header, tail, False)
+        #merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
+        #merge_process.start()
+        #process_store.append(merge_process)
+        #final_fasta_file = os.path.join(path_1, header + "_" + item + tail)
         
         
 def merge_all_proteins(path, gene_transcripts_dict, export_path):
@@ -352,6 +377,15 @@ def export_leftover_paired_reads(all_paired_reads, pair_1_df, pair_2_df, export_
     
     pair_1_leftover.to_csv(pair_1_export_path, mode = "w", sep= "\n", header = False, index = False, quoting = 3)
     pair_2_leftover.to_csv(pair_2_export_path, mode = "w", sep= "\n", header = False, index = False, quoting = 3)
+    
+    
+def make_second_merge_process(process_store, path_0, path_1, header, tail):
+    section = ["BWA_annotated", "BLAT_annotated"]
+    for item in section:
+        merge_fastas(path_0, path_1, item, header, tail)
+        #merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
+        #merge_process.start()
+        #process_store.append(merge_process)    
        
 if __name__ == "__main__":
     assemble_path           = sys.argv[1]
@@ -485,7 +519,7 @@ if __name__ == "__main__":
     
     #reconcile the paired reads (For export)
     all_paired_reads = reconcile_paired_gene_map(pair_1_gene_map, pair_2_gene_map)
-    
+    export_leftover_paired_reads(all_paired_reads, pair_1_raw_df, pair_2_raw_df, export_path)
     
     
     #merge all gene maps
@@ -506,7 +540,7 @@ if __name__ == "__main__":
     
     
     #convert genes to proteins, and merge with diamond's export
-    handle_final_proteins(final_path, export_path))
+    handle_final_proteins(final_path, export_path)
     
     export_gene_map(final_gene_map, export_path)
     
