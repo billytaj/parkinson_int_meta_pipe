@@ -1202,11 +1202,18 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
     #if not check_where_resume(taxon_annotation_path, None, GA_DIAMOND_path):
     if check_bypass_log(output_folder_path, taxon_annotation_label):
-        command_list = commands.create_taxonomic_annotation_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, GA_final_merge_label),
+    
+        
+        command_list = commands.create_taxonomic_annotation_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, GA_final_merge_label)
         job_name = taxon_annotation_label
         launch_and_create_simple(taxon_annotation_label, job_name, commands, command_list)
-        
-        write_to_bypass_log(output_folder_path, taxon_annotation_label)
+        final_taxa_output_path = os.path.join(output_folder_path, taxon_annotation_label, "final_results", "constrain_classification.tsv")
+        if(os.path.exists(final_taxa_output_path)):
+            write_to_bypass_log(output_folder_path, taxon_annotation_label)
+        else:
+            print(dt.today(), "TA failed")
+            sys.exit()
+            
     cleanup_TA_start = time.time()
     if(keep_all == "no" and keep_TA == "no"):
         delete_folder(taxon_annotation_path)
@@ -1259,7 +1266,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         else:
             if(os.path.exists(ec_priam_path)):
                 print(dt.today(), "starting with a fresh PRIAM run")
-                os.remove(ec_priam_path)
+                shutil.rmtree(ec_priam_path)
                 
             job_name = "ec_priam"
             command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label)
