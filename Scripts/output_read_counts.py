@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     raw_sequence        = sys.argv[1]   #in: the raw, unfiltered input
     quality_sequence    = sys.argv[2]   #in: the post-qual 
-    rRNA_sequence       = sys.argv[3]   #in: total rRNA
+    rRNA_sequence       = sys.argv[3]   #in: total rRNA + tRNA
     mRNA_sequence       = sys.argv[4]   #in: total mRNA
     gene_to_read_map    = sys.argv[5]   #in: gene map: get number of reads
     ec_map              = sys.argv[6]   #in: the gene-ec map: get number of unique ECs
@@ -84,11 +84,11 @@ if __name__ == "__main__":
     host_pct = host_read_counts / raw_sequence_count
     data.append("%.2f" % (host_pct * 100))
 
-    headings.append("rRNA reads")
+    headings.append("rRNA + tRNA reads")
     rRNA_sequence_count = fastq_count(rRNA_sequence)
     data.append(str(int(rRNA_sequence_count)))
 
-    headings.append("% rRNA reads")
+    headings.append("% rRNA + tRNA reads")
     rRNA_sequence_pct = rRNA_sequence_count / raw_sequence_count
     data.append("%.2f" % (rRNA_sequence_pct*100))
 

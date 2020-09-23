@@ -1337,22 +1337,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     cleanup_EC_end = time.time()
     EC_post_end = time.time()
         
-    #else:
-    #    #EC bypassed
-    #    EC_PRIAM_start = time.time()
-    #    EC_PRIAM_end = time.time()
-    #    EC_DIAMOND_start = time.time()
-    #    EC_DIAMOND_end = time.time()
-    #    EC_DETECT_start = time.time()
-    #    EC_DETECT_end = time.time()
-    #    EC_post_start = time.time()
-    #    EC_post_end = time.time()
-    #    cleanup_EC_start = time.time()
-    #    cleanup_EC_end = time.time()
-        
-        #print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
-    #EC_PRIAM_DIAMOND_end = time.time()
-    #print("EC PRIAM + DIAMOND:", '%1.1f' % (EC_PRIAM_DIAMOND_end - EC_PRIAM_DIAMOND_start - (cleanup_EC_end - cleanup_EC_start)), "s")
+   
     EC_end = time.time()
     print("EC run:", '%1.1f' % (EC_end - EC_start), "s")
     print("EC cleanup:", '%1.1f' % (cleanup_EC_end - cleanup_EC_start), "s")
@@ -1364,101 +1349,39 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     #if not check_where_resume(network_path, None, ec_annotation_path):
     
     if check_bypass_log(output_folder, output_label):
-        #phase 0
-        if check_bypass_log(output_folder, output_taxa_table_label):
-            job_name = output_taxa_table_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_taxa_table_v2_command(output_label, assemble_contigs_label, taxon_annotation_label),
-                    True,
-                    job_name
-                )
-            )
-            process.start()
-            mp_store.append(process)
-    
-        print(dt.today(), "output report phase 0 launched.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        
-        conditional_write_to_bypass_log(output_taxa_table_label, "outputs/final_results", "taxa_table.tsv", output_folder_path)
-        
-      
-    
-    
+
         #phase 1
         if check_bypass_log(output_folder, output_copy_gene_map_label):
             job_name = output_copy_gene_map_label
-            process = mp.Process(
-                    target = commands.create_and_launch, 
-                    args = (output_label, 
-                        commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label),
-                        True, 
-                        job_name
-                    )
-                )
-            process.start()
-            mp_store.append(process)
-        
+            command_list = commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
             
         
         if check_bypass_log(output_folder, output_contig_stats_label):
             job_name = output_contig_stats_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_contig_stats_command(output_label, assemble_contigs_label),
-                    True,
-                    job_name
-                )
-            )
-            process.start()
-            mp_store.append(process)
+            command_list = commands.create_output_contig_stats_command(output_label, assemble_contigs_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
             
         
             
         if not(no_host):
             if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
                 job_name = output_unique_hosts_singletons_label
-                process = mp.Process(
-                    target = commands.create_and_launch,
-                    args = (output_label, 
-                        commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label),
-                        True,
-                        job_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)
+                command_list = commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            
             if(read_mode == "paired"):
                 if check_bypass_log(output_folder, output_unique_hosts_pair_1_label):
                     job_name = output_unique_hosts_pair_1_label
-                    process = mp.Process(
-                        target = commands.create_and_launch,
-                        args = (output_label,
-                            commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label),
-                            True,
-                            job_name
-                        )
-                    )
-                    process.start()
-                    mp_store.append(process)
+                    command_list = commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                     
                 if check_bypass_log(output_folder, output_unique_hosts_pair_2_label):
                     job_name = output_unique_hosts_pair_2_label
-                    process = mp.Process(
-                        target = commands.create_and_launch,
-                        args = (output_label,
-                            commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label),
-                            True,
-                            job_name
-                        )
-                    )
-                    process.start()
-                    mp_store.append(process)
-            
+                    command_list = commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                    
+                    
         print(dt.today(), "output report phase 1 launched.  waiting for sync")
         for item in mp_store:
             item.join()
@@ -1478,35 +1401,19 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if not(no_host):
             if check_bypass_log(output_folder, output_combine_hosts_label):
                 job_name = output_combine_hosts_label
-                process = mp.Process(
-                    target = commands.create_and_launch,
-                    args = (output_label,
-                        commands.create_output_combine_hosts_command(output_label),
-                        True,
-                        job_name
-                    )
-                )
-                process.start()
-                mp_store.append(process)
-            
-        if check_bypass_log(output_folder, output_clean_EC_label):
-            job_name = output_clean_EC_label
-            process = mp.Process(
-                target = commands.create_and_launch, 
-                args = (output_label, 
-                    commands.create_output_clean_ec_report_command(output_label, ec_annotation_label),
-                    True,
-                    job_name
-                )
-            )
-            process.start()
-            mp_store.append(process)
-            
+                command_list = commands.create_output_combine_hosts_command(output_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                
+        if check_bypass_log(output_folder, output_network_gen_label):
+            job_name = output_network_gen_label
+            command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+       
         print(dt.today(), "output report phase 2 launched.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        conditional_write_to_bypass_log(output_clean_EC_label, "outputs/5_cleaned_ec", "cleaned_proteins.ECs_All", output_folder_path)
+        conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv", output_folder_path)
         if not (no_host):
             conditional_write_to_bypass_log(output_combine_hosts_label, "outputs/2_full_hosts", "combined_hosts.fastq", output_folder_path)
         
@@ -1515,70 +1422,27 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #Phase 3
         if check_bypass_log(output_folder, output_read_count_label):
             job_name = output_read_count_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, GA_final_merge_label, ec_annotation_label),
-                    True,
-                    job_name
-                )
-            )
-            process.start()
-            mp_store.append(process)
-            
-        if check_bypass_log(output_folder, output_network_gen_label):
-            job_name = output_network_gen_label
-            process = mp.Process(
-                    target = commands.create_and_launch, 
-                    args = (
-                        output_label, 
-                        commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label),
-                        True, 
-                        job_name
-                    )
-                )
-            process.start()
-            mp_store.append(process)
+            command_list = commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, GA_final_merge_label, ec_annotation_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                               
+
         if check_bypass_log(output_folder, output_per_read_scores_label):
             job_name = output_per_read_scores_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_per_read_scores_command(output_label, quality_filter_label),
-                    True, 
-                    job_name
-                )
-            )
-            process.start()
-            mp_store.append(process)    
+            command_list = commands.create_output_per_read_scores_command(output_label, quality_filter_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            
+        if check_bypass_log(output_folder, output_ec_heatmap_label):
+            job_name = output_ec_heatmap_label
+            command_list = commands.create_output_EC_heatmap_command(output_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)    
         
         print(dt.today(), "output report phase 3 launched.  waiting for sync")
         for item in mp_store:
             item.join()
         mp_store[:] = []
         conditional_write_to_bypass_log(output_read_count_label, "outputs/final_results", "read_count.tsv", output_folder_path)
-        conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv", output_folder_path)
-        
-        #------------------------------------------------------------------------------------------------
-        # Phase 4
-        if check_bypass_log(output_folder, output_ec_heatmap_label):
-            job_name = output_ec_heatmap_label
-            process = mp.Process(
-                target = commands.create_and_launch,
-                args = (output_label,
-                    commands.create_output_EC_heatmap_command(output_label),
-                    True,
-                    job_name
-                )
-            )
-            process.start()
-            mp_store.append(process)
-            
-        print(dt.today(), "output report phase 4 (final) launched.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []    
         conditional_write_to_bypass_log(output_ec_heatmap_label, "outputs/final_results", "EC_coverage.csv", output_folder_path)
+
         
     cleanup_cytoscape_start = time.time()
     if(keep_all == "no" and keep_outputs == "no"):
