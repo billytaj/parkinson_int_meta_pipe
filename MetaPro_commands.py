@@ -46,6 +46,17 @@ class mt_pipe_commands:
     def make_folder(self, folder_path):
         if not (os.path.exists(folder_path)):
             os.makedirs(folder_path)
+            
+    def conditional_insert_job_into_queue(self, job_location, queue, command):
+        if(not os.path.exists(job_location)):
+            print(dt.today(), job_location, "doesn't exist. adding")
+            if(not queue):
+                queue = [command]
+            else:
+                queue.append(command)
+                
+            print(queue)
+        return queue
 
     def create_and_launch(self, job_folder, inner_name, command_list):
         # create the pbs job, and launch items
@@ -1105,8 +1116,6 @@ class mt_pipe_commands:
         jobs_folder             = os.path.join(data_folder, "jobs")
         
         #self.make_folder(merged_infernal_mRNA_folder)
-        self.make_folder(merged_infernal_rRNA_folder)
-        self.make_folder(merged_barrnap_rRNA_folder)
         self.make_folder(final_folder)
         self.make_folder(final_rRNA_folder)
         self.make_folder(final_mRNA_folder)
@@ -1298,6 +1307,7 @@ class mt_pipe_commands:
         post_mgm_contig     = os.path.join(mgm_folder, "disassembled_contigs.fasta")
         mgm_report          = os.path.join(mgm_folder, "gene_report.txt")
         final_contigs       = os.path.join(mgm_folder, "contigs.fasta")
+        contig_map          = os.path.join(final_folder, "contig_map.tsv")
         
         #-------------------------------------------------------
         #spades does too good of a job sometimes.  Disassemble it into genes.
@@ -1312,16 +1322,15 @@ class mt_pipe_commands:
         remove_whitespace += post_mgm_contig + " "
         remove_whitespace += final_contigs
         
-
-        #bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + final_contigs
-        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + original_contigs
+        #BWA-ing against the final contigs gives us a proper contig-segment -> read map. 
+        bwa_index = self.tool_path_obj.BWA + " index -a bwtsw " + final_contigs
         
         
         # Build a report of what was consumed by contig transmutation (assemble/disassemble)
         bwa_paired_contigs = ">&2 echo BWA pair contigs | "
         bwa_paired_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        #bwa_pair_1_contigs += final_contigs + " "
-        bwa_paired_contigs += original_contigs + " "
+        bwa_paired_contigs += final_contigs + " "
+        #bwa_paired_contigs += original_contigs + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_1.fastq") + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_2.fastq") + " "
         bwa_paired_contigs += ">" + " " 
@@ -1329,7 +1338,8 @@ class mt_pipe_commands:
 
         bwa_singletons_contigs = ">&2 echo BWA singleton contigs | "
         bwa_singletons_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
-        bwa_singletons_contigs += original_contigs + " "
+        bwa_singletons_contigs += final_contigs + " "
+        #bwa_singletons_contigs += original_contigs + " "
         bwa_singletons_contigs += os.path.join(dep_loc, "singletons.fastq")
         bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons_on_contigs.sam")
         
@@ -1363,14 +1373,21 @@ class mt_pipe_commands:
 
         map_read_contig = ">&2 echo map read contig v2 | "
         map_read_contig += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_contig + " "
-        map_read_contig += os.path.join(final_folder, "contig_map.tsv") + " "
+        map_read_contig += contig_map + " "
         map_read_contig += os.path.join(bwa_folder, "singletons_on_contigs.sam")
         if self.read_mode == "paired":
             map_read_contig += " " + os.path.join(bwa_folder, "paired_on_contigs.sam")
-
+            
+            
+        flush_bad_contigs = ">&2 echo flush bad contigs | " 
+        flush_bad_contigs += self.tool_path_obj.Python + " "
+        flush_bad_contigs += self.tool_path_obj.flush_bad_contigs + " "
+        flush_bad_contigs += contig_map + " "
+        flush_bad_contigs += final_contigs + " "
+        flush_bad_contigs += os.path.join(final_folder, "contigs.fasta")
         
-        copy_contigs = ">&2 echo Copying contigs to final folder | "
-        copy_contigs += "cp " + final_contigs + " " + final_folder
+        #copy_contigs = ">&2 echo Copying contigs to final folder | "
+        #copy_contigs += "cp " + final_contigs + " " + final_folder
             
         move_gene_report = ">&2 echo moving gene report | "
         move_gene_report += "cp" + " "
@@ -1389,7 +1406,7 @@ class mt_pipe_commands:
                 samtools_no_contig_singletons_convert + " && " +
                 samtools_no_contig_singletons_export + " && " + 
                 map_read_contig + " && " +
-                copy_contigs + " && " +
+                flush_bad_contigs + " && " +
                 move_gene_report
             ]
         elif self.read_mode == "paired":
@@ -1405,7 +1422,7 @@ class mt_pipe_commands:
                 samtools_no_contig_singletons_convert + " && " +
                 samtools_no_contig_singletons_export + " && " + 
                 map_read_contig + " && " +
-                copy_contigs + " && " +
+                flush_bad_contigs + " && " +
                 move_gene_report
             ]
 
@@ -1417,9 +1434,11 @@ class mt_pipe_commands:
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
+        self.make_folder(jobs_folder)
         
         split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
         split_fastq += "split -l " + str(int(self.chunk_size) * 4) + " "        
@@ -1428,8 +1447,11 @@ class mt_pipe_commands:
         split_fastq += "-d" + " "
         split_fastq += os.path.join(split_folder, category + "_")
         
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "GA_split_fastq_" + category)
+        
         COMMANDS_GA_prep_fastq = [
-            split_fastq
+            split_fastq + " && " + make_marker
         ]
         
         return COMMANDS_GA_prep_fastq
@@ -1439,12 +1461,12 @@ class mt_pipe_commands:
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
         dep_folder      = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
-        
-        
+        self.make_folder(jobs_folder)
         
         split_fasta = ">&2 echo splitting fasta for " + category + " | "
         split_fasta += self.tool_path_obj.Python + " "    
@@ -1453,8 +1475,11 @@ class mt_pipe_commands:
         split_fasta += os.path.join(split_folder, category) + " "
         split_fasta += self.chunk_size
         
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, "GA_split_fasta_" + category)
+        
         COMMANDS_GA_prep_fasta = [
-            split_fasta
+            split_fasta + " && " + make_marker
         ]
         
         return COMMANDS_GA_prep_fasta
@@ -1799,7 +1824,7 @@ class mt_pipe_commands:
     def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
-        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "rRNA")
+        rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "other")
         assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
         final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
@@ -1807,6 +1832,7 @@ class mt_pipe_commands:
         centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
         wevote_folder           = os.path.join(data_folder, "3_wevote")
         final_folder            = os.path.join(subfolder, "final_results")
+        jobs_folder             = os.path.join(data_folder, "jobs")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
@@ -1816,6 +1842,8 @@ class mt_pipe_commands:
         self.make_folder(wevote_folder)
         self.make_folder(rRNA_folder)
         self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
+        
 
         get_taxa_from_gene = ">&2 echo get taxa from gene | "
         get_taxa_from_gene += self.tool_path_obj.Python + " "
@@ -1823,6 +1851,9 @@ class mt_pipe_commands:
         get_taxa_from_gene += os.path.join(final_merge_folder, "gene_map.tsv") + " "
         get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
         get_taxa_from_gene += os.path.join(ga_taxa_folder, "ga_taxon.tsv")
+        
+        make_marker_get_taxa_from_gene = "touch" + " "
+        make_marker_get_taxa_from_gene += os.path.join(jobs_folder, "get_taxa_from_gene")
 
         kaiju_on_contigs = ">&2 echo kaiju on contigs | "
         kaiju_on_contigs += self.tool_path_obj.Kaiju
@@ -1831,6 +1862,9 @@ class mt_pipe_commands:
         kaiju_on_contigs += " -i " + os.path.join(assemble_contigs_folder, "contigs.fasta")
         kaiju_on_contigs += " -z " + self.Threads_str
         kaiju_on_contigs += " -o " + os.path.join(kaiju_folder, "contigs.tsv")
+        
+        make_marker_kaiju_on_contigs = "touch" + " "
+        make_marker_kaiju_on_contigs += os.path.join(jobs_folder, "kaiju_on_contigs")
 
         kaiju_on_singletons = ">&2 echo kaiju on singletons | "
         kaiju_on_singletons += self.tool_path_obj.Kaiju
@@ -1840,6 +1874,9 @@ class mt_pipe_commands:
         kaiju_on_singletons += " -z " + self.Threads_str
         kaiju_on_singletons += " -o " + os.path.join(kaiju_folder, "singletons.tsv")
 
+        make_marker_kaiju_on_singletons = "touch" + " "
+        make_marker_kaiju_on_singletons += os.path.join(jobs_folder, "kaiju_on_singletons")
+
         kaiju_on_paired = ">&2 echo kaiju on pairs | "
         kaiju_on_paired += self.tool_path_obj.Kaiju
         kaiju_on_paired += " -t " + self.tool_path_obj.nodes
@@ -1848,6 +1885,9 @@ class mt_pipe_commands:
         kaiju_on_paired += " -j " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
         kaiju_on_paired += " -z " + self.Threads_str
         kaiju_on_paired += " -o " + os.path.join(kaiju_folder, "pairs.tsv")
+        
+        make_marker_kaiju_on_paired = "touch" +  " "
+        make_marker_kaiju_on_paired += os.path.join(jobs_folder, "kaiju_on_paired")
 
         cat_kaiju = ">&2 echo merging all kaiju results | "
         cat_kaiju += "cat "
@@ -1856,6 +1896,9 @@ class mt_pipe_commands:
         if self.read_mode == "paired":
             cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
         cat_kaiju += " > " + os.path.join(kaiju_folder, "merged_kaiju.tsv")
+        
+        make_marker_cat_kaiju = "touch" + " "
+        make_marker_cat_kaiju += os.path.join(jobs_folder, "cat_kaiju")
 
         centrifuge_on_reads = ">&2 echo centrifuge on reads | "
         centrifuge_on_reads += self.tool_path_obj.Centrifuge
@@ -1870,6 +1913,9 @@ class mt_pipe_commands:
         centrifuge_on_reads += " -S " + os.path.join(centrifuge_folder, "reads.tsv")
         centrifuge_on_reads += " --report-file " + os.path.join(centrifuge_folder, "reads.txt")
 
+        make_marker_centrifuge_on_reads = "touch" + " "
+        make_marker_centrifuge_on_reads += os.path.join(jobs_folder, "centrifuge_on_reads")
+
         centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
         centrifuge_on_contigs += self.tool_path_obj.Centrifuge
         centrifuge_on_contigs += " -f -x " + self.tool_path_obj.Centrifuge_db
@@ -1879,12 +1925,18 @@ class mt_pipe_commands:
         centrifuge_on_contigs += " -p 6"
         centrifuge_on_contigs += " -S " + os.path.join(centrifuge_folder, "contigs.tsv")
         centrifuge_on_contigs += " --report-file " + os.path.join(centrifuge_folder, "contigs.txt")
+        
+        make_marker_centrifuge_on_contigs = "touch" + " "
+        make_marker_centrifuge_on_contigs += os.path.join(jobs_folder, "centrifuge_on_contigs")
 
         cat_centrifuge = ">&2 echo combining all centrifuge results | "
         cat_centrifuge += "cat "
         cat_centrifuge += os.path.join(centrifuge_folder, "reads.tsv") + " "
         cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
         cat_centrifuge += " > " + os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
+
+        make_marker_cat_centrifuge = "touch" + " "
+        make_marker_cat_centrifuge += os.path.join(jobs_folder, "cat_centrifuge")
 
         wevote_combine = ">&2 echo combining classification outputs for wevote | "
         wevote_combine += self.tool_path_obj.Python + " "
@@ -1896,6 +1948,9 @@ class mt_pipe_commands:
         wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
         wevote_combine += os.path.join(kaiju_folder, "merged_kaiju.tsv") + " "
         wevote_combine += os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
+        
+        make_marker_wevote_combine = "touch" + " "
+        make_marker_wevote_combine += os.path.join(jobs_folder, "wevote_combine")
 
         wevote_call = ">&2 echo Running WEVOTE | "
         wevote_call += self.tool_path_obj.WEVOTE
@@ -1906,30 +1961,34 @@ class mt_pipe_commands:
         wevote_call += " -k " + "2"
         wevote_call += " -a " + "0"
         wevote_call += " -s " + "0"
-
-        #awk_cleanup = ">&2 echo AWK cleanup of WEVOTE results | "
-        #awk_cleanup += "awk -F \'\\t\' \'{print \"C\\t\"$1\"\\t\"$9}\' "
-        #awk_cleanup += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt")
-        #awk_cleanup += " > " + os.path.join(final_folder, "taxonomic_classifications.tsv")
+        
+        make_marker_wevote_call = "touch" + " "
+        make_marker_wevote_call += os.path.join(jobs_folder, "wevote_call")
+        
         wevote_collect = ">&2 echo gathering WEVOTE results | "
         wevote_collect += self.tool_path_obj.Python + " "
         wevote_collect += self.tool_path_obj.Wevote_parser + " "
         wevote_collect += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt") + " "
         wevote_collect += os.path.join(final_folder, "taxonomic_classifications.tsv")
         
+        make_marker_wevote_collect = "touch" + " "
+        make_marker_wevote_collect += os.path.join(jobs_folder, "wevote_collect")
 
         centrifuge_on_rRNA = ">&2 echo centrifuge on rRNA | "
         centrifuge_on_rRNA += self.tool_path_obj.Centrifuge
         centrifuge_on_rRNA += " -x " + self.tool_path_obj.Centrifuge_db
-        centrifuge_on_rRNA += " -U " + os.path.join(rRNA_folder, "singletons.fastq")
+        centrifuge_on_rRNA += " -U " + os.path.join(rRNA_folder, "singletons_other.fastq")
         if self.read_mode == "paired":
-            centrifuge_on_rRNA += " -1 " + os.path.join(rRNA_folder, "pair_1.fastq")
-            centrifuge_on_rRNA += " -2 " + os.path.join(rRNA_folder, "pair_2.fastq")
+            centrifuge_on_rRNA += " -1 " + os.path.join(rRNA_folder, "pair_1_other.fastq")
+            centrifuge_on_rRNA += " -2 " + os.path.join(rRNA_folder, "pair_2_other.fastq")
         centrifuge_on_rRNA += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
         centrifuge_on_rRNA += " --phred" + self.Qual_str
         centrifuge_on_rRNA += " -p 6"
-        centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "rRNA.tsv")
-        centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "rRNA.txt")
+        centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "other.tsv")
+        centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "other.txt")
+        
+        make_marker_centrifuge_on_rRNA = "touch" + " "
+        make_marker_centrifuge_on_rRNA += os.path.join(jobs_folder, "centrifuge_on_rRNA")
 
         constrain = ">&2 echo Constraining the Taxonomic Annotation | " 
         constrain += self.tool_path_obj.Python + " " + self.tool_path_obj.Constrain_classification + " "
@@ -1939,38 +1998,84 @@ class mt_pipe_commands:
         constrain += self.tool_path_obj.names + " "
         constrain += os.path.join(final_folder, "constrain_classification.tsv")
         
+        make_marker_constrain = "touch" + " "
+        make_marker_constrain += os.path.join(jobs_folder, "constrain")
         
         if self.read_mode == "single":
-            COMMANDS_Classify = [
-                get_taxa_from_gene,
-                kaiju_on_contigs,
-                kaiju_on_singletons,
-                cat_kaiju,
-                centrifuge_on_reads,
-                centrifuge_on_contigs,
-                cat_centrifuge,
-                wevote_combine,
-                wevote_call,
-                wevote_collect,
-                constrain
-            ]
-        elif self.read_mode == "paired":
-            COMMANDS_Classify = [
-                get_taxa_from_gene,
-                kaiju_on_contigs,
-                kaiju_on_singletons,
-                kaiju_on_paired,
-                cat_kaiju,
-                centrifuge_on_reads,
-                centrifuge_on_contigs,
-                cat_centrifuge,
-                wevote_combine,
-                wevote_call,
-                wevote_collect,
-                centrifuge_on_rRNA,
-                constrain
-            ]
+            COMMANDS_Classify = []
+            command = get_taxa_from_gene + " && " + make_marker_get_taxa_from_gene
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "get_taxa_from_gene"), COMMANDS_Classify, command)
+            
+            command = kaiju_on_contigs + " && " + make_marker_kaiju_on_contigs
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_contigs"), COMMANDS_Classify, command)
+        
+            command = kaiju_on_singletons + " && " + make_marker_kaiju_on_singletons
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_singletons"), COMMANDS_Classify, command)
+            
+            command = cat_kaiju + " && " + make_marker_cat_kaiju
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_kaiju"), COMMANDS_Classify, command)
+                
+            command = centrifuge_on_reads + " && " + make_marker_centrifuge_on_reads
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_reads"), COMMANDS_Classify, command)
+                
+            command = centrifuge_on_contigs + " && " + make_marker_centrifuge_on_contigs
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_contigs"), COMMANDS_Classify, command)
+            
+            command = cat_centrifuge + " && " + make_marker_cat_centrifuge
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_centrifuge"), COMMANDS_Classify, command)
+            
+            command = wevote_combine + " && " + make_marker_wevote_combine
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_combine"), COMMANDS_Classify, command)
+            
+            command = wevote_call + " && " + make_marker_wevote_call
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_call"), COMMANDS_Classify, command)
+            
+            command = wevote_collect + "&& " + make_marker_wevote_collect
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_collect"), COMMANDS_Classify, command)
 
+            command = constrain + " && " + make_marker_constrain
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "constrain"), COMMANDS_Classify, command)
+                
+                
+        elif self.read_mode == "paired":
+        
+            COMMANDS_Classify = []
+            command = get_taxa_from_gene + " && " + make_marker_get_taxa_from_gene
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "get_taxa_from_gene"), COMMANDS_Classify, command)
+            
+            command = kaiju_on_contigs + " && " + make_marker_kaiju_on_contigs
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_contigs"), COMMANDS_Classify, command)
+        
+            command = kaiju_on_singletons + " && " + make_marker_kaiju_on_singletons
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_singletons"), COMMANDS_Classify, command)
+            
+            command = kaiju_on_paired + " && " + make_marker_kaiju_on_paired
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_paired"), COMMANDS_Classify, command)
+            
+            command = cat_kaiju + " && " + make_marker_cat_kaiju
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_kaiju"), COMMANDS_Classify, command)
+                
+            command = centrifuge_on_reads + " && " + make_marker_centrifuge_on_reads
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_reads"), COMMANDS_Classify, command)
+                
+            command = centrifuge_on_contigs + " && " + make_marker_centrifuge_on_contigs
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_contigs"), COMMANDS_Classify, command)
+            
+            command = cat_centrifuge + " && " + make_marker_cat_centrifuge
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_centrifuge"), COMMANDS_Classify, command)
+            
+            command = wevote_combine + " && " + make_marker_wevote_combine
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_combine"), COMMANDS_Classify, command)
+            
+            command = wevote_call + " && " + make_marker_wevote_call
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_call"), COMMANDS_Classify, command)
+            
+            command = wevote_collect + "&& " + make_marker_wevote_collect
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_collect"), COMMANDS_Classify, command)
+
+            command = constrain + " && " + make_marker_constrain
+            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "constrain"), COMMANDS_Classify, command)
+        
         return COMMANDS_Classify
         
       
@@ -2017,7 +2122,7 @@ class mt_pipe_commands:
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
-        self.jobs_folder    = os.path.join(data_folder, "jobs")
+        jobs_folder    = os.path.join(data_folder, "jobs")
 
         self.make_folder(PRIAM_folder)
         self.make_folder(jobs_folder)
@@ -2111,153 +2216,26 @@ class mt_pipe_commands:
         return COMMANDS_EC_Postprocess
 
         
-    def create_output_taxa_table_v2_command(self, current_stage_name, assemble_contigs_stage, taxonomic_annotation_stage):
-        subfolder           = os.path.join(self.Output_Path, current_stage_name)
-        data_folder         = os.path.join(subfolder, "data")
-        taxa_prep_folder    = os.path.join(data_folder, "3_taxa_table")
-        contig_folder       = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
-        taxa_folder         = os.path.join(self.Output_Path, taxonomic_annotation_stage, "final_results")
-        final_folder        = os.path.join(subfolder, "final_results")
-        
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(taxa_prep_folder)
-        self.make_folder(final_folder)
-        
-        copy_contig_data = ">&2 echo Copying contig data | "
-        copy_contig_data += "cp" + " "
-        copy_contig_data += os.path.join(contig_folder, "contigs.fasta") + " "
-        copy_contig_data += taxa_prep_folder
-        
-        copy_constrain_class = ">&2 echo Copying constrain classification | "
-        copy_constrain_class += "cp" + " "
-        copy_constrain_class += os.path.join(taxa_folder, "constrain_classification.tsv") + " "
-        copy_constrain_class += taxa_prep_folder
-        
-        bwa_index_contigs = ">&2 echo BWA index contigs | "
-        bwa_index_contigs += self.tool_path_obj.BWA + " "
-        bwa_index_contigs += "index" + " "
-        bwa_index_contigs += os.path.join(taxa_prep_folder, "contigs.fasta")
-        
-        bwa_raw_on_contigs = ">&2 echo BWA raw on contigs | "
-        bwa_raw_on_contigs += self.tool_path_obj.BWA + " "
-        bwa_raw_on_contigs += "mem -t " + self.Threads_str + " "
-        bwa_raw_on_contigs += os.path.join(taxa_prep_folder, "contigs.fasta") + " "
-        if(self.read_mode == "single"):
-            bwa_raw_on_contigs += self.sequence_single + " "
-        else:
-            bwa_raw_on_contigs += self.sequence_path_1 + " "
-        bwa_raw_on_contigs += "> " + os.path.join(taxa_prep_folder, "raw_on_contigs.sam") + " "
-
-        parse_sam = ">&2 echo parsing raw-on-contigs SAM | "
-        parse_sam += self.tool_path_obj.Python + " "
-        parse_sam += self.tool_path_obj.parse_sam + " "
-        parse_sam += os.path.join(taxa_prep_folder, "raw_on_contigs.sam") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
-        parse_sam += os.path.join(taxa_prep_folder, "contig_segment_read_map.tsv") 
-        
-        are_you_in_a_contig = ">&2 echo Sorting if a read is in a contig | "
-        are_you_in_a_contig += self.tool_path_obj.Python + " "
-        are_you_in_a_contig += self.tool_path_obj.are_you_in_a_contig + " "
-        are_you_in_a_contig += os.path.join(taxa_prep_folder, "contig_read_list.tsv") + " "
-        if(self.read_mode == "single"):
-            are_you_in_a_contig += self.sequence_single + " "
-        else:   
-            are_you_in_a_contig += self.sequence_path_1 + " "
-        are_you_in_a_contig += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv") 
-
-        clean_constrain_file = ">&2 echo Cleaning Constrain_classification | "
-        clean_constrain_file += self.tool_path_obj.Python + " "
-        clean_constrain_file += self.tool_path_obj.output_filter_taxa + " "
-        clean_constrain_file += os.path.join(taxa_prep_folder, "constrain_classification.tsv") + " "
-        clean_constrain_file += os.path.join(taxa_prep_folder, "contig_segment_read_map.tsv") + " "
-        clean_constrain_file += os.path.join(taxa_prep_folder, "cleaned_constrain_classification.tsv")
-        
-
-        make_taxa_table = ">&2 echo Making taxa table | "
-        make_taxa_table += self.tool_path_obj.Python + " "
-        make_taxa_table += self.tool_path_obj.taxa_table + " "
-        make_taxa_table += os.path.join(taxa_prep_folder, "cleaned_constrain_classification.tsv") + " "
-        make_taxa_table += os.path.join(taxa_prep_folder, "contig_read_count.tsv") + " "
-        make_taxa_table += os.path.join(taxa_prep_folder, "read_contig_lookup.tsv") + " "
-        make_taxa_table += os.path.join(final_folder, "taxa_table.tsv")
-        
-        
-
-        command_list = [
-            copy_contig_data, 
-            copy_constrain_class,
-            bwa_index_contigs,
-            bwa_raw_on_contigs,
-            parse_sam,
-            are_you_in_a_contig,
-            clean_constrain_file,
-            make_taxa_table
-        ]
-        
-        return command_list
-        
 
         
     def create_output_copy_gene_map_command(self, current_stage_name, ga_final_merge_stage):
-        #must use the contig map from output_taxa_table.
+        #just copies the gene map over to the output
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
         ga_final_merge_folder   = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
-        convert_gene_map_folder = os.path.join(data_folder, "4_convert_gene_map")
-        output_taxa_folder      = os.path.join(data_folder, "3_taxa_table")
         final_folder            = os.path.join(subfolder, "final_results")
+
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(convert_gene_map_folder)
         self.make_folder(final_folder)
         gene_map_location = os.path.join(ga_final_merge_folder, "gene_map.tsv")
         
         copy_gene_map = ">&2 echo copying gene map | "
         copy_gene_map += "cp " + os.path.join(ga_final_merge_folder, "gene_map.tsv") + " "
-        copy_gene_map += convert_gene_map_folder
+        copy_gene_map += os.path.join(final_folder, "gene_map.tsv")
         
-        copy_contig_map = ">&2 echo copying contig map | "
-        copy_contig_map += "cp " + os.path.join(output_taxa_folder, "contig_segment_read_map.tsv") + " "
-        copy_contig_map += convert_gene_map_folder
         
-        convert_gene_map = ">&2 echo converting contig segments to reads | "
-        convert_gene_map += self.tool_path_obj.Python + " "
-        convert_gene_map += self.tool_path_obj.convert_contig_segments + " "
-        convert_gene_map += os.path.join(convert_gene_map_folder, "gene_map.tsv") + " "
-        convert_gene_map += os.path.join(convert_gene_map_folder, "contig_segment_read_map.tsv") + " "
-        convert_gene_map += os.path.join(final_folder, "final_gene_map.tsv")
-        
-        return[copy_gene_map, copy_contig_map, convert_gene_map]
-
-    def create_output_clean_ec_report_command(self, current_stage_name, ec_stage):
-        subfolder               = os.path.join(self.Output_Path, current_stage_name)
-        data_folder             = os.path.join(subfolder, "data")
-        ec_folder               = os.path.join(self.Output_Path, ec_stage, "final_results")
-        final_gene_map_folder   = os.path.join(data_folder, "4_convert_gene_map")
-        clean_ec_folder         = os.path.join(data_folder, "5_cleaned_ec")
-        final_folder            = os.path.join(subfolder, "final_results")
-        
-        self.make_folder(subfolder)
-        self.make_folder(data_folder)
-        self.make_folder(clean_ec_folder)
-        
-        clean_ec_all = ">&2 echo Cleaning HQ ECs | "
-        clean_ec_all += self.tool_path_obj.Python + " "
-        clean_ec_all += self.tool_path_obj.output_filter_ECs + " "
-        clean_ec_all += os.path.join(ec_folder, "proteins.ECs_All") + " "
-        clean_ec_all += os.path.join(final_folder, "final_gene_map.tsv") + " "
-        clean_ec_all += os.path.join(clean_ec_folder, "cleaned_proteins.ECs_All")
-
-        clean_lq_ec = ">&2 echo Cleaning LQ ECs | "
-        clean_lq_ec += self.tool_path_obj.Python + " "
-        clean_lq_ec += self.tool_path_obj.output_filter_ECs + " "
-        clean_lq_ec += os.path.join(ec_folder, "lq_proteins.ECs_All") + " "
-        clean_lq_ec += os.path.join(final_folder, "final_gene_map.tsv") + " "
-        clean_lq_ec += os.path.join(clean_ec_folder, "cleaned_lq_proteins.ECs_All")
-        
-        return [clean_ec_all, clean_lq_ec]
+        return[copy_gene_map]
 
         
     def create_output_network_generation_command(self, current_stage_name, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
@@ -2272,12 +2250,13 @@ class mt_pipe_commands:
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_folder, "final_gene_map.tsv")
+        #gene_map_location = os.path.join(final_folder, "final_gene_map.tsv")
+        gene_map_location = os.path.join(ga_final_merge_folder, "gene_map.tsv")
         
         network_generation = ">&2 echo Generating RPKM and Cytoscape network | "
         network_generation += self.tool_path_obj.Python + " "
         network_generation += self.tool_path_obj.RPKM + " "
-        network_generation += str(self.tool_path_obj.rpkm_cutoff) + " "
+        network_generation += str(self.tool_path_obj.RPKM_cutoff) + " "
         network_generation += "None" + " "
         network_generation += self.tool_path_obj.nodes + " "
         network_generation += self.tool_path_obj.names + " "
@@ -2287,6 +2266,8 @@ class mt_pipe_commands:
         network_generation += self.tool_path_obj.show_unclassified + " "
         network_generation += os.path.join(final_folder, "RPKM_table.tsv") + " "
         network_generation += os.path.join(final_folder, "Cytoscape_network.tsv") + " "
+        
+        
         
         flatten_rpkm = ">&2 echo Reformat RPKM for EC heatmap | "
         flatten_rpkm += self.tool_path_obj.Python + " "
@@ -2401,7 +2382,7 @@ class mt_pipe_commands:
         repop_pair_2_hosts += self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_match.fastq") + " "
         repop_pair_2_hosts += os.path.join(unique_hosts_folder, "pair_2_hosts.fastq") + " "
-        repop_pair_2_hosts += os.path.join(quality_folder, "pair_2_unique.fastq.clstr") + " "
+        repop_pair_2_hosts += os.path.join(quality_folder, "pair_1_unique.fastq.clstr") + " " #we do this based on pairs now
         repop_pair_2_hosts += os.path.join(full_hosts_folder, "pair_2_full_hosts.fastq")
         
         return [get_unique_host_reads_pair_2, repop_pair_2_hosts]
@@ -2522,7 +2503,7 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(full_hosts_folder)
         self.make_folder(final_folder)
-        gene_map_location = os.path.join(final_folder, "final_gene_map.tsv")
+        gene_map_location = os.path.join(final_folder, "gene_map.tsv")
         
         read_counts = ">&2 echo generating read count table | "
         read_counts += self.tool_path_obj.Python + " "
