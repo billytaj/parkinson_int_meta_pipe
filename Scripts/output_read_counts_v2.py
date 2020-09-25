@@ -76,7 +76,7 @@ if __name__ == "__main__":
     
     qc_p1_unique    = os.path.join(quality_location, "pair_1.fastq")
     qc_p2_unique    = os.path.join(quality_location, "pair_2.fastq")
-    qc_s_unique     = os.path.join*quality_location, "singletons.fastq")
+    qc_s_unique     = os.path.join(quality_location, "singletons.fastq")
     
     host_p1         = os.path.join(host_location, "pair_1_full_hosts.fastq")
     host_p2         = os.path.join(host_location, "pair_2_full_hosts.fastq")
