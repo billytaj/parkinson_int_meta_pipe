@@ -3,7 +3,7 @@
 import sys
 import os
 import pandas as pd
-
+from datetime import datetime as dt
 def fastq_count(item):
     lines = 0
     if(os.path.exists(item)):
@@ -53,7 +53,9 @@ def ec_count(map):
     return len(ecs)
 
 def check_paired_data(p1, p2, message):
-    if(p1 == p2):
+    p1_count = fastq_count(p1)
+    p2_count = fastq_count(p2)
+    if(p1_count == p2_count):
         return True
     else:
         print(dt.today(), "bad data in:", message)
