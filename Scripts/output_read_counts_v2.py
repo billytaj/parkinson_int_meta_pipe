@@ -1,6 +1,7 @@
 #this code just makes the final stats reports
 #not much logic here
 import sys
+import os
 import pandas as pd
 
 def fastq_count(item):
