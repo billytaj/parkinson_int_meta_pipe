@@ -2510,23 +2510,14 @@ class mt_pipe_commands:
         read_counts += self.tool_path_obj.read_count + " "
         if self.read_mode == "single":
             read_counts += self.sequence_single + " "
-            read_counts += os.path.join(quality_folder, "singletons_hq.fastq") + " "
-            read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + " "
-            read_counts += os.path.join(repopulation_folder, "singletons.fastq") + " "
+            
         elif self.read_mode == "paired":
             read_counts += self.sequence_path_1 + " "
-            read_counts += os.path.join(quality_folder, "singletons_with_duplicates.fastq") + ","
-            read_counts += os.path.join(quality_folder, "pair_1_match.fastq") + " "
-            read_counts += os.path.join(repopulation_folder, "singletons_rRNA.fastq") + ","
-            read_counts += os.path.join(repopulation_folder, "pair_1_rRNA.fastq") + " "
-            read_counts += os.path.join(repopulation_folder, "singletons.fastq") + ","
-            read_counts += os.path.join(repopulation_folder, "pair_1.fastq") + " "
-        read_counts += gene_map_location + " "
-        read_counts += os.path.join(ea_folder, "proteins.ECs_All") + " "
-        if(self.no_host_flag):
-            read_counts += "no_host" + " "
-        else:
-            read_counts += os.path.join(full_hosts_folder, "combined_hosts.fastq") + " "
+        read_counts += quality_folder + " "
+        read_counts += full_hosts_folder + " "
+        read_counts += repopulation_folder + " "
+        read_counts += final_merge_folder + " "
+        read_counts += ea_folder + " "
         read_counts += os.path.join(final_folder, "read_count.tsv")    
         
         return [read_counts]
