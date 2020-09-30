@@ -7,6 +7,7 @@ import os.path
 import MetaPro_paths as mpp
 import subprocess as sp
 import time
+import sys
 from datetime import datetime as dt
 
 class mt_pipe_commands:
@@ -83,6 +84,8 @@ class mt_pipe_commands:
             return_code = e.returncode
             if return_code != 1:
                 raise
+        else:
+            sys.exit("something bad happened")
 
     
     def launch_only(self, command_list, command_list_length):
@@ -97,6 +100,8 @@ class mt_pipe_commands:
                 return_code = e.returncode
                 if return_code != 1:
                     raise
+            else:
+                sys.exit("something bad happened")
         else:
         
             for command_item in command_list:
@@ -106,6 +111,8 @@ class mt_pipe_commands:
                     return_code = e.returncode
                     if return_code != 1:
                         raise
+                else:
+                    sys.exit("something bad happened")
                 
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
@@ -716,16 +723,18 @@ class mt_pipe_commands:
 
         
         
-    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, chunks):
+    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, chunks, marker_file):
         #split the data into tiny shards.  called once
         dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
         data_folder             = os.path.join(subfolder, "data")
         split_folder            = os.path.join(data_folder, category + "_fastq")
+        jobs_folder             = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
+        self.make_folder(jobs_folder)
         
         split_fastq = ">&2 echo splitting fastq for " + category + " | " 
         split_fastq += self.tool_path_obj.Python + " "
@@ -734,22 +743,26 @@ class mt_pipe_commands:
         split_fastq += os.path.join(split_folder, category) + " "
         split_fastq += self.rRNA_chunks
         
-        return [split_fastq]
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [split_fastq + " && " + make_marker]
 
-    def create_rRNA_filter_convert_fastq_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_convert_fastq_command(self, stage_name, category, fastq_name, marker_file):
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         jobs_folder         = os.path.join(data_folder, "jobs")
         fasta_folder        = os.path.join(data_folder, category + "_fasta")
         fastq_folder        = os.path.join(data_folder, category + "_fastq")
         file_name           = fastq_name.split(".")[0]
+        jobs_folder         = os.path.join(data_folder, "jobs")
         
         fastq_seqs          = os.path.join(fastq_folder, fastq_name)
         
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
         self.make_folder(fasta_folder)
-
+        self.make_folder(jobs_folder)
         
         convert_fastq_to_fasta = ">&2 echo " + " converting " + file_name + " file to fasta | "
         convert_fastq_to_fasta += self.tool_path_obj.vsearch
@@ -757,9 +770,12 @@ class mt_pipe_commands:
         convert_fastq_to_fasta += " --fastq_ascii " + self.Qual_str
         convert_fastq_to_fasta += " --fastaout " + fasta_seqs
         
-        return [convert_fastq_to_fasta]
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [convert_fastq_to_fasta + " && " + make_marker]
     
-    def create_rRNA_filter_barrnap_arc_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_barrnap_arc_command(self, stage_name, category, fastq_name, marker_file):
         # called by each split file
         # category -> singletons, pair 1, pair 2
         # file name -> the specific split section of the category (the fastq segments)
@@ -775,12 +791,13 @@ class mt_pipe_commands:
         Barrnap_bac_out     = os.path.join(Barrnap_out_folder, file_name + "_bac.barrnap_out")
         Barrnap_euk_out     = os.path.join(Barrnap_out_folder, file_name + "_euk.barrnap_out")
         Barrnap_mit_out     = os.path.join(Barrnap_out_folder, file_name + "_mit.barrnap_out")
+        jobs_folder         = os.path.join(data_folder, "jobs")
         
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
 
         self.make_folder(fasta_folder)
         self.make_folder(Barrnap_out_folder)
-
+        self.make_folder(jobs_folder)
      
         Barrnap_archaea = ">&2 echo running Barrnap on " + file_name + " file: arc | "
         Barrnap_archaea += self.tool_path_obj.Barrnap
@@ -788,12 +805,14 @@ class mt_pipe_commands:
         Barrnap_archaea += " --threads " + self.Threads_str
         Barrnap_archaea += " " + fasta_seqs
         Barrnap_archaea += " >> " + Barrnap_arc_out
-
+    
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
   
-        return [Barrnap_archaea]
+        return [Barrnap_archaea + " && " + make_marker]
          
         
-    def create_rRNA_filter_barrnap_bac_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_barrnap_bac_command(self, stage_name, category, fastq_name, marker_file):
 
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -801,11 +820,12 @@ class mt_pipe_commands:
         Barrnap_out_folder  = os.path.join(data_folder, category + "_barrnap")
         file_name           = fastq_name.split(".")[0]
         Barrnap_bac_out     = os.path.join(Barrnap_out_folder, file_name + "_bac.barrnap_out")
-        
+        jobs_folder         = os.path.join(data_folder, "jobs")
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
-
+        
         self.make_folder(fasta_folder)
         self.make_folder(Barrnap_out_folder)
+        self.make_folder(jobs_folder)
 
         Barrnap_bacteria = ">&2 echo Running Barrnap on " + file_name + " file:  bac | "
         Barrnap_bacteria += self.tool_path_obj.Barrnap
@@ -814,9 +834,12 @@ class mt_pipe_commands:
         Barrnap_bacteria += " " + fasta_seqs
         Barrnap_bacteria += " >> " + Barrnap_bac_out
 
-        return [Barrnap_bacteria]
+        make_marker = "touch"  + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+
+        return [Barrnap_bacteria + " && " + make_marker]
         
-    def create_rRNA_filter_barrnap_euk_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_barrnap_euk_command(self, stage_name, category, fastq_name, marker_file):
 
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -825,9 +848,11 @@ class mt_pipe_commands:
         file_name           = fastq_name.split(".")[0]
         Barrnap_euk_out     = os.path.join(Barrnap_out_folder, file_name + "_euk.barrnap_out")
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
-
+        jobs_folder         = os.path.join(data_folder, "jobs")
+        
         self.make_folder(fasta_folder)
         self.make_folder(Barrnap_out_folder)
+        self.make_folder(jobs_folder)
 
         Barrnap_eukaryote = ">&2 echo Running Barrnap on " + file_name + " file: euk | "
         Barrnap_eukaryote += self.tool_path_obj.Barrnap
@@ -836,9 +861,12 @@ class mt_pipe_commands:
         Barrnap_eukaryote += " " + fasta_seqs
         Barrnap_eukaryote += " >> " + Barrnap_euk_out
 
-        return [Barrnap_eukaryote]
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+    
+        return [Barrnap_eukaryote + " && " + make_marker]
         
-    def create_rRNA_filter_barrnap_mit_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_barrnap_mit_command(self, stage_name, category, fastq_name, marker_file):
         #designed to run on a single split sample.
         #expected to be merged later with all the other runs of the same fastq name
         subfolder           = os.path.join(self.Output_Path, stage_name)
@@ -848,9 +876,11 @@ class mt_pipe_commands:
         file_name           = fastq_name.split(".")[0]
         Barrnap_mit_out     = os.path.join(Barrnap_out_folder, file_name + "_mit.barrnap_out")
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
+        jobs_folder         = os.path.join(data_folder, "jobs")
 
         self.make_folder(fasta_folder)
         self.make_folder(Barrnap_out_folder)
+        self.make_folder(jobs_folder)
 
         Barrnap_mitochondria = ">&2 echo Running Barrnap on " + file_name + " file: mito | " 
         Barrnap_mitochondria += self.tool_path_obj.Barrnap
@@ -859,14 +889,17 @@ class mt_pipe_commands:
         Barrnap_mitochondria += " " + fasta_seqs
         Barrnap_mitochondria += " >> " + Barrnap_mit_out
 
-        return [Barrnap_mitochondria]
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+
+        return [Barrnap_mitochondria + " && " + make_marker]
         
         
         
         
         
         
-    def create_rRNA_filter_barrnap_cat_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_barrnap_cat_command(self, stage_name, category, fastq_name, marker_file):
         #this is expected to run on each sample split
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -911,10 +944,13 @@ class mt_pipe_commands:
         rm_mit += "rm" + " "
         rm_mit += Barrnap_mit_out
         
-        return [cat_command, rm_arc, rm_bac, rm_euk, rm_mit]
+        make_marker = "touch" + " " 
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [cat_command + " && " + make_marker, rm_arc, rm_bac, rm_euk, rm_mit]
         
         
-    def create_rRNA_filter_barrnap_pp_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_barrnap_pp_command(self, stage_name, category, fastq_name, marker_file):
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         jobs_folder         = os.path.join(data_folder, "jobs")
@@ -950,12 +986,12 @@ class mt_pipe_commands:
         
         #make_marker = ">&2 echo " + file_name + "_barrnap Marking job completed | " 
         make_marker = "touch" + " " 
-        make_marker += os.path.join(jobs_folder, file_name + "_barrnap")
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         return [Barrnap_pp + " && " + make_marker]
         
         
-    def create_rRNA_filter_infernal_prep_command(self, stage_name, category, fastq_name):
+    def create_rRNA_filter_infernal_prep_command(self, stage_name, category, fastq_name, root_name, marker_file):
         #expecting full file name in fastq_name
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -967,7 +1003,7 @@ class mt_pipe_commands:
         file_name           = fastq_name.split(".")[0]
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
-        
+        jobs_folder         = os.path.join(data_folder, "jobs")
         fastq_seqs          = os.path.join(fastq_folder, fastq_name)
         
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
@@ -975,6 +1011,7 @@ class mt_pipe_commands:
         self.make_folder(infernal_out_folder)
         self.make_folder(mRNA_folder)
         self.make_folder(Barrnap_out_folder)
+        self.make_folder(jobs_folder)
         
         convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
         convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
@@ -982,9 +1019,12 @@ class mt_pipe_commands:
         convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
         convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, file_name + ".fasta")
         
-        return [convert_fastq_to_fasta_barrnap]
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [convert_fastq_to_fasta_barrnap + " && " + make_marker]
 
-    def create_rRNA_filter_infernal_command(self, stage_name, category, file_name):
+    def create_rRNA_filter_infernal_command(self, stage_name, category, file_name, marker_file):
     
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -1015,13 +1055,13 @@ class mt_pipe_commands:
 
         #make_marker = ">&2 echo " + file_name + "_infernal Marking job completed | " 
         make_marker = "touch" + " " 
-        make_marker += os.path.join(jobs_folder, file_name + "_infernal")
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         COMMANDS_infernal = [infernal_command + " && " + make_marker]
         return COMMANDS_infernal
 
     
-    def create_rRNA_filter_splitter_command(self, stage_name, category, file_name):
+    def create_rRNA_filter_splitter_command(self, stage_name, category, file_name, marker_file):
     #file name expected to have no extensions.  eg: pair_1_0
     #expected to be called for each category (pair1, singletons).  not pair 2.  paired data is handled in combination
         subfolder           = os.path.join(self.Output_Path, stage_name)
@@ -1033,10 +1073,12 @@ class mt_pipe_commands:
         mRNA_infernal_folder= os.path.join(data_folder, category + "_infernal_mRNA")
         rRNA_folder         = os.path.join(data_folder, category + "_infernal_rRNA")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
-        
+        jobs_folder         = os.path.join(data_folder, "jobs")
         
         file_name_code = file_name.split("_")[-1]
         self.make_folder(mRNA_infernal_folder)
+        self.make_folder(jobs_folder)
+        
         if(category == "pair_1"):
             
             infernal_pair_1_out_folder = os.path.join(data_folder, "pair_1_infernal")
@@ -1098,11 +1140,15 @@ class mt_pipe_commands:
             
         else:
             rRNA_filtration = ">&2 echo rRNA filtration ignored for pair 2 data: " + file_name
-        return [rRNA_filtration]
+            
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+            
+        return [rRNA_filtration + " && " + make_marker]
     
     
     
-    def create_rRNA_filter_final_cat_command(self, stage_name, category):
+    def create_rRNA_filter_final_cat_command(self, stage_name, category, marker_file):
         # 
         # Cat then final filter.  
         # operates in sections
@@ -1135,7 +1181,7 @@ class mt_pipe_commands:
         cat_infernal_rRNA += "; done"
 
         make_marker = "touch" +  " "
-        make_marker += os.path.join(jobs_folder, category + "_rRNA_filter_packup")
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         
         COMMANDS_rRNA_post = [cat_infernal_mRNA + " && " + cat_infernal_rRNA + " && " + make_marker]
@@ -1429,7 +1475,7 @@ class mt_pipe_commands:
         return COMMANDS_Assemble
 
    
-    def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category):
+    def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
@@ -1448,7 +1494,7 @@ class mt_pipe_commands:
         split_fastq += os.path.join(split_folder, category + "_")
         
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, "GA_split_fastq_" + category)
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         COMMANDS_GA_prep_fastq = [
             split_fastq + " && " + make_marker
@@ -1456,7 +1502,7 @@ class mt_pipe_commands:
         
         return COMMANDS_GA_prep_fastq
 
-    def create_split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category):
+    def create_split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
@@ -1476,7 +1522,7 @@ class mt_pipe_commands:
         split_fasta += self.chunk_size
         
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, "GA_split_fasta_" + category)
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         COMMANDS_GA_prep_fasta = [
             split_fasta + " && " + make_marker
@@ -1485,7 +1531,7 @@ class mt_pipe_commands:
         return COMMANDS_GA_prep_fasta
 
 
-    def create_BWA_annotate_command_v2(self, stage_name, query_file):
+    def create_BWA_annotate_command_v2(self, stage_name, query_file, marker_file):
         # meant to be called multiple times: query file is a split file
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
@@ -1510,7 +1556,7 @@ class mt_pipe_commands:
         
         #make_marker = ">&2 echo marking BWA job complete: " + file_tag + " | "
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, file_tag + "_bwa")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_BWA = [
             bwa_job + " && " + make_marker
@@ -1519,7 +1565,7 @@ class mt_pipe_commands:
         return COMMANDS_BWA
 
         
-    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
+    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, query_file, marker_file):
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
             
@@ -1554,9 +1600,9 @@ class mt_pipe_commands:
         map_read_bwa += bwa_in + " "
         map_read_bwa += reads_out
         
-        make_marker = ">&2 echo bwa pp complete: " + sample_root_name + " | " 
+        make_marker = ">&2 echo bwa pp complete: " + marker_file + " | " 
         make_marker += "touch" + " " 
-        make_marker += os.path.join(jobs_folder, sample_root_name + "_bwa_pp")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_Annotate_BWA = [
             map_read_bwa + " && " + make_marker
@@ -1582,7 +1628,7 @@ class mt_pipe_commands:
         
         return [copy_contig_map]
 
-    def create_BLAT_annotate_command_v2(self, stage_name, query_file, fasta_db):
+    def create_BLAT_annotate_command_v2(self, stage_name, query_file, fasta_db, marker_file):
         #takes in a sample query file (expecting a segment of the whole GA data, after BWA
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
@@ -1606,7 +1652,7 @@ class mt_pipe_commands:
         
         #make_marker = ">&2 echo marking BLAT job complete: " + sample_root_name + "_" + fasta_db + " | " 
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, sample_root_name + "_blat_" + fasta_db)
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         if(os.path.getsize(query_file) > 0):
             return [blat_command + " && " + make_marker]
@@ -1615,7 +1661,7 @@ class mt_pipe_commands:
             return [dummy_blat_command]
         
         
-    def create_BLAT_cat_command_v2(self, stage_name, query_file):
+    def create_BLAT_cat_command_v2(self, stage_name, query_file, marker_file):
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
         # This merges each blatout file based on the sample's name
@@ -1632,9 +1678,9 @@ class mt_pipe_commands:
 
         cat_command = "for f in " + os.path.join(blat_folder, sample_root_name + "_*.blatout") + ";  do cat $f >> " + os.path.join(blat_merge_folder, sample_root_name + ".blatout") + " && rm $f; done"
         
-        make_marker = ">&2 echo completed BLAT cat: " + sample_root_name + " | " 
+        make_marker = ">&2 echo completed BLAT cat: " + marker_file + " | " 
         make_marker += "touch" + " "
-        make_marker += (os.path.join(jobs_folder, sample_root_name + "_blat_cat"))
+        make_marker += (os.path.join(jobs_folder, marker_file))
         
         return [
             cat_command + " && " + make_marker
@@ -1643,7 +1689,7 @@ class mt_pipe_commands:
         
 
 
-    def create_BLAT_pp_command_v2(self, stage_name, query_file, dependency_stage_name):
+    def create_BLAT_pp_command_v2(self, stage_name, query_file, dependency_stage_name, marker_file):
         # this call is meant to be run after the BLAT calls have been completed.
         
         sample_root_name = os.path.basename(query_file)
@@ -1673,9 +1719,9 @@ class mt_pipe_commands:
         blat_pp += os.path.join(blat_folder, sample_root_name + ".blatout") + " "
         blat_pp += os.path.join(final_folder, sample_root_name + ".fasta") + " "
         
-        make_marker = ">&2 echo BLAT pp complete: " + sample_root_name + " | "
+        make_marker = ">&2 echo BLAT pp complete: " + marker_file + " | "
         make_marker += "touch" + " " 
-        make_marker += os.path.join(jobs_folder, sample_root_name + "_blat_pp")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_Annotate_BLAT_Post = [blat_pp + " && " + make_marker]
 
