@@ -99,10 +99,31 @@ PRIAM can be downloaded here: http://priam.prabi.fr/
 * DetectDB
 Detect is an enzyme annotation tool. 
 
+* WEVOTEDB
+WeVote is a taxonomy consensus tool that determines taxonomy, given a collection of possible results.
+
+* EC_pathway
+This file translates ECs to pathways.  It is needed for the CytoScape data generation
+
+* path_to_superpath
+This file is also for the CytoScape data generation
+
+* MetaGeneMark_model
+The MetaGeneMark model used by MetaGeneMark to identify genes within contigs.
+
 ## Settings
 ---
-The optional settings are used by MetaPro to orchestrate the concurrency of the tools in action.
+These settings are used by MetaPro to orchestrate the concurrency of the tools in action, as well as control some quality-of-life functions within MetaPro
 - 
+
+
+## Important note for MetaGeneMark
+---
+MetaGeneMark is free to use, but requires a license.  If your MetaGeneMark license is not valid, MetaPro will not proceed past the Contig Assembly stage.
+To acquire a valid MetaGeneMark license, please visit: http://exon.gatech.edu/GeneMark/license_download.cgi
+Select MetaGeneMark, along with the linux 64bit version, and fill in the required fields.  Then download the 64bit key.  Extract the key to obtain the .gm_key file.
+The expected location of the license file (.gm_key) is in the home folder of your singularity instance.
+
 
 # Important Features
 ---
