@@ -986,8 +986,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 marker_file = file_tag + "_bwa"
                 marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
                 #this checker assumes that BWA only exports a file when it's finished running
-                if(os.path.exists(BWA_marker_path)):
-                    print(dt.today(), "skipping:", BWA_marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
                     continue
                 else:
                     marker_path_list.append(marker_path)
