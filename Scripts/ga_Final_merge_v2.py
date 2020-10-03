@@ -394,157 +394,247 @@ if __name__ == "__main__":
     diamond_path            = sys.argv[4]
     final_path              = sys.argv[5]
     export_path             = sys.argv[6]
-    #diamond_proteins_file   = sys.argv[5]
+    operating_mode          = sys.argv[7]
     
-    pair_1_raw_df = import_fastq(os.path.join(assemble_path, "pair_1.fastq"))
-    pair_2_raw_df = import_fastq(os.path.join(assemble_path, "pair_2.fastq"))
-    
+    if(operating_mode == "single"):
+        mgr_bwa_singletons_gene_map = manager.dict()
+        mgr_bwa_contig_gene_map     = manager.dict()
 
-    
-    manager = mp.Manager()
-    mgr_bwa_pair_1_gene_map     = manager.dict()
-    mgr_bwa_pair_2_gene_map     = manager.dict()
-    mgr_bwa_singletons_gene_map = manager.dict()
-    mgr_bwa_contig_gene_map     = manager.dict()
-
-    mgr_blat_pair_1_gene_map    = manager.dict()
-    mgr_blat_pair_2_gene_map    = manager.dict()
-    mgr_blat_singletons_gene_map= manager.dict()
-    mgr_blat_contig_gene_map    = manager.dict()
-    
-    mgr_dia_pair_1_gene_map     = manager.dict()
-    mgr_dia_pair_2_gene_map     = manager.dict()
-    mgr_dia_singletons_gene_map = manager.dict()
-    mgr_dia_contig_gene_map     = manager.dict()
-    
-    
-    process_store = []
-    
-    
-    #merge the annotated genes (for protein translation), and leftover contig + singletons
-    make_merge_leftover_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta")  #leftover reads
-    make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna")    #BLAT genes
-    make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")      #BWA genes
-    make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")            #DIAMOND proteins
-    
-    
-    #merge the gene maps, but group them by data context (pair1, pair2, singletons, contigs) for each tool (BWA, BLAT, DIAMOND)
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_pair_1_gene_map, "pair_1"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_pair_2_gene_map, "pair_2"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_singletons_gene_map, "singletons"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_contig_gene_map, "contig"))
-    process.start()
-    process_store.append(process)
-    
-    #----------------------------------------------------------------------
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_pair_1_gene_map, "pair_1"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_pair_2_gene_map, "pair_2"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_singletons_gene_map, "singletons"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_contig_gene_map, "contig"))
-    process.start()
-    process_store.append(process)
-    
-    #----------------------------------------------------------------------
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_pair_1_gene_map, "pair_1"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_pair_2_gene_map, "pair_2"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_singletons_gene_map, "singletons"))
-    process.start()
-    process_store.append(process)
-    
-    process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_contig_gene_map, "contig"))
-    process.start()
-    process_store.append(process)
-    
-    
-    
-    print(dt.today(), "concatenating gene maps")
-    for item in process_store:
-        item.join()
-    process_store[:] = []
-    
-    #-----------------------------------------------------------------------
-    #convert to a standard dict
-    bwa_pair_1_gene_map     = dict(mgr_bwa_pair_1_gene_map)
-    bwa_pair_2_gene_map     = dict(mgr_bwa_pair_2_gene_map)
-    bwa_singleton_gene_map  = dict(mgr_bwa_singletons_gene_map)
-    bwa_contig_gene_map     = dict(mgr_bwa_contig_gene_map)
-    
-    blat_pair_1_gene_map    = dict(mgr_blat_pair_1_gene_map)
-    blat_pair_2_gene_map    = dict(mgr_blat_pair_2_gene_map)
-    blat_singleton_gene_map = dict(mgr_blat_singletons_gene_map)
-    blat_contig_gene_map    = dict(mgr_blat_contig_gene_map)
-    
-    dia_pair_1_gene_map     = dict(mgr_dia_pair_1_gene_map)
-    dia_pair_2_gene_map     = dict(mgr_dia_pair_2_gene_map)
-    dia_singleton_gene_map  = dict(mgr_dia_singletons_gene_map)
-    dia_contig_gene_map     = dict(mgr_dia_contig_gene_map)
-    
-    
-    pair_1_gene_map_list    = [bwa_pair_1_gene_map, blat_pair_1_gene_map, dia_pair_1_gene_map]
-    pair_2_gene_map_list    = [bwa_pair_2_gene_map, blat_pair_2_gene_map, dia_pair_2_gene_map]
-    singleton_gene_map_list = [bwa_singleton_gene_map, blat_singleton_gene_map, dia_singleton_gene_map]
-    contig_gene_map_list    = [bwa_contig_gene_map, blat_contig_gene_map, dia_contig_gene_map]
-    
-    #merge the gene maps by category
-    
-    pair_1_gene_map     = merge_dicts(pair_1_gene_map_list)
-    pair_2_gene_map     = merge_dicts(pair_2_gene_map_list)
-    singletons_gene_map = merge_dicts(singleton_gene_map_list)
-    contig_gene_map     = merge_dicts(contig_gene_map_list)
-    
-    
-    #reconcile the paired reads (For export)
-    all_paired_reads = reconcile_paired_gene_map(pair_1_gene_map, pair_2_gene_map)
-    export_leftover_paired_reads(all_paired_reads, pair_1_raw_df, pair_2_raw_df, export_path)
-    
-    
-    #merge all gene maps
-    final_gene_map_list = [pair_1_gene_map, pair_2_gene_map, singletons_gene_map, contig_gene_map]
-    final_gene_map = merge_dicts(final_gene_map_list)
-    
-  
-    
-    print(dt.today(), "done converting")
-    
-    
-    #secondary combine on the genes (BWA and BLAT)
-    make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
-    
-    for item in process_store:
-        item.join()
-    process_store[:] = []
-    
-    
-    #convert genes to proteins, and merge with diamond's export
-    handle_final_proteins(final_path, export_path)
-    
-    export_gene_map(final_gene_map, export_path)
-    
-    print(dt.today(), "We're at the end")
-    
-
+        mgr_blat_singletons_gene_map= manager.dict()
+        mgr_blat_contig_gene_map    = manager.dict()
         
+        mgr_dia_singletons_gene_map = manager.dict()
+        mgr_dia_contig_gene_map     = manager.dict()
+        
+        process_store = []
+
+        #merge the annotated genes (for protein translation), and leftover contig + singletons
+        make_merge_leftover_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta")  #leftover reads
+        make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna")    #BLAT genes
+        make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")      #BWA genes
+        make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")            #DIAMOND proteins
+        
+        #merge the gene maps, but group them by data context (pair1, pair2, singletons, contigs) for each tool (BWA, BLAT, DIAMOND)
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_singletons_gene_map, "singletons"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_contig_gene_map, "contig"))
+        process.start()
+        process_store.append(process)
+        
+        #----------------------------------------------------------------------
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_singletons_gene_map, "singletons"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_contig_gene_map, "contig"))
+        process.start()
+        process_store.append(process)
+        
+        #----------------------------------------------------------------------
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_singletons_gene_map, "singletons"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_contig_gene_map, "contig"))
+        process.start()
+        process_store.append(process)
+        
+        
+        
+        print(dt.today(), "concatenating gene maps")
+        for item in process_store:
+            item.join()
+        process_store[:] = []
+        
+        #-----------------------------------------------------------------------
+        #convert to a standard dict
+        bwa_singleton_gene_map  = dict(mgr_bwa_singletons_gene_map)
+        bwa_contig_gene_map     = dict(mgr_bwa_contig_gene_map)
+        
+        blat_singleton_gene_map = dict(mgr_blat_singletons_gene_map)
+        blat_contig_gene_map    = dict(mgr_blat_contig_gene_map)
+        
+        dia_singleton_gene_map  = dict(mgr_dia_singletons_gene_map)
+        dia_contig_gene_map     = dict(mgr_dia_contig_gene_map)
+        
+        singleton_gene_map_list = [bwa_singleton_gene_map, blat_singleton_gene_map, dia_singleton_gene_map]
+        contig_gene_map_list    = [bwa_contig_gene_map, blat_contig_gene_map, dia_contig_gene_map]
+        
+        #merge the gene maps by category
+        singletons_gene_map = merge_dicts(singleton_gene_map_list)
+        contig_gene_map     = merge_dicts(contig_gene_map_list)
+        
+        #merge all gene maps
+        final_gene_map_list = [singletons_gene_map, contig_gene_map]
+        final_gene_map = merge_dicts(final_gene_map_list)
+        
+        print(dt.today(), "done converting")
+        
+        #secondary combine on the genes (BWA and BLAT)
+        make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
+        
+        for item in process_store:
+            item.join()
+        process_store[:] = []
+        
+        #convert genes to proteins, and merge with diamond's export
+        handle_final_proteins(final_path, export_path)
+        
+        export_gene_map(final_gene_map, export_path)
+        
+        print(dt.today(), "We're at the end")
+        
+        
+    elif(operating_mode == "paired"):
+        pair_1_raw_df = import_fastq(os.path.join(assemble_path, "pair_1.fastq"))
+        pair_2_raw_df = import_fastq(os.path.join(assemble_path, "pair_2.fastq"))
+        
+        manager = mp.Manager()
+        mgr_bwa_pair_1_gene_map     = manager.dict()
+        mgr_bwa_pair_2_gene_map     = manager.dict()
+        mgr_bwa_singletons_gene_map = manager.dict()
+        mgr_bwa_contig_gene_map     = manager.dict()
+
+        mgr_blat_pair_1_gene_map    = manager.dict()
+        mgr_blat_pair_2_gene_map    = manager.dict()
+        mgr_blat_singletons_gene_map= manager.dict()
+        mgr_blat_contig_gene_map    = manager.dict()
+        
+        mgr_dia_pair_1_gene_map     = manager.dict()
+        mgr_dia_pair_2_gene_map     = manager.dict()
+        mgr_dia_singletons_gene_map = manager.dict()
+        mgr_dia_contig_gene_map     = manager.dict()
+        
+        
+        process_store = []
+        
+        
+        #merge the annotated genes (for protein translation), and leftover contig + singletons
+        make_merge_leftover_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta")  #leftover reads
+        make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna")    #BLAT genes
+        make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")      #BWA genes
+        make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")            #DIAMOND proteins
+        
+        
+        #merge the gene maps, but group them by data context (pair1, pair2, singletons, contigs) for each tool (BWA, BLAT, DIAMOND)
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_pair_1_gene_map, "pair_1"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_pair_2_gene_map, "pair_2"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_singletons_gene_map, "singletons"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_contig_gene_map, "contig"))
+        process.start()
+        process_store.append(process)
+        
+        #----------------------------------------------------------------------
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_pair_1_gene_map, "pair_1"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_pair_2_gene_map, "pair_2"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_singletons_gene_map, "singletons"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (blat_path, mgr_blat_contig_gene_map, "contig"))
+        process.start()
+        process_store.append(process)
+        
+        #----------------------------------------------------------------------
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_pair_1_gene_map, "pair_1"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_pair_2_gene_map, "pair_2"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_singletons_gene_map, "singletons"))
+        process.start()
+        process_store.append(process)
+        
+        process = mp.Process(target = concatenate_gene_maps_v2, args = (diamond_path, mgr_dia_contig_gene_map, "contig"))
+        process.start()
+        process_store.append(process)
+        
+        
+        
+        print(dt.today(), "concatenating gene maps")
+        for item in process_store:
+            item.join()
+        process_store[:] = []
+        
+        #-----------------------------------------------------------------------
+        #convert to a standard dict
+        bwa_pair_1_gene_map     = dict(mgr_bwa_pair_1_gene_map)
+        bwa_pair_2_gene_map     = dict(mgr_bwa_pair_2_gene_map)
+        bwa_singleton_gene_map  = dict(mgr_bwa_singletons_gene_map)
+        bwa_contig_gene_map     = dict(mgr_bwa_contig_gene_map)
+        
+        blat_pair_1_gene_map    = dict(mgr_blat_pair_1_gene_map)
+        blat_pair_2_gene_map    = dict(mgr_blat_pair_2_gene_map)
+        blat_singleton_gene_map = dict(mgr_blat_singletons_gene_map)
+        blat_contig_gene_map    = dict(mgr_blat_contig_gene_map)
+        
+        dia_pair_1_gene_map     = dict(mgr_dia_pair_1_gene_map)
+        dia_pair_2_gene_map     = dict(mgr_dia_pair_2_gene_map)
+        dia_singleton_gene_map  = dict(mgr_dia_singletons_gene_map)
+        dia_contig_gene_map     = dict(mgr_dia_contig_gene_map)
+        
+        
+        pair_1_gene_map_list    = [bwa_pair_1_gene_map, blat_pair_1_gene_map, dia_pair_1_gene_map]
+        pair_2_gene_map_list    = [bwa_pair_2_gene_map, blat_pair_2_gene_map, dia_pair_2_gene_map]
+        singleton_gene_map_list = [bwa_singleton_gene_map, blat_singleton_gene_map, dia_singleton_gene_map]
+        contig_gene_map_list    = [bwa_contig_gene_map, blat_contig_gene_map, dia_contig_gene_map]
+        
+        #merge the gene maps by category
+        
+        pair_1_gene_map     = merge_dicts(pair_1_gene_map_list)
+        pair_2_gene_map     = merge_dicts(pair_2_gene_map_list)
+        singletons_gene_map = merge_dicts(singleton_gene_map_list)
+        contig_gene_map     = merge_dicts(contig_gene_map_list)
+        
+        
+        #reconcile the paired reads (For export)
+        all_paired_reads = reconcile_paired_gene_map(pair_1_gene_map, pair_2_gene_map)
+        export_leftover_paired_reads(all_paired_reads, pair_1_raw_df, pair_2_raw_df, export_path)
+        
+        
+        #merge all gene maps
+        final_gene_map_list = [pair_1_gene_map, pair_2_gene_map, singletons_gene_map, contig_gene_map]
+        final_gene_map = merge_dicts(final_gene_map_list)
+        
+      
+        
+        print(dt.today(), "done converting")
+        
+        
+        #secondary combine on the genes (BWA and BLAT)
+        make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
+        
+        for item in process_store:
+            item.join()
+        process_store[:] = []
+        
+        
+        #convert genes to proteins, and merge with diamond's export
+        handle_final_proteins(final_path, export_path)
+        
+        export_gene_map(final_gene_map, export_path)
+        
+        print(dt.today(), "We're at the end")
+        
+
+            

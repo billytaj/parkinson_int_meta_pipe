@@ -84,8 +84,7 @@ class mt_pipe_commands:
             return_code = e.returncode
             if return_code != 1:
                 raise
-        else:
-            sys.exit("something bad happened")
+                
 
     
     def launch_only(self, command_list, command_list_length):
@@ -111,8 +110,7 @@ class mt_pipe_commands:
                     return_code = e.returncode
                     if return_code != 1:
                         raise
-                else:
-                    sys.exit("something bad happened")
+                
                 
     def create_quality_control_command(self, stage_name):
         subfolder                   = os.path.join(self.Output_Path, stage_name)
@@ -1851,7 +1849,8 @@ class mt_pipe_commands:
         final_merge += dep_1_path + " "
         final_merge += dep_2_path + " "
         final_merge += data_folder + " "
-        final_merge += final_folder
+        final_merge += final_folder + " "
+        final_merge += self.read_mode
         
         make_marker = ">&2 echo GA final merge | "
         make_marker += "touch" + " "

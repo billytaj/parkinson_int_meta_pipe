@@ -251,11 +251,15 @@ def launch_and_create_with_hold(mp_store, mem_threshold, job_limit, job_delay, j
     time.sleep(job_delay)
 
 #check if all jobs ran
-def check_all_job_markers(job_marker_list):
-    for item in job_marker_list:
-        if(not os.path.exists(item)):
-            print(dt.today(), item, "not found.  kill the pipe.  restart this stage")
-            sys.exit("not all jobs completed")
+def check_all_job_markers(job_marker_list, final_folder_checklist):
+    with open(final_folder_checklist, "w") as checklist:
+        for item in job_marker_list:
+            checklist.write(item +"\n")
+            
+        for item in job_marker_list:
+            if(not os.path.exists(item)):
+                print(dt.today(), item, "not found.  kill the pipe.  restart this stage")
+                sys.exit("not all jobs completed")
 
 
 def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack):
@@ -569,7 +573,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_prep.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         for element in sections:
             if check_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + element):
                 write_to_bypass_log(output_folder_path, rRNA_filter_split_label + "_" + element)
@@ -598,7 +603,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                         command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq", marker_file)
                         launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                         
-                check_all_job_markers(marker_path_list)
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_convert_" + section + ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
                 write_to_bypass_log(output_folder_path, rRNA_filter_convert_label + "_" + section)
             
                     
@@ -687,8 +693,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for item in mp_store:
                     item.join()
                 mp_store[:] = []
-                
-                check_all_job_markers(marker_path_list)
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section + ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
                 
                 #------------------------------------------------------
                 #merge the barrnap data
@@ -713,6 +719,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for item in mp_store:
                     item.join()
                 mp_store[:] = []
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_cat_" + section  + ".txt")
                 check_all_job_markers(marker_path_list)
                 write_to_bypass_log(output_folder_path, rRNA_filter_barrnap_merge_label + "_" + section)
 
@@ -739,7 +746,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     for item in mp_store:
                         item.join()
                     mp_store[:] = []
-                    check_all_job_markers(marker_path_list)
+                    final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section +  ".txt")
+                    check_all_job_markers(marker_path_list, final_checklist)
                     write_to_bypass_log(output_folder_path, rRNA_filter_barrnap_label + "_" + section)
             
         #----------------------------------------------------------------------------
@@ -778,7 +786,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []  # clear the list
-                check_all_job_markers(marker_path_list)
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_infernal_prep_" + section + ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
                 write_to_bypass_log(output_folder_path, rRNA_filter_infernal_prep_label + "_" + section)
             
 
@@ -804,7 +813,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 for p_item in mp_store:
                     p_item.join()
                 mp_store[:] = []
-                check_all_job_markers(marker_path_list)
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_infernal_" + section + ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
                 write_to_bypass_log(output_folder_path, rRNA_filter_infernal_label + "_" + section)
             
             if (section != "pair_2"):
@@ -831,7 +841,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     for p_item in mp_store:
                         p_item.join()
                     mp_store[:] = []
-                    check_all_job_markers(marker_path_list)
+                    final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_infernal_splitter_" + section + ".txt")
+                    check_all_job_markers(marker_path_list, final_checklist)
                     write_to_bypass_log(output_folder_path, rRNA_filter_splitter_label + "_" + section)
             else:
                 print(dt.today(), "not calling Infernal rRNA splitter on pair 2.  data handled by pair 1 as a combination")
@@ -853,7 +864,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for p_item in mp_store:
             p_item.join()
         mp_store[:] = []
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_final_cat.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         for section in reversed(sections):
             write_to_bypass_log(output_folder_path, rRNA_filter_splitter_label + "_" + section)
         
@@ -968,7 +980,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(GA_BWA_path, "GA_BWA_prep.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         
         #-------------------------------------------------------------------------
         sections = ["contigs", "singletons"]
@@ -998,7 +1011,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(GA_BWA_path, "GA_BWA.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         write_to_bypass_log(output_folder_path, GA_BWA_label)
             
     if check_bypass_log(output_folder_path, GA_BWA_pp_label):
@@ -1035,7 +1049,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label)
             launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
         
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(GA_BWA_path, "GA_BWA_pp.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         write_to_bypass_log(output_folder_path, GA_BWA_pp_label)
         
         cleanup_GA_BWA_start = time.time()
@@ -1090,7 +1105,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         write_to_bypass_log(output_folder_path, GA_BLAT_label)
         
 
@@ -1117,7 +1133,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_cat.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         write_to_bypass_log(output_folder_path, GA_BLAT_cat_label)
         
     
@@ -1154,8 +1171,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             marker_path_list.append(marker_path)
             command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label)
             launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
-
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         write_to_bypass_log(output_folder_path, GA_BLAT_pp_label)
         
         
@@ -1200,8 +1217,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
+        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
         write_to_bypass_log(output_folder_path, GA_DIAMOND_label)
-        check_all_job_markers(marker_path_list)
         
         
     #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
@@ -1229,7 +1247,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        check_all_job_markers(marker_path_list)
+        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND_pp.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
             
         write_to_bypass_log(output_folder_path, GA_DIAMOND_pp_label)
     
