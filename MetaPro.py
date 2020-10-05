@@ -266,7 +266,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     paths = mpp.tool_path_obj(config_path)
     no_host = args_pack["no_host"]
     verbose_mode = args_pack["verbose_mode"]
-    rRNA_chunks = paths.chunk_size
+    rRNA_chunks = int(paths.rRNA_chunksize)
     GA_chunksize = int(paths.GA_chunksize)
     BWA_mem_threshold = int(paths.BWA_mem_threshold)
     BLAT_mem_threshold = int(paths.BLAT_mem_threshold)

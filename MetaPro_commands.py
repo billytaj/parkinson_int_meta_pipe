@@ -98,8 +98,8 @@ class mt_pipe_commands:
                 return_code = e.returncode
                 if return_code != 1:
                     raise
-            else:
-                sys.exit("something bad happened")
+            #else:
+            #    sys.exit("something bad happened")
         else:
         
             for command_item in command_list:
