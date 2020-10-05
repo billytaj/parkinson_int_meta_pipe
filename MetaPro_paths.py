@@ -219,7 +219,7 @@ class tool_path_obj:
         DETECT_job_delay_default = 5
         
         filter_stringency_default = "high"
-        GA_chunksize_default = 50000
+        GA_chunksize_default = 100000
         
         
         if config:
