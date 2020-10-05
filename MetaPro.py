@@ -252,14 +252,34 @@ def launch_and_create_with_hold(mp_store, mem_threshold, job_limit, job_delay, j
 
 #check if all jobs ran
 def check_all_job_markers(job_marker_list, final_folder_checklist):
-    with open(final_folder_checklist, "w") as checklist:
-        for item in job_marker_list:
-            checklist.write(item +"\n")
-            
-        for item in job_marker_list:
-            if(not os.path.exists(item)):
-                print(dt.today(), item, "not found.  kill the pipe.  restart this stage")
-                sys.exit("not all jobs completed")
+    #if it's already been created, that means the job was killed.
+    if(os.path.exists(final_folder_checklist)):
+        print(dt.today(), final_folder_checklist, "exists: adding to it")
+        #open it, import it.
+        with open(final_folder_checklist, "r") as old_list:
+            for line in old_list:
+                cleaned_line = line.strip("\n")
+                job_marker_list.append(cleaned_line)
+        #then overwrite it
+        with open(final_folder_checklist, "w") as checklist:
+            for item in job_marker_list:
+                checklist.write(item +"\n")
+                
+            for item in job_marker_list:
+                if(not os.path.exists(item)):
+                    print(dt.today(), item, "not found.  kill the pipe.  restart this stage")
+                    sys.exit("not all jobs completed")
+        
+    else:
+        
+        with open(final_folder_checklist, "w") as checklist:
+            for item in job_marker_list:
+                checklist.write(item +"\n")
+                
+            for item in job_marker_list:
+                if(not os.path.exists(item)):
+                    print(dt.today(), item, "not found.  kill the pipe.  restart this stage")
+                    sys.exit("not all jobs completed")
 
 
 def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack):
