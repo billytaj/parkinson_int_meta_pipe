@@ -1516,7 +1516,7 @@ class mt_pipe_commands:
         split_fasta += self.tool_path_obj.File_splitter + " "
         split_fasta += os.path.join(dep_folder, category +".fasta") + " "
         split_fasta += os.path.join(split_folder, category) + " "
-        split_fasta += int(self.tool_path_obj.GA_chunksize)
+        split_fasta += self.tool_path_obj.GA_chunksize
         
         make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, marker_file)
