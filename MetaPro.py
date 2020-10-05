@@ -720,7 +720,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     item.join()
                 mp_store[:] = []
                 final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_cat_" + section  + ".txt")
-                check_all_job_markers(marker_path_list)
+                check_all_job_markers(marker_path_list, final_checklist)
                 write_to_bypass_log(output_folder_path, rRNA_filter_barrnap_merge_label + "_" + section)
 
                 #-----------------------------------------------------

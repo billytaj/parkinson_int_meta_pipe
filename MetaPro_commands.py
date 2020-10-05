@@ -1544,7 +1544,7 @@ class mt_pipe_commands:
         file_tag = os.path.basename(query_file)
         file_tag = os.path.splitext(file_tag)[0]
         
-        bwa_job = ">&2 echo BWA on " + file_tag + " | "
+        bwa_job = ">&2 echo " + str(dt.today()) + " BWA on " + file_tag + " | "
         bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_job += self.tool_path_obj.DNA_DB + " "
         #bwa_job += os.path.join(dep_loc, section_file) + " | "
@@ -1587,7 +1587,7 @@ class mt_pipe_commands:
         bwa_in      = os.path.join(bwa_folder, sample_root_name + ".sam")
         reads_out = os.path.join(final_folder, sample_root_name + ".fasta")
             
-        map_read_bwa = ">&2 echo GA BWA PP generic | "
+        map_read_bwa = ">&2 echo " + str(dt.today()) + " GA BWA PP generic: " + sample_root_name + " | "
         map_read_bwa += self.tool_path_obj.Python + " "
         map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
         map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
@@ -1621,7 +1621,7 @@ class mt_pipe_commands:
         self.make_folder(bwa_folder)
         self.make_folder(final_folder)
     
-        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map = ">&2 echo " + str(dt.today()) + " copy contig map | "
         copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
         
         return [copy_contig_map]
@@ -1641,7 +1641,7 @@ class mt_pipe_commands:
         self.make_folder(blat_folder)
         self.make_folder(jobs_folder)
 
-        blat_command = ">&2 echo BLAT annotation for " + sample_root_name + " " + fasta_db + " | "
+        blat_command = ">&2 echo " + str(dt.today()) + " BLAT annotation for " + sample_root_name + " " + fasta_db + " | "
         blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
         blat_command += self.tool_path_obj.DNA_DB_Split + fasta_db + " "
         blat_command += query_file
@@ -1655,7 +1655,7 @@ class mt_pipe_commands:
         if(os.path.getsize(query_file) > 0):
             return [blat_command + " && " + make_marker]
         else:
-            dummy_blat_command = ">&2 echo Not running BLAT command on empty file: " + query_file
+            dummy_blat_command = ">&2 echo " + str(dt.today()) + " Not running BLAT command on empty file: " + query_file
             return [dummy_blat_command]
         
         
@@ -1674,7 +1674,8 @@ class mt_pipe_commands:
         self.make_folder(blat_merge_folder)
         self.make_folder(jobs_folder)
 
-        cat_command = "for f in " + os.path.join(blat_folder, sample_root_name + "_*.blatout") + ";  do cat $f >> " + os.path.join(blat_merge_folder, sample_root_name + ".blatout") + " && rm $f; done"
+        cat_command = ">&2 echo " + str(dt.today()) + " combining and deleting BLATout | "
+        cat_command += "for f in " + os.path.join(blat_folder, sample_root_name + "_*.blatout") + ";  do cat $f >> " + os.path.join(blat_merge_folder, sample_root_name + ".blatout") + " && rm $f; done"
         
         make_marker = ">&2 echo completed BLAT cat: " + marker_file + " | " 
         make_marker += "touch" + " "
@@ -1706,7 +1707,7 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         self.make_folder(jobs_folder)
 
-        blat_pp = ">&2 echo BLAT post-processing | "
+        blat_pp = ">&2 echo " + str(dt.today()) + " BLAT post-processing " + sample_root_name + " | "
         blat_pp += self.tool_path_obj.Python + " "
         blat_pp += self.tool_path_obj.Map_reads_gene_BLAT + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
@@ -1738,7 +1739,7 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         
     
-        copy_contig_map = ">&2 echo copy contig map | "
+        copy_contig_map = ">&2 echo " + str(dt.today()) + " copy contig map | "
         copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
         
         make_marker = ">&2 echo copy contig map done | "
@@ -1769,7 +1770,7 @@ class mt_pipe_commands:
         self.make_folder(temp_folder)
         self.make_folder(jobs_folder)
         
-        diamond_annotate = ">&2 echo gene annotate DIAMOND " + sample_root_name + " | "
+        diamond_annotate = ">&2 echo " + str(dt.today()) + " GA DIAMOND " + sample_root_name + " | "
         diamond_annotate += self.tool_path_obj.DIAMOND
         diamond_annotate += " blastx -p " + self.Threads_str
         diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
@@ -1803,7 +1804,7 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         self.make_folder(jobs_folder)
 
-        diamond_pp = ">&2 echo DIAMOND post process | "
+        diamond_pp = ">&2 echo " + str(dt.today()) + " DIAMOND post process " + sample_root_name + " | "
         diamond_pp += self.tool_path_obj.Python + " "
         diamond_pp += self.tool_path_obj.Map_reads_prot_DMND + " "
         diamond_pp += self.tool_path_obj.Prot_DB_reads + " "                # IN
@@ -1852,7 +1853,7 @@ class mt_pipe_commands:
         final_merge += final_folder + " "
         final_merge += self.read_mode
         
-        make_marker = ">&2 echo GA final merge | "
+        make_marker = ">&2 echo " + str(dt.today()) + " GA final merge | "
         make_marker += "touch" + " "
         make_marker += os.path.join(jobs_folder, "GA_final_merge")
         
@@ -2503,7 +2504,7 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(final_folder)
         
-        contig_stats = ">&2 echo collecting contig stats | " 
+        contig_stats = ">&2 echo " + str(dt.today()) + " collecting contig stats | " 
         contig_stats += self.tool_path_obj.Python + " "
         contig_stats += self.tool_path_obj.contig_stats + " "
         contig_stats += os.path.join(contig_folder, "contigs.fasta") + " "
@@ -2521,7 +2522,7 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(final_folder)
         
-        EC_heatmap = ">&2 echo forming EC heatmap | "
+        EC_heatmap = ">&2 echo " + str(dt.today()) + " forming EC heatmap | "
         EC_heatmap += self.tool_path_obj.Python + " "
         EC_heatmap += self.tool_path_obj.ec_heatmap + " "
         EC_heatmap += self.tool_path_obj.EC_pathway + " "
@@ -2550,7 +2551,7 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         gene_map_location = os.path.join(final_folder, "gene_map.tsv")
         
-        read_counts = ">&2 echo generating read count table | "
+        read_counts = ">&2 echo " + str(dt.today()) + " generating read count table | "
         read_counts += self.tool_path_obj.Python + " "
         read_counts += self.tool_path_obj.read_count + " "
         if self.read_mode == "single":
