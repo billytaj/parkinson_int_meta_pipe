@@ -267,6 +267,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     no_host = args_pack["no_host"]
     verbose_mode = args_pack["verbose_mode"]
     rRNA_chunks = paths.chunk_size
+    GA_chunksize = int(paths.GA_chunksize)
     BWA_mem_threshold = int(paths.BWA_mem_threshold)
     BLAT_mem_threshold = int(paths.BLAT_mem_threshold)
     DIAMOND_mem_threshold = int(paths.DIAMOND_mem_threshold)
@@ -350,8 +351,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("DETECT job limit:", DETECT_job_limit)
     print("===================================================")
     print("Filter stringency:", filter_stringency)
-    print("Chunk size:", rRNA_chunks)
-    
+    print("rRNA filter Chunk size:", rRNA_chunks)
+    print("GA chunk size:", GA_chunksize)
     print("---------------------------------")
     if not single_path == "":
         read_mode = "single"
@@ -448,9 +449,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = rRNA_chunks, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
     elif read_mode == "paired":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, chunk_size = rRNA_chunks, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
     
 
     # This is the format we use to launch each stage of the pipeline.
@@ -568,7 +569,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 print(dt.today(), "splitting:", section, " for rRNA filtration")
                 job_name = "rRNA_filter_prep_" + section
                 marker_path_list.append(marker_path)
-                command_list = commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, rRNA_chunks, marker_file)
+                command_list = commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, section, vector_filter_label, marker_file)
                 launch_and_create_with_mp_store(mp_store, rRNA_filter_label, job_name, commands, command_list)
         for item in mp_store:
             item.join()
@@ -1046,7 +1047,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             print(dt.today(), "skipping:", marker_file)
         else:   
             marker_path_list.append(marker_path)
-            command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label)
+            command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label, marker_file)
             launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
         
         final_checklist = os.path.join(GA_BWA_path, "GA_BWA_pp.txt")

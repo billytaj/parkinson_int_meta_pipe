@@ -14,7 +14,7 @@ class mt_pipe_commands:
     # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, chunk_size = 100000, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
+    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
 
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
         self.no_host_flag = no_host
@@ -37,9 +37,8 @@ class mt_pipe_commands:
         self.Qual_str = str(Quality_score)
         self.Output_Path = os.getcwd()
         self.Threads_str = str(Thread_count)
-        self.rRNA_chunks = str(chunk_size)
-        self.chunk_size = str(chunk_size)
-
+        
+        
         print("Output filepath:", self.Output_Path)
 
     # -----------------------------------------------------------
@@ -721,7 +720,7 @@ class mt_pipe_commands:
 
         
         
-    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, chunks, marker_file):
+    def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, marker_file):
         #split the data into tiny shards.  called once
         dep_loc                 = os.path.join(self.Output_Path, dependency_name, "final_results")
         subfolder               = os.path.join(self.Output_Path, stage_name)
@@ -739,7 +738,7 @@ class mt_pipe_commands:
         split_fastq += self.tool_path_obj.File_splitter + " "
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
         split_fastq += os.path.join(split_folder, category) + " "
-        split_fastq += self.rRNA_chunks
+        split_fastq += int(self.tool_path_obj.rRNA_chunksize)
         
         make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, marker_file)
@@ -1485,7 +1484,7 @@ class mt_pipe_commands:
         self.make_folder(jobs_folder)
         
         split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
-        split_fastq += "split -l " + str(int(self.chunk_size) * 4) + " "        
+        split_fastq += "split -l " + str(int(self.tool_path_obj.GA_chunksize) * 4) + " "        
         split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
         split_fastq += "--additional-suffix .fastq" + " "
         split_fastq += "-d" + " "
@@ -1517,7 +1516,7 @@ class mt_pipe_commands:
         split_fasta += self.tool_path_obj.File_splitter + " "
         split_fasta += os.path.join(dep_folder, category +".fasta") + " "
         split_fasta += os.path.join(split_folder, category) + " "
-        split_fasta += self.chunk_size
+        split_fasta += int(self.tool_path_obj.GA_chunksize)
         
         make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, marker_file)
@@ -1608,23 +1607,29 @@ class mt_pipe_commands:
         ]
         return COMMANDS_Annotate_BWA
 
-    def create_BWA_copy_contig_map_command(self, stage_name, dependency_stage_name):
+    def create_BWA_copy_contig_map_command(self, stage_name, dependency_stage_name, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         bwa_folder      = os.path.join(data_folder, "1_bwa")
         split_folder    = os.path.join(data_folder, "0_read_split")
         final_folder    = os.path.join(subfolder, "final_results")
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(bwa_folder)
         self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
     
         copy_contig_map = ">&2 echo " + str(dt.today()) + " copy contig map | "
         copy_contig_map += "cp " + os.path.join(dep_loc, "contig_map.tsv") + " " + os.path.join(final_folder, "contig_map.tsv")
         
-        return [copy_contig_map]
+        make_marker = ">&2 echo bwa copy contig map complete: " + marker_file + " | " 
+        make_marker += "touch" + " " 
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [copy_contig_map + " && " + make_marker]
 
     def create_BLAT_annotate_command_v2(self, stage_name, query_file, fasta_db, marker_file):
         #takes in a sample query file (expecting a segment of the whole GA data, after BWA

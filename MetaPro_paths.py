@@ -187,7 +187,7 @@ class tool_path_obj:
         Infernal_mem_default = 50
         Barrnap_mem_default = 50
         
-        chunk_size_default = 50000
+        rRNA_chunksize_default = 50000
         BWA_job_limit_default = 80
         BLAT_job_limit_default = 80
         DIAMOND_job_limit_default = 80
@@ -219,6 +219,7 @@ class tool_path_obj:
         DETECT_job_delay_default = 5
         
         filter_stringency_default = "high"
+        GA_chunksize_default = 50000
         
         
         if config:
@@ -237,7 +238,7 @@ class tool_path_obj:
                 
             #-----------------------------------------------------------------------------------------------    
             
-            self.chunk_size                 = self.value_assignment(config, "Settings", "data_chunk_size", chunk_size_default)
+            self.rRNA_chunksize             = self.value_assignment(config, "Settings", "rRNA_chunk_size", rRNA_chunksize_default)
             self.BWA_job_limit              = self.value_assignment(config, "Settings", "BWA_job_limit", BWA_job_limit_default)
             self.BLAT_job_limit             = self.value_assignment(config, "Settings", "BLAT_job_limit", BLAT_job_limit_default)
             self.DIAMOND_job_limit          = self.value_assignment(config, "Settings", "DIAMOND_job_limit", DIAMOND_job_limit_default)
@@ -275,7 +276,7 @@ class tool_path_obj:
             #--------------------------------------------------------------------------------------
             
             self.filter_stringency          = self.value_assignment(config, "Settings", "filter_stringency", filter_stringency_default)
-
+            self.GA_chunksize               = self.value_assignment(config, "Settings", "GA_chunk_size", GA_chunksize_default)
     
                 
              
@@ -319,4 +320,5 @@ class tool_path_obj:
             self.DETECT_job_delay = DETECT_job_delay_default
             
             self.filter_stringency = filter_stringency_default
+            self.GA_chunksize = GA_chunksize_default
             

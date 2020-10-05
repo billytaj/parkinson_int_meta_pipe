@@ -114,7 +114,13 @@ The MetaGeneMark model used by MetaGeneMark to identify genes within contigs.
 ## Settings
 ---
 These settings are used by MetaPro to orchestrate the concurrency of the tools in action, as well as control some quality-of-life functions within MetaPro
-- 
+* AdapterRemoval_minlength
+This is the minimum length for an adapter
+
+*Target_Rank
+Sets the 
+
+
 
 
 ## Important note for MetaGeneMark
