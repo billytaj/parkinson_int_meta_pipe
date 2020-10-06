@@ -397,6 +397,7 @@ if __name__ == "__main__":
     operating_mode          = sys.argv[7]
     
     if(operating_mode == "single"):
+        manager = mp.Manager()
         mgr_bwa_singletons_gene_map = manager.dict()
         mgr_bwa_contig_gene_map     = manager.dict()
 
