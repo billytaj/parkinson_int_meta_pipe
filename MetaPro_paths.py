@@ -221,6 +221,19 @@ class tool_path_obj:
         filter_stringency_default = "high"
         GA_chunksize_default = 100000
         
+        BWA_pp_mem_default = 50
+        BLAT_pp_mem_default = 50
+        DIAMOND_pp_mem_default = 50
+        
+        BWA_pp_job_limit_default = 40
+        BLAT_pp_job_limit_default = 40
+        DIAMOND_pp_job_limit_default = 40
+        
+        BWA_pp_job_delay_default = 5
+        BLAT_pp_job_delay_default = 5
+        DIAMOND_pp_job_delay_default = 5
+        
+        
         
         if config:
             self.target_rank                = self.value_assignment(config, "Settings", "target_rank", "genus")
@@ -235,6 +248,9 @@ class tool_path_obj:
             self.DETECT_mem_threshold       = self.value_assignment(config, "Settings", "DETECT_mem_threshold", DETECT_mem_default)
             self.Infernal_mem_threshold     = self.value_assignment(config, "Settings", "Infernal_mem_threshold", Infernal_mem_default)
             self.Barrnap_mem_threshold      = self.value_assignment(config, "Settings", "Barrnap_mem_threshold", Barrnap_mem_default)
+            self.BWA_pp_mem_threshold       = self.value_assignment(config, "Settings", "BWA_pp_mem_threshold", BWA_pp_mem_default)
+            self.BLAT_pp_mem_threshold      = self.value_assignment(config, "Settings", "BLAT_pp_mem_threshold", BLAT_pp_mem_default)
+            self.DIAMOND_pp_mem_threshold   = self.value_assignment(config, "Settings", "DIAMOND_pp_mem_threshold", DIAMOND_pp_mem_default)
                 
             #-----------------------------------------------------------------------------------------------    
             
@@ -245,6 +261,10 @@ class tool_path_obj:
             self.DETECT_job_limit           = self.value_assignment(config, "Settings", "DETECT_job_limit", DETECT_job_limit_default)
             self.Infernal_job_limit         = self.value_assignment(config, "Settings", "Infernal_job_limit", Infernal_job_limit_default)
             self.Barrnap_job_limit          = self.value_assignment(config, "Settings", "Barrnap_job_limit", Barrnap_job_limit_default)
+            self.BWA_pp_job_limit           = self.value_assignment(config, "Settings", "BWA_pp_job_limit", BWA_pp_job_limit_default)
+            self.BLAT_pp_job_limit          = self.value_assignment(config, "Settings", "BLAT_pp_job_limit", BLAT_pp_job_limit_default)
+            self.DIAMOND_pp_job_limit       = self.value_assignment(config, "Settings", "DIAMOND_pp_job_limit", DIAMOND_pp_job_limit_default)
+            
             
             #------------------------------------------------------------------------------------------------
             self.keep_all                   = self.value_assignment(config, "Settings", "keep_all", keep_all_default)
@@ -266,12 +286,14 @@ class tool_path_obj:
             #------------------------------------------------------------------------
             
             self.Infernal_job_delay         = self.value_assignment(config, "Settings", "Infernal_job_delay", Infernal_job_delay_default)
-            self.Barrnap_job_delay          = self.value_assignment(config, "Settings", "Barrnap_job_delay", Infernal_job_delay_default)
-            self.BWA_job_delay              = self.value_assignment(config, "Settings", "BWA_job_delay", Infernal_job_delay_default)
-            self.BLAT_job_delay             = self.value_assignment(config, "Settings", "BLAT_job_delay", Infernal_job_delay_default)
-            self.DIAMOND_job_delay          = self.value_assignment(config, "Settings", "DIAMOND_job_delay", Infernal_job_delay_default)
-            self.DETECT_job_delay           = self.value_assignment(config, "Settings", "DETECT_job_delay", Infernal_job_delay_default)
-            
+            self.Barrnap_job_delay          = self.value_assignment(config, "Settings", "Barrnap_job_delay", Barrnap_job_delay_default)
+            self.BWA_job_delay              = self.value_assignment(config, "Settings", "BWA_job_delay", BWA_job_delay_default)
+            self.BLAT_job_delay             = self.value_assignment(config, "Settings", "BLAT_job_delay", BLAT_job_delay_default)
+            self.DIAMOND_job_delay          = self.value_assignment(config, "Settings", "DIAMOND_job_delay", DIAMOND_job_delay_default)
+            self.DETECT_job_delay           = self.value_assignment(config, "Settings", "DETECT_job_delay", DETECT_job_delay_default)
+            self.BWA_pp_job_delay           = self.value_assignment(config, "Settings", "BWA_pp_job_delay", BWA_pp_job_delay_default)
+            self.BLAT_pp_job_delay          = self.value_assignment(config, "Settings", "BLAT_pp_job_delay", BLAT_pp_job_delay_default)
+            self.DIAMOND_pp_job_delay       = self.value_assignment(config, "Settings", "DIAMOND_pp_job_delay", DIAMOND_pp_job_delay_default)
             
             #--------------------------------------------------------------------------------------
             
@@ -288,12 +310,19 @@ class tool_path_obj:
             self.BWA_mem_threshold = BWA_mem_default
             self.BLAT_mem_threshold = BLAT_mem_default
             self.DIAMOND_mem_threshold = DIAMOND_mem_default
+            self.BWA_pp_mem_threshold = BWA_pp_mem_default
+            self.BLAT_pp_mem_threshold = BLAT_pp_mem_default
+            self.DIAMOND_pp_mem_threshold = DIAMOND_pp_mem_default
             self.DETECT_mem_threshold = DETECT_mem_default
             self.Infernal_mem_threshold = Infernal_mem_default
             self.rRNA_chunksize = rRNA_chunksize_default
             self.BWA_job_limit = BWA_job_limit_default
             self.BLAT_job_limit = BLAT_job_limit_default
             self.DIAMOND_job_limit = DIAMOND_job_limit_default
+            self.BWA_pp_job_limit = BWA_pp_job_limit_default
+            self.BLAT_pp_job_limit = BLAT_pp_job_limit_default
+            self.DIAMOND_pp_job_limit = DIAMOND_pp_job_limit_default
+
             self.DETECT_job_limit = DETECT_job_limit_default
             self.Infernal_job_limit = Infernal_job_limit_default
             
@@ -317,6 +346,9 @@ class tool_path_obj:
             self.BWA_job_delay = BWA_job_delay_default
             self.BLAT_job_delay = BLAT_job_delay_default
             self.DIAMOND_job_delay = DIAMOND_job_delay_default
+            self.BWA_pp_job_delay = BWA_pp_job_delay_default
+            self.BLAT_pp_job_delay = BLAT_pp_job_delay_default
+            self.DIAMOND_pp_job_delay = DIAMOND_pp_job_delay_default
             self.DETECT_job_delay = DETECT_job_delay_default
             
             self.filter_stringency = filter_stringency_default
