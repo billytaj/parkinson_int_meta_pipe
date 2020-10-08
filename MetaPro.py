@@ -288,9 +288,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     verbose_mode = args_pack["verbose_mode"]
     rRNA_chunks = int(paths.rRNA_chunksize)
     GA_chunksize = int(paths.GA_chunksize)
+    
     BWA_mem_threshold = int(paths.BWA_mem_threshold)
     BLAT_mem_threshold = int(paths.BLAT_mem_threshold)
     DIAMOND_mem_threshold = int(paths.DIAMOND_mem_threshold)
+    BWA_pp_mem_threshold = int(paths.BWA_pp_mem_threshold)
+    BLAT_pp_mem_threshold = int(paths.BLAT_pp_mem_threshold)
+    DIAMOND_pp_mem_threshold = int(paths.DIAMOND_pp_mem_threshold)
     Infernal_mem_threshold = int(paths.Infernal_mem_threshold)
     Barrnap_mem_threshold = int(paths.Barrnap_mem_threshold)
     DETECT_mem_threshold = int(paths.DETECT_mem_threshold)
@@ -300,6 +304,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     BWA_job_limit = int(paths.BWA_job_limit)
     BLAT_job_limit = int(paths.BLAT_job_limit)
     DIAMOND_job_limit = int(paths.DIAMOND_job_limit)
+    BWA_pp_job_limit = int(paths.BWA_pp_job_limit)
+    BLAT_pp_job_limit = int(paths.BLAT_pp_job_limit)
+    DIAMOND_pp_job_limit = int(paths.DIAMOND_pp_job_limit)
     Infernal_job_limit = int(paths.Infernal_job_limit)
     Barrnap_job_limit = int(paths.Barrnap_job_limit)
     DETECT_job_limit = int(paths.DETECT_job_limit)
@@ -309,6 +316,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     BWA_job_delay           = float(paths.BWA_job_delay)
     BLAT_job_delay          = float(paths.BLAT_job_delay)
     DIAMOND_job_delay       = float(paths.DIAMOND_job_delay)
+    BWA_pp_job_delay        = float(paths.BWA_pp_job_delay)
+    BLAT_pp_job_delay       = float(paths.BLAT_pp_job_delay)
+    DIAMOND_pp_job_delay    = float(paths.DIAMOND_pp_job_delay)
     DETECT_job_delay        = float(paths.DETECT_job_delay)
     
     #-----------------------------------------------------
@@ -353,6 +363,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("BWA job delay:", BWA_job_delay)
     print("BLAT job delay:", BLAT_job_delay)
     print("DIAMOND job delay:", DIAMOND_job_delay)
+    print("BWA pp job delay:", BWA_pp_job_delay)
+    print("BLAT pp job delay:", BLAT_pp_job_delay)
+    print("DIAMOND pp job delay:", DIAMOND_pp_job_delay)
     print("DETECT job delay:", DETECT_job_delay)
     print("=================================================")
     print("memory thresholds")
@@ -361,6 +374,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("BWA mem threshold:", BWA_mem_threshold)
     print("BLAT mem threshold:", BLAT_mem_threshold)
     print("DIAMOND mem threshold:", DIAMOND_mem_threshold)
+    print("BWA pp mem threshold:", BWA_pp_mem_threshold)
+    print("BLAT pp mem threshold:", BLAT_pp_mem_threshold)
+    print("DIAMOND pp mem threshold:", DIAMOND_pp_mem_threshold)
     print("DETECT mem threshold:", DETECT_mem_threshold)
     print("======================================================")
     print("Barrnap job limit:", Barrnap_job_limit)
@@ -368,6 +384,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("BWA job limit:", BWA_job_limit)
     print("BLAT job limit:", BLAT_job_limit)
     print("DIAMOND job limit:", DIAMOND_job_limit)
+    print("BWA pp job limit:", BWA_pp_job_limit)
+    print("BLAT pp job limit:", BLAT_pp_job_limit)
+    print("DIAMOND pp job limit:", DIAMOND_pp_job_limit)
     print("DETECT job limit:", DETECT_job_limit)
     print("===================================================")
     print("Filter stringency:", filter_stringency)
@@ -1055,7 +1074,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 else:
                     marker_path_list.append(marker_path)
                     command_list = commands.create_BWA_pp_command_v2(GA_BWA_label, assemble_contigs_label, full_sample_path, marker_file)
-                    launch_and_create_with_hold(mp_store, BWA_mem_threshold, BWA_job_limit, BWA_job_delay, GA_BWA_label, job_name, commands, command_list)
+                    launch_and_create_with_hold(mp_store, BWA_pp_mem_threshold, BWA_pp_job_limit, BWA_pp_job_delay, GA_BWA_label, job_name, commands, command_list)
                         
         print(dt.today(), "all BWA PP jobs submitted.  waiting for sync")            
         for item in mp_store:
@@ -1176,7 +1195,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 else:
                     marker_path_list.append(marker_path)
                     command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, marker_file)
-                    launch_and_create_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                    launch_and_create_with_hold(mp_store, BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
                 
         print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
         for item in mp_store:
@@ -1262,7 +1281,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 else:
                     marker_path_list.append(marker_path)
                     command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path)
-                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
+                    launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                                     
         print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
         for item in mp_store:
