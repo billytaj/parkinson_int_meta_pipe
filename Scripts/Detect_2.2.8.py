@@ -602,8 +602,8 @@ if __name__=="__main__":
                 process_list[:] = []
                 process_counter = 0
             
-        outer_dict = merge_dicts(outer_dict, final_dict) #merge the 2
-        final_dict = mp.Manager().dict()    #empty it. start a new collection
+        #outer_dict = merge_dicts(outer_dict, final_dict) #merge the 2
+        #final_dict = mp.Manager().dict()    #empty it. start a new collection
             
     #======================================================================
     # Final sync
@@ -612,7 +612,8 @@ if __name__=="__main__":
         item.join()
     process_list[:] = []
     process_counter = 0
-    outer_dict = merge_dicts(outer_dict, final_dict) #merge the 2
+    outer_dict = dict(final_dict)
+    #outer_dict = merge_dicts(outer_dict, final_dict) #merge the 2
 
                         
     
