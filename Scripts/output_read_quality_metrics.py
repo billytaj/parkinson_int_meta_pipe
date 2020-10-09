@@ -14,17 +14,17 @@ import math
 class read_quality_metrics:
     def __init__(self, input_file):
         self.input_file = input_file
-        self.input_suffix = os.path.splitext(input_file)[1]
+        self.input_suffix = os.path.splitext(input_file)[1].strip(".")
         #self.df_orig = None
         
-        if(self.input_suffix == ".fastq"):
+        if(self.input_suffix == "fastq"):
             self.df_file = pd.read_csv(self.input_file, header = None, names=None, sep='\n', skip_blank_lines=False, quoting = 3)
             self.df_orig = pd.DataFrame(self.df_file.values.reshape(int(len(self.df_file)/4), 4))
             self.df_orig.columns = ["ID", "seq", "junk", "quality"]
             self.df_orig.drop(columns =["ID", "seq", "junk"], inplace = True)
             
             
-        elif(self.input_suffix == ".fasta"):
+        elif(self.input_suffix == "fasta"):
             self.df_orig = pd.read_csv(self.input_file, error_bad_lines=False, header=None, sep="\n")  # import the fasta
             self.df_orig.columns = ["row"]
             #There's apparently a possibility for NaNs to be introduced in the raw fasta.  We have to strip it before we process (from DIAMOND proteins.faa)
