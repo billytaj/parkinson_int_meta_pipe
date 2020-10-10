@@ -178,6 +178,8 @@ class tool_path_obj:
         self.output_filter_taxa         = os.path.join(script_path, "output_filter_taxa.py")
         self.output_filter_ECs          = os.path.join(script_path, "output_filter_ECs.py")
         self.bwa_read_sorter            = os.path.join(script_path, "bwa_read_sorter.py")
+        self.ta_contig_name_convert     = os.path.join(script_path, "ta_contig_name_convert.py")
+        
         #--------------------------------------------------
         # miscellaneous values
         BWA_mem_default = 50
