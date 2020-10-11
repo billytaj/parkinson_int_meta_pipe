@@ -1264,7 +1264,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
     #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
     if check_bypass_log(output_folder_path, GA_DIAMOND_pp_label):
-        DIAMOND_pp_Pool = mp.Pool(int(real_thread_count / 2))
         print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
         marker_path_list = []
         for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
@@ -1338,20 +1337,92 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     # ------------------------------------------------------
     # Taxonomic annotation
     TA_start = time.time()
-    taxon_annotation_path = os.path.join(output_folder_path, taxon_annotation_label)
-    #if not check_where_resume(taxon_annotation_path, None, GA_DIAMOND_path):
+    TA_path = os.path.join(output_folder_path, taxon_annotation_label)
+    TA_jobs_folder = os.path.join(TA_path, "data", "jobs")
     if check_bypass_log(output_folder_path, taxon_annotation_label):
-    
-        
-        command_list = commands.create_taxonomic_annotation_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, GA_final_merge_label)
-        job_name = taxon_annotation_label
-        launch_and_create_simple(taxon_annotation_label, job_name, commands, command_list)
-        final_taxa_output_path = os.path.join(output_folder_path, taxon_annotation_label, "final_results", "constrain_classification.tsv")
-        if(os.path.exists(final_taxa_output_path)):
-            write_to_bypass_log(output_folder_path, taxon_annotation_label)
+        #-----------------------------------------
+        # stage 1
+        marker_path_list = []
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["paired"])
+            
+        for section in sections:
+            marker_file = "TA_kaiju_" + section
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_kaiju_command(taxon_annotation_label, assemble_contigs_label, section, marker_file)
+                launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+        sections = ["contigs", "reads", "rRNA"]
+        for section in sections:
+            marker_file = "TA_centrifuge_" + section
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+                
+        marker_file = "TA_taxon_pull"
+        marker_path = os.path.join(TA_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_file)
         else:
-            print(dt.today(), "TA failed")
-            sys.exit()
+            marker_path_list.append(marker_path)
+            command_list = commands.create_TA_taxon_pull_command(taxon_annotation_label, GA_final_merge_label, marker_file)
+            launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+        print(dt.today(), "waiting for TA stage 1")
+        for p_item in mp_store:
+            p_item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(TA_path, "TA_stage_1.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        
+        #--------------------------------------------------
+        # stage 2
+        marker_path_list = []
+        marker_file = "TA_centrifuge_pp"
+        marker_path = os.path.join(TA_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_file)
+        else:
+            marker_path_list.append(marker_path)
+            command_list = commands.create_TA_centrifuge_pp_command(taxon_annotation_label, marker_file)
+            launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+            
+        marker_file = "TA_kaiju_pp"
+        marker_path = os.path.join(TA_jobs_folder, marker_file)
+        if(os.path.exists(marker_file)):
+            print(dt.today(), "skipping:", marker_file)
+        else:
+            marker_path_list.append(marker_path)
+            command_list = commands.create_TA_kaiju_pp_command(taxon_annotation_label, marker_file)
+            launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+        for p_item in mp_store:
+            p_item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(TA_path, "TA_stage_2.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        
+        #-----------------------------------------------
+        # stage 3
+        marker_path_list = []
+        marker_file = "TA_final"
+        marker_path = os.path.join(TA_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_file)
+        else:
+            marker_path_list.append(marker_path)
+            command_list = commands.create_TA_final_command(taxon_annotation_label, assemble_contigs_label, marker_file)
+            launch_and_create_simple(taxon_annotation_label, marker_file, commands, command_list)
+        final_checklist = os.path.join(TA_path, "TA_final.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        
             
     cleanup_TA_start = time.time()
     if(keep_all == "no" and keep_TA == "no"):
