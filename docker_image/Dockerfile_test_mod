@@ -49,6 +49,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/t
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ta_contig_name_fix/Scripts/ta_taxid.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ta_contig_name_fix/Scripts/ta_wevote_parser.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ta_contig_name_fix/Scripts/remove_gaps_in_fasta.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ta_contig_name_fix/Scripts/ta_contig_name_convert.py /pipeline/Scripts
 
 
 #--------------------------------------------
