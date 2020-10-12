@@ -1877,6 +1877,9 @@ class mt_pipe_commands:
         kaiju_folder            = os.path.join(data_folder, "1_kaiju")
         jobs_folder             = os.path.join(data_folder, "jobs")
         
+        self.make_folder(kaiju_folder)
+        self.make_folder(jobs_folder)
+        
         if(operating_mode == "contigs"):
             kaiju_on_contigs = ">&2 echo kaiju on contigs | "
             kaiju_on_contigs += self.tool_path_obj.Kaiju
@@ -1926,6 +1929,8 @@ class mt_pipe_commands:
         data_folder             = os.path.join(subfolder, "data")
         kaiju_folder            = os.path.join(data_folder, "1_kaiju")
         jobs_folder             = os.path.join(data_folder, "jobs")
+
+        self.make_folder(jobs_folder)
         
         cat_kaiju = ">&2 echo merging all kaiju results | "
         cat_kaiju += "cat "
@@ -1948,11 +1953,13 @@ class mt_pipe_commands:
         assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
         centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
         jobs_folder             = os.path.join(data_folder, "jobs")
+        final_folder            = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
         self.make_folder(centrifuge_folder)
         self.make_folder(jobs_folder)
+        self.make_folder(final_folder)
         
         if(operating_mode == "contigs"):
             patch_contig_name = self.tool_path_obj.Python + " "
@@ -1978,7 +1985,7 @@ class mt_pipe_commands:
             make_marker = "touch" + " "
             make_marker += os.path.join(jobs_folder, marker_file)
             
-            return [centrifuge_on_contigs + " && " + back_convert_report + " && " +  make_marker]
+            return [patch_contig_name + " && " + centrifuge_on_contigs + " && " + back_convert_report + " && " +  make_marker]
 
             
         elif(operating_mode == "reads"):

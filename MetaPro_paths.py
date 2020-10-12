@@ -235,6 +235,10 @@ class tool_path_obj:
         BLAT_pp_job_delay_default = 5
         DIAMOND_pp_job_delay_default = 5
         
+        TA_mem_threshold_default = 75
+        TA_job_delay_default = 5
+        TA_job_limit_default = 40
+        
         
         
         if config:
@@ -253,6 +257,7 @@ class tool_path_obj:
             self.BWA_pp_mem_threshold       = self.value_assignment(config, "Settings", "BWA_pp_mem_threshold", BWA_pp_mem_default)
             self.BLAT_pp_mem_threshold      = self.value_assignment(config, "Settings", "BLAT_pp_mem_threshold", BLAT_pp_mem_default)
             self.DIAMOND_pp_mem_threshold   = self.value_assignment(config, "Settings", "DIAMOND_pp_mem_threshold", DIAMOND_pp_mem_default)
+            self.TA_mem_threshold           = self.value_assignment(config, "Settings", "TA_mem_threshold", TA_mem_threshold_default)
                 
             #-----------------------------------------------------------------------------------------------    
             
@@ -266,7 +271,7 @@ class tool_path_obj:
             self.BWA_pp_job_limit           = self.value_assignment(config, "Settings", "BWA_pp_job_limit", BWA_pp_job_limit_default)
             self.BLAT_pp_job_limit          = self.value_assignment(config, "Settings", "BLAT_pp_job_limit", BLAT_pp_job_limit_default)
             self.DIAMOND_pp_job_limit       = self.value_assignment(config, "Settings", "DIAMOND_pp_job_limit", DIAMOND_pp_job_limit_default)
-            
+            self.TA_job_limit               = self.value_assignment(config, "Settings", "TA_job_limit", TA_job_limit_default)
             
             #------------------------------------------------------------------------------------------------
             self.keep_all                   = self.value_assignment(config, "Settings", "keep_all", keep_all_default)
@@ -296,6 +301,7 @@ class tool_path_obj:
             self.BWA_pp_job_delay           = self.value_assignment(config, "Settings", "BWA_pp_job_delay", BWA_pp_job_delay_default)
             self.BLAT_pp_job_delay          = self.value_assignment(config, "Settings", "BLAT_pp_job_delay", BLAT_pp_job_delay_default)
             self.DIAMOND_pp_job_delay       = self.value_assignment(config, "Settings", "DIAMOND_pp_job_delay", DIAMOND_pp_job_delay_default)
+            self.TA_job_delay               = self.value_assignment(config, "Settings", "TA_job_delay", TA_job_delay_default)
             
             #--------------------------------------------------------------------------------------
             

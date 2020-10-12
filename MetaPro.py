@@ -298,6 +298,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     Infernal_mem_threshold = int(paths.Infernal_mem_threshold)
     Barrnap_mem_threshold = int(paths.Barrnap_mem_threshold)
     DETECT_mem_threshold = int(paths.DETECT_mem_threshold)
+    TA_mem_threshold = int(paths.TA_mem_threshold)
     filter_stringency = paths.filter_stringency
     
     
@@ -310,6 +311,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     Infernal_job_limit = int(paths.Infernal_job_limit)
     Barrnap_job_limit = int(paths.Barrnap_job_limit)
     DETECT_job_limit = int(paths.DETECT_job_limit)
+    TA_job_limit = int(paths.TA_job_limit)
     
     Infernal_job_delay      = float(paths.Infernal_job_delay)
     Barrnap_job_delay       = float(paths.Barrnap_job_delay)
@@ -320,6 +322,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     BLAT_pp_job_delay       = float(paths.BLAT_pp_job_delay)
     DIAMOND_pp_job_delay    = float(paths.DIAMOND_pp_job_delay)
     DETECT_job_delay        = float(paths.DETECT_job_delay)
+    TA_job_delay            = float(paths.TA_job_delay)
     
     #-----------------------------------------------------
     keep_all                = paths.keep_all
@@ -1343,6 +1346,20 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #-----------------------------------------
         # stage 1
         marker_path_list = []
+        #----------------------------------------------
+        #centrifuge is too much of a RAM hog.  can't run more than 1 at a time
+        sections = ["rRNA"]#, "reads", "contigs"]
+        for section in sections:
+            marker_file = "TA_centrifuge_" + section
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+                
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
             sections.extend(["paired"])
@@ -1355,19 +1372,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             else:
                 marker_path_list.append(marker_path)
                 command_list = commands.create_TA_kaiju_command(taxon_annotation_label, assemble_contigs_label, section, marker_file)
-                launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
-        sections = ["contigs", "reads", "rRNA"]
-        for section in sections:
-            marker_file = "TA_centrifuge_" + section
-            marker_path = os.path.join(TA_jobs_folder, marker_file)
-            
-            if(os.path.exists(marker_path)):
-                print(dt.today(), "skipping:", marker_file)
-            else:
-                marker_path_list.append(marker_path)
-                command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
-                launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
-                
+                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)        
         marker_file = "TA_taxon_pull"
         marker_path = os.path.join(TA_jobs_folder, marker_file)
         if(os.path.exists(marker_path)):
@@ -1375,7 +1380,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         else:
             marker_path_list.append(marker_path)
             command_list = commands.create_TA_taxon_pull_command(taxon_annotation_label, GA_final_merge_label, marker_file)
-            launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+            launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
         print(dt.today(), "waiting for TA stage 1")
         for p_item in mp_store:
             p_item.join()
@@ -1386,15 +1391,18 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #--------------------------------------------------
         # stage 2
         marker_path_list = []
-        marker_file = "TA_centrifuge_pp"
-        marker_path = os.path.join(TA_jobs_folder, marker_file)
-        if(os.path.exists(marker_path)):
-            print(dt.today(), "skipping:", marker_file)
-        else:
-            marker_path_list.append(marker_path)
-            command_list = commands.create_TA_centrifuge_pp_command(taxon_annotation_label, marker_file)
-            launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+        sections = ["reads"]
+        for section in sections:
+            marker_file = "TA_centrifuge_" + section
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
             
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+        
         marker_file = "TA_kaiju_pp"
         marker_path = os.path.join(TA_jobs_folder, marker_file)
         if(os.path.exists(marker_file)):
@@ -1402,16 +1410,50 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         else:
             marker_path_list.append(marker_path)
             command_list = commands.create_TA_kaiju_pp_command(taxon_annotation_label, marker_file)
-            launch_and_create_with_mp_store(mp_store, taxon_annotation_label, marker_file, commands, command_list)
+            launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
         for p_item in mp_store:
             p_item.join()
         mp_store[:] = []
         final_checklist = os.path.join(TA_path, "TA_stage_2.txt")
         check_all_job_markers(marker_path_list, final_checklist)
+        #------------------------------------------------------------------
+        sections = ["contigs"]
+        for section in sections:
+            marker_file = "TA_centrifuge_" + section
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
         
-        #-----------------------------------------------
+        for p_item in mp_store:
+            p_item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(TA_path, "TA_stage_3.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        #-----------------------------------------------------------------
         # stage 3
         marker_path_list = []
+        marker_file = "TA_centrifuge_pp"
+        marker_path = os.path.join(TA_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_file)
+        else:
+            marker_path_list.append(marker_path)
+            command_list = commands.create_TA_centrifuge_pp_command(taxon_annotation_label, marker_file)
+            launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+        for p_item in mp_store:
+            p_item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(TA_path, "TA_stage_4.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        #-----------------------------------------------
+        # stage 4
+        marker_path_list = []
+        
         marker_file = "TA_final"
         marker_path = os.path.join(TA_jobs_folder, marker_file)
         if(os.path.exists(marker_path)):
