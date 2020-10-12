@@ -1870,14 +1870,215 @@ class mt_pipe_commands:
         return COMMANDS_ga_final_merge
         
 
+    def create_TA_kaiju_command(self, current_stage_name, assemble_contigs_stage, operating_mode, marker_file):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        jobs_folder             = os.path.join(data_folder, "jobs")
         
+        self.make_folder(kaiju_folder)
+        self.make_folder(jobs_folder)
+        
+        if(operating_mode == "contigs"):
+            kaiju_on_contigs = ">&2 echo kaiju on contigs | "
+            kaiju_on_contigs += self.tool_path_obj.Kaiju
+            kaiju_on_contigs += " -t " + self.tool_path_obj.nodes
+            kaiju_on_contigs += " -f " + self.tool_path_obj.Kaiju_db
+            kaiju_on_contigs += " -i " + os.path.join(assemble_contigs_folder, "contigs.fasta")
+            kaiju_on_contigs += " -z " + self.Threads_str
+            kaiju_on_contigs += " -o " + os.path.join(kaiju_folder, "contigs.tsv")
+            
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            return [kaiju_on_contigs + " && " + make_marker]
 
-    def create_taxonomic_annotation_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, ga_final_merge_stage):
+        elif(operating_mode == "singletons"):
+            kaiju_on_singletons = ">&2 echo kaiju on singletons | "
+            kaiju_on_singletons += self.tool_path_obj.Kaiju
+            kaiju_on_singletons += " -t " + self.tool_path_obj.nodes
+            kaiju_on_singletons += " -f " + self.tool_path_obj.Kaiju_db
+            kaiju_on_singletons += " -i " + os.path.join(assemble_contigs_folder, "singletons.fastq")
+            kaiju_on_singletons += " -z " + self.Threads_str
+            kaiju_on_singletons += " -o " + os.path.join(kaiju_folder, "singletons.tsv")
+
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            return [kaiju_on_singletons + " && " + make_marker]
+            
+        elif(operating_mode == "paired"):
+            kaiju_on_paired = ">&2 echo kaiju on pairs | "
+            kaiju_on_paired += self.tool_path_obj.Kaiju
+            kaiju_on_paired += " -t " + self.tool_path_obj.nodes
+            kaiju_on_paired += " -f " + self.tool_path_obj.Kaiju_db
+            kaiju_on_paired += " -i " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+            kaiju_on_paired += " -j " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+            kaiju_on_paired += " -z " + self.Threads_str
+            kaiju_on_paired += " -o " + os.path.join(kaiju_folder, "pairs.tsv")
+            
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            return [kaiju_on_paired + " && " + make_marker]
+            
+            
+    def create_TA_kaiju_pp_command(self, current_stage_name, marker_file):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        kaiju_folder            = os.path.join(data_folder, "1_kaiju")
+        jobs_folder             = os.path.join(data_folder, "jobs")
+
+        self.make_folder(jobs_folder)
+        
+        cat_kaiju = ">&2 echo merging all kaiju results | "
+        cat_kaiju += "cat "
+        cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
+        cat_kaiju += os.path.join(kaiju_folder, "singletons.tsv")
+        if self.read_mode == "paired":
+            cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
+        cat_kaiju += " > " + os.path.join(kaiju_folder, "merged_kaiju.tsv")
+        
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [cat_kaiju + " && " + make_marker]
+        
+        
+    def create_TA_centrifuge_command(self, current_stage_name, rRNA_stage, assemble_contigs_stage, operating_mode, marker_file):
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
         rRNA_folder             = os.path.join(self.Output_Path, rRNA_stage, "final_results", "other")
         assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        jobs_folder             = os.path.join(data_folder, "jobs")
+        final_folder            = os.path.join(subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(jobs_folder)
+        self.make_folder(final_folder)
+        
+        if(operating_mode == "contigs"):
+            patch_contig_name = self.tool_path_obj.Python + " "
+            patch_contig_name += self.tool_path_obj.ta_contig_name_convert + " "
+            patch_contig_name += os.path.join(assemble_contigs_folder, "contigs.fasta") + " "
+            patch_contig_name += os.path.join(centrifuge_folder, "contigs_renamed.fasta")
+        
+            centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
+            centrifuge_on_contigs += self.tool_path_obj.Centrifuge
+            centrifuge_on_contigs += " -f -x " + self.tool_path_obj.Centrifuge_db
+            centrifuge_on_contigs += " -U " + os.path.join(centrifuge_folder, "contigs_renamed.fasta")
+            centrifuge_on_contigs += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+            centrifuge_on_contigs += " --phred" + self.Qual_str
+            centrifuge_on_contigs += " -p 6"
+            centrifuge_on_contigs += " -S " + os.path.join(centrifuge_folder, "raw_contigs.tsv")
+            centrifuge_on_contigs += " --report-file " + os.path.join(centrifuge_folder, "raw_contigs.txt")
+            
+            back_convert_report = self.tool_path_obj.Python + " "
+            back_convert_report += self.tool_path_obj.ta_contig_name_convert + " "
+            back_convert_report += os.path.join(centrifuge_folder, "raw_contigs.tsv") + " "
+            back_convert_report += os.path.join(centrifuge_folder, "contigs.tsv")
+            
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            return [patch_contig_name + " && " + centrifuge_on_contigs + " && " + back_convert_report + " && " +  make_marker]
+
+            
+        elif(operating_mode == "reads"):
+            centrifuge_on_reads = ">&2 echo centrifuge on reads | "
+            centrifuge_on_reads += self.tool_path_obj.Centrifuge
+            centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
+            centrifuge_on_reads += " -U " + os.path.join(assemble_contigs_folder, "singletons.fastq")
+            if self.read_mode == "paired":
+                centrifuge_on_reads += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+                centrifuge_on_reads += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+            centrifuge_on_reads += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+            centrifuge_on_reads += " --phred" + self.Qual_str
+            centrifuge_on_reads += " -p 6"
+            centrifuge_on_reads += " -S " + os.path.join(centrifuge_folder, "reads.tsv")
+            centrifuge_on_reads += " --report-file " + os.path.join(centrifuge_folder, "reads.txt")
+
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+        
+            return [centrifuge_on_reads + " && " + make_marker]
+            
+        elif(operating_mode == "rRNA"):
+        
+            centrifuge_on_rRNA = ">&2 echo centrifuge on rRNA | "
+            centrifuge_on_rRNA += self.tool_path_obj.Centrifuge
+            centrifuge_on_rRNA += " -x " + self.tool_path_obj.Centrifuge_db
+            centrifuge_on_rRNA += " -U " + os.path.join(rRNA_folder, "singletons_other.fastq")
+            if self.read_mode == "paired":
+                centrifuge_on_rRNA += " -1 " + os.path.join(rRNA_folder, "pair_1_other.fastq")
+                centrifuge_on_rRNA += " -2 " + os.path.join(rRNA_folder, "pair_2_other.fastq")
+            centrifuge_on_rRNA += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
+            centrifuge_on_rRNA += " --phred" + self.Qual_str
+            centrifuge_on_rRNA += " -p 6"
+            centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "other.tsv")
+            centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "other.txt")
+            
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            return [centrifuge_on_rRNA + " &&  " + make_marker]
+        
+    def create_TA_centrifuge_pp_command(self, current_stage_name, marker_file):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
+        jobs_folder             = os.path.join(data_folder, "jobs")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(centrifuge_folder)
+        self.make_folder(jobs_folder)        
+    
+        cat_centrifuge = ">&2 echo combining all centrifuge results | "
+        cat_centrifuge += "cat "
+        cat_centrifuge += os.path.join(centrifuge_folder, "reads.tsv") + " "
+        cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
+        cat_centrifuge += " > " + os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
+
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [cat_centrifuge + " && " + make_marker]
+    
+    def create_TA_taxon_pull_command(self, current_stage_name, ga_final_merge_stage, marker_file):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
         final_merge_folder      = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
+        ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
+        jobs_folder             = os.path.join(data_folder, "jobs")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(ga_taxa_folder)
+        self.make_folder(jobs_folder)
+        
+
+        get_taxa_from_gene = ">&2 echo get taxa from gene | "
+        get_taxa_from_gene += self.tool_path_obj.Python + " "
+        get_taxa_from_gene += self.tool_path_obj.Annotated_taxid + " "  # SLOW STEP
+        get_taxa_from_gene += os.path.join(final_merge_folder, "gene_map.tsv") + " "
+        get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
+        get_taxa_from_gene += os.path.join(ga_taxa_folder, "ga_taxon.tsv")
+        
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        return [get_taxa_from_gene + " && " + make_marker]
+
+    
+    def create_TA_final_command(self, current_stage_name, assemble_contigs_stage, marker_file):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        assemble_contigs_folder = os.path.join(self.Output_Path, assemble_contigs_stage, "final_results")
         ga_taxa_folder          = os.path.join(data_folder, "0_gene_taxa")
         kaiju_folder            = os.path.join(data_folder, "1_kaiju")
         centrifuge_folder       = os.path.join(data_folder, "2_centrifuge")
@@ -1891,103 +2092,8 @@ class mt_pipe_commands:
         self.make_folder(kaiju_folder)
         self.make_folder(centrifuge_folder)
         self.make_folder(wevote_folder)
-        self.make_folder(rRNA_folder)
         self.make_folder(final_folder)
         self.make_folder(jobs_folder)
-        
-
-        get_taxa_from_gene = ">&2 echo get taxa from gene | "
-        get_taxa_from_gene += self.tool_path_obj.Python + " "
-        get_taxa_from_gene += self.tool_path_obj.Annotated_taxid + " "  # SLOW STEP
-        get_taxa_from_gene += os.path.join(final_merge_folder, "gene_map.tsv") + " "
-        get_taxa_from_gene += self.tool_path_obj.accession2taxid + " "
-        get_taxa_from_gene += os.path.join(ga_taxa_folder, "ga_taxon.tsv")
-        
-        make_marker_get_taxa_from_gene = "touch" + " "
-        make_marker_get_taxa_from_gene += os.path.join(jobs_folder, "get_taxa_from_gene")
-
-        kaiju_on_contigs = ">&2 echo kaiju on contigs | "
-        kaiju_on_contigs += self.tool_path_obj.Kaiju
-        kaiju_on_contigs += " -t " + self.tool_path_obj.nodes
-        kaiju_on_contigs += " -f " + self.tool_path_obj.Kaiju_db
-        kaiju_on_contigs += " -i " + os.path.join(assemble_contigs_folder, "contigs.fasta")
-        kaiju_on_contigs += " -z " + self.Threads_str
-        kaiju_on_contigs += " -o " + os.path.join(kaiju_folder, "contigs.tsv")
-        
-        make_marker_kaiju_on_contigs = "touch" + " "
-        make_marker_kaiju_on_contigs += os.path.join(jobs_folder, "kaiju_on_contigs")
-
-        kaiju_on_singletons = ">&2 echo kaiju on singletons | "
-        kaiju_on_singletons += self.tool_path_obj.Kaiju
-        kaiju_on_singletons += " -t " + self.tool_path_obj.nodes
-        kaiju_on_singletons += " -f " + self.tool_path_obj.Kaiju_db
-        kaiju_on_singletons += " -i " + os.path.join(assemble_contigs_folder, "singletons.fastq")
-        kaiju_on_singletons += " -z " + self.Threads_str
-        kaiju_on_singletons += " -o " + os.path.join(kaiju_folder, "singletons.tsv")
-
-        make_marker_kaiju_on_singletons = "touch" + " "
-        make_marker_kaiju_on_singletons += os.path.join(jobs_folder, "kaiju_on_singletons")
-
-        kaiju_on_paired = ">&2 echo kaiju on pairs | "
-        kaiju_on_paired += self.tool_path_obj.Kaiju
-        kaiju_on_paired += " -t " + self.tool_path_obj.nodes
-        kaiju_on_paired += " -f " + self.tool_path_obj.Kaiju_db
-        kaiju_on_paired += " -i " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
-        kaiju_on_paired += " -j " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
-        kaiju_on_paired += " -z " + self.Threads_str
-        kaiju_on_paired += " -o " + os.path.join(kaiju_folder, "pairs.tsv")
-        
-        make_marker_kaiju_on_paired = "touch" +  " "
-        make_marker_kaiju_on_paired += os.path.join(jobs_folder, "kaiju_on_paired")
-
-        cat_kaiju = ">&2 echo merging all kaiju results | "
-        cat_kaiju += "cat "
-        cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
-        cat_kaiju += os.path.join(kaiju_folder, "singletons.tsv")
-        if self.read_mode == "paired":
-            cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
-        cat_kaiju += " > " + os.path.join(kaiju_folder, "merged_kaiju.tsv")
-        
-        make_marker_cat_kaiju = "touch" + " "
-        make_marker_cat_kaiju += os.path.join(jobs_folder, "cat_kaiju")
-
-        centrifuge_on_reads = ">&2 echo centrifuge on reads | "
-        centrifuge_on_reads += self.tool_path_obj.Centrifuge
-        centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
-        centrifuge_on_reads += " -U " + os.path.join(assemble_contigs_folder, "singletons.fastq")
-        if self.read_mode == "paired":
-            centrifuge_on_reads += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
-            centrifuge_on_reads += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
-        centrifuge_on_reads += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
-        centrifuge_on_reads += " --phred" + self.Qual_str
-        centrifuge_on_reads += " -p 6"
-        centrifuge_on_reads += " -S " + os.path.join(centrifuge_folder, "reads.tsv")
-        centrifuge_on_reads += " --report-file " + os.path.join(centrifuge_folder, "reads.txt")
-
-        make_marker_centrifuge_on_reads = "touch" + " "
-        make_marker_centrifuge_on_reads += os.path.join(jobs_folder, "centrifuge_on_reads")
-
-        centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
-        centrifuge_on_contigs += self.tool_path_obj.Centrifuge
-        centrifuge_on_contigs += " -f -x " + self.tool_path_obj.Centrifuge_db
-        centrifuge_on_contigs += " -U " + os.path.join(assemble_contigs_folder, "contigs.fasta")
-        centrifuge_on_contigs += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
-        centrifuge_on_contigs += " --phred" + self.Qual_str
-        centrifuge_on_contigs += " -p 6"
-        centrifuge_on_contigs += " -S " + os.path.join(centrifuge_folder, "contigs.tsv")
-        centrifuge_on_contigs += " --report-file " + os.path.join(centrifuge_folder, "contigs.txt")
-        
-        make_marker_centrifuge_on_contigs = "touch" + " "
-        make_marker_centrifuge_on_contigs += os.path.join(jobs_folder, "centrifuge_on_contigs")
-
-        cat_centrifuge = ">&2 echo combining all centrifuge results | "
-        cat_centrifuge += "cat "
-        cat_centrifuge += os.path.join(centrifuge_folder, "reads.tsv") + " "
-        cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
-        cat_centrifuge += " > " + os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
-
-        make_marker_cat_centrifuge = "touch" + " "
-        make_marker_cat_centrifuge += os.path.join(jobs_folder, "cat_centrifuge")
 
         wevote_combine = ">&2 echo combining classification outputs for wevote | "
         wevote_combine += self.tool_path_obj.Python + " "
@@ -1998,10 +2104,7 @@ class mt_pipe_commands:
         wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
         wevote_combine += os.path.join(ga_taxa_folder, "ga_taxon.tsv") + " "
         wevote_combine += os.path.join(kaiju_folder, "merged_kaiju.tsv") + " "
-        wevote_combine += os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
-        
-        make_marker_wevote_combine = "touch" + " "
-        make_marker_wevote_combine += os.path.join(jobs_folder, "wevote_combine")
+        wevote_combine += os.path.join(centrifuge_folder, "merged_centrifuge.tsv")        
 
         wevote_call = ">&2 echo Running WEVOTE | "
         wevote_call += self.tool_path_obj.WEVOTE
@@ -2013,34 +2116,12 @@ class mt_pipe_commands:
         wevote_call += " -a " + "0"
         wevote_call += " -s " + "0"
         
-        make_marker_wevote_call = "touch" + " "
-        make_marker_wevote_call += os.path.join(jobs_folder, "wevote_call")
-        
         wevote_collect = ">&2 echo gathering WEVOTE results | "
         wevote_collect += self.tool_path_obj.Python + " "
         wevote_collect += self.tool_path_obj.Wevote_parser + " "
         wevote_collect += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt") + " "
         wevote_collect += os.path.join(final_folder, "taxonomic_classifications.tsv")
         
-        make_marker_wevote_collect = "touch" + " "
-        make_marker_wevote_collect += os.path.join(jobs_folder, "wevote_collect")
-
-        centrifuge_on_rRNA = ">&2 echo centrifuge on rRNA | "
-        centrifuge_on_rRNA += self.tool_path_obj.Centrifuge
-        centrifuge_on_rRNA += " -x " + self.tool_path_obj.Centrifuge_db
-        centrifuge_on_rRNA += " -U " + os.path.join(rRNA_folder, "singletons_other.fastq")
-        if self.read_mode == "paired":
-            centrifuge_on_rRNA += " -1 " + os.path.join(rRNA_folder, "pair_1_other.fastq")
-            centrifuge_on_rRNA += " -2 " + os.path.join(rRNA_folder, "pair_2_other.fastq")
-        centrifuge_on_rRNA += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
-        centrifuge_on_rRNA += " --phred" + self.Qual_str
-        centrifuge_on_rRNA += " -p 6"
-        centrifuge_on_rRNA += " -S " + os.path.join(final_folder, "other.tsv")
-        centrifuge_on_rRNA += " --report-file " + os.path.join(final_folder, "other.txt")
-        
-        make_marker_centrifuge_on_rRNA = "touch" + " "
-        make_marker_centrifuge_on_rRNA += os.path.join(jobs_folder, "centrifuge_on_rRNA")
-
         constrain = ">&2 echo Constraining the Taxonomic Annotation | " 
         constrain += self.tool_path_obj.Python + " " + self.tool_path_obj.Constrain_classification + " "
         constrain += self.tool_path_obj.target_rank + " "
@@ -2049,85 +2130,10 @@ class mt_pipe_commands:
         constrain += self.tool_path_obj.names + " "
         constrain += os.path.join(final_folder, "constrain_classification.tsv")
         
-        make_marker_constrain = "touch" + " "
-        make_marker_constrain += os.path.join(jobs_folder, "constrain")
-        
-        if self.read_mode == "single":
-            COMMANDS_Classify = []
-            command = get_taxa_from_gene + " && " + make_marker_get_taxa_from_gene
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "get_taxa_from_gene"), COMMANDS_Classify, command)
-            
-            command = kaiju_on_contigs + " && " + make_marker_kaiju_on_contigs
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_contigs"), COMMANDS_Classify, command)
-        
-            command = kaiju_on_singletons + " && " + make_marker_kaiju_on_singletons
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_singletons"), COMMANDS_Classify, command)
-            
-            command = cat_kaiju + " && " + make_marker_cat_kaiju
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_kaiju"), COMMANDS_Classify, command)
-                
-            command = centrifuge_on_reads + " && " + make_marker_centrifuge_on_reads
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_reads"), COMMANDS_Classify, command)
-                
-            command = centrifuge_on_contigs + " && " + make_marker_centrifuge_on_contigs
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_contigs"), COMMANDS_Classify, command)
-            
-            command = cat_centrifuge + " && " + make_marker_cat_centrifuge
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_centrifuge"), COMMANDS_Classify, command)
-            
-            command = wevote_combine + " && " + make_marker_wevote_combine
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_combine"), COMMANDS_Classify, command)
-            
-            command = wevote_call + " && " + make_marker_wevote_call
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_call"), COMMANDS_Classify, command)
-            
-            command = wevote_collect + "&& " + make_marker_wevote_collect
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_collect"), COMMANDS_Classify, command)
-
-            command = constrain + " && " + make_marker_constrain
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "constrain"), COMMANDS_Classify, command)
-                
-                
-        elif self.read_mode == "paired":
-        
-            COMMANDS_Classify = []
-            command = get_taxa_from_gene + " && " + make_marker_get_taxa_from_gene
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "get_taxa_from_gene"), COMMANDS_Classify, command)
-            
-            command = kaiju_on_contigs + " && " + make_marker_kaiju_on_contigs
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_contigs"), COMMANDS_Classify, command)
-        
-            command = kaiju_on_singletons + " && " + make_marker_kaiju_on_singletons
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_singletons"), COMMANDS_Classify, command)
-            
-            command = kaiju_on_paired + " && " + make_marker_kaiju_on_paired
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "kaiju_on_paired"), COMMANDS_Classify, command)
-            
-            command = cat_kaiju + " && " + make_marker_cat_kaiju
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_kaiju"), COMMANDS_Classify, command)
-                
-            command = centrifuge_on_reads + " && " + make_marker_centrifuge_on_reads
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_reads"), COMMANDS_Classify, command)
-                
-            command = centrifuge_on_contigs + " && " + make_marker_centrifuge_on_contigs
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "centrifuge_on_contigs"), COMMANDS_Classify, command)
-            
-            command = cat_centrifuge + " && " + make_marker_cat_centrifuge
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "cat_centrifuge"), COMMANDS_Classify, command)
-            
-            command = wevote_combine + " && " + make_marker_wevote_combine
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_combine"), COMMANDS_Classify, command)
-            
-            command = wevote_call + " && " + make_marker_wevote_call
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_call"), COMMANDS_Classify, command)
-            
-            command = wevote_collect + "&& " + make_marker_wevote_collect
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "wevote_collect"), COMMANDS_Classify, command)
-
-            command = constrain + " && " + make_marker_constrain
-            COMMANDS_Classify = self.conditional_insert_job_into_queue(os.path.join(jobs_folder, "constrain"), COMMANDS_Classify, command)
-        
-        return COMMANDS_Classify
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+   
+        return [wevote_combine + " && " + wevote_call + " && " + wevote_collect + " && " + constrain + " && " + make_marker]
         
       
 
