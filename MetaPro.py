@@ -546,14 +546,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         print("host filter:", '%1.1f' % (host_end - host_start - (cleanup_host_end - cleanup_host_start)), "s")
         print("host filter cleanup:", '%1.1f' %(cleanup_host_end - cleanup_host_start),"s")
         
-
+    #-----------------------------------------------------------------
     # The vector contaminant filter stage
     vector_start = time.time()
     vector_path = os.path.join(output_folder_path, vector_filter_label)
     if no_host:
         #get dep args from quality filter
         #if not check_where_resume(vector_path, None, quality_path):
-        if check_bypass_log(output_folder_path, host_filter_label):        
+        if check_bypass_log(output_folder_path, vector_filter_label):        
             job_name = vector_filter_label
             command_list = commands.create_vector_filter_command(vector_filter_label, quality_filter_label)
             launch_and_create_simple(vector_filter_label, job_name, commands, command_list)
@@ -1787,5 +1787,7 @@ if __name__ == "__main__":
     args_pack["no_host"] = no_host
     args_pack["verbose_mode"] = verbose_mode
     
-    
+    print("=====================================")
+    print("no-host:", no_host)
+    print("verbose_mode:", verbose_mode)
     main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack)

@@ -31,7 +31,6 @@ def mem_checker(threshold):
         return True
         
 def cpu_checker():
-    time.sleep(1)
     cpu_use = psu.cpu_percent(interval = 0.0001, percpu = True)
     for item in cpu_use:
         if(item == 0):
@@ -493,6 +492,8 @@ if __name__=="__main__":
     
     parser.add_argument("--job_delay", type = int, help = "time (seconds) to wait in between parallel jobs")
     
+    parser.add_argument("--cpu_interval_time", type = float, help = "time(seconds) to poll the cpu interval time")
+    
     args = parser.parse_args()
     script_path = args.db if args.db else os.path.dirname(os.path.realpath(__file__))
 
@@ -504,6 +505,7 @@ if __name__=="__main__":
     needle = args.needle if args.needle else "needle"
     DETECT_mem_limit = int(args.mem_limit) if args.mem_limit else 50
     DETECT_job_delay = int(args.job_delay) if args.job_delay else 5
+    DETECT_cpu_interval = float(args.cpu_interval_time) if args.cpu_interval_time else 0.001
     
     print(dt.today(), "mem limit used:", DETECT_mem_limit, "%")
     
@@ -603,12 +605,12 @@ if __name__=="__main__":
                         print(dt.today(), true_job_count, "jobs launched!")
                     #print(dt.today(), process_counter, " process launch!")
                 else:
-                    print(dt.today(), "mem limit reached")
-                    time.sleep(DETECT_job_delay)
+                    #print(dt.today(), "mem limit reached")
+                    time.sleep(0.001)#DETECT_job_delay)
                 
             else:
-                print(dt.today(), "process launch paused due to cpu limit")
-                time.sleep(1)
+                #print(dt.today(), "process launch paused due to cpu limit")
+                time.sleep(0.001)
                 #for item in process_list:
                 #    item.join()
                 #process_list[:] = []
