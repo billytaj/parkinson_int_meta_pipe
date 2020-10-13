@@ -1348,7 +1348,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         marker_path_list = []
         #----------------------------------------------
         #centrifuge is too much of a RAM hog.  can't run more than 1 at a time
-        sections = ["rRNA"]#, "reads", "contigs"]
+        sections = ["reads"]
         for section in sections:
             marker_file = "TA_centrifuge_" + section
             marker_path = os.path.join(TA_jobs_folder, marker_file)
@@ -1391,7 +1391,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #--------------------------------------------------
         # stage 2
         marker_path_list = []
-        sections = ["reads"]
+        sections = ["contigs"]
         for section in sections:
             marker_file = "TA_centrifuge_" + section
             marker_path = os.path.join(TA_jobs_folder, marker_file)
@@ -1417,23 +1417,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         final_checklist = os.path.join(TA_path, "TA_stage_2.txt")
         check_all_job_markers(marker_path_list, final_checklist)
         #------------------------------------------------------------------
-        sections = ["contigs"]
-        for section in sections:
-            marker_file = "TA_centrifuge_" + section
-            marker_path = os.path.join(TA_jobs_folder, marker_file)
-            
-            if(os.path.exists(marker_path)):
-                print(dt.today(), "skipping:", marker_file)
-            else:
-                marker_path_list.append(marker_path)
-                command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
-                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
-        
-        for p_item in mp_store:
-            p_item.join()
-        mp_store[:] = []
-        final_checklist = os.path.join(TA_path, "TA_stage_3.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
+
         #-----------------------------------------------------------------
         # stage 3
         marker_path_list = []
@@ -1448,7 +1432,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         for p_item in mp_store:
             p_item.join()
         mp_store[:] = []
-        final_checklist = os.path.join(TA_path, "TA_stage_4.txt")
+        final_checklist = os.path.join(TA_path, "TA_stage_3.txt")
         check_all_job_markers(marker_path_list, final_checklist)
         #-----------------------------------------------
         # stage 4
