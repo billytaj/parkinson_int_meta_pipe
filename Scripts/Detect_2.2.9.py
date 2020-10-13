@@ -32,7 +32,7 @@ def mem_checker(threshold):
         
 def cpu_checker():
     time.sleep(1)
-    cpu_use = psu.cpu_percent(interval = 1, percpu = True)
+    cpu_use = psu.cpu_percent(interval = 0.0001, percpu = True)
     for item in cpu_use:
         if(item == 0):
             return True
