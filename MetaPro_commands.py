@@ -2137,7 +2137,7 @@ class mt_pipe_commands:
         
       
 
-    def create_EC_DETECT_command(self, current_stage_name, ga_final_merge_stage):
+    def create_EC_DETECT_command(self, current_stage_name, ga_final_merge_stage, marker_file):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
@@ -2166,7 +2166,7 @@ class mt_pipe_commands:
         detect_protein += " >> " + os.path.join(detect_folder, "detect_out.txt") + " 2>&1"
 
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, "ec_detect")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_DETECT = [
             detect_protein + " && " + make_marker
@@ -2174,7 +2174,7 @@ class mt_pipe_commands:
 
         return COMMANDS_DETECT
 
-    def create_EC_PRIAM_command(self, current_stage_name, ga_final_merge_stage):
+    def create_EC_PRIAM_command(self, current_stage_name, ga_final_merge_stage, marker_file):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
@@ -2197,7 +2197,7 @@ class mt_pipe_commands:
         PRIAM_command += self.tool_path_obj.BLAST_dir
         
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, "ec_priam")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_PRIAM = [
             PRIAM_command + " && " + make_marker
@@ -2206,7 +2206,7 @@ class mt_pipe_commands:
         return COMMANDS_PRIAM
         
         
-    def create_EC_DIAMOND_command(self, current_stage_name, ga_final_merge_stage):
+    def create_EC_DIAMOND_command(self, current_stage_name, ga_final_merge_stage, marker_file):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
@@ -2227,7 +2227,7 @@ class mt_pipe_commands:
         #diamond_ea_command += " --max-target-seqs 1"
         
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, "ec_diamond")
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         COMMANDS_DIAMOND_EC = [
             diamond_ea_command + " && " + make_marker
@@ -2235,7 +2235,7 @@ class mt_pipe_commands:
         
         return COMMANDS_DIAMOND_EC
         
-    def create_EC_postprocess_command(self, current_stage_name, ga_final_merge_stage):
+    def create_EC_postprocess_command(self, current_stage_name, ga_final_merge_stage, marker_file):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
@@ -2263,7 +2263,7 @@ class mt_pipe_commands:
         postprocess_command += os.path.join(final_folder, "lq_proteins.ECs_All")
         
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, "ec_post")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_EC_Postprocess = [
             #combine_detect,
@@ -2290,7 +2290,6 @@ class mt_pipe_commands:
         copy_gene_map = ">&2 echo copying gene map | "
         copy_gene_map += "cp " + os.path.join(ga_final_merge_folder, "gene_map.tsv") + " "
         copy_gene_map += os.path.join(final_folder, "gene_map.tsv")
-        
         
         return[copy_gene_map]
 
@@ -2500,7 +2499,21 @@ class mt_pipe_commands:
             
         return [per_read_scores]
         
+    def create_output_copy_taxa_command(self, current_stage_name, taxa_stage):
+        subfolder       = os.path.join(self.Output_Path, current_stage_name)
+        taxa_folder     = os.path.join(self.Output_Path, taxa_stage, "final_results")
+        final_folder    = os.path.join(subfolder, "final_results")
         
+        self.make_folder(subfolder)
+        self.make_folder(final_folder)
+        
+
+        copy_taxa = ">&2 echo " + str(dt.today()) + " copying taxa data | " 
+        copy_taxa += "cp" + " "
+        copy_taxa += os.path.join(taxa_folder, "constrain_classification.tsv") + " "
+        copy_taxa += os.path.join(final_folder, "taxa_classifications.tsv")
+        
+        return [copy_taxa]
         
         
     def create_output_contig_stats_command(self, current_stage_name, contig_stage):
@@ -2511,7 +2524,6 @@ class mt_pipe_commands:
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
-        self.make_folder(data_folder)
         self.make_folder(data_folder)
         self.make_folder(final_folder)
         

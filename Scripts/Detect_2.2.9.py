@@ -45,22 +45,23 @@ def make_folder(folder_path):
 def get_ec_to_cutoff(mapping_file, beta):
     """Return the mapping of EC to cutoff from the file with the mapping."""
     ec_to_cutoff = {}
-    open_file = open(mapping_file)
-    for i, line in enumerate(open_file):
-        line = line.strip()
-        if line == "":
-            continue
-        # which column to use?
-        if i == 0:
-            headers = line.split("\t")
-            for col_of_interest, header in enumerate(headers):
-                if header.find("beta=" + str(beta)) != -1:
-                    break
-            continue
-        split = line.split()
-        ec, cutoff = split[0], float(split[col_of_interest])
-        ec_to_cutoff[ec] = cutoff
-    open_file.close()
+    #open_file = open(mapping_file)
+    with open(mapping_file, "r") as open_file:
+        for i, line in enumerate(open_file):
+            line = line.strip()
+            if line == "":
+                continue
+            # which column to use?
+            if i == 0:
+                headers = line.split("\t")
+                for col_of_interest, header in enumerate(headers):
+                    if header.find("beta=" + str(beta)) != -1:
+                        break
+                continue
+            split = line.split()
+            ec, cutoff = split[0], float(split[col_of_interest])
+            ec_to_cutoff[ec] = cutoff
+    #open_file.close()
     return ec_to_cutoff
 
 class PairwiseAlignment:
@@ -604,6 +605,14 @@ if __name__=="__main__":
                     if(true_job_count % 100 == 0):
                         print(dt.today(), true_job_count, "jobs launched!")
                     #print(dt.today(), process_counter, " process launch!")
+                    
+                    if(process_counter > 100000):
+                        print(dt.today(), "limit of open jobs reached: 100000. closing before launching more.")
+                        for item in process_list:
+                            item.join()
+                        process_list[:] = []
+                        process_counter = 0
+                        
                 else:
                     #print(dt.today(), "mem limit reached")
                     time.sleep(0.001)#DETECT_job_delay)
@@ -611,10 +620,7 @@ if __name__=="__main__":
             else:
                 #print(dt.today(), "process launch paused due to cpu limit")
                 time.sleep(0.001)
-                #for item in process_list:
-                #    item.join()
-                #process_list[:] = []
-                #process_counter = 0
+                
             
         #outer_dict = merge_dicts(outer_dict, final_dict) #merge the 2
         #final_dict = mp.Manager().dict()    #empty it. start a new collection

@@ -478,7 +478,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     output_label                            = "outputs"
     output_copy_gene_map_label              = "output_copy_gene_map"
     output_clean_EC_label                   = "output_clean_ec"
-    output_taxa_table_label                 = "output_taxa_table"
+    output_copy_taxa_label                  = "output_copy_taxa"
     output_network_gen_label                = "output_network_generation"
     output_unique_hosts_singletons_label    = "output_unique_hosts_singletons"
     output_unique_hosts_pair_1_label        = "output_unique_hosts_pair_1"
@@ -1480,9 +1480,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping:", marker_file)
         else:
-            job_name = "ec_detect"
-            command_list = commands.create_EC_DETECT_command(ec_annotation_label, GA_final_merge_label)
-            launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
+            command_list = commands.create_EC_DETECT_command(ec_annotation_label, GA_final_merge_label, marker_file)
+            launch_and_create_with_mp_store(mp_store, ec_annotation_label, marker_file, commands, command_list)
         
         
     EC_DETECT_end = time.time()
@@ -1504,9 +1503,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 print(dt.today(), "starting with a fresh PRIAM run")
                 shutil.rmtree(ec_priam_path)
                 
-            job_name = "ec_priam"
-            command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label)
-            launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
+            command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label, marker_file)
+            launch_and_create_with_mp_store(mp_store, ec_annotation_label, marker_file, commands, command_list)
         
       
         #process.join()
@@ -1523,7 +1521,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             print(dt.today(), "skipping:", marker_file)
         else:
             job_name = "ec_diamond"
-            command_list = commands.create_EC_DIAMOND_command(ec_annotation_label, GA_final_merge_label)
+            command_list = commands.create_EC_DIAMOND_command(ec_annotation_label, GA_final_merge_label, marker_file)
             launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
         
     EC_DIAMOND_end = time.time()
@@ -1557,9 +1555,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping:", marker_file)
         else:
-            job_name = "ec_post"
-            command_list = commands.create_EC_postprocess_command(ec_annotation_label, GA_final_merge_label)
-            launch_and_create_simple(ec_annotation_label, job_name, commands, command_list)
+            command_list = commands.create_EC_postprocess_command(ec_annotation_label, GA_final_merge_label, marker_file)
+            launch_and_create_simple(ec_annotation_label, marker_file, commands, command_list)
         
         if(os.path.exists(marker_path)):
             write_to_bypass_log(output_folder_path, ec_annotation_pp_label)
@@ -1585,13 +1582,17 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     #if not check_where_resume(network_path, None, ec_annotation_path):
     
     if check_bypass_log(output_folder, output_label):
-
+        
         #phase 1
         if check_bypass_log(output_folder, output_copy_gene_map_label):
             job_name = output_copy_gene_map_label
             command_list = commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label)
             launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
             
+        if check_bypass_log(output_folder, output_copy_taxa_label):
+            job_name = output_copy_taxa_label
+            command_list = commands.create_output_copy_taxa_command(output_label, taxon_annotation_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
         
         if check_bypass_log(output_folder, output_contig_stats_label):
             job_name = output_contig_stats_label
@@ -1626,6 +1627,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         conditional_write_to_bypass_log(output_per_read_scores_label, "outputs/final_results", "input_per_seq_quality_report.csv", output_folder_path)
         conditional_write_to_bypass_log(output_copy_gene_map_label, "outputs/final_results", "final_gene_map.tsv", output_folder_path)
+        conditional_write_to_bypass_log(output_copy_taxa_label, "outputs/final_results", "taxa_classifications.tsv", output_folder_path)
         conditional_write_to_bypass_log(output_contig_stats_label, "outputs/final_results", "contig_stats.txt", output_folder_path)
         if not (no_host):
             conditional_write_to_bypass_log(output_unique_hosts_singletons_label, "outputs/data/1_unique_hosts", "singleton_hosts.fastq", output_folder_path)
