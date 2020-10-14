@@ -2587,6 +2587,8 @@ class mt_pipe_commands:
         read_counts += repopulation_folder + " "
         read_counts += final_merge_folder + " "
         read_counts += ea_folder + " "
-        read_counts += os.path.join(final_folder, "read_count.tsv")    
+        read_counts += os.path.join(final_folder, "read_count.tsv") + " "
+        read_counts += self.read_mode
+        
         
         return [read_counts]

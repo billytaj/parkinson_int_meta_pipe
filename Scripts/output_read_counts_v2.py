@@ -63,7 +63,8 @@ def check_paired_data(p1, p2, message):
 
 
 if __name__ == "__main__":
-
+    
+    
     raw_sequence        = sys.argv[1]   #in: the raw, unfiltered input
     quality_location    = sys.argv[2]   #in: th 
     host_location       = sys.argv[3]   #output repop
@@ -71,11 +72,16 @@ if __name__ == "__main__":
     gene_map_location   = sys.argv[5]
     ec_location         = sys.argv[6]
     output_file         = sys.argv[7]
+    operating_mode      = sys.argv[8]
     
+    qc_s = ""
+    if(operating_mode == "single"):
+        qc_s = os.path.join(quality_location, "singletons_hq.fastq")
+    else:
+        qc_s       = os.path.join(quality_location, "singletons_with_duplicates.fastq")
     
     qc_p1      = os.path.join(quality_location, "pair_1_match.fastq")
     qc_p2      = os.path.join(quality_location, "pair_2_match.fastq")
-    qc_s        = os.path.join(quality_location, "singletons_with_duplicates.fastq")
     
     qc_p1_unique    = os.path.join(quality_location, "pair_1.fastq")
     qc_p2_unique    = os.path.join(quality_location, "pair_2.fastq")
