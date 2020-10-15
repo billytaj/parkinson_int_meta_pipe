@@ -16,6 +16,7 @@ import pandas as pd
 import multiprocessing as mp
 import psutil as psu
 import time
+import resource as rs
 
 def mem_checker(threshold):
     #threshold is a percentage
@@ -573,7 +574,8 @@ if __name__=="__main__":
     outer_dict = dict()
     number_of_seqs = len(sequences)
     true_job_count = 0
-    
+    max_open_file_limit = rs.getrlimit(rs.RLIMIT_NOFILE)[0]
+    max_open_file_limit = int(max_open_file_limit *0.85) #don't go crazy
     #limiter bypass
     #if n_count == 0:
     #    n_count = number_of_seqs
@@ -606,8 +608,8 @@ if __name__=="__main__":
                         print(dt.today(), true_job_count, "jobs launched!")
                     #print(dt.today(), process_counter, " process launch!")
                     
-                    if(process_counter > 100000):
-                        print(dt.today(), "limit of open jobs reached: 100000. closing before launching more.")
+                    if(process_counter > max_open_file_limit):
+                        print(dt.today(), "limit of open jobs reached:" + str(max_open_file_limit) +  "|closing before launching more.")
                         for item in process_list:
                             item.join()
                         process_list[:] = []
