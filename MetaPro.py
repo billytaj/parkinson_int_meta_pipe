@@ -1449,6 +1449,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         final_checklist = os.path.join(TA_path, "TA_final.txt")
         check_all_job_markers(marker_path_list, final_checklist)
         
+        if(os.path.exists(marker_path)):
+            write_to_bypass_log(output_folder_path, taxon_annotation_label)
             
     cleanup_TA_start = time.time()
     if(keep_all == "no" and keep_TA == "no"):
