@@ -1317,9 +1317,6 @@ class mt_pipe_commands:
         mgm_folder          = os.path.join(data_folder, "1_mgm")
         bwa_folder          = os.path.join(data_folder, "2_bwa_align")
         mapped_reads_folder = os.path.join(data_folder, "3_mapped_reads")
-        consumed_folder     = os.path.join(data_folder, "4_reads_in_contigs")
-        #sam_trimmer_folder  = os.path.join(data_folder, "3_clean_sam")
-        #mapped_reads_folder = os.path.join(data_folder, "4_mapped_reads")
         final_folder        = os.path.join(subfolder, "final_results")
         
 
@@ -1327,9 +1324,6 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(spades_folder)
         self.make_folder(bwa_folder)
-        self.make_folder(consumed_folder)
-        #self.make_folder(sam_trimmer_folder)
-        #self.make_folder(mapped_reads_folder)
         self.make_folder(mgm_folder)
         self.make_folder(final_folder)
 
@@ -1373,7 +1367,6 @@ class mt_pipe_commands:
         bwa_paired_contigs = ">&2 echo BWA pair contigs | "
         bwa_paired_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
         bwa_paired_contigs += final_contigs + " "
-        #bwa_paired_contigs += original_contigs + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_1.fastq") + " "
         bwa_paired_contigs += os.path.join(dep_loc, "pair_2.fastq") + " "
         bwa_paired_contigs += ">" + " " 
@@ -1382,44 +1375,18 @@ class mt_pipe_commands:
         bwa_singletons_contigs = ">&2 echo BWA singleton contigs | "
         bwa_singletons_contigs += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " -B 40 -O 60 -E 10 -L 50 "
         bwa_singletons_contigs += final_contigs + " "
-        #bwa_singletons_contigs += original_contigs + " "
         bwa_singletons_contigs += os.path.join(dep_loc, "singletons.fastq")
         bwa_singletons_contigs += " > " + os.path.join(bwa_folder, "singletons_on_contigs.sam")
         
-        bwa_sort_paired = ">&2 echo bwa sort paired | " 
-        bwa_sort_paired += self.tool_path_obj.Python + " "
-        bwa_sort_paired += self.tool_path_obj.bwa_read_sorter + " "
-        bwa_sort_paired += "paired" + " "
-        bwa_sort_paired += self.tool_path_obj.filter_stringency + " "
-        bwa_sort_paired += os.path.join(bwa_folder, "paired_on_contigs.sam") + " "
-        bwa_sort_paired += os.path.join(dep_loc, "pair_1.fastq") + " "
-        bwa_sort_paired += os.path.join(dep_loc, "pair_2.fastq") + " "
-        bwa_sort_paired += os.path.join(final_folder, "pair_1.fastq") + " "
-        bwa_sort_paired += os.path.join(final_folder, "pair_2.fastq") + " "
-        bwa_sort_paired += os.path.join(consumed_folder, "pair_1.fastq") + " "
-        bwa_sort_paired += os.path.join(consumed_folder, "pair_2.fastq")
-        
-        samtools_no_contig_singletons_convert = ">&2 echo get contigs out of singletons | "
-        samtools_no_contig_singletons_convert += self.tool_path_obj.SAMTOOLS + " "
-        samtools_no_contig_singletons_convert += "view -bS" + " "
-        samtools_no_contig_singletons_convert += os.path.join(bwa_folder, "singletons_on_contigs.sam") + " "
-        samtools_no_contig_singletons_convert += ">" + " "
-        samtools_no_contig_singletons_convert += os.path.join(bwa_folder, "singletons_on_contigs.bam")
-        
-        
-        samtools_no_contig_singletons_export = ">&2 echo Samtools contig singletons pass-export | "
-        samtools_no_contig_singletons_export += self.tool_path_obj.SAMTOOLS + " "
-        samtools_no_contig_singletons_export += "fastq -n -f 4" + " "
-        samtools_no_contig_singletons_export += "-0" + " "
-        samtools_no_contig_singletons_export += os.path.join(final_folder, "singletons.fastq") + " "
-        samtools_no_contig_singletons_export += os.path.join(bwa_folder, "singletons_on_contigs.bam")
-
-        map_read_contig = ">&2 echo map read contig v2 | "
-        map_read_contig += self.tool_path_obj.Python + " " + self.tool_path_obj.Map_contig + " "
-        map_read_contig += contig_map + " "
-        map_read_contig += os.path.join(bwa_folder, "singletons_on_contigs.sam")
-        if self.read_mode == "paired":
-            map_read_contig += " " + os.path.join(bwa_folder, "paired_on_contigs.sam")
+        make_contig_map = ">&2 echo Making contig map | " 
+        make_contig_map += self.tool_path_obj.Python + " "
+        make_contig_map += self.tool_path_obj.Map_contig + " "
+        make_contig_map += self.read_mode + " "
+        make_contig_map += dep_loc + " "
+        make_contig_map += final_folder + " "
+        make_contig_map += os.path.join(bwa_folder, "singletons_on_contigs.sam") + " "
+        if(self.read_mode == "paired"):
+            make_contig_map += os.path.join(bwa_folder, "paired_on_contigs.sam")
             
             
         flush_bad_contigs = ">&2 echo flush bad contigs | " 
@@ -1429,8 +1396,6 @@ class mt_pipe_commands:
         flush_bad_contigs += final_contigs + " "
         flush_bad_contigs += os.path.join(final_folder, "contigs.fasta")
         
-        #copy_contigs = ">&2 echo Copying contigs to final folder | "
-        #copy_contigs += "cp " + final_contigs + " " + final_folder
             
         move_gene_report = ">&2 echo moving gene report | "
         move_gene_report += "cp" + " "
@@ -1446,9 +1411,7 @@ class mt_pipe_commands:
                 remove_whitespace + " && " +
                 bwa_index + " && " +
                 bwa_singletons_contigs + " && " +
-                samtools_no_contig_singletons_convert + " && " +
-                samtools_no_contig_singletons_export + " && " + 
-                map_read_contig + " && " +
+                make_contig_map + " && " +
                 flush_bad_contigs + " && " +
                 move_gene_report
             ]
@@ -1461,10 +1424,7 @@ class mt_pipe_commands:
                 bwa_index + " && " +
                 bwa_paired_contigs + " && " +
                 bwa_singletons_contigs + " && " +
-                bwa_sort_paired + " && " + 
-                samtools_no_contig_singletons_convert + " && " +
-                samtools_no_contig_singletons_export + " && " + 
-                map_read_contig + " && " +
+                make_contig_map + " && " + 
                 flush_bad_contigs + " && " +
                 move_gene_report
             ]

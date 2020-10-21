@@ -40,13 +40,11 @@ def get_match_score(cigar_segment):
     
     return match_score
 
-def add_new_read(status, contig_id, match_score, seq, quality):
+def add_new_read(status, contig_id, match_score):
     inner_dict = dict()
     inner_dict["status"] = status
     inner_dict["contig"] = contig_id
     inner_dict["score"] = match_score
-    inner_dict["seq"] = seq
-    inner_dict["quality"] = quality
     return inner_dict
 
 def import_samfile(samfile):
@@ -62,13 +60,10 @@ def import_samfile(samfile):
                 continue
             else:
                 line_split = line.split("\t")
-                match_score = get_match_score(line_split[5])
+                match_score = get_match_score(line_split[5]) #decode cigar segment
                 read_id = line_split[0]
                 contig_id = line_split[2]
                 flag_data = line_split[1]
-                seq = line_split[9]
-                quality = line_split[10]
-                
                 
                 flag_bin = bin(int(flag_data))[2:].zfill(11)
                 if(flag_bin[8] == "1"):
@@ -76,7 +71,7 @@ def import_samfile(samfile):
                     if(read_id in read_status_dict):
                         continue
                     else:
-                        inner_dict = add_new_read("u", contig_id, match_score, seq, quality)
+                        inner_dict = add_new_read("u", contig_id, match_score)
                         read_status_dict[read_id] = inner_dict
                 else:
                     if(read_id in read_status_dict):
@@ -104,7 +99,7 @@ def import_samfile(samfile):
                                     #time.sleep(1)
                         else:
                             #repeat read previously unmatched (happens in paired)
-                            inner_dict = add_new_read("c", contig_id, match_score, seq, quality)
+                            inner_dict = add_new_read("c", contig_id, match_score)
                             read_status_dict[read_id] = inner_dict
                             if(contig_id in contig_read_dict):
                                 contig_read_dict[contig_id].append(read_id)
@@ -113,18 +108,13 @@ def import_samfile(samfile):
                                    
                     else:
                         #fresh read
-                        inner_dict = add_new_read("c", contig_id, match_score, seq, quality)
+                        inner_dict = add_new_read("c", contig_id, match_score)
                         read_status_dict[read_id] = inner_dict
                         
                         if(contig_id in contig_read_dict):
                             #old contig
-                            old_len = len(contig_read_dict[contig_id])
                             contig_read_dict[contig_id].append(read_id)
-                            new_len = len(contig_read_dict[contig_id])
-                            if(old_len >= new_len):
-                                sys.exit("didn't_Work")
-                            
-                        else:
+                         else:
                             #new contig
                             contig_read_dict[contig_id] = [read_id]
                             

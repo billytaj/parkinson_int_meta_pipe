@@ -150,7 +150,7 @@ class tool_path_obj:
         self.File_splitter              = os.path.join(script_path, "read_split.py")
         self.barrnap_post               = os.path.join(script_path, "read_rRNA_barrnap.py")
         self.rRNA_filter                = os.path.join(script_path, "read_rRNA_infernal.py")
-        self.Map_contig                 = os.path.join(script_path, "assembly_map.py")
+        self.Map_contig                 = os.path.join(script_path, "assembly_make_contig_map.py")
         self.flush_bad_contigs          = os.path.join(script_path, "assembly_flush_bad_contigs.py")
         self.contig_duplicate_remover   = os.path.join(script_path, "assembly_deduplicate.py")
         self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA_generic.py")
