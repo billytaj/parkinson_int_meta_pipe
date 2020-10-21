@@ -28,6 +28,7 @@ def annotated_count(map):
             cleaned_line = line.strip("\n")
             line_split = cleaned_line.split("\t")
             reads = line_split[3:]
+            read_count_entry = line_split[2]
             
             genes += 1
             if (not read_list):
