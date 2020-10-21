@@ -165,6 +165,7 @@ class tool_path_obj:
         self.taxa_table                 = os.path.join(script_path, "output_taxa_table.py")
         self.RPKM                       = os.path.join(script_path, "output_table_v3.py")
         self.format_RPKM                = os.path.join(script_path, "output_reformat_rpkm_table.py")
+        self.taxa_RPKM                  = os.path.join(script_path, "output_table_with_taxonomy_v2.py")
         self.read_count                 = os.path.join(script_path, "output_read_counts_v2.py")
         self.read_quality_metrics       = os.path.join(script_path, "output_read_quality_metrics.py")
         self.contig_stats               = os.path.join(script_path, "output_contig_stats.py")
@@ -179,6 +180,7 @@ class tool_path_obj:
         self.output_filter_ECs          = os.path.join(script_path, "output_filter_ECs.py")
         self.bwa_read_sorter            = os.path.join(script_path, "bwa_read_sorter.py")
         self.ta_contig_name_convert     = os.path.join(script_path, "ta_contig_name_convert.py")
+        
         
         #--------------------------------------------------
         # miscellaneous values

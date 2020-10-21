@@ -1587,38 +1587,32 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         
         #phase 1
         if check_bypass_log(output_folder, output_copy_gene_map_label):
-            job_name = output_copy_gene_map_label
             command_list = commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, output_label, output_copy_gene_map_label, commands, command_list)
             
         if check_bypass_log(output_folder, output_copy_taxa_label):
-            job_name = output_copy_taxa_label
             command_list = commands.create_output_copy_taxa_command(output_label, taxon_annotation_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, output_label, output_copy_taxa_label, commands, command_list)
         
         if check_bypass_log(output_folder, output_contig_stats_label):
-            job_name = output_contig_stats_label
             command_list = commands.create_output_contig_stats_command(output_label, assemble_contigs_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, output_label, output_contig_stats_label, commands, command_list)
             
         
             
         if not(no_host):
             if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
-                job_name = output_unique_hosts_singletons_label
                 command_list = commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label)
-                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                launch_and_create_with_mp_store(mp_store, output_label, output_unique_hosts_singletons_label, commands, command_list)
             
             if(read_mode == "paired"):
                 if check_bypass_log(output_folder, output_unique_hosts_pair_1_label):
-                    job_name = output_unique_hosts_pair_1_label
                     command_list = commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label)
-                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                    launch_and_create_with_mp_store(mp_store, output_label, output_unique_hosts_pair_1_label, commands, command_list)
                     
                 if check_bypass_log(output_folder, output_unique_hosts_pair_2_label):
-                    job_name = output_unique_hosts_pair_2_label
                     command_list = commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label)
-                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                    launch_and_create_with_mp_store(mp_store, output_label, output_unique_hosts_pair_2_label, commands, command_list)
                     
                     
         print(dt.today(), "output report phase 1 launched.  waiting for sync")
@@ -1640,14 +1634,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #Phase 2
         if not(no_host):
             if check_bypass_log(output_folder, output_combine_hosts_label):
-                job_name = output_combine_hosts_label
                 command_list = commands.create_output_combine_hosts_command(output_label)
-                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                launch_and_create_with_mp_store(mp_store, output_label, output_combine_hosts_label, commands, command_list)
                 
         if check_bypass_log(output_folder, output_network_gen_label):
-            job_name = output_network_gen_label
             command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, output_label, output_network_gen_label, commands, command_list)
+            
+        if check_bypass_log(output_folder, "output_taxa_rpkm"):
+            command_list = commands.create_output_taxa_rpkm_table_command(output_label, assemble_contigs_label, taxon_annotation_label, ec_annotation_label)
+            launch_and_create_with_mp_store(mp_store, output_label, "output_taxa_rpkm", commands, command_list)
        
         print(dt.today(), "output report phase 2 launched.  waiting for sync")
         for item in mp_store:
@@ -1661,20 +1657,17 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #-------------------------------------------------------------------
         #Phase 3
         if check_bypass_log(output_folder, output_read_count_label):
-            job_name = output_read_count_label
             command_list = commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, GA_final_merge_label, ec_annotation_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, output_label, output_read_count_label, commands, command_list)
                                
 
         if check_bypass_log(output_folder, output_per_read_scores_label):
-            job_name = output_per_read_scores_label
             command_list = commands.create_output_per_read_scores_command(output_label, quality_filter_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, output_label, output_per_read_scores_label, commands, command_list)
             
         if check_bypass_log(output_folder, output_ec_heatmap_label):
-            job_name = output_ec_heatmap_label
             command_list = commands.create_output_EC_heatmap_command(output_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)    
+            launch_and_create_with_mp_store(mp_store, output_ec_heatmap_label, job_name, commands, command_list)    
         
         print(dt.today(), "output report phase 3 launched.  waiting for sync")
         for item in mp_store:

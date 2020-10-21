@@ -2252,7 +2252,27 @@ class mt_pipe_commands:
         copy_gene_map += os.path.join(final_folder, "gene_map.tsv")
         
         return[copy_gene_map]
-
+    
+    def create_output_taxa_rpkm_table_command(self, current_stage_name, contig_stage, taxa_stage, EC_stage):
+        subfolder               = os.path.join(self.Output_Path, current_stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        final_folder            = os.path.join(subfolder, "final_results")
+        assembly_folder         = os.path.join(contig_stage, "final_results")
+        taxa_folder             = os.path.join(taxa_stage, "final_results")
+        EC_folder               = os.path.join(EC_stage, "final_results")
+        
+        make_taxa_rpkm = ">&2 echo Making taxa rpkm table | "
+        make_taxa_rpkm += self.tool_path_obj.Python + " "
+        make_taxa_rpkm += self.tool_path_obj.taxa_RPKM + " "
+        make_taxa_rpkm += os.path.join(final_folder, "gene_map.tsv") + " "
+        make_taxa_rpkm += os.path.join(EC_folder, "proteins.ECs_All") + " "
+        make_taxa_rpkm += os.path.join(taxa_folder, "constrain_classification.tsv") + " "
+        make_taxa_rpkm += os.path.join(assembly_folder, "gene_report.txt") + " "
+        make_taxa_rpkm += os.path.join(assembly_folder, "contig_map.tsv") + " "
+        make_taxa_rpkm += os.path.join(final_folder, "taxa_RPKM.tsv")
+        
+        return [make_taxa_rpkm]
+    
         
     def create_output_network_generation_command(self, current_stage_name, ga_final_merge_stage, taxonomic_annotation_stage, enzyme_annotation_stage):
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
