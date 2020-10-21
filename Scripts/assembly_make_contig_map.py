@@ -114,8 +114,7 @@ def import_samfile(samfile):
                         if(contig_id in contig_read_dict):
                             #old contig
                             contig_read_dict[contig_id].append(read_id)
-                         else:
-                            #new contig
+                        else:
                             contig_read_dict[contig_id] = [read_id]
                             
     return contig_read_dict, read_status_dict
