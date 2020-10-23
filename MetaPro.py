@@ -66,6 +66,7 @@ def write_to_bypass_log(folder_path, message):
 
 
 def check_bypass_log(folder_path, message):
+    stop_message = "stop_" + message
     bypass_keys_list = list()
     bypass_log_path = os.path.join(folder_path, "bypass_log.txt")
     if(os.path.exists(bypass_log_path)):
@@ -73,9 +74,16 @@ def check_bypass_log(folder_path, message):
             for line in bypass_log:
                 bypass_key = line.strip("\n")
                 bypass_keys_list.append(bypass_key)
-        if(message in bypass_keys_list):
+        
+        if(stop_message in bypass_keys_list):
+            print(dt.today(), "stopping at:", message)
+            print("to continue, remove:", stop_message, "from the bypass_log")
+            sys.exit("brakes engaged")
+        
+        elif(message in bypass_keys_list):
             print(dt.today(), "bypassing:", message)
             return False
+        
         else:
             print(dt.today(), "running:", message) 
             return True

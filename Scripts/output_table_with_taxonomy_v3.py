@@ -2,6 +2,7 @@
 #oct 21, 2020:
 #testbed for updates 
 #This exports the taxonomy table.  It now also takes into account the gene segments.
+#contigs have all been translated to reads.  Also there's a contig->read map now.  There's a lot of code and logic that's not needed
 
 import sys
 from datetime import datetime as dt
@@ -20,8 +21,8 @@ def import_contig_map(contig_map_path):
         for line in contig_map:
             line_split = line.split("\t")
             contig_name = line_split[0]
-            read_count = line_split[1]
-            contig_map_dict[contig_name] = read_count
+            reads = line_split[2:]
+            contig_map_dict[contig_name] = reads
     return contig_map_dict
 
 def import_gene_report(gene_report_path):
@@ -117,9 +118,9 @@ if __name__ == "__main__":
     contig_map              = sys.argv[5] #IN: contig map
     taxa_table              = sys.argv[6] #OUT: taxa table
 
-    contig_map_dict = import_contig_map(contig_map)
-    contig_segment_dict = import_gene_report(assembly_gene_report)
-    translate_contig_segement_map(contig_segment_dict, contig_map_dict)
+    contig_segment_dict = import_contig_map(contig_map)
+    #contig_segment_dict = import_gene_report(assembly_gene_report)
+    #translate_contig_segement_map(contig_segment_dict, contig_map_dict)
 
     read2taxonomy_dict = import_classification_table(read2taxonomy)
 
@@ -164,15 +165,9 @@ if __name__ == "__main__":
                 taxon = read2taxonomy_dict[read]
                 if taxon in taxon_count_dict:
                     #taxon_count_dict[taxon].append(read)
-                    if(real_read.startswith("gene")):
-                        taxon_count_dict[taxon] += contig_segment_dict[real_read]
-                    else:      
-                        taxon_count_dict[taxon] += 1
+                    taxon_count_dict[taxon] += 1
                 else:
-                    if(real_read.startswith("gene")):
-                        taxon_count_dict[taxon] = contig_segment_dict[real_read]
-                    else:
-                        taxon_count_dict[taxon] = 1
+                    taxon_count_dict[taxon] = 1
                     #taxon_count_dict[taxon].append(read)
                     #taxon_count_dict[taxon] = [read]
             else:
