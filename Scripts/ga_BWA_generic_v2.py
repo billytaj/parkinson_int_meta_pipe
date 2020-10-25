@@ -198,9 +198,10 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
                 contig_reads = list()
                 for read in contig2read_map[query]:
                     contig_reads.append(read + "<match_score>" + str(match_score))
-                
-                gene2read_map[db_match].extend(contig_reads)
-                                
+                if(db_match in gene2read_map):
+                    gene2read_map[db_match].extend(contig_reads)
+                else:
+                    gene2read_map[db_match] = contig_reads
             else:
                 read_entry = query + "<match_score>" + str(match_score)
                 if(db_match in gene2read_map):
