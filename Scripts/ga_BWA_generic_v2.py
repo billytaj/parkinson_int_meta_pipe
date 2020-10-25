@@ -115,6 +115,9 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
     mapped = set()              #qualified mapped reads
     gene2read_map = dict()      #final gene->reads map
     unmapped = set()            #qualified unmapped reads
+    repeat_read_count = 0
+    repeat_disagreements = 0
+    repeat_one_sided_alignments = 0
     
     len_chars= ["M","I","S","=","X"]                    # These particular CIGAR operations cause the
                                                         #  alignment to step along the query sequence.
@@ -139,67 +142,84 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
             if flag[8]=="1":                            # If contig/read is NOT BWA-ALIGNED (9th digit=1),
                 inner_details_dict["match"] = False
                 query_details_dict[query] = inner_details_dict
-                continue
-                #unmapped.add(query)                     # add it to the unmapped set and
-                #continue                                # skip to the next query.
-            
-            #if contig, mark it <we convert to reads down below>
-            if query in contig2read_map:                
-                contig = True                        
             else:
-                contig = False                           
                 
-            # does query alignment meet threshold?:
-            cigar_match_score = get_match_score(line_parts[5])
-            if(cigar_match_score < 90):
-                inner_details_dict["match"] = False
-                query_details_dict[query] = inner_details_dict
-                continue
-
-            #reconcile multi-hit queries
-            if(query in query_details_dict):
-                if(query_details_dict[query]["match"]):
-                    old_score = query_details_dict[query]["score"]
-                    if(match_score > old_score):
-                        #a better match came along.  if not, do nothing
-                        query_details_dict[query]["score"] = match_score
-                        query_details_dict[query]["gene"] = db_match
-                        query_details_dict[query]["is_contig"] = contig
+                    
+                # does query alignment meet threshold?:
+                cigar_match_score = get_match_score(line_parts[5])
+                if(cigar_match_score < 90):
+                    inner_details_dict["match"] = False
+                    query_details_dict[query] = inner_details_dict
                 else:
-                    #previously unmatched
-                    query_details_dict[query]["match"] = True
-                    query_details_dict[query]["score"] = match_score
-                    query_details_dict[query]["gene"] = db_match
-                    query_details_dict[query]["is_contig"] = contig
-            else:
-                #new match
-                inner_details_dict["match"] = True
-                inner_details_dict["score"] = match_score
-                inner_details_dict["gene"] = db_match
-                inner_details_dict["is_contig"] = contig
-                query_details_dict[query] = inner_details_dict
-                
+                    
+                    #if contig, mark it <we convert to reads down below>
+                    if query in contig2read_map:                
+                        contig = True                        
+                    else:
+                        contig = False                           
+                    
+                    #reconcile multi-hit queries
+                    if(query in query_details_dict):
+                        repeat_read_count += 1
+                        if(query_details_dict[query]["match"]):
+                            repeat_disagreements += 1
+                            old_score = query_details_dict[query]["score"]
+                            if(cigar_match_score > old_score):
+                                #a better match came along.  if not, do nothing
+                                query_details_dict[query]["score"] = cigar_match_score
+                                query_details_dict[query]["gene"] = db_match
+                                query_details_dict[query]["is_contig"] = contig
+                        else:
+                            #previously unmatched
+                            repeat_one_sided_alignments += 1
+                            query_details_dict[query]["match"] = True
+                            query_details_dict[query]["score"] = cigar_match_score
+                            query_details_dict[query]["gene"] = db_match
+                            query_details_dict[query]["is_contig"] = contig
+                    else:
+                        #new match
+                        inner_details_dict["match"] = True
+                        inner_details_dict["score"] = cigar_match_score
+                        inner_details_dict["gene"] = db_match
+                        inner_details_dict["is_contig"] = contig
+                        query_details_dict[query] = inner_details_dict
+                        
             
     
     for query in query_details_dict:
         inner_dict = query_details_dict[query]
-        db_match = inner_dict["gene"]
-        contig = inner_dict["is_contig"]    
-        # RECORD alignments:
-        if contig:                                      # If query is a contig, then
-            gene2read_map[db_match].extend(contig2read_map[query])
-                            
-        else:                                           
-            gene2read_map[db_match].append(query)       #  append its readID to aligned gene<->read dict,
-        
-        #sort the queries    
         if(inner_dict["match"]):
-            mapped.add(query)
+            mapped.add(query)        
+            db_match = inner_dict["gene"]
+            contig = inner_dict["is_contig"]    
+            match_score = inner_dict["score"]
+            # RECORD alignments:
+            if contig:                                      # If query is a contig, then
+                contig_reads = list()
+                for read in contig2read_map[query]:
+                    contig_reads.append(read + "<match_score>" + str(match_score))
+                
+                gene2read_map[db_match].extend(contig_reads)
+                                
+            else:
+                read_entry = query + "<match_score>" + str(match_score)
+                if(db_match in gene2read_map):
+                    
+                    gene2read_map[db_match].append(read_entry)       #  append its readID to aligned gene<->read dict,
+                    print(dt.today(), "old entry:", gene2read_map[db_match])
+                else:
+                    
+                    gene2read_map[db_match] = [read_entry]
+                    print(dt.today(), "new entry:", gene2read_map[db_match])
+            #sort the queries    
         else:
             unmapped.add(query)
             
 
     # return unmapped set:
+    print(dt.today(), "repeated reads in scan:", repeat_read_count)
+    print(dt.today(), "disagreements:", repeat_disagreements)
+    print(dt.today(), "one-sided alignments:", repeat_one_sided_alignments)
     return unmapped, mapped, gene2read_map
     
 
@@ -264,11 +284,7 @@ if __name__ == "__main__":
         contig2read_map, contig_reads = import_contig2read(contig2read_file)
         #contig2read_map_uniq, contig_unique_reads = filter_common_contigs(contig2read_map, contig_reads)
         # tracking BWA-assigned:
-        gene2read_map = defaultdict(list)                    # dict of BWA-aligned geneID<->readID(s)
-        mapped_reads = set()                                 # tracks BWA-assigned reads
-        mapped_list = []
-        prev_mapping_count = 0
-        unmapped_reads, mapped_reads, gene2read_map = gene_map(bwa_in, mapped_reads, gene2read_map, contig2read_map, contig2read_map_uniq)
+        unmapped_reads, mapped_reads, gene2read_map = gene_map(bwa_in, contig2read_map)
         
         write_gene_map(DNA_DB, gene2read_out, gene2read_map, mapped_gene_file)
         write_unmapped_reads(unmapped_reads, reads_in, reads_out)

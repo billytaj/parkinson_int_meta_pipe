@@ -90,27 +90,29 @@ def get_blat_details(blat_in, reads_in):                          # List of list
 
     # return info:
     print(dt.today(), "hits in blatout:", len(hits))
+    
+    #send back the hits based on e-value
+    hits = sorted(hits, key=sortbyscore)
+    
     return hits, seqrec
 
 
 
 
 # sort by score:
-# (12th field of the .blatout file)
+# sort by the e-value.  It's the actual match quality 
 def sortbyscore(line):
-    return float(line[11])
+    return float(line[10])
 
 # add BLAT-aligned reads that meet threshold
 # to the aligned geneID<->readID(s) dict:
 
-def make_gene_map(hits, mapped_reads, gene2read_map, contig2read_map):                         # fail-mapped contig/readIDs=
-                                            #  gene_map(list of list of blatout fields)
-    print(dt.today(), "number of keys in gene map [prior]:", len(gene2read_map.keys())) 
-    print(dt.today(), "number of mapped reads [prior]:", len(mapped_reads))
+def make_gene_map(hits, contig2read_map):                         # fail-mapped contig/readIDs=
     # sort alignment list by high score:
-    sorted_hits = sorted(hits, key=sortbyscore, reverse=True)
-    del hits
-    mapped_reads_from_session = set()
+    gene2read_map = dict()
+    mapped = set()
+    unmapped = set()                         # Set of unmapped contig/readIDs.
+    query_details_dict = dict()
 
     # BLAT threshold:
     identity_cutoff= 85
@@ -118,14 +120,12 @@ def make_gene_map(hits, mapped_reads, gene2read_map, contig2read_map):          
     length_cutoff= 0.65
     score_cutoff= 60
 
-    # tracking BLAT-assigned & unassigned:
-    #query2gene_map= defaultdict(set)        # Dict of BLAT-aligned contig/readID<->geneID(s).
-    #queryIScontig= {}                       # Dict of BLAT-aligned contig/readID<->contig? (True/False).
-    unmapped = set()                         # Set of unmapped contig/readIDs.
-    query_details_dict = dict()
-
+    repeat_reads = 0
+    disagreements = 0
+    one_sided_alignments = 0
+    
     # loop through sorted BLAT-aligned reads/contigs:
-    for line in sorted_hits:
+    for line in hits:
         inner_details_dict = dict()
         # "ON-THE-FLY" filter:
         
@@ -136,115 +136,94 @@ def make_gene_map(hits, mapped_reads, gene2read_map, contig2read_map):          
         align_len = int(line[3])             # alignment length
         score = float(line[11])              # score
         seq_len = int(line[12])              # query sequence length
+        e_value = float(line[10])
         
-        print("line:", line)
-        print("seq len:", seq_len)
-        time.sleep(10)
-        
-        # is this alignment the highest-score match for that query?
-        if query in query_details_dict: #query2gene_map:         # If alignment previously found for this contig/read,
-            continue                        # skip to next qurey as this alignment will have a lower score,
-                                            # and don't add to unmapped set.
-        # is query a contig?:
-        if query in contig2read_map:        # If query is found in contig list,
-            contig= True                    #  then mark as contig,
-        else:                               #  if not,
-            contig= False                   #  mark as not a contig.
-                                        
         # does query alignment meet threshold?:
         # (identity, length, score):
         if seq_identity<=identity_cutoff or align_len<=seq_len*length_cutoff or score<=score_cutoff:
-            unmapped.add(query)             # if threshold is failed, add to unmapped set and
-            continue                        # skip to the next query.
-        
-        # store info for queries that remain:
-        inner_details_dict["is_contig"] = contig
-        inner_details_dict["gene"] = db_match
-        query_details_dict[query] = inner_details_dict
-        #queryIScontig[query] = contig        # Store contig (T/F) info.
-        #query2gene_map[query].add(db_match) # Collect all aligned genes for contig/read;
-                                            #  query2gene_map[query] is a set, although there should be
-                                            #  no more than one gene alignement getting through filter.
-        
+            #unmapped.add(query)             # if threshold is failed, add to unmapped set and
+            inner_details_dict = dict()
+            inner_details_dict["match"] = False
+            query_details_dict[query] = inner_details_dict
+        else:
+            
+            # is query a contig?:
+            if query in contig2read_map:        # If query is found in contig list,
+                contig= True                    #  then mark as contig,
+            else:                               #  if not,
+                contig= False                   #  mark as not a contig.
+                
+                
+            # is this alignment the highest-score match for that query?
+            if query in query_details_dict: #query2gene_map:         # If alignment previously found for this contig/read,
+                repeat_reads += 1
+                inner_details_dict = query_details_dict[query]
+                if(inner_details_dict["match"]):
+                    old_e_value = inner_details_dict["e_value"]
+                    disagreements += 1
+                    if(old_e_value > e_value):
+                        print("old:", old_e_value, "new:", e_value)
+                        #update, but this shouldn't happen
+                        inner_details_dict["gene"] = db_match
+                        inner_details_dict["e_value"] = e_value
+                        inner_details_dict["is_contig"] = contig
+                else:
+                    one_sided_alignments += 1
+                    inner_details_dict["match"] = True
+                    inner_details_dict["is_contig"] = contig
+                    inner_details_dict["gene"] = db_match
+                    inner_details_dict["e_value"] = e_value
+                
+                                            
+                              # skip to the next query.
+            else:
+                #new hit
+                inner_details_dict = dict()
+                inner_details_dict["match"] = True
+                inner_details_dict["is_contig"] = contig
+                inner_details_dict["gene"] = db_match
+                inner_details_dict["e_value"] = e_value
+                query_details_dict[query] = inner_details_dict
+            #queryIScontig[query] = contig        # Store contig (T/F) info.
+            #query2gene_map[query].add(db_match) # Collect all aligned genes for contig/read;
+                                                #  query2gene_map[query] is a set, although there should be
+                                                #  no more than one gene alignement getting through filter.
+            
     # EXPAND HERE to deal with multiple high-score genes for a read.
-    
-    # DEBUG:
-    contigread_inmapped = 0
-    contigread_inmapped_ingene = 0
-    contigread_ingene = 0
-    read_inmapped = 0
-    read_inmapped_ingene = 0
-    read_ingene = 0
+    print(dt.today(), "repeat reads:", repeat_reads)
+    print(dt.today(), "disagreements:", disagreements)
+    print(dt.today(), "one-sided alignments:", one_sided_alignments)
     
     # FINAL remaining BLAT-aligned queries:
     for query in query_details_dict:#query2gene_map:                        # contig/readID
         inner_dict = query_details_dict[query]
-        db_match = inner_dict["gene"] #list(query2gene_map[query])[0]        # geneID (pull out of 1-element set)
-        contig = inner_dict["is_contig"] #queryIScontig[query]                    # contig?
-        
-        # RECORD alignment:
-        if contig:                                      # If query is a contig, then
-            for read in contig2read_map[query]:         #  take all reads making up that contig and
+        if(inner_dict["match"]):
+            mapped.add(query)
+            db_match = inner_dict["gene"] 
+            contig = inner_dict["is_contig"]
+            e_value = inner_dict["e_value"]
             
-                # DEBUG:
-                if read in mapped_reads:                # (Track how many contig reads have already been
-                    contigread_inmapped+= 1             #  mapped by BLAT---i.e., through other contigs---
-                    if read in gene2read_map[db_match]: #  and how many of those were already assigned to this
-                        contigread_inmapped_ingene+= 1  #  particular gene---i.e., contigs aligned to same gene.)
-                elif read in gene2read_map[db_match]:   # (Check to see if any of the contig reads are already
-                    contigread_ingene+= 1               #  assigned to this particular gene, but not by BLAT.)
-                
-                if read not in mapped_reads:            #  if not already assigned by BLAT to a diff gene***, then
-                    gene2read_map[db_match].append(read)#  append their readIDs to aligned gene<->read dict,
-                    mapped_reads.add(read)              #  and mark them as assigned by BLAT.
-                    mapped_reads_from_session.add(query)
-                    
-                    
-                    
-        elif not contig:                                # If query is a read, then
+            # RECORD alignment:
+            if contig:                                      # If query is a contig, then
+                for read in contig2read_map[query]:         #  take all reads making up that contig and
+                    read_line = read + "<e_value>" + str(e_value)
+                    if(db_match in gene2read_map):
+                        gene2read_map[db_match].append(read_line)#  append their readIDs to aligned gene<->read dict,
+                    else:
+                        gene2read_map[db_match] = [read_line]
+                        
+            else:
+                read_line = query + "<e_value>" + str(e_value)
+                if(db_match in gene2read_map):
+                    gene2read_map[db_match].append(read_line)
+                else:
+                    gene2read_map[db_match] = [read_line]
+
         
-            # DEBUG:
-            if query in mapped_reads:                   # (Check to see if the read has already been mapped
-                read_inmapped+= 1                       #  by BLAT---it shouldn't be---and
-                if query in gene2read_map[db_match]:    #  and to the same gene, for that matter.
-                    read_inmapped_ingene+= 1
-            elif query in gene2read_map[db_match]:      # (Check to see if the read is already assigned to this
-                read_ingene+= 1                         #  particular gene, but not by BLAT---it shouldn't be.)
-            
-            if query not in mapped_reads:
-                gene2read_map[db_match].append(query)       #  append its readID to aligned gene<->read dict,
-                mapped_reads.add(query)                     #  and mark it as assigned by BLAT.
-                mapped_reads_from_session.add(query)
-
-        # *** This deals with reads that show up in multiple contigs.
-        # Just use the read alignment from the contig that had the best alignment score.
-        # This could result in "broken" contigs...
-
-    # DEBUG (for this datatype):
-    print ('no. contig reads already mapped by BLAT = ' + str(contigread_inmapped))
-    print ('no. contig reads mapped by BLAT to same gene = ' + str(contigread_inmapped_ingene))
-    print ('no. contig reads mapped by NOT BLAT to same gene = ' + str(contigread_ingene) + ' (should be 0)')
-    print ('no. reads already mapped by BLAT = ' + str(read_inmapped) + ' (should be 0)')
-    print ('no. reads already mapped by BLAT to same gene = ' + str(read_inmapped_ingene) + ' (should be 0)')
-    print ('no. reads already mapped by NOT BLAT to same gene = ' + str(read_ingene) + ' (should be 0)')
-
-    # Remove contigs/reads previously added to the unmapped set but later found to have a mapping:
-    # This prevents re-annotation by a later program.
-    # Such queries end up in the unmapped set when they BLAT-aligned to multiple genes, where one
-    # alignment is recorded, while the other alignments fail the "on-the-fly" alignment-threshold filter.
-    print ('umapped no. (before double-checking mapped set) = ' + str(len(unmapped)))
-    for query in query_details_dict: #query2gene_map:                        # Take all contigs/reads to be mapped and
-        try:                                            #  if they exist in the unmapped set, then
-            unmapped.remove(query)                      #  remove them from the unmapped set.
-        except:
-            pass
-    print ('umapped no. (after double-checking mapped set)= ' + str(len(unmapped)))
-
-    # return unmapped set:
-    print(dt.today(), "number of keys in gene map [post]:", len(gene2read_map.keys())) 
-    print(dt.today(), "number of mapped reads [post]:", len(mapped_reads))
-    #return unmapped, mapped_reads_from_session    
-    return mapped_reads_from_session
+        #else:
+        #    unmapped.add(query)
+    return mapped, gene2read_map
+    
 
 def write_unmapped_seqs(unmapped_reads, reads_in, reads_out):
     #This is specifically made to export the reads as fastas, for the purpose of combining it with BLAT
@@ -345,11 +324,9 @@ if __name__ == "__main__":
     input_safety = check_file_safety(reads_in) and check_file_safety(blat_in)
     
     if(input_safety):
-        gene2read_map   = defaultdict(list)
-        mapped_reads    = set()
         contig2read_map = import_contig_map(contig2read_file)
         blat_hits, reads_in_dict = get_blat_details(blat_in, reads_in)
-        mapped_reads = make_gene_map(blat_hits, mapped_reads, gene2read_map, contig2read_map) 
+        mapped_reads, gene2read_map = make_gene_map(blat_hits, contig2read_map) 
         unmapped_reads = get_full_unmapped_reads(mapped_reads, reads_in_dict)
         
         write_gene_map(DNA_DB, new_gene2read_file, gene2read_map, mapped_gene_file)
