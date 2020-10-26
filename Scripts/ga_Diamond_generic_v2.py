@@ -82,15 +82,15 @@ def get_dmd_hit_details(dmd_out_file, reads_in):
                 info_list.append(len(seqrec[read_id].seq))#  add query length (int) to end of list,
                 hits.append(info_list)                  #  and append the list to the hits list.
     
-    hits = sorted(hits, key=sortbyscore)     # sort alignment list by high score:
+    hits = sorted(hits, key=sortbyscore, reverse = True)     # sort alignment list by high score:
     
     
     return hits
 
 # sort function: sort by score:
-#sort by e-value
+#sort by bitscore
 def sortbyscore(line):
-    return line[10]
+    return line[11]
 
 
 
@@ -126,7 +126,7 @@ def form_prot_map(hits, contig2read_map):
         align_len = 3*int(line[3])             # alignment length
         score = float(line[11])              # score
         seq_len = int(line[12])              # query sequence length
-        e_value = float(line[10])
+        bitscore = float(line[11])
         
         # does query alignment meet threshold?:
         # (identity, length, score):
@@ -149,20 +149,20 @@ def form_prot_map(hits, contig2read_map):
                 repeat_reads += 1
                 inner_details_dict = query_details_dict[query]
                 if(inner_details_dict["match"]):
-                    old_e_value = inner_details_dict["e_value"]
+                    old_bitscore = inner_details_dict["bitscore"]
                     disagreements += 1
-                    if(old_e_value > e_value):
-                        print("old:", old_e_value, "new:", e_value)
+                    if(old_bitscore < bitscore):
+                        print("old:", old_e_value, "new:", bitscore)
                         #update, but this shouldn't happen
                         inner_details_dict["gene"] = db_match
-                        inner_details_dict["e_value"] = e_value
+                        inner_details_dict["bitscore"] = bitscore
                         inner_details_dict["is_contig"] = contig
                 else:
                     one_sided_alignments += 1
                     inner_details_dict["match"] = True
                     inner_details_dict["is_contig"] = contig
                     inner_details_dict["gene"] = db_match
-                    inner_details_dict["e_value"] = e_value
+                    inner_details_dict["bitscore"] = bitscore
                 
                                             
                               # skip to the next query.
@@ -172,7 +172,7 @@ def form_prot_map(hits, contig2read_map):
                 inner_details_dict["match"] = True
                 inner_details_dict["is_contig"] = contig
                 inner_details_dict["gene"] = db_match
-                inner_details_dict["e_value"] = e_value
+                inner_details_dict["bitscore"] = bitscore
                 query_details_dict[query] = inner_details_dict
             #queryIScontig[query] = contig        # Store contig (T/F) info.
             #query2gene_map[query].add(db_match) # Collect all aligned genes for contig/read;
@@ -191,19 +191,19 @@ def form_prot_map(hits, contig2read_map):
             mapped.add(query)
             db_match = inner_dict["gene"] 
             contig = inner_dict["is_contig"]
-            e_value = inner_dict["e_value"]
+            bitscore = inner_dict["bitscore"]
             
             # RECORD alignment:
             if contig:                                      # If query is a contig, then
                 for read in contig2read_map[query]:         #  take all reads making up that contig and
-                    read_line = read + "<e_value>" + str(e_value)
+                    read_line = read + "<bitscore>" + str(bitscore)
                     if(db_match in prot2read_map):
                         prot2read_map[db_match].append(read_line)#  append their readIDs to aligned gene<->read dict,
                     else:
                         prot2read_map[db_match] = [read_line]
                         
             else:
-                read_line = query + "<e_value>" + str(e_value)
+                read_line = query + "<bitscore>" + str(bitscore)
                 if(db_match in prot2read_map):
                     prot2read_map[db_match].append(read_line)
                 else:

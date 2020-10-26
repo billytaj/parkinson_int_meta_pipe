@@ -372,20 +372,18 @@ def reconcile_paired_gene_map_v2(pair_1_gene_map, pair_2_gene_map, message):
                 print(dt.today(), "a repeat read in pair1.  This shouldn't happen")
                 sys.exit("death")
             else:
-                match_score = "none"
-                e_value = "none"
+                score = 0
                 real_read_name = "none"
-                if("<e_value>" in read):
-                    real_read_name = read.split("<e_value>")[0]
-                    e_value = read.split("<e_value>")[1]
+                if("<bitscore>" in read):
+                    real_read_name = read.split("<bitscore>")[0]
+                    score = read.split("<bitscore>")[1]
                 elif("<match_score>" in read):
                     real_read_name = read.split("<match_score>")[0]
-                    match_score = read.split("<match_score>")[1]
+                    score = read.split("<match_score>")[1]
                 
                 inner_dict = dict()
                 inner_dict["gene"] = p1_gene
-                inner_dict["e_value"] = e_value
-                inner_dict["match_score"] = match_score
+                inner_dict["score"] = score
                 inner_dict["gene_length"] = gene_length
                 read_details_dict[real_read_name] = inner_dict
             
@@ -393,51 +391,37 @@ def reconcile_paired_gene_map_v2(pair_1_gene_map, pair_2_gene_map, message):
         gene_length = pair_2_gene_map[p2_gene][0]
         reads = pair_2_gene_map[p2_gene][2:]
         for read in reads:
-            match_score = "none"
-            e_value = "none"
+            score = 0
             real_read_name = "none"
-            if("<e_value>" in read):
-                real_read_name = read.split("<e_value>")[0]
-                e_value = read.split("<e_value>")[1]
+            if("<bitscore>" in read):
+                real_read_name = read.split("<bitscore>")[0]
+                score = read.split("<bitscore>")[1]
             elif("<match_score>" in read):
                 real_read_name = read.split("<match_score>")[0]
-                match_score = read.split("<match_score>")[1]
+                score = read.split("<match_score>")[1]
             
             if(real_read_name in read_details_dict):
                 repeat_reads += 1
                 #read already processed
                 old_details = read_details_dict[real_read_name]
-                old_e_value = old_details["e_value"]
-                old_match_score = old_details["match_score"]
-                if(e_value != "none"):
-                    if(e_value < old_e_value):
-                        #disagreement found
-                        disagreements += 1
-                        inner_dict = dict()
-                        inner_dict["gene"] = p2_gene
-                        inner_dict["e_value"] = e_value
-                        inner_dict["match_score"] = match_score
-                        inner_dict["gene_length"] = gene_length
-                        read_details_dict[real_read_name] = inner_dict
-                        
-                elif(match_score != "none"):
-                    if(match_score > old_match_score):
-                        #disagreement found
-                        disagreements += 1
-                        inner_dict = dict()
-                        inner_dict["gene"] = p2_gene
-                        inner_dict["e_value"] = e_value
-                        inner_dict["match_score"] = match_score
-                        inner_dict["gene_length"] = gene_length
-                        read_details_dict[real_read_name] = inner_dict
+                old_score = old_details["score"]
+                if(old_score < score):
+                    #disagreement found
+                    disagreements += 1
+                    inner_dict = dict()
+                    inner_dict["gene"] = p2_gene
+                    inner_dict["score"] = score
+                    inner_dict["gene_length"] = gene_length
+                    read_details_dict[real_read_name] = inner_dict
+                    
+               
             else:
                 #new p2-only read
                 new_read += 1
                 inner_dict = dict()
                 inner_dict["gene"] = p1_gene
-                inner_dict["e_value"] = e_value
+                inner_dict["score"] = score
                 inner_dict["gene_length"] = gene_length
-                inner_dict["match_score"] = match_score
                 read_details_dict[real_read_name] = inner_dict
         
     #make the new gene map

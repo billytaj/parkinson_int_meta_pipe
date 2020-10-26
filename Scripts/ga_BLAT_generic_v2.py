@@ -92,7 +92,7 @@ def get_blat_details(blat_in, reads_in):                          # List of list
     print(dt.today(), "hits in blatout:", len(hits))
     
     #send back the hits based on e-value
-    hits = sorted(hits, key=sortbyscore)
+    hits = sorted(hits, key=sortbyscore, reverse = True)
     
     return hits, seqrec
 
@@ -100,9 +100,9 @@ def get_blat_details(blat_in, reads_in):                          # List of list
 
 
 # sort by score:
-# sort by the e-value.  It's the actual match quality 
+# sort by the bitscore. bitscore > e_Value.  bitscores don't change on database sizes
 def sortbyscore(line):
-    return float(line[10])
+    return float(line[11])
 
 # add BLAT-aligned reads that meet threshold
 # to the aligned geneID<->readID(s) dict:
@@ -136,7 +136,7 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
         align_len = int(line[3])             # alignment length
         score = float(line[11])              # score
         seq_len = int(line[12])              # query sequence length
-        e_value = float(line[10])
+        bitscore = float(line[11])
         
         # does query alignment meet threshold?:
         # (identity, length, score):
@@ -159,20 +159,20 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
                 repeat_reads += 1
                 inner_details_dict = query_details_dict[query]
                 if(inner_details_dict["match"]):
-                    old_e_value = inner_details_dict["e_value"]
+                    old_bitscore = inner_details_dict["bitscore"]
                     disagreements += 1
-                    if(old_e_value > e_value):
-                        print("old:", old_e_value, "new:", e_value)
+                    if(old_bitscore < bitscore):
+                        print("old:", old_bitscore, "new:", bitscore)
                         #update, but this shouldn't happen
                         inner_details_dict["gene"] = db_match
-                        inner_details_dict["e_value"] = e_value
+                        inner_details_dict["bitscore"] = bitscore
                         inner_details_dict["is_contig"] = contig
                 else:
                     one_sided_alignments += 1
                     inner_details_dict["match"] = True
                     inner_details_dict["is_contig"] = contig
                     inner_details_dict["gene"] = db_match
-                    inner_details_dict["e_value"] = e_value
+                    inner_details_dict["bitscore"] = bitscore
                 
                                             
                               # skip to the next query.
@@ -182,7 +182,7 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
                 inner_details_dict["match"] = True
                 inner_details_dict["is_contig"] = contig
                 inner_details_dict["gene"] = db_match
-                inner_details_dict["e_value"] = e_value
+                inner_details_dict["bitscore"] = bitscore
                 query_details_dict[query] = inner_details_dict
             #queryIScontig[query] = contig        # Store contig (T/F) info.
             #query2gene_map[query].add(db_match) # Collect all aligned genes for contig/read;
@@ -201,19 +201,19 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
             mapped.add(query)
             db_match = inner_dict["gene"] 
             contig = inner_dict["is_contig"]
-            e_value = inner_dict["e_value"]
+            bitscore = inner_dict["bitscore"]
             
             # RECORD alignment:
             if contig:                                      # If query is a contig, then
                 for read in contig2read_map[query]:         #  take all reads making up that contig and
-                    read_line = read + "<e_value>" + str(e_value)
+                    read_line = read + "<bitscore>" + str(bitscore)
                     if(db_match in gene2read_map):
                         gene2read_map[db_match].append(read_line)#  append their readIDs to aligned gene<->read dict,
                     else:
                         gene2read_map[db_match] = [read_line]
                         
             else:
-                read_line = query + "<e_value>" + str(e_value)
+                read_line = query + "<bitscore>" + str(bitscore)
                 if(db_match in gene2read_map):
                     gene2read_map[db_match].append(read_line)
                 else:
