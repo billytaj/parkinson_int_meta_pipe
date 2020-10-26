@@ -89,7 +89,6 @@ def concatenate_gene_maps_v2(path, gene_map_dict, context):
     #the gene length stays constant.  The number of reads do not.
     path_contents = os.listdir(path)
     duplicates_found = False
-    read_details_dict = dict()
     #gene_map_dict = dict()
     for content in path_contents:
         item = os.path.join(path, content)
@@ -107,83 +106,49 @@ def concatenate_gene_maps_v2(path, gene_map_dict, context):
                         gene_length = int(line_split[1])
                         gene_name = line_split[0]
                         reads = line_split[3:]
-                        
-                        for read_entry in reads:
-                            #decode the read data in the gene map
-                            read_name = "none"
-                            match_score = "none"
-                            e_value = "none"
+                  
+                        if(gene_name in gene_map_dict):
+                            old_pack = gene_map_dict[gene_name]
+                            old_reads = old_pack[2:]
+                            old_gene_length = int(old_pack[0])
                             
-                            if("<match_score>" in read_entry):
-                                read_split = read_entry.split("<match_score>")
-                                read_name = read_split[0]
-                                match_score = float(read_split[1])
+                            new_reads = list(set(old_reads + reads))
+                            if(len(new_reads) < (len(old_reads) + len(reads))):
+                                duplicates_found = True
+                                print("---------------------------------")
+                                print(dt.today(), gene_name, "duplicates removed", len(new_reads), "<-", len(old_reads) + len(reads))
+                                print(gene_name, "new:", new_reads)
+                                print(gene_name, "old:", old_reads)
+                                print(gene_name, "added:", reads)
+                                #time.sleep(3)
+                            #print(gene_name, "old reads:", len(old_reads), "current reads:", len(reads), "combined:", len(new_reads))
+                            #time.sleep(2)
                             
-                            elif("<e_value>" in read_entry):
-                                read_split = read_entry.split("<e_value>")
-                                read_name = read_split[0]
-                                e_value = float(read_split[1])
-                            
-                            if(read_name in read_details_dict):
-                                inner_details_dict = read_details_dict[read_name]
-                                if(e_value != "none"):
-                                    old_e_value = inner_details_dict["e_value"]
-                                    if(old_e_value > e_value):
-                                        #replace it
-                                        inner_details_dict["gene"] = gene_name
-                                        inner_details_dict["e_value"] = e_value
-                                        inner_details_dict["gene_length"] = gene_length
-                                        read_details_dict[read_name] = inner_details_dict
-                                elif(match_score != "none"):
-                                    old_match_score = inner_details_dict["match_score"]
-                                    if(old_match_score < match_score):
-                                        #replace it
-                                        inner_details_dict["gene"] = gene_name
-                                        inner_details_dict["match_score"] = match_score
-                                        inner_details_dict["gene_length"] = gene_length
-                                        read_details_dict[read_name] = inner_details_dict
-                                        
+                            new_number_of_reads = len(new_reads)
+                            final_gene_length = gene_length
+                            if(int(old_gene_length) != int(gene_length)):
+                                print("gene lengths for same gene in table do not match. This shouldn't happen")
+                                print("taking larger length:", old_gene_length, gene_length)
+                                print("for:", gene_name)
+                                if(int(old_gene_length) > int(gene_length)):
+                                    final_gene_length = old_gene_length
                                 else:
-                                    print(dt.today(), "No e_value or match score: this can't happen")
-                                    sys.exit("death")
-                            else:
-                                inner_details_dict = dict()
-                                inner_details_dict["gene"] = gene_name
-                                inner_details_dict["e_value"] = e_value
-                                inner_details_dict["match_score"] = match_score
-                                inner_details_dict["gene_length"] = gene_length
-                                
-                                read_details_dict[read_name] = inner_details_dict
-                                
-                                
+                                    final_gene_length = gene_length
                             
-    #now sort the read_details_dict
-    for read in read_details_dict:
-        inner_details_dict = read_details_dict[read]
-        gene_name = inner_details_dict["gene"]
-        gene_length = inner_details_dict["gene_length"]
-        
-        if(gene_name in gene_map_dict):
-            
-            gene_map_entry = gene_map_dict[gene_name]
-            gene_reads = gene_map_entry[2:].append(read)
-            gene_read_count = int(gene_map_entry[1]) + 1]
-            print(dt.today(), context, "|old:", gene_map_entry)
-            
-            gene_map_entry = [gene_length, gene_read_count] + gene_reads
-            gene_map_dict[gene_name] = gene_map_entry
-            
-            print(dt.today(), context,"|new:", gene_map_dict[gene_name]
-            time.sleep(5)
-            
-        else:
-            gene_map_dict[gene_name] = [gene_length, 1, read]
-                
+                            gene_map_dict[gene_name] = [final_gene_length, new_number_of_reads] + new_reads
+                            #print("merged entry:", gene_name, gene_map_dict[gene_name])
+                        else:
+                            
+                            gene_map_dict[gene_name] = [gene_length, number_of_reads] + reads
+    if(duplicates_found):
+        print(dt.today(),"duplicates found")
+    else:
+        print(dt.today(), path, context, "OK! no duplicates found")
         
     
 def merge_fastas(path_0, path_1, section, header, extension, bypass_ID_check = True):
-    #it's just a simple concatenation job. that also checks for duplicates
-    
+    #This walks through each pairing, and checks for duplicates.
+    #it has to be unique
     IDs_used = list()
     skip_this_line = False
     path_contents = os.listdir(path_0)
@@ -370,9 +335,9 @@ def merge_dicts(list_of_dicts):
                     final_dict[gene] = new_entry
                     #time.sleep(1)
                     
-            else:
-                #add new gene to map
-                final_dict[gene] = item[gene]
+                else:
+                    #add new gene to map
+                    final_dict[gene] = item[gene]
     return final_dict
     
 def reconcile_paired_gene_map(pair_1_gene_map, pair_2_gene_map):
@@ -390,6 +355,125 @@ def reconcile_paired_gene_map(pair_1_gene_map, pair_2_gene_map):
     all_reads = list(set(all_reads))
     return all_reads
     
+def reconcile_paired_gene_map_v2(pair_1_gene_map, pair_2_gene_map, message):
+    #we need to rebuild the gene maps of paired data
+    read_details_dict = dict()
+    final_gene_map = dict()
+    repeat_reads = 0
+    disagreements = 0
+    new_read = 0
+    print(dt.today(), "working on:", message)
+    for p1_gene in pair_1_gene_map:
+        reads = pair_1_gene_map[p1_gene][2:]
+        gene_length = pair_1_gene_map[p1_gene][0]
+        for read in reads:
+            
+            if(read in read_details_dict):
+                print(dt.today(), "a repeat read in pair1.  This shouldn't happen")
+                sys.exit("death")
+            else:
+                match_score = "none"
+                e_value = "none"
+                real_read_name = "none"
+                if("<e_value>" in read):
+                    real_read_name = read.split("<e_value>")[0]
+                    e_value = read.split("<e_value>")[1]
+                elif("<match_score>" in read):
+                    real_read_name = read.split("<match_score>")[0]
+                    match_score = read.split("<match_score>")[1]
+                
+                inner_dict = dict()
+                inner_dict["gene"] = p1_gene
+                inner_dict["e_value"] = e_value
+                inner_dict["match_score"] = match_score
+                inner_dict["gene_length"] = gene_length
+                read_details_dict[real_read_name] = inner_dict
+            
+    for p2_gene in pair_2_gene_map:
+        gene_length = pair_2_gene_map[p2_gene][0]
+        reads = pair_2_gene_map[p2_gene][2:]
+        for read in reads:
+            match_score = "none"
+            e_value = "none"
+            real_read_name = "none"
+            if("<e_value>" in read):
+                real_read_name = read.split("<e_value>")[0]
+                e_value = read.split("<e_value>")[1]
+            elif("<match_score>" in read):
+                real_read_name = read.split("<match_score>")[0]
+                match_score = read.split("<match_score>")[1]
+            
+            if(real_read_name in read_details_dict):
+                repeat_reads += 1
+                #read already processed
+                old_details = read_details_dict[real_read_name]
+                old_e_value = old_details["e_value"]
+                old_match_score = old_details["match_score"]
+                if(e_value != "none"):
+                    if(e_value < old_e_value):
+                        #disagreement found
+                        disagreements += 1
+                        inner_dict = dict()
+                        inner_dict["gene"] = p2_gene
+                        inner_dict["e_value"] = e_value
+                        inner_dict["match_score"] = match_score
+                        inner_dict["gene_length"] = gene_length
+                        read_details_dict[real_read_name] = inner_dict
+                        
+                elif(match_score != "none"):
+                    if(match_score > old_match_score):
+                        #disagreement found
+                        disagreements += 1
+                        inner_dict = dict()
+                        inner_dict["gene"] = p2_gene
+                        inner_dict["e_value"] = e_value
+                        inner_dict["match_score"] = match_score
+                        inner_dict["gene_length"] = gene_length
+                        read_details_dict[real_read_name] = inner_dict
+            else:
+                #new p2-only read
+                new_read += 1
+                inner_dict = dict()
+                inner_dict["gene"] = p1_gene
+                inner_dict["e_value"] = e_value
+                inner_dict["gene_length"] = gene_length
+                inner_dict["match_score"] = match_score
+                read_details_dict[real_read_name] = inner_dict
+        
+    #make the new gene map
+    all_paired_reads = []
+    for read in read_details_dict:
+        inner_dict = read_details_dict[read]
+        gene_name = inner_dict["gene"]
+        gene_length = inner_dict["gene_length"]
+        all_paired_reads.append(read)
+        if(gene_name in final_gene_map):
+            old_reads = final_gene_map[gene_name][2:]
+            old_gene_count = final_gene_map[gene_name][1]
+            old_reads.append(read)
+            #print(dt.today(), "old final gene map:", gene_name, final_gene_map[gene_name])
+            final_gene_map[gene_name] = [gene_length, old_gene_count + 1] +  old_reads
+            #print(dt.today(), "new final_gene_map:", gene_name, final_gene_map[gene_name])
+            
+            #
+        else:
+            final_gene_map[gene_name] = [gene_length, 1, read]
+            #print("new gene entry:", gene_name, final_gene_map[gene_name])
+            
+            #time.sleep(1)
+    print(message, "repeat:", repeat_reads)
+    print(message, "disagreements:", disagreements)
+    print(message, "new reads:", new_read)
+    
+    if(message == "cs"):
+        for item in final_gene_map:
+            if(type(final_gene_map[item]) is not list):
+                print(message, item,  type(final_gene_map[item]))
+                time.sleep(1)
+            
+    return final_gene_map, all_paired_reads
+        
+                
 
 def import_fastq(file_name_in):
     fastq_df = pd.read_csv(file_name_in, header=None, names=[None], sep="\n", skip_blank_lines = False, quoting=3)
@@ -421,7 +505,25 @@ def make_second_merge_process(process_store, path_0, path_1, header, tail):
         #merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
         #merge_process.start()
         #process_store.append(merge_process)    
-       
+        
+        
+def final_gene_map_merge(gene_map_0, gene_map_1):
+    final_gene_map = gene_map_0
+    for gene in gene_map_1:
+        if(gene in final_gene_map):
+            new_reads = gene_map_1[gene][2:]
+            old_reads = gene_map_0[gene][2:]
+            gene_length = final_gene_map[gene][0]
+            combined_reads = old_reads + new_reads
+            final_gene_map[gene] = [gene_length, len(combined_reads)] + combined_reads
+            
+        else:
+            final_gene_map[gene] = gene_map_1[gene]
+            
+    return final_gene_map
+    
+    
+    
 if __name__ == "__main__":
     assemble_path           = sys.argv[1]
     bwa_path                = sys.argv[2]
@@ -559,6 +661,7 @@ if __name__ == "__main__":
         process.start()
         process_store.append(process)
         
+        
         process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_pair_2_gene_map, "pair_2"))
         process.start()
         process_store.append(process)
@@ -636,23 +739,23 @@ if __name__ == "__main__":
         contig_gene_map_list    = [bwa_contig_gene_map, blat_contig_gene_map, dia_contig_gene_map]
         
         #merge the gene maps by category
+            
+        
         
         pair_1_gene_map     = merge_dicts(pair_1_gene_map_list)
         pair_2_gene_map     = merge_dicts(pair_2_gene_map_list)
         singletons_gene_map = merge_dicts(singleton_gene_map_list)
         contig_gene_map     = merge_dicts(contig_gene_map_list)
         
-        
         #reconcile the paired reads (For export)
-        all_paired_reads = reconcile_paired_gene_map(pair_1_gene_map, pair_2_gene_map)
+        paired_gene_map, all_paired_reads = reconcile_paired_gene_map_v2(pair_1_gene_map, pair_2_gene_map, "paired only")
         export_leftover_paired_reads(all_paired_reads, pair_1_raw_df, pair_2_raw_df, export_path)
         
         
         #merge all gene maps
-        final_gene_map_list = [pair_1_gene_map, pair_2_gene_map, singletons_gene_map, contig_gene_map]
-        final_gene_map = merge_dicts(final_gene_map_list)
+        contigs_and_singletons_gene_map, other_reads = reconcile_paired_gene_map_v2(contig_gene_map, singletons_gene_map, "cs")    
         
-      
+        final_gene_map = final_gene_map_merge(contigs_and_singletons_gene_map, paired_gene_map)
         
         print(dt.today(), "done converting")
         

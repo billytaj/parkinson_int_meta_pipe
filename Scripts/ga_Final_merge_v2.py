@@ -335,9 +335,9 @@ def merge_dicts(list_of_dicts):
                     final_dict[gene] = new_entry
                     #time.sleep(1)
                     
-            else:
-                #add new gene to map
-                final_dict[gene] = item[gene]
+                else:
+                    #add new gene to map
+                    final_dict[gene] = item[gene]
     return final_dict
     
 def reconcile_paired_gene_map(pair_1_gene_map, pair_2_gene_map):
