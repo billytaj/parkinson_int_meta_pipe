@@ -1431,7 +1431,18 @@ class mt_pipe_commands:
 
         return COMMANDS_Assemble
 
-   
+    def create_ga_merge_paired_command(self, stage_name, dependency_stage_name, marker_file):
+        subfolder       = os.path.join(self.Output_Path, stage_name)
+        data_folder     = os.path.join(subfolder, "data")
+        split_folder    = os.path.join(data_folder, "0_read_split", category)
+        dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        jobs_folder     = os.path.join(data_folder, "jobs")
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(split_folder)
+        self.make_folder(jobs_folder)
+        
+    
     def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
