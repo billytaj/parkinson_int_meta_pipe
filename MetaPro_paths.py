@@ -162,7 +162,7 @@ class tool_path_obj:
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
         self.Classification_combine     = os.path.join(script_path, "ta_combine_v2.py")
         self.Wevote_parser              = os.path.join(script_path, "ta_wevote_parser.py")
-        self.taxa_table                 = os.path.join(script_path, "output_taxa_table.py")
+        self.taxa_table                 = os.path.join(script_path, "output_taxa_groupby.py")
         self.RPKM                       = os.path.join(script_path, "output_table_v3.py")
         self.format_RPKM                = os.path.join(script_path, "output_reformat_rpkm_table.py")
         self.read_count                 = os.path.join(script_path, "output_read_counts_v2.py")
