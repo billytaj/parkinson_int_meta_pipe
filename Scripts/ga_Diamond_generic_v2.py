@@ -152,7 +152,7 @@ def form_prot_map(hits, contig2read_map):
                     old_bitscore = inner_details_dict["bitscore"]
                     disagreements += 1
                     if(old_bitscore < bitscore):
-                        print("old:", old_e_value, "new:", bitscore)
+                        print("old:", old_bitscore, "new:", bitscore)
                         #update, but this shouldn't happen
                         inner_details_dict["gene"] = db_match
                         inner_details_dict["bitscore"] = bitscore
