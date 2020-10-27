@@ -2550,5 +2550,22 @@ class mt_pipe_commands:
         read_counts += os.path.join(final_folder, "read_count.tsv") + " "
         read_counts += self.read_mode
         
-        
         return [read_counts]
+        
+        
+    def create_output_taxa_groupby_command(self, current_stage_name):
+        subfolder           = os.path.join(self.Output_Path, current_stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        final_folder        = os.path.join(subfolder, "final_results")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(final_folder)
+        
+        taxa_groupby = ">&2 echo making Taxa summary | " 
+        taxa_groupby += self.tool_path_obj.Python + " "
+        taxa_groupby += self.tool_path_obj.taxa_table + " "
+        taxa_groupby += os.path.join(final_folder, "taxa_classifications.tsv") + " "
+        taxa_groupby += os.path.join(final_folder, "taxa_summary.tsv")
+        
+        return [taxa_groupby]

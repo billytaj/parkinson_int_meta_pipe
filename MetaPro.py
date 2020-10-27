@@ -495,6 +495,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     output_per_read_scores_label            = "output_per_read_scores"
     output_contig_stats_label               = "output_contig_stats"
     output_ec_heatmap_label                 = "output_ec_heatmap"
+    output_taxa_groupby_label               = "output_taxa_groupby"
     output_read_count_label                 = "output_read_count"
     
     # Creates our command object, for creating shellscripts.
@@ -1641,14 +1642,16 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #Phase 2
         if not(no_host):
             if check_bypass_log(output_folder, output_combine_hosts_label):
-                job_name = output_combine_hosts_label
                 command_list = commands.create_output_combine_hosts_command(output_label)
-                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                launch_and_create_with_mp_store(mp_store, output_label, output_combine_hosts_label, commands, command_list)
                 
         if check_bypass_log(output_folder, output_network_gen_label):
-            job_name = output_network_gen_label
             command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            launch_and_create_with_mp_store(mp_store, output_label, output_network_gen_label, commands, command_list)
+            
+        if check_bypass_log(output_folder, output_taxa_groupby_label):
+            command_list = commands.create_output_taxa_groupby_command(output_label)
+            launch_and_create_with_mp_store(mp_store, output_label, output_taxa_groupby_label, commands, command_list)
        
         print(dt.today(), "output report phase 2 launched.  waiting for sync")
         for item in mp_store:
