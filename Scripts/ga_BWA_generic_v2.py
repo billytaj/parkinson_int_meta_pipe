@@ -15,7 +15,7 @@ from Bio import SeqIO
 from datetime import datetime as dt
 import multiprocessing as mp
 from shutil import copyfile
-
+import pandas as pd
 def get_match_score(cigar_segment):
     CIGAR = re.split("([MIDNSHPX=])", cigar_segment) # Split CIGAR string into list, placing
     CIGAR = CIGAR[:-1]                      #lop off the empty char artifact from the split
@@ -245,6 +245,63 @@ def write_unmapped_reads(unmapped_reads, reads_in, output_file):
         #if x!=2: print ('')
         #prev_mapping_count= len(mapped_reads)
 
+def import_fastq(file_name_in):
+    fastq_df = pd.read_csv(file_name_in, header=None, names=[None], sep="\n", skip_blank_lines = False, quoting=3)
+    fastq_df = pd.DataFrame(fastq_df.values.reshape(int(len(fastq_df)/4), 4))
+    fastq_df.columns = ["ID", "sequences", "junk", "quality"]
+    fastq_df["ID"] = fastq_df["ID"].apply(lambda x: x.strip("@"))
+    return fastq_df        
+        
+def import_fasta(reads_in):
+    header = 0
+    body = 0
+    read_dict = dict()
+    with open(reads_in, "r") as fasta_in:
+        for line in fasta_in:
+            cleaned_line = line.strip("\n")
+            if(cleaned_line.startswith(">")):
+                if(header != 0):
+                    print(dt.today(), "inserting:", header, body)
+                    read_dict[header] = body
+                        
+                    print(header, "|", read_dict[header])
+                header = cleaned_line.strip(">")
+                body = 0
+            else:
+                if(body == 0):
+                    body = cleaned_line
+                else:
+                    body += cleaned_line
+        read_dict[header] = body
+    return read_dict
+                    
+def write_unmapped_reads_v2(unmapped_reads, reads_in, output_file):
+    #original breaks on the new paired.  No more seqIO
+    if(len(unmapped_reads) == 0):
+        print(dt.today(), "no unmapped reads found.  skipping")
+    else:
+        suffix = os.path.splitext(reads_in)[1][1:]
+        
+        if(suffix == "fastq"):
+            read_df = import_fastq(reads_in)#SeqIO.index(reads_in, )
+            unmapped_df = read_df[read_df["ID"].isin(unmapped_reads)]
+            #export in the fasta format
+            unmapped_df = unmapped_df["ID", "sequences"]
+            unmapped_df["ID"] = ">" + unmapped_df["ID"]
+            unmapped_df.to_csv(output_file, sep = "\n", header = False, index = False, quoting = 3)
+            
+        elif(suffix == "fasta"):
+            read_seqs = import_fasta(reads_in)
+            
+            with open(output_file, "w") as seqs_out:
+                for read in unmapped_reads:
+                    line_out = ">" + read + "\n" + read_seqs[read] + "\n"
+                    seqs_out.write(line_out)
+        else:
+            print(dt.today(), "error in unmapped export.  bad suffix")
+            sys.exit("death")
+        
+
 
 def write_gene_map(DNA_DB, gene2read_file, gene2read_map, mapped_gene_file):
     # WRITE OUTPUT: write gene<->read mapfile of BWA-aligned:
@@ -288,14 +345,17 @@ if __name__ == "__main__":
         unmapped_reads, mapped_reads, gene2read_map = gene_map(bwa_in, contig2read_map)
         
         write_gene_map(DNA_DB, gene2read_out, gene2read_map, mapped_gene_file)
-        write_unmapped_reads(unmapped_reads, reads_in, reads_out)
+        write_unmapped_reads_v2(unmapped_reads, reads_in, reads_out)
         
     else:
         print(dt.today(), "input unsafe.  Either no reads, or BWA annotated nothing.  converting to fasta, then passing on")
         if(check_file_safety(reads_in)):
             if(reads_in.endswith(".fastq")):
-                reads_to_convert = SeqIO.parse(reads_in, "fastq")
-                SeqIO.write(reads_to_convert, reads_out, "fasta")
+                fastq_in = import_fastq(reads_in)
+                fastq_in = fastq_in["ID", "sequences"]
+                fastq_in.to_csv(reads_out, sep = "\n", header = False, index = False, quoting = 3)
+                #reads_to_convert = SeqIO.parse(reads_in, "fastq")
+                #SeqIO.write(reads_to_convert, reads_out, "fasta")
             else:
                 copyfile(reads_in, reads_out)
             
