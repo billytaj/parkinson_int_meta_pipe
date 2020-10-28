@@ -119,6 +119,7 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
     repeat_disagreements = 0
     repeat_one_sided_alignments = 0
     rejected_low_score_matches = 0
+    rejected_matches = 0
     accepted_matches = 0
     total_queries = 0
     len_chars= ["M","I","S","=","X"]                    # These particular CIGAR operations cause the
