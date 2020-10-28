@@ -1015,20 +1015,27 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
         
         
-        sections = ["singletons"]
-        if(read_mode == "paired"):
-            sections.extend(["pair_1", "pair_2"])
-        for section in sections: 
-            marker_file = "GA_split_fastq_" + section
+        if read_mode == "paired":   
+            marker_file = "GA_merge_and_split_paired"
             marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
             if(os.path.exists(marker_path)):
-                print(dt.today(), "skipping", marker_file)
+                print(dt.today(), "skipping:", marker_file)
             else:
                 marker_path_list.append(marker_path)
-                job_name = "GA_prep_split_" + section
-                command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
+                job_name = "GA_prep_paired"
+                command_list = commands.create_ga_merge_and_split_paired_command(GA_BWA_label, assemble_contigs_label, "paired", marker_file)
                 launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
         
+        marker_file = "GA_split_fastq_singletons"
+        marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping", marker_file)
+        else:
+            marker_path_list.append(marker_path)
+            job_name = "GA_prep_split_singletons"
+            command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, "singletons", marker_file)
+            launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
+    
         for item in mp_store:
             item.join()
         mp_store[:] = []
@@ -1038,7 +1045,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         #-------------------------------------------------------------------------
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
-            sections.extend(["pair_1", "pair_2"])
+            sections.extend(["paired"])
         
         for section in sections:
             for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
@@ -1071,7 +1078,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         marker_path_list = []
         sections = ["contigs", "singletons"]
         if read_mode == "paired":
-            sections.extend(["pair_1", "pair_2"])
+            sections.extend(["paired"])
         for section in sections:
             for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))

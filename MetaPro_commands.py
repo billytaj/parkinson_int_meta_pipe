@@ -1431,7 +1431,7 @@ class mt_pipe_commands:
 
         return COMMANDS_Assemble
 
-    def create_ga_merge_paired_command(self, stage_name, dependency_stage_name, marker_file):
+    def create_ga_merge_and_split_paired_command(self, stage_name, dependency_stage_name, category, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         split_folder    = os.path.join(data_folder, "0_read_split", category)
@@ -1441,6 +1441,25 @@ class mt_pipe_commands:
         self.make_folder(data_folder)
         self.make_folder(split_folder)
         self.make_folder(jobs_folder)
+        
+        merge_paired = ">&2 echo merging paired reads | "
+        merge_paired += self.tool_path_obj.Python + " "
+        merge_paired += self.tool_path_obj.GA_merge_paired + " "
+        merge_paired += os.path.join(dep_loc, "pair_1.fastq") + " "
+        merge_paired += os.path.join(dep_loc, "pair_2.fastq") + " "
+        merge_paired += os.path.join(split_folder, "paired_merged.fastq")
+        
+        split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
+        split_fastq += "split -l " + str(int(self.tool_path_obj.GA_chunksize) * 4) + " "        
+        split_fastq += os.path.join(split_folder, "paired_merged.fastq") + " "
+        split_fastq += "--additional-suffix .fastq" + " "
+        split_fastq += "-d" + " "
+        split_fastq += os.path.join(split_folder,  + category + "_")
+        
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, marker_file)
+        
+        COMMANDS_GA_prep_fastq = [merge_paired + " && " + split_fastq + " && " + make_marker]
         
     
     def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category, marker_file):

@@ -156,6 +156,7 @@ class tool_path_obj:
         self.Map_reads_gene_BWA         = os.path.join(script_path, "ga_BWA_generic_v2.py")
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT_generic_v2.py")
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond_generic_v2.py")
+        self.GA_merge_paired            = os.path.join(script_path, "ga_merge_paired_reads.py")
         self.GA_final_merge             = os.path.join(script_path, "ga_Final_merge_v3.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine_v4.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid.py")
@@ -179,6 +180,7 @@ class tool_path_obj:
         self.output_filter_ECs          = os.path.join(script_path, "output_filter_ECs.py")
         self.bwa_read_sorter            = os.path.join(script_path, "bwa_read_sorter.py")
         self.ta_contig_name_convert     = os.path.join(script_path, "ta_contig_name_convert.py")
+        
         
         #--------------------------------------------------
         # miscellaneous values
