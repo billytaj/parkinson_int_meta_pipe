@@ -18,13 +18,13 @@ def reverse_complement_seq(x):
     rev = x[::-1]
     for item in rev:
         if(item == "T"):
-            final_string += "G"
-        elif(item =="G"):
-            final_string += "T"
-        elif(item == "A"):
-            final_string += "C"
-        elif(item == "C"):
             final_string += "A"
+        elif(item =="G"):
+            final_string += "C"
+        elif(item == "A"):
+            final_string += "T"
+        elif(item == "C"):
+            final_string += "G"
     return final_string
 
 def reverse_quality(x):

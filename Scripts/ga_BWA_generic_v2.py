@@ -118,7 +118,9 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
     repeat_read_count = 0
     repeat_disagreements = 0
     repeat_one_sided_alignments = 0
-    
+    rejected_low_score_matches = 0
+    accepted_matches = 0
+    total_queries = 0
     len_chars= ["M","I","S","=","X"]                    # These particular CIGAR operations cause the
                                                         #  alignment to step along the query sequence.
                                                         # Sum of lengths of these ops=length of seq.
@@ -126,6 +128,7 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
     # first, process .sam file, one contig/read (query) at a time:
     with open(sam,"r") as samfile:
         for line in samfile:
+            total_queries += 1
             # "ON-THE-FLY" filter:
             inner_details_dict = dict() #stores the inner details: what's the gene association of this query(contig or read ID) and is it a contig+
             
@@ -142,6 +145,7 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
             if flag[8]=="1":                            # If contig/read is NOT BWA-ALIGNED (9th digit=1),
                 inner_details_dict["match"] = False
                 query_details_dict[query] = inner_details_dict
+                rejected_matches += 1
             else:
                 
                     
@@ -150,6 +154,7 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
                 if(cigar_match_score < 90):
                     inner_details_dict["match"] = False
                     query_details_dict[query] = inner_details_dict
+                    rejected_low_score_matches += 1
                 else:
                     
                     #if contig, mark it <we convert to reads down below>
@@ -172,11 +177,14 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
                         else:
                             #previously unmatched
                             repeat_one_sided_alignments += 1
+                            accepted_matches += 1
+                            rejected_matches -= 1
                             query_details_dict[query]["match"] = True
                             query_details_dict[query]["score"] = cigar_match_score
                             query_details_dict[query]["gene"] = db_match
                             query_details_dict[query]["is_contig"] = contig
                     else:
+                        accepted_matches += 1
                         #new match
                         inner_details_dict["match"] = True
                         inner_details_dict["score"] = cigar_match_score
@@ -221,6 +229,9 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
     print(dt.today(), "repeated reads in scan:", repeat_read_count)
     print(dt.today(), "disagreements:", repeat_disagreements)
     print(dt.today(), "one-sided alignments:", repeat_one_sided_alignments)
+    print(dt.today(), "accepted:", accepted_matches,  "/", total_queries)
+    print(dt.today(), "rejected:", rejected_matches,  "/", total_queries)
+    print(dt.today(), "rejected low score:", rejected_low_score_matches,  "/", total_queries)
     return unmapped, mapped, gene2read_map
     
 
@@ -286,7 +297,7 @@ def write_unmapped_reads_v2(unmapped_reads, reads_in, output_file):
             read_df = import_fastq(reads_in)#SeqIO.index(reads_in, )
             unmapped_df = read_df[read_df["ID"].isin(unmapped_reads)]
             #export in the fasta format
-            unmapped_df = unmapped_df["ID", "sequences"]
+            unmapped_df = unmapped_df[["ID", "sequences"]]
             unmapped_df["ID"] = ">" + unmapped_df["ID"]
             unmapped_df.to_csv(output_file, sep = "\n", header = False, index = False, quoting = 3)
             
