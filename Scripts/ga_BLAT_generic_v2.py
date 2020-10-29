@@ -15,8 +15,8 @@ from Bio import SeqIO
 from datetime import datetime as dt
 import multiprocessing as mp
 from shutil import copyfile
-
-
+import time
+from math import ceil
 def import_contig_map(contig2read_file):
     # make dict of contigID<->readsID(s):
     contig2read_map= {}
@@ -27,6 +27,11 @@ def import_contig_map(contig2read_file):
                 contig2read_map[entry[0]]= entry[2:]    # key=contigID, value=list of readID(s)
     return contig2read_map
 
+def extract_true_read_length(read):
+    real_length = (len(read) - 10)/2
+    if(real_length % 1 != 0):
+        sys.exit("reads aren't of even length")
+    return real_length
 
 def import_gene_map(gene2read_file):
     # make dict of BWA-aligned geneID<->readID(s):
@@ -67,7 +72,6 @@ def check_file_safety(file_name):
 def get_blat_details(blat_in, reads_in):                          # List of lists [blatout info, read length]=
                                                         #  read_aligned(.blatout file, dict contig/readID<->SeqRecord)
     
-    #seqrec = import_reads(reads_in)
     seqrec = SeqIO.index(reads_in, os.path.splitext(reads_in)[1][1:])
     
     #for item in seqrec:
@@ -118,14 +122,21 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
     identity_cutoff= 85
     #identity_cutoff= 80
     length_cutoff= 0.65
+    true_length_cutoff = 0.85
     score_cutoff= 60
 
     repeat_reads = 0
     disagreements = 0
     one_sided_alignments = 0
-    
+    rejected = 0
+    accepted = 0
+    total_reads = 0
+    rejected_score = 0
+    rejected_align = 0
+    rejected_id = 0
     # loop through sorted BLAT-aligned reads/contigs:
     for line in hits:
+        total_reads += 1
         inner_details_dict = dict()
         # "ON-THE-FLY" filter:
         
@@ -138,13 +149,32 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
         seq_len = int(line[12])              # query sequence length
         bitscore = float(line[11])
         
+        true_seq_len = ceil((seq_len - 10)/2)
+        if(true_seq_len % 1 != 0):  
+            print(dt.today(), "reads not of equal length", query, seq_len, true_seq_len)
+            sys.exit("death")
+        
         # does query alignment meet threshold?:
         # (identity, length, score):
-        if seq_identity<=identity_cutoff or align_len<=seq_len*length_cutoff or score<=score_cutoff:
+        if seq_identity<=identity_cutoff  or score<=score_cutoff or align_len<=true_seq_len*true_length_cutoff:
             #unmapped.add(query)             # if threshold is failed, add to unmapped set and
+            if(seq_identity <= identity_cutoff):
+                rejected_id += 1
+            elif(align_len<=true_seq_len*true_length_cutoff):
+                rejected_align += 1
+                if(query not in query_details_dict):
+                    print(dt.today(), query, "rejected align:", align_len/true_seq_len)
+                time.sleep(0.05)
+            elif(score <= score_cutoff):
+                rejected_score += 1
+                
+
             inner_details_dict = dict()
             inner_details_dict["match"] = False
             query_details_dict[query] = inner_details_dict
+            rejected += 1
+            
+
         else:
             
             # is query a contig?:
@@ -168,6 +198,8 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
                         inner_details_dict["bitscore"] = bitscore
                         inner_details_dict["is_contig"] = contig
                 else:
+                    rejected -= 1
+                    accepted += 1
                     one_sided_alignments += 1
                     inner_details_dict["match"] = True
                     inner_details_dict["is_contig"] = contig
@@ -178,6 +210,7 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
                               # skip to the next query.
             else:
                 #new hit
+                accepted += 1
                 inner_details_dict = dict()
                 inner_details_dict["match"] = True
                 inner_details_dict["is_contig"] = contig
@@ -193,6 +226,11 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
     print(dt.today(), "repeat reads:", repeat_reads)
     print(dt.today(), "disagreements:", disagreements)
     print(dt.today(), "one-sided alignments:", one_sided_alignments)
+    print(dt.today(), "accepted:", accepted, "/", total_reads)
+    print(dt.today(), "rejected:", rejected, "/", total_reads)
+    print(dt.today(), "rejected by seq id:", rejected_id, "/", total_reads)
+    print(dt.today(), "rejected by align:", rejected_align, "/", total_reads)
+    print(dt.today(), "rejected by score:", rejected_score, "/", total_reads)
     
     # FINAL remaining BLAT-aligned queries:
     for query in query_details_dict:#query2gene_map:                        # contig/readID
@@ -263,32 +301,7 @@ def write_gene_map(DNA_DB, new_gene2read_file, gene2read_map, mapped_gene_file):
     with open(mapped_gene_file,"w") as outfile:
         SeqIO.write(genes, outfile, "fasta")    
         
-        
-def import_reads(reads_in):
-    fasta_dict = dict()
-    with open(reads_in, "r") as reads_fasta:
-        header = 0
-        seq = 0
-        for line in reads_fasta:
-            if(line.startswith(">")):
-                if(header == 0):
-                    header = line.strip(">")
-                    header = header.strip("\n")
-                    #print("import header:", header)
-                else:
-                    fasta_dict[header] = seq
-                    
-                    header = line.strip(">")
-                    header = header.strip("\n")
-                    #print("import header:", header)
-            else:
-                if(seq == 0):
-                    seq = line.strip("\n")
-                else:
-                    seq += line.strip("\n")
-        #final line:
-        fasta_dict[header] = seq
-    return fasta_dict
+       
 
 def get_full_unmapped_reads(mapped_reads, fasta_keys):
     unmapped_reads = list()
@@ -310,11 +323,9 @@ def export_seqs(reads_in_dict, output_name):
 if __name__ == "__main__":
 
     DNA_DB              = sys.argv[1]   # INPUT: DNA db used for BLAT alignement
-    contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
-    #old_gene2read_file  = sys.argv[3]   # INPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
-                                        # ->OUTPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
-    mapped_gene_file    = sys.argv[3]   # OUTPUT: BWA&BLAT-aligned geneIDs and aa seqs (.fna; fasta-format)
-    new_gene2read_file  = sys.argv[4]   # OUTPUT: new gene2read_file instead of overwriting the old map
+    contig_map_in       = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
+    genes_out           = sys.argv[3]   # OUTPUT: BWA&BLAT-aligned geneIDs and aa seqs (.fna; fasta-format)
+    gene_map_out        = sys.argv[4]   # OUTPUT: new gene2read_file instead of overwriting the old map
     
     reads_in            = sys.argv[5]   # INPUT: sequence in general
     blat_in             = sys.argv[6]
@@ -324,12 +335,12 @@ if __name__ == "__main__":
     input_safety = check_file_safety(reads_in) and check_file_safety(blat_in)
     
     if(input_safety):
-        contig2read_map = import_contig_map(contig2read_file)
+        contig2read_map = import_contig_map(contig_map_in)
         blat_hits, reads_in_dict = get_blat_details(blat_in, reads_in)
         mapped_reads, gene2read_map = make_gene_map(blat_hits, contig2read_map) 
         unmapped_reads = get_full_unmapped_reads(mapped_reads, reads_in_dict)
         
-        write_gene_map(DNA_DB, new_gene2read_file, gene2read_map, mapped_gene_file)
+        write_gene_map(DNA_DB, gene_map_out, gene2read_map, genes_out)
         write_unmapped_seqs(unmapped_reads, reads_in, reads_out)
         
     else:
