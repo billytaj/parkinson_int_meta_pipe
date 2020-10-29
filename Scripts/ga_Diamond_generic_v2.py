@@ -46,10 +46,19 @@ from shutil import copyfile
 import pandas as pd
 import itertools
 import multiprocessing as mp
-
+from math import ceil
 
 #####################################
 # FUNCTIONS:
+
+
+def extract_true_read_length(read):
+    real_length = (len(read) - 10)/2
+    if(real_length % 1 != 0):
+        sys.exit("reads aren't of even length")
+    return real_length
+
+
 def check_file_safety(file_name):
     if(os.path.exists(file_name)):
         if(os.path.getsize(file_name) == 0):
@@ -113,6 +122,11 @@ def form_prot_map(hits, contig2read_map):
     repeat_reads = 0
     disagreements = 0
     one_sided_alignments = 0
+    accepted = 0
+    rejected = 0
+    rejected_score = 0
+    rejected_align = 0
+    rejected_seq = 0
     
     # loop through sorted BLAT-aligned reads/contigs:
     for line in hits:
@@ -128,9 +142,19 @@ def form_prot_map(hits, contig2read_map):
         seq_len = int(line[12])              # query sequence length
         bitscore = float(line[11])
         
+        true_seq_len = ceil((seq_len - 10)/2)
+        
         # does query alignment meet threshold?:
         # (identity, length, score):
-        if seq_identity<=identity_cutoff or align_len<=seq_len*length_cutoff or score<=score_cutoff:
+        
+        if seq_identity<=identity_cutoff or score<=score_cutoff or align_len <= true_seq_len * 0.85: #align_len<=seq_len*length_cutoff:
+            rejected += 1
+            if(seq_identity<=identity_cutoff):
+                rejected_seq += 1
+            elif(align_len<=seq_len*length_cutoff):
+                rejected_align += 1
+            elif(score<=score_cutoff):
+                rejected_score += 1
             #unmapped.add(query)             # if threshold is failed, add to unmapped set and
             inner_details_dict = dict()
             inner_details_dict["match"] = False
@@ -159,6 +183,8 @@ def form_prot_map(hits, contig2read_map):
                         inner_details_dict["is_contig"] = contig
                 else:
                     one_sided_alignments += 1
+                    accepted += 1
+                    rejected -= 1
                     inner_details_dict["match"] = True
                     inner_details_dict["is_contig"] = contig
                     inner_details_dict["gene"] = db_match
@@ -168,6 +194,7 @@ def form_prot_map(hits, contig2read_map):
                               # skip to the next query.
             else:
                 #new hit
+                accepted += 1
                 inner_details_dict = dict()
                 inner_details_dict["match"] = True
                 inner_details_dict["is_contig"] = contig
@@ -183,6 +210,11 @@ def form_prot_map(hits, contig2read_map):
     print(dt.today(), "repeat reads:", repeat_reads)
     print(dt.today(), "disagreements:", disagreements)
     print(dt.today(), "one-sided alignments:", one_sided_alignments)
+    print(dt.today(), "accepted:", accepted)
+    print(dt.today(), "rejected:", rejected)
+    print(dt.today(), "rejected by score:", rejected_score)
+    print(dt.today(), "rejected by %id:", rejected_seq)
+    print(dt.today(), "rejected by align:", rejected_align)
     
     # FINAL remaining BLAT-aligned queries:
     for query in query_details_dict:#query2gene_map:                        # contig/readID
