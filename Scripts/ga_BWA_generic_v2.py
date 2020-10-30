@@ -137,7 +137,12 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
             db_match = line_parts[2]                     #  geneID, and a
             flag = bin(int(line_parts[1]))[2:].zfill(11) #  flag---after conversion into 11-digit binary format
                                                         #  where each bit is a flag for a specific descriptor.
-
+            
+            AS_score = 0
+            for item in line_parts:
+                if(item.startswith("AS")):
+                    AS_score = int(item.split(":")[-1])
+            
             # is query BWA-aligned?:
             if flag[8]=="1":                            # If contig/read is NOT BWA-ALIGNED (9th digit=1),
                 inner_details_dict["match"] = False
@@ -164,22 +169,22 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
                         if(query_details_dict[query]["match"]):
                             repeat_disagreements += 1
                             old_score = query_details_dict[query]["score"]
-                            if(cigar_match_score > old_score):
+                            if(AS_score > old_score):
                                 #a better match came along.  if not, do nothing
-                                query_details_dict[query]["score"] = cigar_match_score
+                                query_details_dict[query]["score"] = AS_score
                                 query_details_dict[query]["gene"] = db_match
                                 query_details_dict[query]["is_contig"] = contig
                         else:
                             #previously unmatched
                             repeat_one_sided_alignments += 1
                             query_details_dict[query]["match"] = True
-                            query_details_dict[query]["score"] = cigar_match_score
+                            query_details_dict[query]["score"] = AS_score
                             query_details_dict[query]["gene"] = db_match
                             query_details_dict[query]["is_contig"] = contig
                     else:
                         #new match
                         inner_details_dict["match"] = True
-                        inner_details_dict["score"] = cigar_match_score
+                        inner_details_dict["score"] = AS_score
                         inner_details_dict["gene"] = db_match
                         inner_details_dict["is_contig"] = contig
                         query_details_dict[query] = inner_details_dict
@@ -192,18 +197,18 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
             mapped.add(query)        
             db_match = inner_dict["gene"]
             contig = inner_dict["is_contig"]    
-            match_score = inner_dict["score"]
+            AS_score = inner_dict["score"]
             # RECORD alignments:
             if contig:                                      # If query is a contig, then
                 contig_reads = list()
                 for read in contig2read_map[query]:
-                    contig_reads.append(read + "<match_score>" + str(match_score))
+                    contig_reads.append(read + "<AS_score>" + str(AS_score))
                 if(db_match in gene2read_map):
                     gene2read_map[db_match].extend(contig_reads)
                 else:
                     gene2read_map[db_match] = contig_reads
             else:
-                read_entry = query + "<match_score>" + str(match_score)
+                read_entry = query + "<AS_score>" + str(AS_score)
                 if(db_match in gene2read_map):
                     
                     gene2read_map[db_match].append(read_entry)       #  append its readID to aligned gene<->read dict,
