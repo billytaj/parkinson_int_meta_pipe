@@ -377,9 +377,9 @@ def reconcile_paired_gene_map_v2(pair_1_gene_map, pair_2_gene_map, message):
                 if("<bitscore>" in read):
                     real_read_name = read.split("<bitscore>")[0]
                     score = read.split("<bitscore>")[1]
-                elif("<match_score>" in read):
-                    real_read_name = read.split("<match_score>")[0]
-                    score = read.split("<match_score>")[1]
+                elif("<AS_score>" in read):
+                    real_read_name = read.split("<AS_score>")[0]
+                    score = read.split("<AS_score>")[1]
                 
                 inner_dict = dict()
                 inner_dict["gene"] = p1_gene
@@ -396,9 +396,9 @@ def reconcile_paired_gene_map_v2(pair_1_gene_map, pair_2_gene_map, message):
             if("<bitscore>" in read):
                 real_read_name = read.split("<bitscore>")[0]
                 score = read.split("<bitscore>")[1]
-            elif("<match_score>" in read):
-                real_read_name = read.split("<match_score>")[0]
-                score = read.split("<match_score>")[1]
+            elif("<AS_score>" in read):
+                real_read_name = read.split("<AS_score>")[0]
+                score = read.split("<AS_score>")[1]
             
             if(real_read_name in read_details_dict):
                 repeat_reads += 1
