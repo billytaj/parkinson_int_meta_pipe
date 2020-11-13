@@ -350,6 +350,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     #------------------------------------------------------------------------
     
+    diamond_sensitivity = paths.diamond_sensitivity
+    
     
     print("============================================================")
     print("data cleaner options:")
@@ -403,6 +405,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("Filter stringency:", filter_stringency)
     print("rRNA filter Chunk size:", rRNA_chunks)
     print("GA chunk size:", GA_chunksize)
+    print("GA DIAMOND sensitivity:", ga_diamond_sensitivity)
     print("---------------------------------")
     if not single_path == "":
         read_mode = "single"
@@ -1256,6 +1259,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 else:
                     marker_path_list.append(marker_path)
                     command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path)
+                    if(ga_diamond_sensitivity == "sensitive"):
+                        command_list = commands.create_DIAMOND_annotate_command_v2_sensitive(GA_DIAMOND_label, full_sample_path)
+                    elif(ga_diamond_sensitivity == "more_sensitive"):    
+                        command_list = commands.create_DIAMOND_annotate_command_v2_more_sensitive(GA_DIAMOND_label, full_sample_path)
                     launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                 
         print(dt.today(), "All DIAMOND jobs launched.  waiting for join")

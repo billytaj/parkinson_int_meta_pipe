@@ -1743,12 +1743,85 @@ class mt_pipe_commands:
         diamond_annotate += " -o " + os.path.join(diamond_folder, sample_root_name + ".dmdout")
         diamond_annotate += " -f 6 -t " + temp_folder #section_temp_folder
         diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
+        
 
         #make_marker = ">&2 echo marking DIAMOND complete: " + sample_root_name + " | "
         make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond")
 
         return [diamond_annotate + " && " + make_marker]
+        
+    def create_DIAMOND_annotate_command_v2_sensitive(self, stage_name, query_file):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+    
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        #dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        diamond_folder      = os.path.join(data_folder, "0_diamond")
+        main_temp_folder    = os.path.join(data_folder, sample_root_name + "_diamond_temp")
+        temp_folder         = os.path.join(main_temp_folder, "temp")
+        jobs_folder         = os.path.join(data_folder, "jobs")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(diamond_folder)
+        self.make_folder(main_temp_folder)
+        self.make_folder(temp_folder)
+        self.make_folder(jobs_folder)
+        
+        diamond_annotate = ">&2 echo " + str(dt.today()) + " GA DIAMOND " + sample_root_name + " | "
+        diamond_annotate += self.tool_path_obj.DIAMOND
+        diamond_annotate += " blastx -p " + self.Threads_str
+        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
+        diamond_annotate += " -q " + query_file 
+        diamond_annotate += " --sensitive"
+        diamond_annotate += " -o " + os.path.join(diamond_folder, sample_root_name + ".dmdout")
+        diamond_annotate += " -f 6 -t " + temp_folder #section_temp_folder
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
+        
+
+        #make_marker = ">&2 echo marking DIAMOND complete: " + sample_root_name + " | "
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond_sensitive")
+
+        return [diamond_annotate + " && " + make_marker]    
+        
+    def create_DIAMOND_annotate_command_v2_more_sensitive(self, stage_name, query_file):
+        sample_root_name = os.path.basename(query_file)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+    
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        #dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        diamond_folder      = os.path.join(data_folder, "0_diamond")
+        main_temp_folder    = os.path.join(data_folder, sample_root_name + "_diamond_temp")
+        temp_folder         = os.path.join(main_temp_folder, "temp")
+        jobs_folder         = os.path.join(data_folder, "jobs")
+        
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(diamond_folder)
+        self.make_folder(main_temp_folder)
+        self.make_folder(temp_folder)
+        self.make_folder(jobs_folder)
+        
+        diamond_annotate = ">&2 echo " + str(dt.today()) + " GA DIAMOND " + sample_root_name + " | "
+        diamond_annotate += self.tool_path_obj.DIAMOND
+        diamond_annotate += " blastx -p " + self.Threads_str
+        diamond_annotate += " -d " + self.tool_path_obj.Prot_DB
+        diamond_annotate += " -q " + query_file 
+        diamond_annotate += " --more-sensitive"
+        diamond_annotate += " -o " + os.path.join(diamond_folder, sample_root_name + ".dmdout")
+        diamond_annotate += " -f 6 -t " + temp_folder #section_temp_folder
+        diamond_annotate += " -k 10 --id 85 --query-cover 65 --min-score 60 --unal 1"
+        
+
+        #make_marker = ">&2 echo marking DIAMOND complete: " + sample_root_name + " | "
+        make_marker = "touch" + " "
+        make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond_more_sensitive")
+
+        return [diamond_annotate + " && " + make_marker]    
 
 
    
