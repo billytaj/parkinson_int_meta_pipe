@@ -350,7 +350,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     #------------------------------------------------------------------------
     
-    diamond_sensitivity = paths.diamond_sensitivity
+    ga_diamond_sensitivity = paths.ga_diamond_sensitivity
     
     
     print("============================================================")
