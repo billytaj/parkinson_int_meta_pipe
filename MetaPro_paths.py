@@ -309,7 +309,7 @@ class tool_path_obj:
             self.filter_stringency          = self.value_assignment(config, "Settings", "filter_stringency", filter_stringency_default)
             self.GA_chunksize               = self.value_assignment(config, "Settings", "GA_chunk_size", GA_chunksize_default)
             
-            self.ga_diamond_sensitivity        = self.value_assignment(config, "Settings", "ga_diamond_sensitivity", diamond_sensitivity_default)
+            self.ga_diamond_sensitivity        = self.value_assignment(config, "Settings", "ga_diamond_sensitivity", ga_diamond_sensitivity_default)
             
     
                 
