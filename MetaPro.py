@@ -1260,9 +1260,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     marker_path_list.append(marker_path)
                     command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path)
                     if(ga_diamond_sensitivity == "sensitive"):
+                        print(dt.today(), "launching DMD in sensitive-mode")
                         command_list = commands.create_DIAMOND_annotate_command_v2_sensitive(GA_DIAMOND_label, full_sample_path)
                     elif(ga_diamond_sensitivity == "more_sensitive"):    
+                        print(dt.today(), "launching DMD in more-sensitive-mode")
                         command_list = commands.create_DIAMOND_annotate_command_v2_more_sensitive(GA_DIAMOND_label, full_sample_path)
+                    else:
+                        print(dt.today(), "launching DMD in normal-mode", ga_diamond_sensitivity)
+                        
                     launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                 
         print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
