@@ -350,7 +350,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     #------------------------------------------------------------------------
     
-    ga_diamond_sensitivity = paths.ga_diamond_sensitivity
+    ga_diamond_sensitivity = paths.ga_diamond_sensitivity.strip("\n")
     
     
     print("============================================================")
@@ -1252,19 +1252,24 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                 job_name = "DIAMOND_" + file_tag
                 full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
                 marker_file = file_tag + "_diamond"
+                if(ga_diamond_sensitivity == "sensitive"):
+                    marker_file = file_tag + "_diamond_sensitive"
+                elif(ga_diamond_sensitivity == "more_sensitive"):
+                    marker_file = file_tag + "_diamond_more_sensitive"
+                
                 marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
                 if(os.path.exists(marker_path)):
                     print(dt.today(), "skipping:", marker_path)
                     continue
                 else:
                     marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path)
+                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path, marker_file)
                     if(ga_diamond_sensitivity == "sensitive"):
                         print(dt.today(), "launching DMD in sensitive-mode")
-                        command_list = commands.create_DIAMOND_annotate_command_v2_sensitive(GA_DIAMOND_label, full_sample_path)
+                        command_list = commands.create_DIAMOND_annotate_command_v2_sensitive(GA_DIAMOND_label, full_sample_path, marker_file)
                     elif(ga_diamond_sensitivity == "more_sensitive"):    
                         print(dt.today(), "launching DMD in more-sensitive-mode")
-                        command_list = commands.create_DIAMOND_annotate_command_v2_more_sensitive(GA_DIAMOND_label, full_sample_path)
+                        command_list = commands.create_DIAMOND_annotate_command_v2_more_sensitive(GA_DIAMOND_label, full_sample_path, marker_file)
                     else:
                         print(dt.today(), "launching DMD in normal-mode", ga_diamond_sensitivity)
                         
@@ -1296,7 +1301,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path)
+                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path, marker_file)
                     launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                                     
         print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
@@ -1331,7 +1336,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping: GA final merge")
         else:
-            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label)
+            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label, marker_file)
             job_name = "GA_final_merge"
             launch_and_create_simple(GA_final_merge_label, job_name, commands, command_list)
         
