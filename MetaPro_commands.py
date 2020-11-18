@@ -1691,7 +1691,7 @@ class mt_pipe_commands:
 
         return COMMANDS_Annotate_BLAT_Post
 
-    def create_BLAT_copy_contig_map_command(self, stage_name, dependency_stage_name):
+    def create_BLAT_copy_contig_map_command(self, stage_name, dependency_stage_name, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         final_folder    = os.path.join(subfolder, "final_results")
@@ -1709,14 +1709,14 @@ class mt_pipe_commands:
         
         make_marker = ">&2 echo copy contig map done | "
         make_marker += "touch" + " "
-        make_marker += os.path.join(jobs_folder, "blat_copy_contig_map")
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         return [copy_contig_map + " && " + make_marker]
 
 
 
         
-    def create_DIAMOND_annotate_command_v2(self, stage_name, query_file):
+    def create_DIAMOND_annotate_command_v2(self, stage_name, query_file, marker_file):
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
     
@@ -1746,13 +1746,13 @@ class mt_pipe_commands:
 
         #make_marker = ">&2 echo marking DIAMOND complete: " + sample_root_name + " | "
         make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         return [diamond_annotate + " && " + make_marker]
 
 
    
-    def create_DIAMOND_pp_command_v2(self, stage_name, dependency_stage_name, query_file):
+    def create_DIAMOND_pp_command_v2(self, stage_name, dependency_stage_name, query_file, marker_file):
     
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
@@ -1783,7 +1783,7 @@ class mt_pipe_commands:
         
         make_marker = ">&2 echo diamond pp complete: " + sample_root_name + " | "
         make_marker += "touch" + " "
-        make_marker += os.path.join(jobs_folder, sample_root_name + "_diamond_pp")
+        make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_Annotate_Diamond_Post = [
             diamond_pp + " && " + make_marker
@@ -1793,7 +1793,7 @@ class mt_pipe_commands:
 
 
 
-    def create_GA_final_merge_command(self, current_stage_name, dep_0_name, dep_1_name, dep_2_name, dep_3_name):
+    def create_GA_final_merge_command(self, current_stage_name, dep_0_name, dep_1_name, dep_2_name, dep_3_name, marker_file):
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
         final_folder    = os.path.join(subfolder, "final_results")
@@ -1820,7 +1820,7 @@ class mt_pipe_commands:
         
         make_marker = ">&2 echo " + str(dt.today()) + " GA final merge | "
         make_marker += "touch" + " "
-        make_marker += os.path.join(jobs_folder, "GA_final_merge")
+        make_marker += os.path.join(jobs_folder, marker_file)
         
         
         COMMANDS_ga_final_merge = [

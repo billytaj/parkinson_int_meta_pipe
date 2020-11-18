@@ -1214,7 +1214,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
             print(dt.today(), "skipping:", marker_file)
         else:
             marker_path_list.append(marker_path)
-            command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label)
+            command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
             launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
         final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
         check_all_job_markers(marker_path_list, final_checklist)
@@ -1255,7 +1255,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path)
+                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path, marker_file)
                     launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                 
         print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
@@ -1284,7 +1284,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
                     continue
                 else:
                     marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path)
+                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path, marker_file)
                     launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
                                     
         print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
@@ -1319,7 +1319,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping: GA final merge")
         else:
-            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label)
+            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label, marker_file)
             job_name = "GA_final_merge"
             launch_and_create_simple(GA_final_merge_label, job_name, commands, command_list)
         
