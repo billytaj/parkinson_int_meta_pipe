@@ -419,7 +419,7 @@ def reconcile_paired_gene_map_v2(pair_1_gene_map, pair_2_gene_map, message):
                 #new p2-only read
                 new_read += 1
                 inner_dict = dict()
-                inner_dict["gene"] = p1_gene
+                inner_dict["gene"] = p2_gene
                 inner_dict["score"] = score
                 inner_dict["gene_length"] = gene_length
                 read_details_dict[real_read_name] = inner_dict
