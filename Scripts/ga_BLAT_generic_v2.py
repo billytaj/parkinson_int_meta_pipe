@@ -162,7 +162,7 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
                     old_bitscore = inner_details_dict["bitscore"]
                     disagreements += 1
                     if(old_bitscore < bitscore):
-                        print("old:", old_bitscore, "new:", bitscore)
+                        #print("old:", old_bitscore, "new:", bitscore)
                         #update, but this shouldn't happen
                         inner_details_dict["gene"] = db_match
                         inner_details_dict["bitscore"] = bitscore

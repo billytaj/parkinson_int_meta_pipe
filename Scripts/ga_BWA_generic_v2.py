@@ -212,11 +212,11 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
                 if(db_match in gene2read_map):
                     
                     gene2read_map[db_match].append(read_entry)       #  append its readID to aligned gene<->read dict,
-                    print(dt.today(), "old entry:", gene2read_map[db_match])
+                    #print(dt.today(), "old entry:", gene2read_map[db_match])
                 else:
                     
                     gene2read_map[db_match] = [read_entry]
-                    print(dt.today(), "new entry:", gene2read_map[db_match])
+                    #print(dt.today(), "new entry:", gene2read_map[db_match])
             #sort the queries    
         else:
             unmapped.add(query)

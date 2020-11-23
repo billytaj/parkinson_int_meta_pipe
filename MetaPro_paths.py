@@ -221,7 +221,7 @@ class tool_path_obj:
         DETECT_job_delay_default = 5
         
         filter_stringency_default = "high"
-        GA_chunksize_default = 100000
+        GA_chunksize_default = 25000
         
         BWA_pp_mem_default = 50
         BLAT_pp_mem_default = 50
