@@ -589,8 +589,7 @@ if __name__ == "__main__":
         contig_gene_map     = merge_dicts(contig_gene_map_list)
         
         #merge all gene maps
-        final_gene_map_list = [singletons_gene_map, contig_gene_map]
-        final_gene_map = merge_dicts(final_gene_map_list)
+        final_gene_map, other_reads = reconcile_paired_gene_map_v2(contig_gene_map, singletons_gene_map, "cs")    
         
         print(dt.today(), "done converting")
         
