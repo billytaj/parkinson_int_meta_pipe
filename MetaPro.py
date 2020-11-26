@@ -260,6 +260,7 @@ def launch_and_create_with_hold(mp_store, mem_threshold, job_limit, job_delay, j
 
 #check if all jobs ran
 def check_all_job_markers(job_marker_list, final_folder_checklist):
+    time.sleep(1)
     #if it's already been created, that means the job was killed.
     if(os.path.exists(final_folder_checklist)):
         print(dt.today(), final_folder_checklist, "exists: adding to it")
