@@ -1933,21 +1933,30 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_fol
         
     if(tutorial_mode_string == "quality"):
         print(dt.today(), "working on:", tutorial_mode_string)
-        
         command_list = commands.create_quality_control_command(quality_filter_label)
         job_name = quality_filter_label
         launch_and_create_simple(quality_filter_label, job_name, commands, command_list)
-        
         
     elif(tutorial_mode_string == "host"):
         print(dt.today(), "working on:", tutorial_mode_string)
         job_name = host_filter_label
         command_list = commands.create_host_filter_command(host_filter_label, quality_filter_label)
         launch_and_create_simple(host_filter_label, job_name, commands, command_list)
+        
     elif(tutorial_mode_string == "vector"):
         print(dt.today(), "working on:", tutorial_mode_string)
+        job_name = vector_filter_label
+        command_list = commands.create_vector_filter_command(vector_filter_label, quality_filter_label)
+        launch_and_create_simple(vector_filter_label, job_name, commands, command_list)
+        
     elif(tutorial_mode_string == "rRNA"):
         print(dt.today(), "working on:", tutorial_mode_string)
+        job_name = root_name + "_convert_to_fasta"
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq", marker_file)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+        
+        
     elif(tutorial_mode_string == "deduplicate"):
         print(dt.today(), "working on:", tutorial_mode_string)
     elif(tutorial_mode_string == "contigs"):
