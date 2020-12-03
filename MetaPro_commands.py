@@ -14,11 +14,10 @@ class mt_pipe_commands:
     # --------------------------------------------------------------------
     # constructor:
     # there should only be one of these objects used for an entire pipeline.
-    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, sequence_path_1=None, sequence_path_2=None, sequence_single=None):
+    def __init__(self, no_host, Config_path, Quality_score=33, Thread_count=8, tutorial_keyword = None, sequence_path_1=None, sequence_path_2=None, sequence_single=None, sequence_contigs = None):
 
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
         self.no_host_flag = no_host
-
         # path to the genome sequence file
         if sequence_single is not None:
             self.sequence_single = sequence_single
@@ -33,7 +32,16 @@ class mt_pipe_commands:
             print("Forward Reads:", self.sequence_path_1)
             print("Reverse Reads:", self.sequence_path_2)
             self.read_mode = "paired"
-
+        
+        if(tutorial_keyword is None):
+            print("MetaPro operating in auto-mode")
+            self.tutorial_keyword = None
+        else:
+            print("MetaPro is in TUTORIAL MODE:", tutorial_keyword)
+            self.tutorial_keyword = tutorial_keyword
+            
+            
+                
         self.Qual_str = str(Quality_score)
         self.Output_Path = os.getcwd()
         self.Threads_str = str(Thread_count)
@@ -362,6 +370,14 @@ class mt_pipe_commands:
         bwa_hr_singletons += Host_Contaminants + " "
         bwa_hr_singletons += os.path.join(quality_folder, "singletons.fastq")
         bwa_hr_singletons += " > " + os.path.join(host_removal_folder, "singletons_no_host.sam")
+        
+        #Tutorial-use only.  
+        bwa_hr_tut_singletons = ">&2 echo BWA host remove on singletons | "
+        bwa_hr_tut_singletons += self.tool_path_obj.BWA + " mem -t "
+        bwa_hr_tut_singletons += self.Threads_str + " "
+        bwa_hr_tut_singletons += Host_Contaminants + " "
+        bwa_hr_tut_singletons += self.sequence_single 
+        bwa_hr_tut_singletons += " > " + os.path.join(host_removal_folder, "singletons_no_host.sam")
 
         # annoying type conversion pt 1
         samtools_hr_singletons_sam_to_bam = ">&2 echo convert singletons host reads | "
@@ -388,6 +404,17 @@ class mt_pipe_commands:
         bwa_hr_paired += os.path.join(quality_folder, "pair_2.fastq") + " "
         bwa_hr_paired += ">" + " "
         bwa_hr_paired += os.path.join(host_removal_folder, "paired_on_host.sam")
+        
+        #Tutorial-use only
+        bwa_hr_tut_paired = ">&2 echo bwa host-removal on paired | " 
+        bwa_hr_tut_paired += self.tool_path_obj.BWA + " "
+        bwa_hr_tut_paired += "mem" + " "  + "-t" + " " + self.Threads_str + " "
+        bwa_hr_tut_paired += Host_Contaminants + " "
+        bwa_hr_tut_paired += self.sequence_path_1 + " "
+        bwa_hr_tut_paired += self.sequence_path_2 + " "
+        bwa_hr_tut_paired += ">" + " "
+        bwa_hr_tut_paired += os.path.join(host_removal_folder, "paired_on_host.sam")
+        
         
         bwa_hr_filter_paired = ">&2 echo BWA host-removal PP on paired | "
         bwa_hr_filter_paired += self.tool_path_obj.Python + " "
@@ -487,47 +514,81 @@ class mt_pipe_commands:
         
         
         
+        if(tutorial_keyword is None):
+            if self.read_mode == "single":
+                COMMANDS_host = [
+                    copy_host,
+                    bwa_hr_prep,
+                    samtools_hr_prep,
+                    bwa_hr_singletons,
+                    samtools_hr_singletons_sam_to_bam,
+                    samtools_no_host_singletons_bam_to_fastq,
+                    samtools_host_singletons_bam_to_fastq,
+                    make_blast_db_host,
+                    vsearch_filter_3,
+                    blat_hr_singletons,
+                    hr_singletons,
+                    copy_singletons
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_host = [
+                    copy_host,
+                    bwa_hr_prep,
+                    samtools_hr_prep,
+                    bwa_hr_singletons,
+                    samtools_hr_singletons_sam_to_bam,
+                    samtools_no_host_singletons_bam_to_fastq,
+                    samtools_host_singletons_bam_to_fastq,
+                    bwa_hr_paired,
+                    bwa_hr_filter_paired,
+                    make_blast_db_host,
+                    vsearch_filter_3,
+                    vsearch_filter_4,
+                    vsearch_filter_5,
+                    blat_hr_singletons,
+                    blat_hr_pair_1,
+                    blat_hr_pair_2,
+                    hr_singletons,
+                    hr_paired,
+                    copy_singletons,
+                    copy_pair_1,
+                    copy_pair_2
+                ]
+        else:
+            print(dt.today(), "Host filter operating in tutorial-mode")
+            if self.read_mode == "single":
+                COMMANDS_host = [
+                    copy_host,
+                    bwa_hr_prep,
+                    samtools_hr_prep,
+                    bwa_hr_tut_singletons,
+                    samtools_hr_singletons_sam_to_bam,
+                    samtools_no_host_singletons_bam_to_fastq,
+                    samtools_host_singletons_bam_to_fastq,
+                    make_blast_db_host,
+                    vsearch_filter_3,
+                    blat_hr_singletons,
+                    hr_singletons,
+                    copy_singletons
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_host = [
+                    copy_host,
+                    bwa_hr_prep,
+                    samtools_hr_prep,
+                    bwa_hr_paired,
+                    bwa_hr_filter_paired,
+                    make_blast_db_host,
+                    vsearch_filter_4,
+                    vsearch_filter_5,
+                    blat_hr_pair_1,
+                    blat_hr_pair_2,
+                    hr_paired,
+                    copy_pair_1,
+                    copy_pair_2
+                ]
 
-        if self.read_mode == "single":
-            COMMANDS_host = [
-                copy_host,
-                bwa_hr_prep,
-                samtools_hr_prep,
-                bwa_hr_singletons,
-                samtools_hr_singletons_sam_to_bam,
-                samtools_no_host_singletons_bam_to_fastq,
-                samtools_host_singletons_bam_to_fastq,
-                make_blast_db_host,
-                vsearch_filter_3,
-                blat_hr_singletons,
-                hr_singletons,
-                copy_singletons
-            ]
-        elif self.read_mode == "paired":
-            COMMANDS_host = [
-                copy_host,
-                bwa_hr_prep,
-                samtools_hr_prep,
-                bwa_hr_singletons,
-                samtools_hr_singletons_sam_to_bam,
-                samtools_no_host_singletons_bam_to_fastq,
-                samtools_host_singletons_bam_to_fastq,
-                bwa_hr_paired,
-                bwa_hr_filter_paired,
-                make_blast_db_host,
-                vsearch_filter_3,
-                vsearch_filter_4,
-                vsearch_filter_5,
-                blat_hr_singletons,
-                blat_hr_pair_1,
-                blat_hr_pair_2,
-                hr_singletons,
-                hr_paired,
-                copy_singletons,
-                copy_pair_1,
-                copy_pair_2
-            ]
-
+                
         return COMMANDS_host
 
     def create_vector_filter_command(self, stage_name, dependency_name):
@@ -562,6 +623,13 @@ class mt_pipe_commands:
         bwa_vr_singletons += Vector_Contaminants + " "
         bwa_vr_singletons += os.path.join(dependency_folder, "singletons.fastq")
         bwa_vr_singletons += " > " + os.path.join(vector_removal_folder, "singletons_no_vectors.sam")
+        
+        
+        bwa_vr_tut_singletons = ">&2 echo BWA vector oprhans TUTORIAL MODE | "
+        bwa_vr_tut_singletons += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
+        bwa_vr_tut_singletons += Vector_Contaminants + " "
+        bwa_vr_tut_singletons += self.sequence_single
+        bwa_vr_tut_singletons += " > " + os.path.join(vector_removal_folder, "singletons_no_vectors.sam")
 
         samtools_no_vector_singletons_convert = ">&2 echo samtools vector oprhans pt 1 | "
         samtools_no_vector_singletons_convert += self.tool_path_obj.SAMTOOLS + " view -bS "
@@ -578,13 +646,20 @@ class mt_pipe_commands:
         samtools_vector_singletons_export += " -0 " + os.path.join(vector_removal_folder, "singletons_vectors_only.fastq") + " "
         samtools_vector_singletons_export += os.path.join(vector_removal_folder, "singletons_no_vectors.bam")
 
-        bwa_vr_paired = ">&2 echo bwa vector pair | "
+        bwa_vr_paired = ">&2 echo bwa vector paired | "
         bwa_vr_paired += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
         bwa_vr_paired += Vector_Contaminants + " "
         bwa_vr_paired += os.path.join(dependency_folder, "pair_1.fastq") + " "
         bwa_vr_paired += os.path.join(dependency_folder, "pair_2.fastq") + " "
         bwa_vr_paired += " > " + os.path.join(vector_removal_folder, "paired_on_vectors.sam")
 
+        bwa_vr_tut_paired = ">&2 echo bwa vector paired TUTORIAL MODE | "
+        bwa_vr_tut_paired += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
+        bwa_vr_tut_paired += Vector_Contaminants + " "
+        bwa_vr_tut_paired += self.sequence_path_1 + " "
+        bwa_vr_tut_paired += self.sequence_path_2 + " "
+        bwa_vr_tut_paired += " > " + os.path.join(vector_removal_folder, "paired_on_vectors.sam")
+        
         bwa_vr_filter_paired = ">&2 echo BWA vector filter on paired | "
         bwa_vr_filter_paired += self.tool_path_obj.Python + " "
         bwa_vr_filter_paired += self.tool_path_obj.bwa_read_sorter + " "
@@ -673,46 +748,78 @@ class mt_pipe_commands:
         copy_pair_2 = "cp " + os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
         
-        
-        if self.read_mode == "single":
-            COMMANDS_vector = [
-                copy_vector,
-                bwa_vr_prep,
-                samtools_vr_prep,
-                bwa_vr_singletons,
-                samtools_no_vector_singletons_convert,
-                samtools_no_vector_singletons_export,
-                samtools_vector_singletons_export,
-                make_blast_db_vector,
-                vsearch_filter_6,
-                blat_vr_singletons,
-                blat_filter_vector_singletons,
-                copy_singletons
-            ]
-        elif self.read_mode == "paired":
-            COMMANDS_vector = [
-                copy_vector,
-                bwa_vr_prep,
-                samtools_vr_prep,
-                bwa_vr_singletons,
-                samtools_no_vector_singletons_convert,
-                samtools_no_vector_singletons_export,
-                samtools_vector_singletons_export,
-                bwa_vr_paired,
-                bwa_vr_filter_paired, 
-                make_blast_db_vector,
-                vsearch_filter_6,
-                vsearch_filter_7,
-                vsearch_filter_8,
-                blat_vr_singletons,
-                blat_vr_pair_1,
-                blat_vr_pair_2,
-                blat_filter_vector_singletons,
-                blat_filter_vector_paired,
-                copy_singletons,
-                copy_pair_1,
-                copy_pair_2
-            ]
+        if(self.tutorial_keyword == "vectors"):
+            if self.read_mode == "single":
+                COMMANDS_vector = [
+                    copy_vector,
+                    bwa_vr_prep,
+                    samtools_vr_prep,
+                    bwa_vr_tut_singletons,
+                    samtools_no_vector_singletons_convert,
+                    samtools_no_vector_singletons_export,
+                    samtools_vector_singletons_export,
+                    make_blast_db_vector,
+                    vsearch_filter_6,
+                    blat_vr_singletons,
+                    blat_filter_vector_singletons,
+                    copy_singletons
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_vector = [
+                    copy_vector,
+                    bwa_vr_prep,
+                    samtools_vr_prep,
+                    bwa_vr_tut_paired,
+                    bwa_vr_filter_paired, 
+                    make_blast_db_vector,
+                    vsearch_filter_7,
+                    vsearch_filter_8,
+                    blat_vr_pair_1,
+                    blat_vr_pair_2,
+                    blat_filter_vector_paired,
+                    copy_pair_1,
+                    copy_pair_2
+                ]
+        else:    
+            if self.read_mode == "single":
+                COMMANDS_vector = [
+                    copy_vector,
+                    bwa_vr_prep,
+                    samtools_vr_prep,
+                    bwa_vr_singletons,
+                    samtools_no_vector_singletons_convert,
+                    samtools_no_vector_singletons_export,
+                    samtools_vector_singletons_export,
+                    make_blast_db_vector,
+                    vsearch_filter_6,
+                    blat_vr_singletons,
+                    blat_filter_vector_singletons,
+                    copy_singletons
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_vector = [
+                    copy_vector,
+                    bwa_vr_prep,
+                    samtools_vr_prep,
+                    bwa_vr_singletons,
+                    samtools_no_vector_singletons_convert,
+                    samtools_no_vector_singletons_export,
+                    samtools_vector_singletons_export,
+                    bwa_vr_paired,
+                    bwa_vr_filter_paired, 
+                    make_blast_db_vector,
+                    vsearch_filter_6,
+                    vsearch_filter_7,
+                    vsearch_filter_8,
+                    blat_vr_singletons,
+                    blat_vr_pair_1,
+                    blat_vr_pair_2,
+                    blat_filter_vector_singletons,
+                    blat_filter_vector_paired,
+                    copy_singletons,
+                    copy_pair_1,
+                    copy_pair_2
+                ]    
 
         return COMMANDS_vector
 

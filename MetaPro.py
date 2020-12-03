@@ -291,7 +291,7 @@ def check_all_job_markers(job_marker_list, final_folder_checklist):
                     sys.exit("not all jobs completed")
 
 
-def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack):
+def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack, tutorial_mode):
     paths = mpp.tool_path_obj(config_path)
     no_host = args_pack["no_host"]
     verbose_mode = args_pack["verbose_mode"]
@@ -501,9 +501,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = False, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
     elif read_mode == "paired":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = False, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
     
 
     # This is the format we use to launch each stage of the pipeline.
@@ -1741,7 +1741,179 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("Outputs cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
     
 
+def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack, tutorial_mode_string): 
+    paths = mpp.tool_path_obj(config_path)
+    no_host = args_pack["no_host"]
+    verbose_mode = args_pack["verbose_mode"]
+    rRNA_chunks = int(paths.rRNA_chunksize)
+    GA_chunksize = int(paths.GA_chunksize)
+    
+    BWA_mem_threshold = int(paths.BWA_mem_threshold)
+    BLAT_mem_threshold = int(paths.BLAT_mem_threshold)
+    DIAMOND_mem_threshold = int(paths.DIAMOND_mem_threshold)
+    BWA_pp_mem_threshold = int(paths.BWA_pp_mem_threshold)
+    BLAT_pp_mem_threshold = int(paths.BLAT_pp_mem_threshold)
+    DIAMOND_pp_mem_threshold = int(paths.DIAMOND_pp_mem_threshold)
+    Infernal_mem_threshold = int(paths.Infernal_mem_threshold)
+    Barrnap_mem_threshold = int(paths.Barrnap_mem_threshold)
+    DETECT_mem_threshold = int(paths.DETECT_mem_threshold)
+    TA_mem_threshold = int(paths.TA_mem_threshold)
+    filter_stringency = paths.filter_stringency
+    
+    
+    BWA_job_limit = int(paths.BWA_job_limit)
+    BLAT_job_limit = int(paths.BLAT_job_limit)
+    DIAMOND_job_limit = int(paths.DIAMOND_job_limit)
+    BWA_pp_job_limit = int(paths.BWA_pp_job_limit)
+    BLAT_pp_job_limit = int(paths.BLAT_pp_job_limit)
+    DIAMOND_pp_job_limit = int(paths.DIAMOND_pp_job_limit)
+    Infernal_job_limit = int(paths.Infernal_job_limit)
+    Barrnap_job_limit = int(paths.Barrnap_job_limit)
+    DETECT_job_limit = int(paths.DETECT_job_limit)
+    TA_job_limit = int(paths.TA_job_limit)
+    
+    Infernal_job_delay      = float(paths.Infernal_job_delay)
+    Barrnap_job_delay       = float(paths.Barrnap_job_delay)
+    BWA_job_delay           = float(paths.BWA_job_delay)
+    BLAT_job_delay          = float(paths.BLAT_job_delay)
+    DIAMOND_job_delay       = float(paths.DIAMOND_job_delay)
+    BWA_pp_job_delay        = float(paths.BWA_pp_job_delay)
+    BLAT_pp_job_delay       = float(paths.BLAT_pp_job_delay)
+    DIAMOND_pp_job_delay    = float(paths.DIAMOND_pp_job_delay)
+    DETECT_job_delay        = float(paths.DETECT_job_delay)
+    TA_job_delay            = float(paths.TA_job_delay)
+    
+    #-----------------------------------------------------
+    keep_all                = paths.keep_all
+    keep_quality            = paths.keep_quality
+    keep_vector             = paths.keep_vector
+    keep_host               = paths.keep_host
+    keep_rRNA               = paths.keep_rRNA
+    keep_repop              = paths.keep_repop
+    keep_assemble_contigs   = paths.keep_assemble_contigs
+    keep_GA_BWA             = paths.keep_GA_BWA
+    keep_GA_BLAT            = paths.keep_GA_BLAT
+    keep_GA_DIAMOND         = paths.keep_GA_DIAMOND
+    keep_GA_final           = paths.keep_GA_final
+    keep_TA                 = paths.keep_TA
+    keep_EC                 = paths.keep_EC
+    keep_outputs            = paths.keep_outputs
+    
+    #------------------------------------------------------------------------
+    
+    
+    print("============================================================")
+    print("data cleaner options:")
+    print("keep all:", keep_all)
+    print("keep quality:", keep_quality)
+    print("keep vector:", keep_vector)
+    print("keep host:", keep_host)
+    print("keep rRNA:", keep_rRNA)
+    print("keep repop:", keep_repop)
+    print("keep assemble contigs:", keep_assemble_contigs)
+    print("keep GA BWA:", keep_GA_BWA)
+    print("keep GA BLAT:", keep_GA_BLAT)
+    print("keep GA DIAMOND:", keep_GA_DIAMOND)
+    print("keep GA final:", keep_GA_final)
+    print("keep TA:", keep_TA)
+    print("keep EC:", keep_EC)
+    print("keep outputs:", keep_outputs)
+    print("===============================================")
+    print("Job delay options:")
+    print("Infernal job delay:", Infernal_job_delay)
+    print("Barrnap job delay:", Barrnap_job_delay)
+    print("BWA job delay:", BWA_job_delay)
+    print("BLAT job delay:", BLAT_job_delay)
+    print("DIAMOND job delay:", DIAMOND_job_delay)
+    print("BWA pp job delay:", BWA_pp_job_delay)
+    print("BLAT pp job delay:", BLAT_pp_job_delay)
+    print("DIAMOND pp job delay:", DIAMOND_pp_job_delay)
+    print("DETECT job delay:", DETECT_job_delay)
+    print("=================================================")
+    print("memory thresholds")
+    print("Barrnap mem threshold:", Barrnap_mem_threshold)
+    print("Infernal mem threshold:", Infernal_mem_threshold)
+    print("BWA mem threshold:", BWA_mem_threshold)
+    print("BLAT mem threshold:", BLAT_mem_threshold)
+    print("DIAMOND mem threshold:", DIAMOND_mem_threshold)
+    print("BWA pp mem threshold:", BWA_pp_mem_threshold)
+    print("BLAT pp mem threshold:", BLAT_pp_mem_threshold)
+    print("DIAMOND pp mem threshold:", DIAMOND_pp_mem_threshold)
+    print("DETECT mem threshold:", DETECT_mem_threshold)
+    print("======================================================")
+    print("Barrnap job limit:", Barrnap_job_limit)
+    print("Infernal job limit:", Infernal_job_limit)
+    print("BWA job limit:", BWA_job_limit)
+    print("BLAT job limit:", BLAT_job_limit)
+    print("DIAMOND job limit:", DIAMOND_job_limit)
+    print("BWA pp job limit:", BWA_pp_job_limit)
+    print("BLAT pp job limit:", BLAT_pp_job_limit)
+    print("DIAMOND pp job limit:", DIAMOND_pp_job_limit)
+    print("DETECT job limit:", DETECT_job_limit)
+    print("===================================================")
+    print("Filter stringency:", filter_stringency)
+    print("rRNA filter Chunk size:", rRNA_chunks)
+    print("GA chunk size:", GA_chunksize)
+    print("---------------------------------")
+    if not single_path == "":
+        read_mode = "single"
+        quality_encoding = determine_encoding(single_path)
+        print("ENCODING USED:", quality_encoding)
+        print("OPERATING IN SINGLE-ENDED MODE")
+    else:
+        read_mode = "paired"
+        quality_encoding = determine_encoding(pair_1_path)
+        print("ENCODING USED:", quality_encoding)
+        print("OPERATING IN PAIRED-MODE")
+        
+    if threads == 0:
+        real_thread_count = mp.cpu_count()
+    else:
+        real_thread_count = threads
+       
+    if(real_thread_count == 1):
+        real_thread_count = 2
+    print("number of threads used:", real_thread_count)         
+            
+    mp_store = []  # stores the multiprocessing processes    
+    
+    # Creates our command object, for creating shellscripts.
+    if read_mode == "single":
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = tutorial_mode_string, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
+    elif read_mode == "paired":
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = tutorial_mode_string, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
+        
+        
+        
+    if(tutorial_keyword == "quality"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "host"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "vector"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "rRNA"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "deduplicate"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "contigs"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "GA_BWA"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "GA_BLAT"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "GA_DMD"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "GA_merge"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "TA"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_keyword == "EC"):
+        print(dt.today(), "working on:", tutorial_keyword)
+    else:
+        print(dt.today(), "tutorial mode not recognized:", tutorial_keyword)
+    
 if __name__ == "__main__":
+    print("METAPRO metatranscriptomic analysis pipeline")
     # This is where the code starts
     # There's a few operating modes, mainly "docker", and "singularity".  These modes edit the pipeline filepaths
 
@@ -1756,7 +1928,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--num_threads", type=int, help="Maximum number of threads used by the pipeline")
     parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
     parser.add_argument("--verbose_mode", type=str, help = "Decide how to handle the interim files, Compress them, or leave them alone.  Values are: keep, compress, quiet")
-
+    parser.add_argument("--tutorial", type = str, help = "tutorial operating mode for MetaPro")
     args = parser.parse_args()
 
     if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
@@ -1774,6 +1946,7 @@ if __name__ == "__main__":
     num_threads     = args.num_threads if args.num_threads else 0
     no_host         = args.nhost if args.nhost else False
     verbose_mode    = args.verbose_mode if args.verbose_mode else "quiet"
+    tutorial_mode   = args.tutorial if args.tutorial else "none"
 
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
@@ -1799,4 +1972,10 @@ if __name__ == "__main__":
     print("=====================================")
     print("no-host:", no_host)
     print("verbose_mode:", verbose_mode)
-    main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack)
+
+    if (tutorial_mode != "none"):
+        print("working in tutorial mode:", tutorial_mode)
+        tutorial_main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack, tutorial_mode)
+    
+    else:
+        main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack, tutorial_mode)
