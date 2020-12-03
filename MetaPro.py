@@ -1952,10 +1952,10 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_fol
     elif(tutorial_mode_string == "rRNA"):
         print(dt.today(), "working on:", tutorial_mode_string)
         job_name = root_name + "_convert_to_fasta"
-                        marker_path_list.append(marker_path)
-                        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq", marker_file)
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-        
+        marker_path_list.append(marker_path)
+        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq", marker_file)
+        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+
         
     elif(tutorial_mode_string == "deduplicate"):
         print(dt.today(), "working on:", tutorial_mode_string)
