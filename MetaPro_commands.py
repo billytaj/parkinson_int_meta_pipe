@@ -514,7 +514,7 @@ class mt_pipe_commands:
         
         
         
-        if(tutorial_keyword is None):
+        if(self.tutorial_keyword is None):
             if self.read_mode == "single":
                 COMMANDS_host = [
                     copy_host,

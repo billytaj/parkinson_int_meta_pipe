@@ -1875,6 +1875,54 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_fol
         real_thread_count = 2
     print("number of threads used:", real_thread_count)         
             
+    
+    quality_filter_label                    = "quality_filter"
+    host_filter_label                       = "host_read_filter"
+    vector_filter_label                     = "vector_read_filter"
+    rRNA_filter_label                       = "rRNA_filter"
+    rRNA_filter_split_label                 = "rRNA_filter_split"
+    rRNA_filter_convert_label               = "rRNA_filter_convert"
+    rRNA_filter_barrnap_label               = "rRNA_filter_barrnap"
+    rRNA_filter_barrnap_merge_label         = "rRNA_filter_barrnap_merge"
+    rRNA_filter_barrnap_pp_label            = "rRNA_filter_barrnap_pp"
+    rRNA_filter_infernal_label              = "rRNA_filter_infernal"
+    rRNA_filter_infernal_prep_label         = "rRNA_filter_infernal_prep"
+    rRNA_filter_splitter_label              = "rRNA_filter_splitter"
+    rRNA_filter_post_label                  = "rRNA_filter_post"
+    repop_job_label                         = "duplicate_repopulation"
+    assemble_contigs_label                  = "assemble_contigs"
+    destroy_contigs_label                   = "destroy_contigs"
+    GA_BWA_label                            = "GA_BWA"
+    GA_BWA_pp_label                         = "GA_BWA_pp"
+    GA_BLAT_label                           = "GA_BLAT"
+    GA_BLAT_cleanup_label                   = "GA_BLAT_cleanup"
+    GA_BLAT_cat_label                       = "GA_BLAT_cat"
+    GA_BLAT_pp_label                        = "GA_BLAT_pp"
+    GA_DIAMOND_label                        = "GA_DIAMOND"
+    GA_DIAMOND_pp_label                     = "GA_DIAMOND_pp"
+    GA_final_merge_label                    = "GA_FINAL_MERGE"
+    taxon_annotation_label                  = "taxonomic_annotation"
+    ec_annotation_label                     = "enzyme_annotation"
+    ec_annotation_detect_label              = "enzyme_annotation_detect"
+    ec_annotation_priam_label               = "enzyme_annotation_priam"
+    ec_annotation_DIAMOND_label             = "enzyme_annotation_DIAMOND"
+    ec_annotation_pp_label                  = "enzyme_annotation_pp"
+    output_label                            = "outputs"
+    output_copy_gene_map_label              = "output_copy_gene_map"
+    output_clean_EC_label                   = "output_clean_ec"
+    output_copy_taxa_label                  = "output_copy_taxa"
+    output_network_gen_label                = "output_network_generation"
+    output_unique_hosts_singletons_label    = "output_unique_hosts_singletons"
+    output_unique_hosts_pair_1_label        = "output_unique_hosts_pair_1"
+    output_unique_hosts_pair_2_label        = "output_unique_hosts_pair_2"
+    output_combine_hosts_label              = "output_combine_hosts"
+    output_per_read_scores_label            = "output_per_read_scores"
+    output_contig_stats_label               = "output_contig_stats"
+    output_ec_heatmap_label                 = "output_ec_heatmap"
+    output_taxa_groupby_label               = "output_taxa_groupby"
+    output_read_count_label                 = "output_read_count"
+            
+            
     mp_store = []  # stores the multiprocessing processes    
     
     # Creates our command object, for creating shellscripts.
@@ -1883,34 +1931,45 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_fol
     elif read_mode == "paired":
         commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = tutorial_mode_string, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
         
+    if(tutorial_mode_string == "quality"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+        
+        command_list = commands.create_quality_control_command(quality_filter_label)
+        job_name = quality_filter_label
+        launch_and_create_simple(quality_filter_label, job_name, commands, command_list)
         
         
-    if(tutorial_keyword == "quality"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "host"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "vector"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "rRNA"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "deduplicate"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "contigs"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "GA_BWA"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "GA_BLAT"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "GA_DMD"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "GA_merge"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "TA"):
-        print(dt.today(), "working on:", tutorial_keyword)
-    elif(tutorial_keyword == "EC"):
-        print(dt.today(), "working on:", tutorial_keyword)
+    elif(tutorial_mode_string == "host"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+        job_name = host_filter_label
+        command_list = commands.create_host_filter_command(host_filter_label, quality_filter_label)
+        launch_and_create_simple(host_filter_label, job_name, commands, command_list)
+    elif(tutorial_mode_string == "vector"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "rRNA"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "deduplicate"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "contigs"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "GA_BWA"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "GA_BLAT"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "GA_DMD"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "GA_merge"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "TA"):
+        print(dt.today(), "working on:", tutorial_mode_string)
+    elif(tutorial_mode_string == "EC"):
+        print(dt.today(), "working on:", tutorial_mode_string)
     else:
-        print(dt.today(), "tutorial mode not recognized:", tutorial_keyword)
+        print(dt.today(), "tutorial mode not recognized:", tutorial_mode_string)
+        
+    
+    
+    
     
 if __name__ == "__main__":
     print("METAPRO metatranscriptomic analysis pipeline")
