@@ -1338,6 +1338,8 @@ class mt_pipe_commands:
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
         tut_mRNA_folder     = os.path.join(data_folder, "tutorial_barrnap_mRNA")
         tut_rRNA_folder     = os.path.join(data_folder, "tutorial_barrnap_rRNA")
+        tut_fasta_folder    = os.path.join(data_folder, "tutorial_fasta")
+        tut_Barrnap_out_folder = os.path.join(data_folder, "tutorial_barrnap")
         if(self.tutorial_keyword == "rRNA"):
             self.make_folder(tut_mRNA_folder)
             self.make_folder(tut_rRNA_folder)
@@ -1504,7 +1506,7 @@ class mt_pipe_commands:
         infernal_tut_singletons_command = ">&2 echo " + str(dt.today()) + " running infernal on singletons tutorial | "
         infernal_tut_singletons_command += self.tool_path_obj.Infernal
         infernal_tut_singletons_command += " -o /dev/null --tblout "
-        infernal_tut_singletons_command += infernal_out
+        infernal_tut_singletons_command += os.path.join(infernal_out_folder, "singletons.infernal_out")
         infernal_tut_singletons_command += " --cpu 1"
         infernal_tut_singletons_command += " --anytrunc --rfam -E 0.001 "
         infernal_tut_singletons_command += self.tool_path_obj.Rfam + " "
@@ -1513,7 +1515,7 @@ class mt_pipe_commands:
         infernal_tut_pair_1_command = ">&2 echo " + str(dt.today()) + " running infernal on pair 1 tutorial | "
         infernal_tut_pair_1_command += self.tool_path_obj.Infernal
         infernal_tut_pair_1_command += " -o /dev/null --tblout "
-        infernal_tut_pair_1_command += infernal_out
+        infernal_tut_pair_1_command += os.path.join(infernal_out_folder, "pair_1.infernal_out")
         infernal_tut_pair_1_command += " --cpu 1"
         infernal_tut_pair_1_command += " --anytrunc --rfam -E 0.001 "
         infernal_tut_pair_1_command += self.tool_path_obj.Rfam + " "
@@ -1522,7 +1524,7 @@ class mt_pipe_commands:
         infernal_tut_pair_2_command = ">&2 echo " + str(dt.today()) + " running infernal on pair 1 tutorial | "
         infernal_tut_pair_2_command += self.tool_path_obj.Infernal
         infernal_tut_pair_2_command += " -o /dev/null --tblout "
-        infernal_tut_pair_2_command += infernal_out
+        infernal_tut_pair_2_command += os.path.join(infernal_out_folder, "pair_2.infernal_out")
         infernal_tut_pair_2_command += " --cpu 1"
         infernal_tut_pair_2_command += " --anytrunc --rfam -E 0.001 "
         infernal_tut_pair_2_command += self.tool_path_obj.Rfam + " "
@@ -1560,73 +1562,80 @@ class mt_pipe_commands:
         self.make_folder(mRNA_infernal_folder)
         self.make_folder(jobs_folder)
         
-        if(category == "pair_1"):
+        if(self.tutorial_keyword == "rRNA"):
+            if(self.read_mode == "single"):
+                print("stop here single")
+            elif(self.read_mode == "paired"):
+                print("stop here paired")
             
-            infernal_pair_1_out_folder = os.path.join(data_folder, "pair_1_infernal")
-            infernal_pair_2_out_folder = os.path.join(data_folder, "pair_2_infernal")
-            
-            infernal_mRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_mRNA")
-            infernal_mRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_mRNA")
-            
-            infernal_rRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_other")
-            infernal_rRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_other")
-            
-            Barrnap_pair_1_out_folder = os.path.join(data_folder, "pair_1_barrnap")
-            Barrnap_pair_2_out_folder = os.path.join(data_folder, "pair_2_barrnap")
-            
-            self.make_folder(infernal_mRNA_pair_1_folder)
-            self.make_folder(infernal_mRNA_pair_2_folder)
-            self.make_folder(infernal_rRNA_pair_1_folder)
-            self.make_folder(infernal_rRNA_pair_2_folder)
-            self.make_folder(Barrnap_pair_1_out_folder)
-            self.make_folder(Barrnap_pair_2_out_folder)
-            
-            rRNA_filtration = ">&2 echo extracting mRNA with infernal report: " + file_name + " | "
-            rRNA_filtration += self.tool_path_obj.Python + " "
-            rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
-            rRNA_filtration += self.tool_path_obj.filter_stringency + " "
-            rRNA_filtration += "paired" + " "
-            rRNA_filtration += os.path.join(infernal_pair_1_out_folder, "pair_1_" + file_name_code + ".infernal_out") + " "
-            rRNA_filtration += os.path.join(infernal_pair_2_out_folder, "pair_2_" + file_name_code + ".infernal_out") + " "
-            rRNA_filtration += os.path.join(Barrnap_pair_1_out_folder, "pair_1_" + file_name_code + ".barrnap_out") + " "
-            rRNA_filtration += os.path.join(Barrnap_pair_2_out_folder, "pair_2_" + file_name_code + ".barrnap_out") + " "
-            rRNA_filtration += os.path.join(data_folder, "pair_1_fastq", "pair_1_" + file_name_code + ".fastq") + " "
-            rRNA_filtration += os.path.join(data_folder, "pair_2_fastq", "pair_2_" + file_name_code + ".fastq") + " "
-            rRNA_filtration += os.path.join(infernal_mRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_mRNA.fastq") + " "
-            rRNA_filtration += os.path.join(infernal_mRNA_pair_2_folder, "pair_2_" + file_name_code + "_infernal_mRNA.fastq") + " "
-            rRNA_filtration += os.path.join(infernal_rRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_other.fastq") + " "
-            rRNA_filtration += os.path.join(infernal_rRNA_pair_2_folder, "pair_2_" + file_name_code + "_infernal_other.fastq")
-            
-            
-            
-        elif(category == "singletons"):    
-            infernal_mRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_mRNA")
-            infernal_rRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_other")
-            Barrnap_singletons_out_folder   = os.path.join(data_folder, "singletons_barrnap")
-            infernal_singletons_out_folder  = os.path.join(data_folder, "singletons_infernal")
-            
-            self.make_folder(infernal_mRNA_singletons_folder)
-            self.make_folder(infernal_rRNA_singletons_folder)
-            
-            rRNA_filtration = ">&2 echo extracting mRNA with infernal report: " + file_name + " | "
-            rRNA_filtration += self.tool_path_obj.Python + " "
-            rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
-            rRNA_filtration += self.tool_path_obj.filter_stringency + " "
-            rRNA_filtration += "single" + " "
-            rRNA_filtration += os.path.join(infernal_out_folder, "singletons_" + file_name_code + ".infernal_out") + " "
-            rRNA_filtration += os.path.join(Barrnap_singletons_out_folder, "singletons_" + file_name_code + ".barrnap_out") + " "
-            rRNA_filtration += os.path.join(data_folder, "singletons_fastq", "singletons_" + file_name_code + ".fastq") + " "
-            rRNA_filtration += os.path.join(infernal_mRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_mRNA.fastq") + " "
-            rRNA_filtration += os.path.join(infernal_rRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_rRNA.fastq")
-            
-        else:
-            rRNA_filtration = ">&2 echo rRNA filtration ignored for pair 2 data: " + file_name
-            
-        make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, marker_file)
-            
-        return [rRNA_filtration + " && " + make_marker]
-    
+        else:    
+            if(category == "pair_1"):
+                
+                infernal_pair_1_out_folder = os.path.join(data_folder, "pair_1_infernal")
+                infernal_pair_2_out_folder = os.path.join(data_folder, "pair_2_infernal")
+                
+                infernal_mRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_mRNA")
+                infernal_mRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_mRNA")
+                
+                infernal_rRNA_pair_1_folder = os.path.join(data_folder, "pair_1_infernal_other")
+                infernal_rRNA_pair_2_folder = os.path.join(data_folder, "pair_2_infernal_other")
+                
+                Barrnap_pair_1_out_folder = os.path.join(data_folder, "pair_1_barrnap")
+                Barrnap_pair_2_out_folder = os.path.join(data_folder, "pair_2_barrnap")
+                
+                self.make_folder(infernal_mRNA_pair_1_folder)
+                self.make_folder(infernal_mRNA_pair_2_folder)
+                self.make_folder(infernal_rRNA_pair_1_folder)
+                self.make_folder(infernal_rRNA_pair_2_folder)
+                self.make_folder(Barrnap_pair_1_out_folder)
+                self.make_folder(Barrnap_pair_2_out_folder)
+                
+                rRNA_filtration = ">&2 echo extracting mRNA with infernal report: " + file_name + " | "
+                rRNA_filtration += self.tool_path_obj.Python + " "
+                rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
+                rRNA_filtration += self.tool_path_obj.filter_stringency + " "
+                rRNA_filtration += "paired" + " "
+                rRNA_filtration += os.path.join(infernal_pair_1_out_folder, "pair_1_" + file_name_code + ".infernal_out") + " "
+                rRNA_filtration += os.path.join(infernal_pair_2_out_folder, "pair_2_" + file_name_code + ".infernal_out") + " "
+                rRNA_filtration += os.path.join(Barrnap_pair_1_out_folder, "pair_1_" + file_name_code + ".barrnap_out") + " "
+                rRNA_filtration += os.path.join(Barrnap_pair_2_out_folder, "pair_2_" + file_name_code + ".barrnap_out") + " "
+                rRNA_filtration += os.path.join(data_folder, "pair_1_fastq", "pair_1_" + file_name_code + ".fastq") + " "
+                rRNA_filtration += os.path.join(data_folder, "pair_2_fastq", "pair_2_" + file_name_code + ".fastq") + " "
+                rRNA_filtration += os.path.join(infernal_mRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_mRNA.fastq") + " "
+                rRNA_filtration += os.path.join(infernal_mRNA_pair_2_folder, "pair_2_" + file_name_code + "_infernal_mRNA.fastq") + " "
+                rRNA_filtration += os.path.join(infernal_rRNA_pair_1_folder, "pair_1_" + file_name_code + "_infernal_other.fastq") + " "
+                rRNA_filtration += os.path.join(infernal_rRNA_pair_2_folder, "pair_2_" + file_name_code + "_infernal_other.fastq")
+                
+                
+                
+            elif(category == "singletons"):    
+                infernal_mRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_mRNA")
+                infernal_rRNA_singletons_folder = os.path.join(data_folder, "singletons_infernal_other")
+                Barrnap_singletons_out_folder   = os.path.join(data_folder, "singletons_barrnap")
+                infernal_singletons_out_folder  = os.path.join(data_folder, "singletons_infernal")
+                
+                self.make_folder(infernal_mRNA_singletons_folder)
+                self.make_folder(infernal_rRNA_singletons_folder)
+                
+                rRNA_filtration = ">&2 echo extracting mRNA with infernal report: " + file_name + " | "
+                rRNA_filtration += self.tool_path_obj.Python + " "
+                rRNA_filtration += self.tool_path_obj.rRNA_filter + " "
+                rRNA_filtration += self.tool_path_obj.filter_stringency + " "
+                rRNA_filtration += "single" + " "
+                rRNA_filtration += os.path.join(infernal_out_folder, "singletons_" + file_name_code + ".infernal_out") + " "
+                rRNA_filtration += os.path.join(Barrnap_singletons_out_folder, "singletons_" + file_name_code + ".barrnap_out") + " "
+                rRNA_filtration += os.path.join(data_folder, "singletons_fastq", "singletons_" + file_name_code + ".fastq") + " "
+                rRNA_filtration += os.path.join(infernal_mRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_mRNA.fastq") + " "
+                rRNA_filtration += os.path.join(infernal_rRNA_singletons_folder, "singletons_" + file_name_code + "_infernal_rRNA.fastq")
+                
+            else:
+                rRNA_filtration = ">&2 echo rRNA filtration ignored for pair 2 data: " + file_name
+                
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+                
+            return [rRNA_filtration + " && " + make_marker]
+        
     
     
     def create_rRNA_filter_final_cat_command(self, stage_name, category, marker_file):

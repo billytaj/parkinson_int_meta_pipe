@@ -297,7 +297,7 @@ def check_all_job_markers(job_marker_list, final_folder_checklist):
                     sys.exit("not all jobs completed")
 
 
-def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack, tutorial_mode):
+def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode):
     paths = mpp.tool_path_obj(config_path)
     no_host = args_pack["no_host"]
     verbose_mode = args_pack["verbose_mode"]
@@ -1747,7 +1747,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path,
     print("Outputs cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
     
 
-def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_folder_path, threads, args_pack, tutorial_mode_string): 
+def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode_string): 
     paths = mpp.tool_path_obj(config_path)
     no_host = args_pack["no_host"]
     verbose_mode = args_pack["verbose_mode"]
@@ -1933,9 +1933,9 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_fol
     
     # Creates our command object, for creating shellscripts.
     if read_mode == "single":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = tutorial_mode_string, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = tutorial_mode_string, sequence_path_1=None, sequence_path_2=None, sequence_single=single_path, sequence_contigs = contig_path)
     elif read_mode == "paired":
-        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = tutorial_mode_string, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=None)
+        commands = mpcom.mt_pipe_commands(no_host, Config_path=config_path, Quality_score=quality_encoding, Thread_count=real_thread_count, tutorial_keyword = tutorial_mode_string, sequence_path_1=pair_1_path, sequence_path_2=pair_2_path, sequence_single=single_path, sequence_contigs = contig_path)
         
     if(tutorial_mode_string == "quality"):
         print(dt.today(), "working on:", tutorial_mode_string)
@@ -1957,42 +1957,42 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_fol
         
     elif(tutorial_mode_string == "rRNA"):
         print(dt.today(), "working on:", tutorial_mode_string)
-        job_name = read_mode + "_convert_to_fasta"
-        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # job_name = read_mode + "_convert_to_fasta"
+        # command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
         
-        job_name = read_mode + "_Barrnap_arc"
-        command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # job_name = read_mode + "_Barrnap_arc"
+        # command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
         
-        job_name = read_mode + "_Barrnap_bac"
-        command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # job_name = read_mode + "_Barrnap_bac"
+        # command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
                         
-        job_name = read_mode + "_Barrnap_euk"
-        command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # job_name = read_mode + "_Barrnap_euk"
+        # command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
                         
-        job_name = read_mode + "_Barrnap_mit"
-        command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # job_name = read_mode + "_Barrnap_mit"
+        # command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
         
-        job_name = read_mode + "_Barrnap_cat"
-        command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # job_name = read_mode + "_Barrnap_cat"
+        # command_list = commands.create_rRNA_filter_barrnap_cat_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
         
-        job_name = read_mode + "_barrnap_pp"
-        command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # job_name = read_mode + "_barrnap_pp"
+        # command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
                         
-        job_name = read_mode + "rRNA_filter_infernal_prep"
-        command_list = commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", "tutorial", "tutorial", "tutorial", "tutorial")
-        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
+        # job_name = read_mode + "_rRNA_filter_infernal_prep"
+        # command_list = commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", "tutorial", "tutorial", "tutorial", "tutorial")
+        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
     
-        job_name = "rRNA_filter_infernal_" + root_name
-        command_list = commands.create_rRNA_filter_infernal_command("rRNA_filter", section, root_name, marker_file)
-        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
-                        
+        job_name = read_mode + "_rRNA_filter_infernal"
+        command_list = commands.create_rRNA_filter_infernal_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        #launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        launch_only_simple(command_obj, command_list)               
         
     elif(tutorial_mode_string == "deduplicate"):
         print(dt.today(), "working on:", tutorial_mode_string)
@@ -2029,6 +2029,7 @@ if __name__ == "__main__":
     parser.add_argument("-1", "--pair1",    type=str,   help="Path to the file containing the forward paired-end reads in fastq format")
     parser.add_argument("-2", "--pair2",    type=str,   help="Path to the file containing the reverse paired-end reads in fastq format")
     parser.add_argument("-s", "--single",   type=str,   help="Path to the file containing the single-end reads in fastq format")
+    parser.add_argument("-con", "--contig",   type=str,   help="Tutorial use only: Path to the file containing the contig reads in fastq format")
     parser.add_argument("-o", "--output_folder", type=str, required=True, help="Path of the folder for the output of the pipeline")
     parser.add_argument("-t", "--num_threads", type=int, help="Maximum number of threads used by the pipeline")
     parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
@@ -2044,6 +2045,7 @@ if __name__ == "__main__":
         sys.exit()
 
     config_file     = args.config if args.config else ""
+    contig          = args.contig if args.contig else ""
     pair_1          = args.pair1 if args.pair1 else ""
     pair_2          = args.pair2 if args.pair2 else ""
     single          = args.single if args.single else ""
@@ -2080,7 +2082,7 @@ if __name__ == "__main__":
 
     if (tutorial_mode != "none"):
         print("working in tutorial mode:", tutorial_mode)
-        tutorial_main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack, tutorial_mode)
+        tutorial_main(config_file, pair_1, pair_2, single, contig, output_folder, num_threads, args_pack, tutorial_mode)
     
     else:
-        main(config_file, pair_1, pair_2, single, output_folder, num_threads, args_pack, tutorial_mode)
+        main(config_file, pair_1, pair_2, single, contig, output_folder, num_threads, args_pack, tutorial_mode)
