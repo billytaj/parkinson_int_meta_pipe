@@ -19,27 +19,54 @@ class mt_pipe_commands:
         self.tool_path_obj = mpp.tool_path_obj(Config_path)
         self.no_host_flag = no_host
         # path to the genome sequence file
-        if sequence_single is not None:
-            self.sequence_single = sequence_single
-            self.sequence_path_1 = ""
-            self.sequence_path_2 = ""
-            print("Reads:", self.sequence_single)
-            self.read_mode = "single"
-        else:
-            self.sequence_single = ""
-            self.sequence_path_1 = sequence_path_1
-            self.sequence_path_2 = sequence_path_2
-            print("Forward Reads:", self.sequence_path_1)
-            print("Reverse Reads:", self.sequence_path_2)
-            self.read_mode = "paired"
+
         
         if(tutorial_keyword is None):
             print("MetaPro operating in auto-mode")
             self.tutorial_keyword = None
+            
+            if sequence_single is not None:
+                self.sequence_single = sequence_single
+                self.sequence_path_1 = ""
+                self.sequence_path_2 = ""
+                print("Reads:", self.sequence_single)
+                self.read_mode = "single"
+            else:
+                self.sequence_single = ""
+                self.sequence_path_1 = sequence_path_1
+                self.sequence_path_2 = sequence_path_2
+                print("Forward Reads:", self.sequence_path_1)
+                print("Reverse Reads:", self.sequence_path_2)
+                self.read_mode = "paired"
+            
         else:
             print("MetaPro is in TUTORIAL MODE:", tutorial_keyword)
             self.tutorial_keyword = tutorial_keyword
-            
+            if sequence_path_1 is None:
+                self.sequence_single = sequence_single
+                self.sequence_path_1 = ""
+                self.sequence_path_2 = ""
+                self.sequence_contigs = ""
+                if(sequence_contigs is not None):
+                    self.sequence_contigs = sequence_contigs
+                print("Reads:", self.sequence_single)
+                print("potential contigs:", self.sequence_contigs)
+                self.read_mode = "single"
+            else:
+                self.sequence_single = ""
+                if(sequence_single is not None):
+                    self.sequence_single = sequence_single
+                self.sequence_contigs = ""
+                if(sequence_contigs is not None):
+                    self.sequence_contigs = sequence_contigs
+                    
+                self.sequence_path_1 = sequence_path_1
+                self.sequence_path_2 = sequence_path_2
+                print("Forward Reads:", self.sequence_path_1)
+                print("Reverse Reads:", self.sequence_path_2)
+                print("potential singletons:", self.sequence_single)
+                print("potential contigs:", self.seqeunce_contigs)
+                self.read_mode = "paired"
             
                 
         self.Qual_str = str(Quality_score)
@@ -576,14 +603,22 @@ class mt_pipe_commands:
                     copy_host,
                     bwa_hr_prep,
                     samtools_hr_prep,
-                    bwa_hr_paired,
+                    bwa_hr_tut_singletons,
+                    samtools_hr_singletons_sam_to_bam,
+                    samtools_no_host_singletons_bam_to_fastq,
+                    samtools_host_singletons_bam_to_fastq,
+                    bwa_hr_tut_paired,
                     bwa_hr_filter_paired,
                     make_blast_db_host,
+                    vsearch_filter_3,
                     vsearch_filter_4,
                     vsearch_filter_5,
+                    blat_hr_singletons,
                     blat_hr_pair_1,
                     blat_hr_pair_2,
+                    hr_singletons,
                     hr_paired,
+                    copy_singletons,
                     copy_pair_1,
                     copy_pair_2
                 ]
@@ -769,14 +804,22 @@ class mt_pipe_commands:
                     copy_vector,
                     bwa_vr_prep,
                     samtools_vr_prep,
+                    bwa_vr_tut_singletons,
+                    samtools_no_vector_singletons_convert,
+                    samtools_no_vector_singletons_export,
+                    samtools_vector_singletons_export,
                     bwa_vr_tut_paired,
                     bwa_vr_filter_paired, 
                     make_blast_db_vector,
+                    vsearch_filter_6,
                     vsearch_filter_7,
                     vsearch_filter_8,
+                    blat_vr_singletons,
                     blat_vr_pair_1,
                     blat_vr_pair_2,
+                    blat_filter_vector_singletons,
                     blat_filter_vector_paired,
+                    copy_singletons,
                     copy_pair_1,
                     copy_pair_2
                 ]
@@ -868,12 +911,14 @@ class mt_pipe_commands:
         
         tut_fasta_folder    = os.path.join(data_folder, "tutorial_fasta")
 
-        self.make_folder(fasta_folder)
-        self.make_folder(jobs_folder)
+        
         
         if(self.tutorial_keyword == "rRNA"):
             self.make_folder(tut_fasta_folder)
         
+        else:
+            self.make_folder(fasta_folder)
+            self.make_folder(jobs_folder)
         
         convert_fastq_to_fasta = ">&2 echo " + " converting " + file_name + " file to fasta | "
         convert_fastq_to_fasta += self.tool_path_obj.vsearch
@@ -911,7 +956,7 @@ class mt_pipe_commands:
             if(self.read_mode == "single"):
                 return [convert_tut_singletons_fastq_to_fasta]
             elif(self.read_mode == "paired"):
-                return [convert_tut_pair_1_fastq_to_fasta + " && " + convert_tut_pair_2_fastq_to_fasta]
+                return [convert_tut_singletons_fastq_to_fasta + " && " +  convert_tut_pair_1_fastq_to_fasta + " && " + convert_tut_pair_2_fastq_to_fasta]
             
         else:
             return [convert_fastq_to_fasta + " && " + make_marker]
@@ -938,9 +983,10 @@ class mt_pipe_commands:
         if(self.tutorial_keyword == "rRNA"):
             self.make_folder(tut_fasta_folder)
             self.make_folder(tut_Barrnap_out_folder)
-        self.make_folder(fasta_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(jobs_folder)
+        else:
+            self.make_folder(fasta_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(jobs_folder)
         
         
         Barrnap_archaea = ">&2 echo running Barrnap on " + file_name + " file: arc | "
@@ -981,7 +1027,7 @@ class mt_pipe_commands:
             if(self.read_mode == "single"):
                 return [Barrnap_tut_singletons_archaea]
             elif(self.read_mode == "paired"):
-                return [Barrnap_tut_pair_1_archaea + " && " + Barrnap_tut_pair_2_archaea]
+                return [Barrnap_tut_singletons_archaea + " && " + Barrnap_tut_pair_1_archaea + " && " + Barrnap_tut_pair_2_archaea]
         
         else:
             return [Barrnap_archaea + " && " + make_marker]
@@ -1004,10 +1050,10 @@ class mt_pipe_commands:
             self.make_folder(tut_fasta_folder)
             self.make_folder(tut_Barrnap_out_folder)
             
-            
-        self.make_folder(fasta_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(jobs_folder)
+        else:
+            self.make_folder(fasta_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(jobs_folder)
         
         
 
@@ -1046,7 +1092,7 @@ class mt_pipe_commands:
             if(self.read_mode == "single"):
                 return [Barrnap_tut_singletons_bacteria]
             elif(self.read_mode == "paired"):
-                return [Barrnap_tut_pair_1_bacteria + " && " + Barrnap_tut_pair_2_bacteria]
+                return [Barrnap_tut_singletons_bacteria + " && " + Barrnap_tut_pair_1_bacteria + " && " + Barrnap_tut_pair_2_bacteria]
         else:
             return [Barrnap_bacteria + " && " + make_marker]
         
@@ -1067,10 +1113,10 @@ class mt_pipe_commands:
         if(self.tutorial_keyword == "rRNA"):
             self.make_folder(tut_fasta_folder)
             self.make_folder(tut_Barrnap_out_folder)
-        
-        self.make_folder(fasta_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(jobs_folder)
+        else:
+            self.make_folder(fasta_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(jobs_folder)
 
         Barrnap_eukaryote = ">&2 echo Running Barrnap on " + file_name + " file: euk | "
         Barrnap_eukaryote += self.tool_path_obj.Barrnap
@@ -1110,7 +1156,7 @@ class mt_pipe_commands:
             if(self.read_mode == "single"):
                 return [Barrnap_tut_singletons_eukaryote]
             elif(self.read_mode == "paired"):
-                return [Barrnap_tut_pair_1_eukaryote + " && " + Barrnap_tut_pair_2_eukaryote]
+                return [Barrnap_tut_singletons_eukaryote + " && " + Barrnap_tut_pair_1_eukaryote + " && " + Barrnap_tut_pair_2_eukaryote]
         else:
             return [Barrnap_eukaryote + " && " + make_marker]
         
@@ -1132,10 +1178,10 @@ class mt_pipe_commands:
         if(self.tutorial_keyword == "rRNA"):
             self.make_folder(tut_fasta_folder)
             self.make_folder(tut_Barrnap_out_folder)
-
-        self.make_folder(fasta_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(jobs_folder)
+        else:
+            self.make_folder(fasta_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(jobs_folder)
 
         Barrnap_mitochondria = ">&2 echo Running Barrnap on " + file_name + " file: mito | " 
         Barrnap_mitochondria += self.tool_path_obj.Barrnap
@@ -1173,7 +1219,7 @@ class mt_pipe_commands:
             if(self.read_mode == "single"):
                 return [Barrnap_tut_singletons_mitochondria]
             elif(self.read_mode == "paired"):
-                return [Barrnap_tut_pair_1_mitochondria + " && " + Barrnap_tut_pair_2_mitochondria]
+                return [Barrnap_tut_singletons_mitochondria + " && " + Barrnap_tut_pair_1_mitochondria + " && " + Barrnap_tut_pair_2_mitochondria]
                 
         else:
             return [Barrnap_mitochondria + " && " + make_marker]
@@ -1207,11 +1253,11 @@ class mt_pipe_commands:
         if(self.tutorial_keyword == "rRNA"):
             self.make_folder(tut_fasta_folder)
             self.make_folder(tut_Barrnap_out_folder)
-
-        self.make_folder(fasta_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(infernal_out_folder)
-        self.make_folder(jobs_folder)
+        else:
+            self.make_folder(fasta_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(infernal_out_folder)
+            self.make_folder(jobs_folder)
         
         
         cat_command_tut_singletons = ">&2 echo combining singletons barrnap | "
@@ -1270,7 +1316,7 @@ class mt_pipe_commands:
                 return [cat_command_tut_singletons]
                 
             elif(self.read_mode == "paired"):
-                return [cat_command_tut_pair_1 + " && " + cat_command_tut_pair_2]
+                return [cat_command_tut_singletons + " && " + cat_command_tut_pair_1 + " && " + cat_command_tut_pair_2]
             
         else:
             return [cat_command + " && " + make_marker, rm_arc, rm_bac, rm_euk, rm_mit]
@@ -1290,13 +1336,18 @@ class mt_pipe_commands:
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
         fastq_seqs          = os.path.join(fastq_folder, fastq_name)
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
-
-        self.make_folder(fasta_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(infernal_out_folder)
-        self.make_folder(mRNA_folder)
-        self.make_folder(rRNA_folder)
-        self.make_folder(jobs_folder)
+        tut_mRNA_folder     = os.path.join(data_folder, "tutorial_barrnap_mRNA")
+        tut_rRNA_folder     = os.path.join(data_folder, "tutorial_barrnap_rRNA")
+        if(self.tutorial_keyword == "rRNA"):
+            self.make_folder(tut_mRNA_folder)
+            self.make_folder(tut_rRNA_folder)
+        else:
+            self.make_folder(fasta_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(infernal_out_folder)
+            self.make_folder(mRNA_folder)
+            self.make_folder(rRNA_folder)
+            self.make_folder(jobs_folder)
         
         
         Barrnap_pp = ">&2 echo Running Barrnap pp scripts | "
@@ -1308,11 +1359,45 @@ class mt_pipe_commands:
         Barrnap_pp += rRNA_folder + " "
         Barrnap_pp += file_name + "_barrnap"
         
+        Barrnap_tut_singletons_pp = ">&2 echo Running Barrnap pp scripts | "
+        Barrnap_tut_singletons_pp += self.tool_path_obj.Python + " "
+        Barrnap_tut_singletons_pp += self.tool_path_obj.barrnap_post + " "
+        Barrnap_tut_singletons_pp += os.path.join(tut_Barrnap_out_folder, "singletons.barrnap_out") + " "
+        Barrnap_tut_singletons_pp += self.sequence_single + " "
+        Barrnap_tut_singletons_pp += tut_mRNA_folder + " "
+        Barrnap_tut_singletons_pp += tut_rRNA_folder + " "
+        Barrnap_tut_singletons_pp +=  "singletons_barrnap"
+        
+        Barrnap_tut_pair_1_pp = ">&2 echo Running Barrnap pp scripts | "
+        Barrnap_tut_pair_1_pp += self.tool_path_obj.Python + " "
+        Barrnap_tut_pair_1_pp += self.tool_path_obj.barrnap_post + " "
+        Barrnap_tut_pair_1_pp += os.path.join(tut_Barrnap_out_folder, "pair_1.barrnap_out") + " "
+        Barrnap_tut_pair_1_pp += self.sequence_path_1 + " "
+        Barrnap_tut_pair_1_pp += tut_mRNA_folder + " "
+        Barrnap_tut_pair_1_pp += tut_rRNA_folder + " "
+        Barrnap_tut_pair_1_pp +=  "pair_1_barrnap"
+        
+        Barrnap_tut_pair_2_pp = ">&2 echo Running Barrnap pp scripts | "
+        Barrnap_tut_pair_2_pp += self.tool_path_obj.Python + " "
+        Barrnap_tut_pair_2_pp += self.tool_path_obj.barrnap_post + " "
+        Barrnap_tut_pair_2_pp += os.path.join(tut_Barrnap_out_folder, "pair_2.barrnap_out") + " "
+        Barrnap_tut_pair_2_pp += self.sequence_path_2 + " "
+        Barrnap_tut_pair_2_pp += tut_mRNA_folder + " "
+        Barrnap_tut_pair_2_pp += tut_rRNA_folder + " "
+        Barrnap_tut_pair_2_pp +=  "pair_2_barrnap"
+        
+        
         #make_marker = ">&2 echo " + file_name + "_barrnap Marking job completed | " 
         make_marker = "touch" + " " 
         make_marker += os.path.join(jobs_folder, marker_file)
         
-        return [Barrnap_pp + " && " + make_marker]
+        if(self.tutorial_keyword == "rRNA"):
+            if(self.read_mode == "single"):
+                return [Barrnap_tut_singletons_pp]
+            elif(self.read_mode == "paired"):
+                return [Barrnap_tut_singletons_pp + " && " + Barrnap_tut_pair_1_pp + " && " + Barrnap_tut_pair_2_pp]
+        else:
+            return [Barrnap_pp + " && " + make_marker]
         
         
     def create_rRNA_filter_infernal_prep_command(self, stage_name, category, fastq_name, root_name, marker_file):
@@ -1331,11 +1416,17 @@ class mt_pipe_commands:
         fastq_seqs          = os.path.join(fastq_folder, fastq_name)
         
         fasta_seqs          = os.path.join(fasta_folder, file_name + ".fasta")
-
-        self.make_folder(infernal_out_folder)
-        self.make_folder(mRNA_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(jobs_folder)
+        
+        tut_Barrnap_mRNA_folder     = os.path.join(data_folder, "tutorial_barrnap_mRNA")
+        tut_infernal_input_folder   = os.path.join(data_folder, "tutorial_infernal_input")
+        if(self.tutorial_keyword == "rRNA"):
+            self.make_folder(tut_Barrnap_mRNA_folder)
+            self.make_folder(tut_infernal_input_folder)
+        else:
+            self.make_folder(infernal_out_folder)
+            self.make_folder(mRNA_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(jobs_folder)
         
         convert_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
         convert_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
@@ -1343,10 +1434,36 @@ class mt_pipe_commands:
         convert_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
         convert_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(Barrnap_out_folder, file_name + ".fasta")
         
+        convert_tut_singletons_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
+        convert_tut_singletons_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
+        convert_tut_singletons_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(tut_Barrnap_mRNA_folder, "singletons_barrnap_mRNA.fastq")
+        convert_tut_singletons_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
+        convert_tut_singletons_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(tut_infernal_input_folder,  "singletons_barrnap_mRNA.fasta")
+        
+        convert_tut_pair_1_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
+        convert_tut_pair_1_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
+        convert_tut_pair_1_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(tut_Barrnap_mRNA_folder, "pair_1_barrnap_mRNA.fastq")
+        convert_tut_pair_1_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
+        convert_tut_pair_1_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(tut_infernal_input_folder, "pair_1_barrnap_mRNA.fasta")
+        
+        convert_tut_pair_2_fastq_to_fasta_barrnap = ">&2 echo converting barrnap fastq to fasta:" + file_name + " | "
+        convert_tut_pair_2_fastq_to_fasta_barrnap += self.tool_path_obj.vsearch
+        convert_tut_pair_2_fastq_to_fasta_barrnap += " --fastq_filter " + os.path.join(tut_Barrnap_mRNA_folder, "pair_2_barrnap_mRNA.fastq")
+        convert_tut_pair_2_fastq_to_fasta_barrnap += " --fastq_ascii " + self.Qual_str
+        convert_tut_pair_2_fastq_to_fasta_barrnap += " --fastaout " + os.path.join(tut_infernal_input_folder,  "pair_2_barrnap_mRNA.fasta")
+        
+        
         make_marker = "touch" + " "
         make_marker += os.path.join(jobs_folder, marker_file)
         
-        return [convert_fastq_to_fasta_barrnap + " && " + make_marker]
+        if(self.tutorial_keyword == "rRNA"):
+            if(self.read_mode == "single"):
+                return [convert_tut_singletons_fastq_to_fasta_barrnap]
+            elif(self.read_mode == "paired"):
+                return [convert_tut_singletons_fastq_to_fasta_barrnap + " && " + convert_tut_pair_1_fastq_to_fasta_barrnap + " && " + convert_tut_pair_2_fastq_to_fasta_barrnap]
+                
+        else:
+            return [convert_fastq_to_fasta_barrnap + " && " + make_marker]
 
     def create_rRNA_filter_infernal_command(self, stage_name, category, file_name, marker_file):
     
@@ -1360,11 +1477,18 @@ class mt_pipe_commands:
         Barrnap_out         = os.path.join(Barrnap_out_folder, file_name + ".barrnap_out")
         infernal_out        = os.path.join(infernal_out_folder, file_name + ".infernal_out")
         jobs_folder         = os.path.join(data_folder, "jobs")
+        
+        tut_Barrnap_mRNA_folder     = os.path.join(data_folder, "tutorial_barrnap_mRNA")
+        tut_infernal_input_folder   = os.path.join(data_folder, "tutorial_infernal_input")
+        if(self.tutorial_keyword == "rRNA"):
+            self.make_folder(tut_Barrnap_mRNA_folder)
+            self.make_folder(tut_infernal_input_folder)
+        else:
 
-        self.make_folder(infernal_out_folder)
-        self.make_folder(mRNA_folder)
-        self.make_folder(Barrnap_out_folder)
-        self.make_folder(jobs_folder)
+            self.make_folder(infernal_out_folder)
+            self.make_folder(mRNA_folder)
+            self.make_folder(Barrnap_out_folder)
+            self.make_folder(jobs_folder)
         
 
         infernal_command = ">&2 echo " + str(dt.today()) + " running infernal on " + file_name + " file | "
@@ -1376,14 +1500,47 @@ class mt_pipe_commands:
         infernal_command += " --anytrunc --rfam -E 0.001 "
         infernal_command += self.tool_path_obj.Rfam + " "
         infernal_command += os.path.join(Barrnap_out_folder, file_name + "_barrnap_mRNA.fasta")
+        
+        infernal_tut_singletons_command = ">&2 echo " + str(dt.today()) + " running infernal on singletons tutorial | "
+        infernal_tut_singletons_command += self.tool_path_obj.Infernal
+        infernal_tut_singletons_command += " -o /dev/null --tblout "
+        infernal_tut_singletons_command += infernal_out
+        infernal_tut_singletons_command += " --cpu 1"
+        infernal_tut_singletons_command += " --anytrunc --rfam -E 0.001 "
+        infernal_tut_singletons_command += self.tool_path_obj.Rfam + " "
+        infernal_tut_singletons_command += os.path.join(tut_infernal_input_folder, "singletons_barrnap_mRNA.fasta")
+        
+        infernal_tut_pair_1_command = ">&2 echo " + str(dt.today()) + " running infernal on pair 1 tutorial | "
+        infernal_tut_pair_1_command += self.tool_path_obj.Infernal
+        infernal_tut_pair_1_command += " -o /dev/null --tblout "
+        infernal_tut_pair_1_command += infernal_out
+        infernal_tut_pair_1_command += " --cpu 1"
+        infernal_tut_pair_1_command += " --anytrunc --rfam -E 0.001 "
+        infernal_tut_pair_1_command += self.tool_path_obj.Rfam + " "
+        infernal_tut_pair_1_command += os.path.join(tut_infernal_input_folder, "pair_1_barrnap_mRNA.fasta")
+        
+        infernal_tut_pair_2_command = ">&2 echo " + str(dt.today()) + " running infernal on pair 1 tutorial | "
+        infernal_tut_pair_2_command += self.tool_path_obj.Infernal
+        infernal_tut_pair_2_command += " -o /dev/null --tblout "
+        infernal_tut_pair_2_command += infernal_out
+        infernal_tut_pair_2_command += " --cpu 1"
+        infernal_tut_pair_2_command += " --anytrunc --rfam -E 0.001 "
+        infernal_tut_pair_2_command += self.tool_path_obj.Rfam + " "
+        infernal_tut_pair_2_command += os.path.join(tut_infernal_input_folder, "pair_2_barrnap_mRNA.fasta")
 
+        
         #make_marker = ">&2 echo " + file_name + "_infernal Marking job completed | " 
         make_marker = "touch" + " " 
         make_marker += os.path.join(jobs_folder, marker_file)
         
-        COMMANDS_infernal = [infernal_command + " && " + make_marker]
-        return COMMANDS_infernal
-
+        if(self.tutorial_keyword == "rRNA"):
+            if(self.read_mode == "single"):
+                return [infernal_tut_singletons_command]
+            elif(self.read_mode == "paired"):
+                return [infernal_tut_singletons_command + " && " + infernal_tut_pair_1_command + " && " + infernal_tut_pair_2_command]
+        else:
+            return [infernal_command + " && " + make_marker]
+        
     
     def create_rRNA_filter_splitter_command(self, stage_name, category, file_name, marker_file):
     #file name expected to have no extensions.  eg: pair_1_0

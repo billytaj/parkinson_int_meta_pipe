@@ -207,7 +207,13 @@ def launch_and_create_with_mp_store(mp_store, job_location, job_label, command_o
     process.start()
     mp_store.append(process)
 
-
+def launch_only_simple(command_obj, commands):
+    process = mp.Process(
+        target=command_obj.launch_only,
+        args=(commands, len(commands))
+    )
+    process.start()
+    process.join()
 
 def launch_only_with_hold(mp_store, mem_threshold, job_limit, job_delay, job_name, command_obj, command):
     #launch a job in launch-only mode
@@ -1951,11 +1957,42 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, output_fol
         
     elif(tutorial_mode_string == "rRNA"):
         print(dt.today(), "working on:", tutorial_mode_string)
-        job_name = root_name + "_convert_to_fasta"
-        marker_path_list.append(marker_path)
-        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq", marker_file)
-        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-
+        job_name = read_mode + "_convert_to_fasta"
+        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        
+        job_name = read_mode + "_Barrnap_arc"
+        command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        
+        job_name = read_mode + "_Barrnap_bac"
+        command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+                        
+        job_name = read_mode + "_Barrnap_euk"
+        command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+                        
+        job_name = read_mode + "_Barrnap_mit"
+        command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        
+        job_name = read_mode + "_Barrnap_cat"
+        command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        
+        job_name = read_mode + "_barrnap_pp"
+        command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+                        
+        job_name = read_mode + "rRNA_filter_infernal_prep"
+        command_list = commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", "tutorial", "tutorial", "tutorial", "tutorial")
+        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
+    
+        job_name = "rRNA_filter_infernal_" + root_name
+        command_list = commands.create_rRNA_filter_infernal_command("rRNA_filter", section, root_name, marker_file)
+        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
+                        
         
     elif(tutorial_mode_string == "deduplicate"):
         print(dt.today(), "working on:", tutorial_mode_string)
