@@ -653,7 +653,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                     marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
                     
                     fasta_out_size = os.stat(fasta_file).st_size if (os.path.exists(fasta_file)) else 0
-                    if(fasta_out_size > 0):
+                    if(fasta_out_size > 0) or (os.path.exists(marker_path)):
                         print(dt.today(), item, "already converted to fasta.  skipping")
                         continue
                     else:
@@ -688,6 +688,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 
                 for item in os.listdir(fasta_path):
                     root_name = item.split(".")[0]
+                    final_marker_file = root_name + "_barrnap_cat"
+                    final_marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
                     barrnap_arc_out_file = os.path.join(barrnap_path, root_name + "_arc.barrnap_out")
                     barrnap_bac_out_file = os.path.join(barrnap_path, root_name + "_bac.barrnap_out")
                     barrnap_euk_out_file = os.path.join(barrnap_path, root_name + "_euk.barrnap_out")
@@ -712,42 +714,46 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                     barrnap_mit_out_size    = os.stat(barrnap_mit_out_file).st_size if (os.path.exists(barrnap_mit_out_file)) else 0
                     
                     
-                    if((barrnap_arc_out_size > 0) and (os.path.exists(marker_path_arc))):
-                        print(dt.today(), "barrnap arc already run.  skipping:", item) 
+                    if(os.path.exists(final_marker_path)):
+                        print(dt.today(), "skipping barrnap.  data already merged")
                         continue
                     else:
-                        job_name = root_name + "_barrnap_arc"
-                        marker_path_list.append(marker_path_arc)
-                        command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name, marker_file_arc)
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                        
-                        
-                    if((barrnap_bac_out_size > 0) and (os.path.exists(marker_path_bac))):
-                        print(dt.today(), "barrnap bac already run.  skipping:", item) 
-                        continue
-                    else:
-                        job_name = root_name + "_barrnap_bac"
-                        marker_path_list.append(marker_path_bac)
-                        command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name, marker_file_bac)
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                        
-                    if((barrnap_euk_out_size > 0) and (os.path.join(marker_path_euk))):
-                        print(dt.today(), "barrnap euk already run.  skipping:", item) 
-                        continue
-                    else:
-                        job_name = root_name + "_barrnap_euk"
-                        marker_path_list.append(marker_path_euk)
-                        command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file_euk)
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                        
-                    if((barrnap_mit_out_size > 0) and (os.path.join(marker_path_mit))):
-                        print(dt.today(), "barrnap mit already run.  skipping:", item) 
-                        continue
-                    else:
-                        job_name = root_name + "_barrnap_mit"
-                        marker_path_list.append(marker_path_mit)
-                        command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file_mit)
-                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                        if((barrnap_arc_out_size > 0) and (os.path.exists(marker_path_arc))):
+                            print(dt.today(), "barrnap arc already run.  skipping:", item) 
+                            continue
+                        else:
+                            job_name = root_name + "_barrnap_arc"
+                            marker_path_list.append(marker_path_arc)
+                            command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name, marker_file_arc)
+                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                            
+                            
+                        if((barrnap_bac_out_size > 0) and (os.path.exists(marker_path_bac))):
+                            print(dt.today(), "barrnap bac already run.  skipping:", item) 
+                            continue
+                        else:
+                            job_name = root_name + "_barrnap_bac"
+                            marker_path_list.append(marker_path_bac)
+                            command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name, marker_file_bac)
+                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                            
+                        if((barrnap_euk_out_size > 0) and (os.path.join(marker_path_euk))):
+                            print(dt.today(), "barrnap euk already run.  skipping:", item) 
+                            continue
+                        else:
+                            job_name = root_name + "_barrnap_euk"
+                            marker_path_list.append(marker_path_euk)
+                            command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file_euk)
+                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                            
+                        if((barrnap_mit_out_size > 0) and (os.path.join(marker_path_mit))):
+                            print(dt.today(), "barrnap mit already run.  skipping:", item) 
+                            continue
+                        else:
+                            job_name = root_name + "_barrnap_mit"
+                            marker_path_list.append(marker_path_mit)
+                            command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file_mit)
+                            launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                 print(dt.today(), "waiting for Barrnap jobs to finish")
                 for item in mp_store:
                     item.join()
@@ -766,7 +772,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         final_barrnap_out    = os.path.join(barrnap_path, root_name + ".barrnap_out")
                         final_barrnap_out_size  = os.stat(final_barrnap_out).st_size if (os.path.exists(final_barrnap_out)) else 0
                         
-                        if((final_barrnap_out_size > 0) and (os.path.exists(marker_path))):
+                        if(os.path.exists(marker_path)):
                             print(dt.today(), "barrnap already merged. skipping:", item)
                             continue
                         else:
@@ -792,7 +798,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         barrnap_mRNA_out_size   = os.stat(barrnap_mrna_file).st_size if (os.path.exists(barrnap_mrna_file)) else 0
                         marker_file = root_name + "_barrnap_pp"
                         marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
-                        if(barrnap_mRNA_out_size > 0):
+                        if(os.path.exists(marker_path)):
                             print(dt.today(), "barrnap pp already run.  skipping:", item)
                             continue
                         else:
@@ -831,7 +837,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
                         infernal_prep_out_file = os.path.join(barrnap_mRNA_fasta_path, root_name + ".fasta")
                         infernal_prep_file_size = os.stat(infernal_prep_out_file).st_size if (os.path.exists(infernal_prep_out_file)) else 0
-                        if((infernal_prep_file_size > 0) and (os.path.exists(marker_path))):
+                        if(os.path.exists(marker_path)):
                             print(dt.today(), "Infernal prep already ran on this sample.  skipping", item)
                             continue
                         
@@ -886,7 +892,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         splitter_out_file_size = os.stat(splitter_out_file).st_size if os.path.exists(splitter_out_file) else 0
                         marker_file = root_name + "_infernal_pp"
                         marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
-                        if((splitter_out_file_size > 0) and (os.path.exists(marker_path))):
+                        if(os.path.exists(marker_path)):
                             print(dt.today(), "infernal mRNA splitter already run. skipping:", marker_file)
                             print("file size:", splitter_out_file_size, "file:", splitter_out_file)
                             continue
@@ -1981,7 +1987,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                     marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
                     
                     fasta_out_size = os.stat(fasta_file).st_size if (os.path.exists(fasta_file)) else 0
-                    if(fasta_out_size > 0):
+                    if(os.path.exists(marker_path)):
                         print(dt.today(), item, "already converted to fasta.  skipping")
                         continue
                     else:
