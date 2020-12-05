@@ -840,7 +840,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             job_name = "rRNA_filter_infernal_prep_" + root_name
                             command_list = commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", section, item, root_name, marker_file)
                             launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
-                    
+                            
                 print(dt.today(), "final batch: infernal prep")
                 for p_item in mp_store:
                     p_item.join()
@@ -865,7 +865,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         marker_path_list.append(marker_path)
                         inf_command = commands.create_rRNA_filter_infernal_command("rRNA_filter", section, root_name, marker_file)
                         job_name = "rRNA_filter_infernal_" + root_name
-                        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, inf_command)
+                        #launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, inf_command)
+                        launch_and_create_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, rRNA_filter_label, job_name, commands, inf_command)
                         
                         
                 print(dt.today(), "final batch: infernal")
@@ -1957,42 +1958,283 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         
     elif(tutorial_mode_string == "rRNA"):
         print(dt.today(), "working on:", tutorial_mode_string)
-        # job_name = read_mode + "_convert_to_fasta"
-        # command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        rRNA_filter_path = os.path.join(output_folder_path, rRNA_filter_label)
+        rRNA_filter_jobs_folder = os.path.join(rRNA_filter_path, "data", "jobs")
+        marker_path_list = []
+        sections = ["singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        job_name = "rRNA_filter_prep_tutorial"
+        command_list = commands.create_rRNA_filter_prep_command_v3(rRNA_filter_label, "tutorial", vector_filter_label, "tutorial")
+        launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
         
-        # job_name = read_mode + "_Barrnap_arc"
-        # command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
         
-        # job_name = read_mode + "_Barrnap_bac"
-        # command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        for section in reversed(sections):
+            split_path = os.path.join(rRNA_filter_path, "data", section + "_fastq")
+            if check_bypass_log(output_folder_path, rRNA_filter_convert_label + "_" + section):
+                marker_path_list = []
+                for item in os.listdir(split_path):
+                    root_name = item.split(".")[0]
+                    fasta_path = os.path.join(rRNA_filter_path, "data", section + "_fasta")
+                    fasta_file = os.path.join(fasta_path, root_name + ".fasta")
+                    marker_file = root_name + "_convert_fasta"
+                    marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                    
+                    fasta_out_size = os.stat(fasta_file).st_size if (os.path.exists(fasta_file)) else 0
+                    if(fasta_out_size > 0):
+                        print(dt.today(), item, "already converted to fasta.  skipping")
+                        continue
+                    else:
+                        job_name = root_name + "_convert_to_fasta"
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_rRNA_filter_convert_fastq_command("rRNA_filter", section, root_name+".fastq", marker_file)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                         
-        # job_name = read_mode + "_Barrnap_euk"
-        # command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
                         
-        # job_name = read_mode + "_Barrnap_mit"
-        # command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+        # BARRNAP
+        for section in reversed(sections):  
+            #convert data to fasta, then run barrnap separately, then cat the barrnap, then run barrnap PP
+            #split the data, if necessary.
+            #initial split -> by lines.  we can do both
+            split_path      = os.path.join(rRNA_filter_path, "data", section + "_fastq")
+            fasta_path      = os.path.join(rRNA_filter_path, "data", section + "_fasta")
+            barrnap_path    = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_barrnap")
+            infernal_path   = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal") 
+            
+            mRNA_path       = os.path.join(rRNA_filter_path, "data", section + "_mRNA")
+            
+            concurrent_job_count = 0
+            batch_count = 0
+            marker_path_list = []
+            
+            for item in os.listdir(fasta_path):
+                root_name = item.split(".")[0]
+                barrnap_arc_out_file = os.path.join(barrnap_path, root_name + "_arc.barrnap_out")
+                barrnap_bac_out_file = os.path.join(barrnap_path, root_name + "_bac.barrnap_out")
+                barrnap_euk_out_file = os.path.join(barrnap_path, root_name + "_euk.barrnap_out")
+                barrnap_mit_out_file = os.path.join(barrnap_path, root_name + "_mit.barrnap_out")
+                final_barrnap_out    = os.path.join(barrnap_path, root_name + ".barrnap_out")
+                fasta_file = os.path.join(fasta_path, root_name + ".fasta")
+                fastq_file = os.path.join(split_path, root_name + ".fastq")
+                barrnap_mrna_file   = os.path.join(mRNA_path, root_name + "_barrnap_mRNA.fastq")
+                marker_file_arc = root_name + "_barrnap_arc"
+                marker_file_bac = root_name + "_barrnap_bac"
+                marker_file_euk = root_name + "_barrnap_euk"
+                marker_file_mit = root_name + "_barrnap_mit"
+                
+                marker_path_arc = os.path.join(rRNA_filter_jobs_folder, marker_file_arc)
+                marker_path_bac = os.path.join(rRNA_filter_jobs_folder, marker_file_bac)
+                marker_path_euk = os.path.join(rRNA_filter_jobs_folder, marker_file_euk)
+                marker_path_mit = os.path.join(rRNA_filter_jobs_folder, marker_file_mit)
+                
+                barrnap_arc_out_size    = os.stat(barrnap_arc_out_file).st_size if (os.path.exists(barrnap_arc_out_file)) else 0
+                barrnap_bac_out_size    = os.stat(barrnap_bac_out_file).st_size if (os.path.exists(barrnap_bac_out_file)) else 0
+                barrnap_euk_out_size    = os.stat(barrnap_euk_out_file).st_size if (os.path.exists(barrnap_euk_out_file)) else 0
+                barrnap_mit_out_size    = os.stat(barrnap_mit_out_file).st_size if (os.path.exists(barrnap_mit_out_file)) else 0
+                
+                
+                if((barrnap_arc_out_size > 0) and (os.path.exists(marker_path_arc))):
+                    print(dt.today(), "barrnap arc already run.  skipping:", item) 
+                    continue
+                else:
+                    job_name = root_name + "_barrnap_arc"
+                    marker_path_list.append(marker_path_arc)
+                    command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name, marker_file_arc)
+                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                    
+                    
+                if((barrnap_bac_out_size > 0) and (os.path.exists(marker_path_bac))):
+                    print(dt.today(), "barrnap bac already run.  skipping:", item) 
+                    continue
+                else:
+                    job_name = root_name + "_barrnap_bac"
+                    marker_path_list.append(marker_path_bac)
+                    command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name, marker_file_bac)
+                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                    
+                if((barrnap_euk_out_size > 0) and (os.path.join(marker_path_euk))):
+                    print(dt.today(), "barrnap euk already run.  skipping:", item) 
+                    continue
+                else:
+                    job_name = root_name + "_barrnap_euk"
+                    marker_path_list.append(marker_path_euk)
+                    command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file_euk)
+                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                    
+                if((barrnap_mit_out_size > 0) and (os.path.join(marker_path_mit))):
+                    print(dt.today(), "barrnap mit already run.  skipping:", item) 
+                    continue
+                else:
+                    job_name = root_name + "_barrnap_mit"
+                    marker_path_list.append(marker_path_mit)
+                    command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file_mit)
+                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                print(dt.today(), "waiting for Barrnap jobs to finish")
+                for item in mp_store:
+                    item.join()
+                mp_store[:] = []
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section + ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
+                
+                #------------------------------------------------------
+                #merge the barrnap data
+                marker_path_list = []
+                for item in os.listdir(fasta_path):
+                    root_name = item.split(".")[0]
+                    marker_file = root_name + "_barrnap_cat"
+                    marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                    final_barrnap_out    = os.path.join(barrnap_path, root_name + ".barrnap_out")
+                    final_barrnap_out_size  = os.stat(final_barrnap_out).st_size if (os.path.exists(final_barrnap_out)) else 0
+                    
+                    if((final_barrnap_out_size > 0) and (os.path.exists(marker_path))):
+                        print(dt.today(), "barrnap already merged. skipping:", item)
+                        continue
+                    else:
+                        job_name = root_name + "_barrnap_cat"
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_rRNA_filter_barrnap_cat_command("rRNA_filter", section, root_name, marker_file)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                print(dt.today(), "waiting for Barrnap pp to finish")
+                for item in mp_store:
+                    item.join()
+                mp_store[:] = []
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_cat_" + section  + ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
+                
+                #-----------------------------------------------------
+                #run the barrnap PP
+                marker_path_list = []
+                for item in os.listdir(fasta_path):
+                    root_name = item.split(".")[0]
+                    barrnap_mrna_file   = os.path.join(mRNA_path, root_name + "_barrnap_mRNA.fastq")
+                    barrnap_mRNA_out_size   = os.stat(barrnap_mrna_file).st_size if (os.path.exists(barrnap_mrna_file)) else 0
+                    marker_file = root_name + "_barrnap_pp"
+                    marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                    if(barrnap_mRNA_out_size > 0):
+                        print(dt.today(), "barrnap pp already run.  skipping:", item)
+                        continue
+                    else:
+                        job_name = root_name + "_barrnap_pp"
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", section, root_name + ".fastq", marker_file)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                
+                print(dt.today(), "waiting for Barrnap pp to finish")
+                for item in mp_store:
+                    item.join()
+                mp_store[:] = []
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section +  ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
+                
+        #----------------------------------------------------------------------------
+        # INFERNAL
+        for section in reversed(sections):  
+            #split the data, if necessary.
+            #initial split -> by lines.  we can do both
+            barrnap_mRNA_fastq_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_barrnap_mRNA")
+            infernal_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal") 
+            barrnap_mRNA_fasta_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_barrnap_mRNA_fasta")
+            splitter_path = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal_mRNA")
         
-        # job_name = read_mode + "_Barrnap_cat"
-        # command_list = commands.create_rRNA_filter_barrnap_cat_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
-        
-        # job_name = read_mode + "_barrnap_pp"
-        # command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
+            concurrent_job_count = 0
+            batch_count = 0
+            #these jobs now have to be launched in segments
+            for item in os.listdir(barrnap_mRNA_fastq_path):
+               
+                if(item.endswith("_barrnap_mRNA.fastq")):
+                    root_name = item.split(".")[0]
+                    marker_file = root_name + "_infernal_prep"
+                    marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                    infernal_prep_out_file = os.path.join(barrnap_mRNA_fasta_path, root_name + ".fasta")
+                    infernal_prep_file_size = os.stat(infernal_prep_out_file).st_size if (os.path.exists(infernal_prep_out_file)) else 0
+                    if((infernal_prep_file_size > 0) and (os.path.exists(marker_path))):
+                        print(dt.today(), "Infernal prep already ran on this sample.  skipping", item)
+                        continue
+                    
+                    else:
+                        marker_path_list.append(marker_path)
+                        job_name = "rRNA_filter_infernal_prep_" + root_name
+                        command_list = commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", section, item, root_name, marker_file)
+                        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
                         
-        # job_name = read_mode + "_rRNA_filter_infernal_prep"
-        # command_list = commands.create_rRNA_filter_infernal_prep_command("rRNA_filter", "tutorial", "tutorial", "tutorial", "tutorial")
-        # launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
-    
-        job_name = read_mode + "_rRNA_filter_infernal"
-        command_list = commands.create_rRNA_filter_infernal_command("rRNA_filter", "tutorial", "tutorial", "tutorial")
-        #launch_and_create_simple(rRNA_filter_label, job_name, commands, command_list)
-        launch_only_simple(command_obj, command_list)               
+            print(dt.today(), "final batch: infernal prep")
+            for p_item in mp_store:
+                p_item.join()
+            mp_store[:] = []  # clear the list
+            final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_infernal_prep_" + section + ".txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            
+
+            marker_path_list = []
+            for item in os.listdir(barrnap_mRNA_fasta_path):
+                #using a job marker is ineffective.  The marker will still write 
+                root_name = item.split("_barrnap_mRNA")[0]
+                marker_file = root_name + "_infernal"
+                marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "infernal already run. skipping:", root_name + "_infernal")
+                    continue
+                else:
+                    marker_path_list.append(marker_path)
+                    inf_command = commands.create_rRNA_filter_infernal_command("rRNA_filter", section, root_name, marker_file)
+                    job_name = "rRNA_filter_infernal_" + root_name
+                    #launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, inf_command)
+                    launch_and_create_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, rRNA_filter_label, job_name, commands, inf_command)
+                    
+                    
+            print(dt.today(), "final batch: infernal")
+            for p_item in mp_store:
+                p_item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_infernal_" + section + ".txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            
+            if (section != "pair_2"):
+                marker_path_list = []
+                for item in os.listdir(barrnap_mRNA_fasta_path):
+                    root_name = item.split("_barrnap_mRNA")[0]
+                    splitter_out_file = os.path.join(output_folder_path, rRNA_filter_label, "data", section + "_infernal_mRNA", root_name + "_mRNA.fastq")
+                    splitter_out_file_size = os.stat(splitter_out_file).st_size if os.path.exists(splitter_out_file) else 0
+                    marker_file = root_name + "_infernal_pp"
+                    marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                    if((splitter_out_file_size > 0) and (os.path.exists(marker_path))):
+                        print(dt.today(), "infernal mRNA splitter already run. skipping:", marker_file)
+                        print("file size:", splitter_out_file_size, "file:", splitter_out_file)
+                        continue
+                    else:
+                        job_name = "rRNA_filter_infernal_splitter_" + root_name
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_rRNA_filter_splitter_command("rRNA_filter", section, root_name, marker_file)
+                        print(command_list)
+                        launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
+                        
+                print(dt.today(), "final batch: infernal splitter")
+                for p_item in mp_store:
+                    p_item.join()
+                mp_store[:] = []
+                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_infernal_splitter_" + section + ".txt")
+                check_all_job_markers(marker_path_list, final_checklist)
+                
+            else:
+                print(dt.today(), "not calling Infernal rRNA splitter on pair 2.  data handled by pair 1 as a combination")
+        
+                    
+                    
+        marker_path_list = []
+        for section in reversed(sections):
+            print(dt.today(), "now running rRNA filter post:", section)
+            marker_file = section + "_rRNA_packup"
+            marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+            job_name = "rRNA_post_cat"
+            marker_path_list.append(marker_path)
+            command_list = commands.create_rRNA_filter_final_cat_command("rRNA_filter", section, marker_file)
+            print("command list:", command_list)
+            launch_only_with_hold(mp_store, Infernal_mem_threshold, Infernal_job_limit, Infernal_job_delay, job_name, commands, command_list)
+            
+        for p_item in mp_store:
+            p_item.join()
+        mp_store[:] = []
         
     elif(tutorial_mode_string == "deduplicate"):
         print(dt.today(), "working on:", tutorial_mode_string)
