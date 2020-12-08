@@ -266,7 +266,7 @@ def launch_and_create_with_hold(mp_store, mem_threshold, job_limit, job_delay, j
 
 #check if all jobs ran
 def check_all_job_markers(job_marker_list, final_folder_checklist):
-    time.sleep(1)
+    time.sleep(2)
     #if it's already been created, that means the job was killed.
     if(os.path.exists(final_folder_checklist)):
         print(dt.today(), final_folder_checklist, "exists: adding to it")
@@ -2013,6 +2013,8 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             
             for item in os.listdir(fasta_path):
                 root_name = item.split(".")[0]
+                final_marker_file = root_name + "_barrnap_cat"
+                final_marker_path = os.path.join(rRNA_filter_jobs_folder, final_marker_file)
                 barrnap_arc_out_file = os.path.join(barrnap_path, root_name + "_arc.barrnap_out")
                 barrnap_bac_out_file = os.path.join(barrnap_path, root_name + "_bac.barrnap_out")
                 barrnap_euk_out_file = os.path.join(barrnap_path, root_name + "_euk.barrnap_out")
@@ -2036,99 +2038,103 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                 barrnap_euk_out_size    = os.stat(barrnap_euk_out_file).st_size if (os.path.exists(barrnap_euk_out_file)) else 0
                 barrnap_mit_out_size    = os.stat(barrnap_mit_out_file).st_size if (os.path.exists(barrnap_mit_out_file)) else 0
                 
-                
-                if((barrnap_arc_out_size > 0) and (os.path.exists(marker_path_arc))):
-                    print(dt.today(), "barrnap arc already run.  skipping:", item) 
+                if(os.path.exists(final_marker_path)):
+                    print(dt.today(), "Job already run. skipping:", final_marker_file, final_marker_path)
+                    time.sleep(5)
                     continue
                 else:
-                    job_name = root_name + "_barrnap_arc"
-                    marker_path_list.append(marker_path_arc)
-                    command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name, marker_file_arc)
-                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                    
-                    
-                if((barrnap_bac_out_size > 0) and (os.path.exists(marker_path_bac))):
-                    print(dt.today(), "barrnap bac already run.  skipping:", item) 
-                    continue
-                else:
-                    job_name = root_name + "_barrnap_bac"
-                    marker_path_list.append(marker_path_bac)
-                    command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name, marker_file_bac)
-                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                    
-                if((barrnap_euk_out_size > 0) and (os.path.join(marker_path_euk))):
-                    print(dt.today(), "barrnap euk already run.  skipping:", item) 
-                    continue
-                else:
-                    job_name = root_name + "_barrnap_euk"
-                    marker_path_list.append(marker_path_euk)
-                    command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file_euk)
-                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                    
-                if((barrnap_mit_out_size > 0) and (os.path.join(marker_path_mit))):
-                    print(dt.today(), "barrnap mit already run.  skipping:", item) 
-                    continue
-                else:
-                    job_name = root_name + "_barrnap_mit"
-                    marker_path_list.append(marker_path_mit)
-                    command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file_mit)
-                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                print(dt.today(), "waiting for Barrnap jobs to finish")
-                for item in mp_store:
-                    item.join()
-                mp_store[:] = []
-                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section + ".txt")
-                check_all_job_markers(marker_path_list, final_checklist)
-                
-                #------------------------------------------------------
-                #merge the barrnap data
-                marker_path_list = []
-                for item in os.listdir(fasta_path):
-                    root_name = item.split(".")[0]
-                    marker_file = root_name + "_barrnap_cat"
-                    marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
-                    final_barrnap_out    = os.path.join(barrnap_path, root_name + ".barrnap_out")
-                    final_barrnap_out_size  = os.stat(final_barrnap_out).st_size if (os.path.exists(final_barrnap_out)) else 0
-                    
-                    if((final_barrnap_out_size > 0) and (os.path.exists(marker_path))):
-                        print(dt.today(), "barrnap already merged. skipping:", item)
+                    if((barrnap_arc_out_size > 0) and (os.path.exists(marker_path_arc))):
+                        print(dt.today(), "barrnap arc already run.  skipping:", item) 
                         continue
                     else:
-                        job_name = root_name + "_barrnap_cat"
-                        marker_path_list.append(marker_path)
-                        command_list = commands.create_rRNA_filter_barrnap_cat_command("rRNA_filter", section, root_name, marker_file)
+                        job_name = root_name + "_barrnap_arc"
+                        marker_path_list.append(marker_path_arc)
+                        command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name, marker_file_arc)
                         launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                print(dt.today(), "waiting for Barrnap pp to finish")
-                for item in mp_store:
-                    item.join()
-                mp_store[:] = []
-                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_cat_" + section  + ".txt")
-                check_all_job_markers(marker_path_list, final_checklist)
-                
-                #-----------------------------------------------------
-                #run the barrnap PP
-                marker_path_list = []
-                for item in os.listdir(fasta_path):
-                    root_name = item.split(".")[0]
-                    barrnap_mrna_file   = os.path.join(mRNA_path, root_name + "_barrnap_mRNA.fastq")
-                    barrnap_mRNA_out_size   = os.stat(barrnap_mrna_file).st_size if (os.path.exists(barrnap_mrna_file)) else 0
-                    marker_file = root_name + "_barrnap_pp"
-                    marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
-                    if(barrnap_mRNA_out_size > 0):
-                        print(dt.today(), "barrnap pp already run.  skipping:", item)
+                        
+                        
+                    if((barrnap_bac_out_size > 0) and (os.path.exists(marker_path_bac))):
+                        print(dt.today(), "barrnap bac already run.  skipping:", item) 
                         continue
                     else:
-                        job_name = root_name + "_barrnap_pp"
-                        marker_path_list.append(marker_path)
-                        command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", section, root_name + ".fastq", marker_file)
+                        job_name = root_name + "_barrnap_bac"
+                        marker_path_list.append(marker_path_bac)
+                        command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name, marker_file_bac)
                         launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                        
+                    if((barrnap_euk_out_size > 0) and (os.path.join(marker_path_euk))):
+                        print(dt.today(), "barrnap euk already run.  skipping:", item) 
+                        continue
+                    else:
+                        job_name = root_name + "_barrnap_euk"
+                        marker_path_list.append(marker_path_euk)
+                        command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file_euk)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                        
+                    if((barrnap_mit_out_size > 0) and (os.path.join(marker_path_mit))):
+                        print(dt.today(), "barrnap mit already run.  skipping:", item) 
+                        continue
+                    else:
+                        job_name = root_name + "_barrnap_mit"
+                        marker_path_list.append(marker_path_mit)
+                        command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file_mit)
+                        launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+            print(dt.today(), "waiting for Barrnap jobs to finish")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section + ".txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+        
+            #------------------------------------------------------
+            #merge the barrnap data
+            marker_path_list = []
+            for item in os.listdir(fasta_path):
+                root_name = item.split(".")[0]
+                marker_file = root_name + "_barrnap_cat"
+                marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                final_barrnap_out    = os.path.join(barrnap_path, root_name + ".barrnap_out")
+                final_barrnap_out_size  = os.stat(final_barrnap_out).st_size if (os.path.exists(final_barrnap_out)) else 0
                 
-                print(dt.today(), "waiting for Barrnap pp to finish")
-                for item in mp_store:
-                    item.join()
-                mp_store[:] = []
-                final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section +  ".txt")
-                check_all_job_markers(marker_path_list, final_checklist)
+                if((final_barrnap_out_size > 0) and (os.path.exists(marker_path))):
+                    print(dt.today(), "barrnap already merged. skipping:", item)
+                    continue
+                else:
+                    job_name = root_name + "_barrnap_cat"
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_rRNA_filter_barrnap_cat_command("rRNA_filter", section, root_name, marker_file)
+                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+            print(dt.today(), "waiting for Barrnap pp to finish")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_cat_" + section  + ".txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            
+            #-----------------------------------------------------
+            #run the barrnap PP
+            marker_path_list = []
+            for item in os.listdir(fasta_path):
+                root_name = item.split(".")[0]
+                barrnap_mrna_file   = os.path.join(mRNA_path, root_name + "_barrnap_mRNA.fastq")
+                barrnap_mRNA_out_size   = os.stat(barrnap_mrna_file).st_size if (os.path.exists(barrnap_mrna_file)) else 0
+                marker_file = root_name + "_barrnap_pp"
+                marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                if(barrnap_mRNA_out_size > 0):
+                    print(dt.today(), "barrnap pp already run.  skipping:", item)
+                    continue
+                else:
+                    job_name = root_name + "_barrnap_pp"
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_rRNA_filter_barrnap_pp_command("rRNA_filter", section, root_name + ".fastq", marker_file)
+                    launch_only_with_hold(mp_store, Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+            
+            print(dt.today(), "waiting for Barrnap pp to finish")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(rRNA_filter_path, "rRNA_filter_barrnap_" + section +  ".txt")
+            check_all_job_markers(marker_path_list, final_checklist)
                 
         #----------------------------------------------------------------------------
         # INFERNAL
@@ -2814,113 +2820,112 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
 
     
     elif(tutorial_mode_string == "output"):
-    Cytoscape_start = time.time()
-    network_path = os.path.join(output_folder_path, output_label)
-    #if not check_where_resume(network_path, None, ec_annotation_path):
-    GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
-    TA_path = os.path.join(output_folder_path, taxon_annotation_label)
-    EC_path = os.path.join(output_folder_path, ec_annotation_label)
-    all_good_flag = False
-    if not(os.path.exists(GA_FINAL_MERGE_path)):
-        print(dt.today(), "MetaPro's final outputs rely on the gene annotation.  please run MetaPro with --tutorial GA")
-        sys.exit("missing GA")
-    if not(os.path.exists(TA_path)):
-        print(dt.today(), "MetaPro's final outputs rely on the Taxonomic annotation.  please run MetaPro with --tutorial TA")
-        sys.exit("missing TA")
-    if not(os.path.exists(EC_path)):
-        print(dt.today(), "MetaPRo's final outputs rely on the Enzyme Annotation. Please run MetaPro with --tutorial EC")
-        sys.exit("missing EC")
-        
-    all_good_flag = True    
-    if(all_good_flag):
-        #phase 1
-        if check_bypass_log(output_folder, output_copy_gene_map_label):
-            job_name = output_copy_gene_map_label
-            command_list = commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+        network_path = os.path.join(output_folder_path, output_label)
+        #if not check_where_resume(network_path, None, ec_annotation_path):
+        GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
+        TA_path = os.path.join(output_folder_path, taxon_annotation_label)
+        EC_path = os.path.join(output_folder_path, ec_annotation_label)
+        all_good_flag = False
+        if not(os.path.exists(GA_FINAL_MERGE_path)):
+            print(dt.today(), "MetaPro's final outputs rely on the gene annotation.  please run MetaPro with --tutorial GA")
+            sys.exit("missing GA")
+        if not(os.path.exists(TA_path)):
+            print(dt.today(), "MetaPro's final outputs rely on the Taxonomic annotation.  please run MetaPro with --tutorial TA")
+            sys.exit("missing TA")
+        if not(os.path.exists(EC_path)):
+            print(dt.today(), "MetaPRo's final outputs rely on the Enzyme Annotation. Please run MetaPro with --tutorial EC")
+            sys.exit("missing EC")
             
-        if check_bypass_log(output_folder, output_copy_taxa_label):
-            job_name = output_copy_taxa_label
-            command_list = commands.create_output_copy_taxa_command(output_label, taxon_annotation_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
-        
-        if check_bypass_log(output_folder, output_contig_stats_label):
-            job_name = output_contig_stats_label
-            command_list = commands.create_output_contig_stats_command(output_label, assemble_contigs_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
-            
-        
-            
-        if not(no_host):
-            if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
-                job_name = output_unique_hosts_singletons_label
-                command_list = commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label)
+        all_good_flag = True    
+        if(all_good_flag):
+            #phase 1
+            if check_bypass_log(output_folder, output_copy_gene_map_label):
+                job_name = output_copy_gene_map_label
+                command_list = commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                
+            if check_bypass_log(output_folder, output_copy_taxa_label):
+                job_name = output_copy_taxa_label
+                command_list = commands.create_output_copy_taxa_command(output_label, taxon_annotation_label)
                 launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
             
-            if(read_mode == "paired"):
-                if check_bypass_log(output_folder, output_unique_hosts_pair_1_label):
-                    job_name = output_unique_hosts_pair_1_label
-                    command_list = commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label)
-                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
-                    
-                if check_bypass_log(output_folder, output_unique_hosts_pair_2_label):
-                    job_name = output_unique_hosts_pair_2_label
-                    command_list = commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label)
-                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
-                    
-                    
-        print(dt.today(), "output report phase 1 launched.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        
-        #----------------------------------------------------------------------------
-        #Phase 2
-        if not(no_host):
-            if check_bypass_log(output_folder, output_combine_hosts_label):
-                command_list = commands.create_output_combine_hosts_command(output_label)
-                launch_and_create_with_mp_store(mp_store, output_label, output_combine_hosts_label, commands, command_list)
+            if check_bypass_log(output_folder, output_contig_stats_label):
+                job_name = output_contig_stats_label
+                command_list = commands.create_output_contig_stats_command(output_label, assemble_contigs_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                 
-        if check_bypass_log(output_folder, output_network_gen_label):
-            command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
-            launch_and_create_with_mp_store(mp_store, output_label, output_network_gen_label, commands, command_list)
             
-        if check_bypass_log(output_folder, output_taxa_groupby_label):
-            command_list = commands.create_output_taxa_groupby_command(output_label)
-            launch_and_create_with_mp_store(mp_store, output_label, output_taxa_groupby_label, commands, command_list)
-       
-        print(dt.today(), "output report phase 2 launched.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-     
-        
-        #-------------------------------------------------------------------
-        #Phase 3
-        if check_bypass_log(output_folder, output_read_count_label):
-            job_name = output_read_count_label
-            command_list = commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, GA_final_merge_label, ec_annotation_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
-                               
+                
+            if not(no_host):
+                if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
+                    job_name = output_unique_hosts_singletons_label
+                    command_list = commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                
+                if(read_mode == "paired"):
+                    if check_bypass_log(output_folder, output_unique_hosts_pair_1_label):
+                        job_name = output_unique_hosts_pair_1_label
+                        command_list = commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label)
+                        launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                        
+                    if check_bypass_log(output_folder, output_unique_hosts_pair_2_label):
+                        job_name = output_unique_hosts_pair_2_label
+                        command_list = commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label)
+                        launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                        
+                        
+            print(dt.today(), "output report phase 1 launched.  waiting for sync")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            
+            #----------------------------------------------------------------------------
+            #Phase 2
+            if not(no_host):
+                if check_bypass_log(output_folder, output_combine_hosts_label):
+                    command_list = commands.create_output_combine_hosts_command(output_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, output_combine_hosts_label, commands, command_list)
+                    
+            if check_bypass_log(output_folder, output_network_gen_label):
+                command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
+                launch_and_create_with_mp_store(mp_store, output_label, output_network_gen_label, commands, command_list)
+                
+            if check_bypass_log(output_folder, output_taxa_groupby_label):
+                command_list = commands.create_output_taxa_groupby_command(output_label)
+                launch_and_create_with_mp_store(mp_store, output_label, output_taxa_groupby_label, commands, command_list)
+           
+            print(dt.today(), "output report phase 2 launched.  waiting for sync")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+         
+            
+            #-------------------------------------------------------------------
+            #Phase 3
+            if check_bypass_log(output_folder, output_read_count_label):
+                job_name = output_read_count_label
+                command_list = commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, GA_final_merge_label, ec_annotation_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                                   
 
-        if check_bypass_log(output_folder, output_per_read_scores_label):
-            job_name = output_per_read_scores_label
-            command_list = commands.create_output_per_read_scores_command(output_label, quality_filter_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            if check_bypass_log(output_folder, output_per_read_scores_label):
+                job_name = output_per_read_scores_label
+                command_list = commands.create_output_per_read_scores_command(output_label, quality_filter_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                
+            if check_bypass_log(output_folder, output_ec_heatmap_label):
+                job_name = output_ec_heatmap_label
+                command_list = commands.create_output_EC_heatmap_command(output_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)    
             
-        if check_bypass_log(output_folder, output_ec_heatmap_label):
-            job_name = output_ec_heatmap_label
-            command_list = commands.create_output_EC_heatmap_command(output_label)
-            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)    
-        
-        print(dt.today(), "output report phase 3 launched.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
- 
+            print(dt.today(), "output report phase 3 launched.  waiting for sync")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+     
     else:
         print(dt.today(), "tutorial mode not recognized:", tutorial_mode_string)
-        
+    
     
     
     

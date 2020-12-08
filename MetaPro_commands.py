@@ -1497,13 +1497,11 @@ class mt_pipe_commands:
         repop_singletons += os.path.join(dep_loc, "mRNA", "singletons.fastq") + " "  # in -> rRNA filtration output
         repop_singletons += os.path.join(cluster_path, "singletons_unique.fastq.clstr") + " "  # in -> duplicates filter output
 
-        if(self.tutorial_keyword == tut_keyword):
-            repop_singletons += self.sequence_single
-        else:
-            if self.read_mode == "single":
-                repop_singletons += os.path.join(final_folder, "singletons.fastq")  # out
-            elif self.read_mode == "paired":
-                repop_singletons += os.path.join(repop_folder, "singletons.fastq")  # out
+        
+        if self.read_mode == "single":
+            repop_singletons += os.path.join(final_folder, "singletons.fastq")  # out
+        elif self.read_mode == "paired":
+            repop_singletons += os.path.join(repop_folder, "singletons.fastq")  # out
             
             
 
@@ -2308,7 +2306,7 @@ class mt_pipe_commands:
         if(operating_mode == "contigs"):
             patch_contig_name = self.tool_path_obj.Python + " "
             patch_contig_name += self.tool_path_obj.ta_contig_name_convert + " "
-            if(self.tutorial_keyword == "TA):
+            if(self.tutorial_keyword == "TA"):
                 patch_contig_name += self.sequence_contigs + " "
             else:
                 patch_contig_name += os.path.join(assemble_contigs_folder, "contigs.fasta") + " "
