@@ -2216,7 +2216,10 @@ class mt_pipe_commands:
             kaiju_on_contigs += self.tool_path_obj.Kaiju
             kaiju_on_contigs += " -t " + self.tool_path_obj.nodes
             kaiju_on_contigs += " -f " + self.tool_path_obj.Kaiju_db
-            kaiju_on_contigs += " -i " + os.path.join(assemble_contigs_folder, "contigs.fasta")
+            if(self.tutorial_keyword == "TA"):
+                kaiju_on_contigs += " -i " + self.sequence_contigs
+            else:
+                kaiju_on_contigs += " -i " + os.path.join(assemble_contigs_folder, "contigs.fasta")
             kaiju_on_contigs += " -z " + self.Threads_str
             kaiju_on_contigs += " -o " + os.path.join(kaiju_folder, "contigs.tsv")
             
@@ -2230,7 +2233,10 @@ class mt_pipe_commands:
             kaiju_on_singletons += self.tool_path_obj.Kaiju
             kaiju_on_singletons += " -t " + self.tool_path_obj.nodes
             kaiju_on_singletons += " -f " + self.tool_path_obj.Kaiju_db
-            kaiju_on_singletons += " -i " + os.path.join(assemble_contigs_folder, "singletons.fastq")
+            if(self.tutorial_keyword == "TA"):
+                kaiju_on_singletons += " -i " + self.sequence_single
+            else:
+                kaiju_on_singletons += " -i " + os.path.join(assemble_contigs_folder, "singletons.fastq")
             kaiju_on_singletons += " -z " + self.Threads_str
             kaiju_on_singletons += " -o " + os.path.join(kaiju_folder, "singletons.tsv")
 
@@ -2244,8 +2250,15 @@ class mt_pipe_commands:
             kaiju_on_paired += self.tool_path_obj.Kaiju
             kaiju_on_paired += " -t " + self.tool_path_obj.nodes
             kaiju_on_paired += " -f " + self.tool_path_obj.Kaiju_db
-            kaiju_on_paired += " -i " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
-            kaiju_on_paired += " -j " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+
+            if(self.tutorial_keyword == "TA"):
+                kaiju_on_paired += " -i " + self.sequence_path_1
+                kaiju_on_paired += " -j " + self.sequence_path_2
+
+            else:
+                kaiju_on_paired += " -i " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+                kaiju_on_paired += " -j " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+
             kaiju_on_paired += " -z " + self.Threads_str
             kaiju_on_paired += " -o " + os.path.join(kaiju_folder, "pairs.tsv")
             
@@ -2295,7 +2308,10 @@ class mt_pipe_commands:
         if(operating_mode == "contigs"):
             patch_contig_name = self.tool_path_obj.Python + " "
             patch_contig_name += self.tool_path_obj.ta_contig_name_convert + " "
-            patch_contig_name += os.path.join(assemble_contigs_folder, "contigs.fasta") + " "
+            if(self.tutorial_keyword == "TA):
+                patch_contig_name += self.sequence_contigs + " "
+            else:
+                patch_contig_name += os.path.join(assemble_contigs_folder, "contigs.fasta") + " "
             patch_contig_name += os.path.join(centrifuge_folder, "contigs_renamed.fasta")
         
             centrifuge_on_contigs = ">&2 echo centrifuge on contigs | "
@@ -2323,10 +2339,17 @@ class mt_pipe_commands:
             centrifuge_on_reads = ">&2 echo centrifuge on reads | "
             centrifuge_on_reads += self.tool_path_obj.Centrifuge
             centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
-            centrifuge_on_reads += " -U " + os.path.join(assemble_contigs_folder, "singletons.fastq")
-            if self.read_mode == "paired":
-                centrifuge_on_reads += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
-                centrifuge_on_reads += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
+            
+            if(self.tutorial_keyword == "TA"):
+                centrifuge_on_reads += " -U " + self.sequence_single
+                if self.read_mode == "paired":
+                    centrifuge_on_reads += " -1 " + self.sequence_path_1
+                    centrifuge_on_reads += " -2 " + self.sequence_path_2
+            else:
+                centrifuge_on_reads += " -U " + os.path.join(assemble_contigs_folder, "singletons.fastq")
+                if self.read_mode == "paired":
+                    centrifuge_on_reads += " -1 " + os.path.join(assemble_contigs_folder, "pair_1.fastq")
+                    centrifuge_on_reads += " -2 " + os.path.join(assemble_contigs_folder, "pair_2.fastq")
             centrifuge_on_reads += " --exclude-taxids 2759 -k 1 --tab-fmt-cols " + "score,readID,taxID"
             centrifuge_on_reads += " --phred" + self.Qual_str
             centrifuge_on_reads += " -p 6"

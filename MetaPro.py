@@ -1482,8 +1482,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     
     # ------------------------------------------------------
     # Detect EC annotation
-   
-    
     ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
     EC_start = time.time()
     #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
@@ -2242,19 +2240,30 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             p_item.join()
         mp_store[:] = []
         
-    elif(tutorial_mode_string == "deduplicate"):
+    elif(tutorial_mode_string == "repop"):
         print(dt.today(), "working on:", tutorial_mode_string)
         quality_path = os.path.join(output_folder_path, quality_filter_label)
-        
         if(os.path.exists(quality_path)):
-            print(dt.todday(), 
+            job_name = repop_job_label
+            command_list = commands.create_repop_command(repop_job_label, quality_filter_label, rRNA_filter_label)
+            launch_and_create_simple(repop_job_label, job_name, commands, command_list)
+        
             
         else:
             print(dt.today(), "no quality filter was run.  please run MetaPro with option  <--tutorial quality> to continue")
         
     elif(tutorial_mode_string == "contigs"):
         print(dt.today(), "working on:", tutorial_mode_string)
-    elif(tutorial_mode_string == "GA_BWA"):
+        job_name = assemble_contigs_label
+        command_list = commands.create_assemble_contigs_command(assemble_contigs_label, repop_job_label)
+        launch_and_create_simple(assemble_contigs_label, job_name, commands, command_list)
+        mgm_file = os.path.join(assemble_contigs_path, "data", "1_mgm", "gene_report.txt")
+        if(os.path.exists(mgm_file)):
+            print(dt.today(), "MetaGeneMark ran successfully.  Everything is great")
+        else:
+            sys.exit("mgm did not run.  look into it.  Proabably a license issue. pipeline stopping here")
+        
+    elif(tutorial_mode_string == "GA"):
     
         GA_BWA_start = time.time()
         GA_BWA_path = os.path.join(output_folder_path, GA_BWA_label)
@@ -2580,13 +2589,335 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         elif(keep_all == "compress" or keep_GA_final == "compress"):
             compress_folder(GA_FINAL_MERGE_path)
             delete_folder(GA_FINAL_MERGE_path)
-        
-    
-    
+          
     elif(tutorial_mode_string == "TA"):
         print(dt.today(), "working on:", tutorial_mode_string)
+        GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
+        if not(os.path.exists(GA_FINAL_MERGE_path)):
+            print(dt.today(), "MetaPro's Taxonomic annotation relies the gene map created by GA.  please run MetaPro again with --tutorial GA")
+        else:
+            # ------------------------------------------------------
+            # Taxonomic annotation
+            TA_start = time.time()
+            TA_path = os.path.join(output_folder_path, taxon_annotation_label)
+            TA_jobs_folder = os.path.join(TA_path, "data", "jobs")
+            #-----------------------------------------
+            # stage 1
+            marker_path_list = []
+            #----------------------------------------------
+            #centrifuge is too much of a RAM hog.  can't run more than 1 at a time
+            sections = ["reads"]
+            for section in sections:
+                marker_file = "TA_centrifuge_" + section
+                marker_path = os.path.join(TA_jobs_folder, marker_file)
+                
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                    launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+                    
+            sections = ["contigs", "singletons"]
+            if read_mode == "paired":
+                sections.extend(["paired"])
+                
+            for section in sections:
+                marker_file = "TA_kaiju_" + section
+                marker_path = os.path.join(TA_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_TA_kaiju_command(taxon_annotation_label, assemble_contigs_label, section, marker_file)
+                    launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)        
+            marker_file = "TA_taxon_pull"
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_taxon_pull_command(taxon_annotation_label, GA_final_merge_label, marker_file)
+                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+            print(dt.today(), "waiting for TA stage 1")
+            for p_item in mp_store:
+                p_item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(TA_path, "TA_stage_1.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            
+            #--------------------------------------------------
+            # stage 2
+            marker_path_list = []
+            sections = ["contigs"]
+            for section in sections:
+                marker_file = "TA_centrifuge_" + section
+                marker_path = os.path.join(TA_jobs_folder, marker_file)
+                
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                    launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+            
+            marker_file = "TA_kaiju_pp"
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            if(os.path.exists(marker_file)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_kaiju_pp_command(taxon_annotation_label, marker_file)
+                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+            for p_item in mp_store:
+                p_item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(TA_path, "TA_stage_2.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            #------------------------------------------------------------------
+
+            #-----------------------------------------------------------------
+            # stage 3
+            marker_path_list = []
+            marker_file = "TA_centrifuge_pp"
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_centrifuge_pp_command(taxon_annotation_label, marker_file)
+                launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+            for p_item in mp_store:
+                p_item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(TA_path, "TA_stage_3.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            #-----------------------------------------------
+            # stage 4
+            marker_path_list = []
+            
+            marker_file = "TA_final"
+            marker_path = os.path.join(TA_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_TA_final_command(taxon_annotation_label, assemble_contigs_label, marker_file)
+                launch_and_create_simple(taxon_annotation_label, marker_file, commands, command_list)
+            final_checklist = os.path.join(TA_path, "TA_final.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            
+
+                
+
     elif(tutorial_mode_string == "EC"):
         print(dt.today(), "working on:", tutorial_mode_string)
+        # Detect EC annotation
+        GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
+        if not(os.path.exists(GA_FINAL_MERGE_path)):
+            print(dt.today(), "MetaPro Enzyme Annotation depends on the Gene Annotation phase.  Please run MetaPro with the option --tutorial GA")
+        else:
+            ec_annotation_path = os.path.join(output_folder_path, ec_annotation_label)
+            EC_start = time.time()
+            #There's a 2-step check.  We don't want it ti re-run either DETECT, or PRIAM+DIAMOND because they're too slow
+            #if not check_where_resume(ec_annotation_path, None, GA_DIAMOND_path):
+            #if check_bypass_log(output_folder_path, ec_annotation_label):
+            EC_DETECT_start = time.time()
+            ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
+            #if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = GA_DIAMOND_path):
+            if check_bypass_log(output_folder_path, ec_annotation_detect_label):
+                marker_file = "ec_detect"
+                marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    command_list = commands.create_EC_DETECT_command(ec_annotation_label, GA_final_merge_label, marker_file)
+                    launch_and_create_with_mp_store(mp_store, ec_annotation_label, marker_file, commands, command_list)
+                
+                
+            EC_DETECT_end = time.time()
+            print("EC DETECT:", '%1.1f' % (EC_DETECT_end - EC_DETECT_start), "s")
+            
+            # --------------------------------------------------------------
+            # Priam EC annotation.  Why isn't it parallel? computing restraints.  Not enough mem
+            EC_PRIAM_start = time.time()
+            
+            ec_priam_path = os.path.join(ec_annotation_path, "data", "1_priam")
+            #if not check_where_resume(job_label = None, full_path = ec_priam_path, dep_job_path = GA_DIAMOND_path):
+            if check_bypass_log(output_folder_path, ec_annotation_priam_label):
+                marker_file = "ec_priam"
+                marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    if(os.path.exists(ec_priam_path)):
+                        print(dt.today(), "starting with a fresh PRIAM run")
+                        shutil.rmtree(ec_priam_path)
+                        
+                    command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label, marker_file)
+                    launch_and_create_with_mp_store(mp_store, ec_annotation_label, marker_file, commands, command_list)
+                
+              
+                #process.join()
+            EC_PRIAM_end = time.time()
+            print("EC PRIAM:", '%1.1f' % (EC_PRIAM_end - EC_PRIAM_start), "s")
+            # --------------------------------------------------------------
+            # DIAMOND EC annotation 
+            EC_DIAMOND_start = time.time()
+            ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
+            if check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
+                marker_file = "ec_diamond"
+                marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    job_name = "ec_diamond"
+                    command_list = commands.create_EC_DIAMOND_command(ec_annotation_label, GA_final_merge_label, marker_file)
+                    launch_and_create_with_mp_store(mp_store, ec_annotation_label, job_name, commands, command_list)
+                
+            EC_DIAMOND_end = time.time()
+            
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            
+            ec_detect_out   = os.path.join(ec_annotation_path, "data", "jobs", "ec_detect")
+            ec_priam_out    = os.path.join(ec_annotation_path, "data", "jobs", "ec_priam")
+            ec_diamond_out  = os.path.join(ec_annotation_path, "data", "jobs", "ec_diamond")
+            if check_bypass_log(output_folder_path, ec_annotation_detect_label):
+                if(os.path.exists(ec_detect_out)):
+                    write_to_bypass_log(output_folder_path, ec_annotation_detect_label)
+            if check_bypass_log(output_folder_path, ec_annotation_priam_label):
+                if(os.path.exists(ec_priam_out)):
+                    write_to_bypass_log(output_folder_path, ec_annotation_priam_label)
+            if check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
+                if(os.path.exists(ec_diamond_out)):
+                    write_to_bypass_log(output_folder_path, ec_annotation_DIAMOND_label)
+            
+            #----------------------------------------------------------------------
+            # EC post process
+            EC_post_start = time.time()
+            #if not (check_where_resume(ec_annotation_path, None, GA_DIAMOND_path)):
+            if check_bypass_log(output_folder_path, ec_annotation_pp_label):
+                
+                marker_file = "ec_post"
+                marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_file)
+                
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    command_list = commands.create_EC_postprocess_command(ec_annotation_label, GA_final_merge_label, marker_file)
+                    launch_and_create_simple(ec_annotation_label, marker_file, commands, command_list)
+                
+                if(os.path.exists(marker_path)):
+                    write_to_bypass_log(output_folder_path, ec_annotation_pp_label)
+
+    
+    elif(tutorial_mode_string == "output"):
+    Cytoscape_start = time.time()
+    network_path = os.path.join(output_folder_path, output_label)
+    #if not check_where_resume(network_path, None, ec_annotation_path):
+    GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
+    TA_path = os.path.join(output_folder_path, taxon_annotation_label)
+    EC_path = os.path.join(output_folder_path, ec_annotation_label)
+    all_good_flag = False
+    if not(os.path.exists(GA_FINAL_MERGE_path)):
+        print(dt.today(), "MetaPro's final outputs rely on the gene annotation.  please run MetaPro with --tutorial GA")
+        sys.exit("missing GA")
+    if not(os.path.exists(TA_path)):
+        print(dt.today(), "MetaPro's final outputs rely on the Taxonomic annotation.  please run MetaPro with --tutorial TA")
+        sys.exit("missing TA")
+    if not(os.path.exists(EC_path)):
+        print(dt.today(), "MetaPRo's final outputs rely on the Enzyme Annotation. Please run MetaPro with --tutorial EC")
+        sys.exit("missing EC")
+        
+    all_good_flag = True    
+    if(all_good_flag):
+        #phase 1
+        if check_bypass_log(output_folder, output_copy_gene_map_label):
+            job_name = output_copy_gene_map_label
+            command_list = commands.create_output_copy_gene_map_command(output_label, GA_final_merge_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            
+        if check_bypass_log(output_folder, output_copy_taxa_label):
+            job_name = output_copy_taxa_label
+            command_list = commands.create_output_copy_taxa_command(output_label, taxon_annotation_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+        
+        if check_bypass_log(output_folder, output_contig_stats_label):
+            job_name = output_contig_stats_label
+            command_list = commands.create_output_contig_stats_command(output_label, assemble_contigs_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            
+        
+            
+        if not(no_host):
+            if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
+                job_name = output_unique_hosts_singletons_label
+                command_list = commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            
+            if(read_mode == "paired"):
+                if check_bypass_log(output_folder, output_unique_hosts_pair_1_label):
+                    job_name = output_unique_hosts_pair_1_label
+                    command_list = commands.create_output_unique_hosts_pair_1_command(output_label, quality_filter_label, host_filter_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                    
+                if check_bypass_log(output_folder, output_unique_hosts_pair_2_label):
+                    job_name = output_unique_hosts_pair_2_label
+                    command_list = commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                    
+                    
+        print(dt.today(), "output report phase 1 launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        
+        #----------------------------------------------------------------------------
+        #Phase 2
+        if not(no_host):
+            if check_bypass_log(output_folder, output_combine_hosts_label):
+                command_list = commands.create_output_combine_hosts_command(output_label)
+                launch_and_create_with_mp_store(mp_store, output_label, output_combine_hosts_label, commands, command_list)
+                
+        if check_bypass_log(output_folder, output_network_gen_label):
+            command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
+            launch_and_create_with_mp_store(mp_store, output_label, output_network_gen_label, commands, command_list)
+            
+        if check_bypass_log(output_folder, output_taxa_groupby_label):
+            command_list = commands.create_output_taxa_groupby_command(output_label)
+            launch_and_create_with_mp_store(mp_store, output_label, output_taxa_groupby_label, commands, command_list)
+       
+        print(dt.today(), "output report phase 2 launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+     
+        
+        #-------------------------------------------------------------------
+        #Phase 3
+        if check_bypass_log(output_folder, output_read_count_label):
+            job_name = output_read_count_label
+            command_list = commands.create_output_read_count_command(output_label, quality_filter_label, repop_job_label, GA_final_merge_label, ec_annotation_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                               
+
+        if check_bypass_log(output_folder, output_per_read_scores_label):
+            job_name = output_per_read_scores_label
+            command_list = commands.create_output_per_read_scores_command(output_label, quality_filter_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            
+        if check_bypass_log(output_folder, output_ec_heatmap_label):
+            job_name = output_ec_heatmap_label
+            command_list = commands.create_output_EC_heatmap_command(output_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)    
+        
+        print(dt.today(), "output report phase 3 launched.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+ 
     else:
         print(dt.today(), "tutorial mode not recognized:", tutorial_mode_string)
         
