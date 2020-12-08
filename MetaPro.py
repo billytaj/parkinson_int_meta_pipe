@@ -2244,16 +2244,345 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         
     elif(tutorial_mode_string == "deduplicate"):
         print(dt.today(), "working on:", tutorial_mode_string)
+        quality_path = os.path.join(output_folder_path, quality_filter_label)
+        
+        if(os.path.exists(quality_path)):
+            print(dt.todday(), 
+            
+        else:
+            print(dt.today(), "no quality filter was run.  please run MetaPro with option  <--tutorial quality> to continue")
+        
     elif(tutorial_mode_string == "contigs"):
         print(dt.today(), "working on:", tutorial_mode_string)
     elif(tutorial_mode_string == "GA_BWA"):
-        print(dt.today(), "working on:", tutorial_mode_string)
-    elif(tutorial_mode_string == "GA_BLAT"):
-        print(dt.today(), "working on:", tutorial_mode_string)
-    elif(tutorial_mode_string == "GA_DMD"):
-        print(dt.today(), "working on:", tutorial_mode_string)
-    elif(tutorial_mode_string == "GA_merge"):
-        print(dt.today(), "working on:", tutorial_mode_string)
+    
+        GA_BWA_start = time.time()
+        GA_BWA_path = os.path.join(output_folder_path, GA_BWA_label)
+        GA_BWA_jobs_folder = os.path.join(GA_BWA_path, "data", "jobs")
+        #if not check_where_resume(GA_BWA_path, None, assemble_contigs_path):
+        marker_path_list = []
+        marker_file = "GA_split_fasta_contigs"
+        marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping", marker_file)
+        else:
+            job_name = "GA_prep_split_contigs"
+            marker_path_list.append(marker_path)
+            command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs", marker_file)
+            launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
+        
+        
+        sections = ["singletons"]
+        if(read_mode == "paired"):
+            sections.extend(["pair_1", "pair_2"])
+        for section in sections: 
+            marker_file = "GA_split_fastq_" + section
+            marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                job_name = "GA_prep_split_" + section
+                command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
+                launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
+        
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(GA_BWA_path, "GA_BWA_prep.txt")
+
+            
+        #-------------------------------------------------------------------------
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        
+        for section in sections:
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
+                job_submitted = False
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))
+                print("split sample:", full_sample_path)
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "BWA" + "_" + file_tag
+                marker_file = file_tag + "_bwa"
+                marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+                #this checker assumes that BWA only exports a file when it's finished running
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                    continue
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_BWA_annotate_command_v2(GA_BWA_label, full_sample_path, marker_file)
+                    launch_and_create_with_hold(mp_store, BWA_mem_threshold, BWA_job_limit, BWA_job_delay, GA_BWA_label, job_name, commands, command_list)
+
+        print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(GA_BWA_path, "GA_BWA.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+            
+        marker_path_list = []
+        sections = ["contigs", "singletons"]
+        if read_mode == "paired":
+            sections.extend(["pair_1", "pair_2"])
+        for section in sections:
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "BWA_pp" + "_" + file_tag
+                marker_file = file_tag + "_bwa_pp"
+                marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                    continue
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_BWA_pp_command_v2(GA_BWA_label, assemble_contigs_label, full_sample_path, marker_file)
+                    launch_and_create_with_hold(mp_store, BWA_pp_mem_threshold, BWA_pp_job_limit, BWA_pp_job_delay, GA_BWA_label, job_name, commands, command_list)
+                        
+        print(dt.today(), "all BWA PP jobs submitted.  waiting for sync")            
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        marker_file = "BWA_copy_contig_map"
+        marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_file)
+        else:   
+            marker_path_list.append(marker_path)
+            command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label, marker_file)
+            launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
+        
+        final_checklist = os.path.join(GA_BWA_path, "GA_BWA_pp.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        
+        cleanup_GA_BWA_start = time.time()
+        delete_folder_simple(GA_BWA_jobs_folder)
+        
+        GA_BWA_data_path = os.path.join(GA_BWA_path, "data")
+        if(keep_all == "no" and keep_GA_BWA == "no"):
+            delete_folder(GA_BWA_data_path)
+        elif(keep_all == "compress" or keep_GA_BWA == "compress"):
+            compress_folder(GA_BWA_path)
+            delete_folder(GA_BWA_data_path)
+        cleanup_GA_BWA_end = time.time()
+        GA_BWA_end = time.time()
+        print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
+        print("GA BWA cleanup:", '%1.1f' % (cleanup_GA_BWA_end - cleanup_GA_BWA_start), "s")
+        
+        # ------------------------------------------------
+        # BLAT gene annotation
+        GA_BLAT_start = time.time()
+        GA_BLAT_path = os.path.join(output_folder_path, GA_BLAT_label)
+        GA_BLAT_jobs_folder = os.path.join(GA_BLAT_path, "data", "jobs")
+
+        marker_path_list = []
+        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                for fasta_db in os.listdir(paths.DNA_DB_Split):
+                    if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
+                        job_name = "BLAT_" + file_tag + "_" + fasta_db
+                        marker_file = file_tag + "_blat_" + fasta_db
+                        marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                        #This checker assume BLAT only exports a file when it's finished running
+                        if(os.path.exists(marker_path)):
+                            print(dt.today(), "BLAT job ran already, skipping:", marker_file)
+                            continue
+                        else:
+                            marker_path_list.append(marker_path)
+                            command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
+                            launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                            
+                                
+        print(dt.today(), "final BLAT job removal")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        
+
+            
+        marker_path_list = []
+        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                job_name = file_tag + "_cat"
+                
+                marker_file = file_tag + "_blat_cat"
+                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                    continue
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_BLAT_cat_command_v2(GA_BLAT_label, full_sample_path, marker_file)
+                    launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_cat.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+            
+        
+        
+        marker_path_list = []
+        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "BLAT_" + file_tag + "_pp"
+                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                marker_file = file_tag + "_blat_pp"
+                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                    continue
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, marker_file)
+                    launch_and_create_with_hold(mp_store, BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                
+        print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        
+        job_name = "GA_BLAT_copy_contigs"
+        marker_file = "blat_copy_contig_map"
+        marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping:", marker_file)
+        else:
+            marker_path_list.append(marker_path)
+            command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
+            launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
+        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+        
+            
+        cleanup_GA_BLAT_start = time.time()
+        delete_folder_simple(GA_BLAT_jobs_folder)
+        if(keep_all == "no" and keep_GA_BLAT == "no"):
+            delete_folder(GA_BLAT_path)
+        elif(keep_all == "compress" or keep_GA_BLAT == "compress"):
+            compress_folder(GA_BLAT_path)
+            delete_folder(GA_BLAT_path)
+        cleanup_GA_BLAT_end = time.time()
+        GA_BLAT_end = time.time()
+        print("GA BLAT:", '%1.1f' % (GA_BLAT_end - GA_BLAT_start - (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start)), "s")
+        print("GA BLAT cleanup:", '%1.1f' % (cleanup_GA_BLAT_end - cleanup_GA_BLAT_start), "s")
+        
+        # ------------------------------------------------------
+        # Diamond gene annotation
+        GA_DIAMOND_start = time.time()
+        GA_DIAMOND_path = os.path.join(output_folder_path, GA_DIAMOND_label)
+        GA_DIAMOND_tool_output_path = os.path.join(GA_DIAMOND_path, "data", "0_diamond")
+        GA_DIAMOND_jobs_folder = os.path.join(GA_DIAMOND_path, "data", "jobs")
+        #if not check_where_resume(None, GA_DIAMOND_tool_output_path, GA_BLAT_path, file_check_bypass = True):
+        marker_path_list = []
+        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "DIAMOND_" + file_tag
+                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                marker_file = file_tag + "_diamond"
+                marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_path)
+                    continue
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path, marker_file)
+                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
+                
+        print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+            
+            
+        #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
+        print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
+        marker_path_list = []
+        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
+            if(split_sample.endswith(".fasta")):
+                file_tag = os.path.basename(split_sample)
+                file_tag = os.path.splitext(file_tag)[0]
+                job_name = "DIAMOND_pp_" + file_tag
+                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                marker_file = file_tag + "_diamond_pp"
+                marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                    continue
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path, marker_file)
+                    launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
+                                    
+        print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
+        for item in mp_store:
+            item.join()
+        mp_store[:] = []
+        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND_pp.txt")
+        check_all_job_markers(marker_path_list, final_checklist)
+   
+            
+        
+        cleanup_GA_DIAMOND_start = time.time()
+        delete_folder_simple(GA_DIAMOND_jobs_folder)
+        if(keep_all == "no" and keep_GA_DIAMOND == "no"):
+            delete_folder(GA_DIAMOND_path)
+        elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
+            compress_folder(GA_DIAMOND_path)
+            delete_folder(GA_DIAMOND_path)
+        cleanup_GA_DIAMOND_end = time.time()
+        GA_DIAMOND_end = time.time()
+        print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
+        print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
+        
+        
+        GA_final_merge_start = time.time()
+        GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
+        marker_file = "GA_final_merge"
+        marker_path = os.path.join(GA_FINAL_MERGE_path, "data", "jobs", "GA_final_merge")
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "skipping: GA final merge")
+        else:
+            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label, marker_file)
+            job_name = "GA_final_merge"
+            launch_and_create_simple(GA_final_merge_label, job_name, commands, command_list)
+        
+        #check if all_proteins.faa was generated
+        all_proteins_path = os.path.join(output_folder_path, GA_final_merge_label, "final_results", "all_proteins.faa")
+        if(os.path.getsize(all_proteins_path) > 0):
+            print(dt.today(), "All_proteins.faa is OK.  Continuing")
+        else:
+            sys.exit("GA final merge failed.  proteins weren't translated")
+            
+        GA_final_merge_end = time.time()
+        print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")
+        if(keep_all == "no" and keep_GA_final == "no"):
+            delete_folder(GA_FINAL_MERGE_path)
+        elif(keep_all == "compress" or keep_GA_final == "compress"):
+            compress_folder(GA_FINAL_MERGE_path)
+            delete_folder(GA_FINAL_MERGE_path)
+        
+    
+    
     elif(tutorial_mode_string == "TA"):
         print(dt.today(), "working on:", tutorial_mode_string)
     elif(tutorial_mode_string == "EC"):

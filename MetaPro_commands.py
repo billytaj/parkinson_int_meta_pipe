@@ -1472,6 +1472,8 @@ class mt_pipe_commands:
         repop_folder            = os.path.join(data_folder, "0_repop")
         final_folder            = os.path.join(subfolder, "final_results")
         preprocess_subfolder    = os.path.join(self.Output_Path, preprocess_stage_name)
+        
+        tut_keyword = "repop"
 
         # we ran a previous preprocess.  grab files
         # need 3, 5(clstr only), and mRNA from the 2nd stage.
@@ -1486,16 +1488,24 @@ class mt_pipe_commands:
 
         repop_singletons = ">&2 echo " + str(dt.today()) + " Duplication repopulation singletons mRNA| "
         repop_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        #the reference data to be drawn from 
         if self.read_mode == "single":
             repop_singletons += os.path.join(singleton_path, "singletons_hq.fastq") + " "
         elif self.read_mode == "paired":
             repop_singletons += os.path.join(hq_path, "singletons_with_duplicates.fastq") + " "
+        
         repop_singletons += os.path.join(dep_loc, "mRNA", "singletons.fastq") + " "  # in -> rRNA filtration output
         repop_singletons += os.path.join(cluster_path, "singletons_unique.fastq.clstr") + " "  # in -> duplicates filter output
-        if self.read_mode == "single":
-            repop_singletons += os.path.join(final_folder, "singletons.fastq")  # out
-        elif self.read_mode == "paired":
-            repop_singletons += os.path.join(repop_folder, "singletons.fastq")  # out
+
+        if(self.tutorial_keyword == tut_keyword):
+            repop_singletons += self.sequence_single
+        else:
+            if self.read_mode == "single":
+                repop_singletons += os.path.join(final_folder, "singletons.fastq")  # out
+            elif self.read_mode == "paired":
+                repop_singletons += os.path.join(repop_folder, "singletons.fastq")  # out
+            
+            
 
         repop_singletons_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulations singletons rRNA | "
         repop_singletons_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
@@ -1513,7 +1523,10 @@ class mt_pipe_commands:
         repop_pair_1 = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 1 mRNA | "
         repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_1 += os.path.join(hq_path, "pair_1_match.fastq") + " "
-        repop_pair_1 += os.path.join(dep_loc, "mRNA", "pair_1.fastq") + " "
+        if(self.tutorial_keyword == tut_keyword):
+            repop_pair_1 += self.sequence_path_1 + " "
+        else:
+            repop_pair_1 += os.path.join(dep_loc, "mRNA", "pair_1.fastq") + " "
         repop_pair_1 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_1 += os.path.join(repop_folder, "pair_1.fastq")
 
@@ -1527,7 +1540,10 @@ class mt_pipe_commands:
         repop_pair_2 = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
         repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_2 += os.path.join(hq_path, "pair_2_match.fastq") + " "
-        repop_pair_2 += os.path.join(dep_loc, "mRNA", "pair_2.fastq") + " "
+        if(self.tutorial_keyword == tut_keyword):
+            repop_pair_2 += self.sequence_path_2 + " "
+        else:
+            repop_pair_2 += os.path.join(dep_loc, "mRNA", "pair_2.fastq") + " "
         repop_pair_2 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
         repop_pair_2 += os.path.join(repop_folder, "pair_2.fastq")
 
@@ -1558,24 +1574,36 @@ class mt_pipe_commands:
         singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
         singleton_repop_filter_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq")
         
-
-
-        if self.read_mode == "single":
-            COMMANDS_Repopulate = [
-                repop_singletons,
-                repop_singletons_rRNA
-            ]
-        elif self.read_mode == "paired":
-            COMMANDS_Repopulate = [
-                repop_singletons,
-                repop_singletons_rRNA,
-                repop_pair_1,
-                repop_pair_1_rRNA,
-                repop_pair_2,
-                repop_pair_2_rRNA,
-                singleton_repop_filter,
-                singleton_repop_filter_rRNA
-            ]
+        if(self.tutorial_keyword == tut_keyword):
+            if self.read_mode == "single":
+                COMMANDS_Repopulate = [
+                    repop_singletons
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_Repopulate = [
+                    repop_singletons,
+                    repop_pair_1,
+                    repop_pair_2,
+                    singleton_repop_filter
+                ]
+        
+        else:
+            if self.read_mode == "single":
+                COMMANDS_Repopulate = [
+                    repop_singletons,
+                    repop_singletons_rRNA
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_Repopulate = [
+                    repop_singletons,
+                    repop_singletons_rRNA,
+                    repop_pair_1,
+                    repop_pair_1_rRNA,
+                    repop_pair_2,
+                    repop_pair_2_rRNA,
+                    singleton_repop_filter,
+                    singleton_repop_filter_rRNA
+                ]
 
         return COMMANDS_Repopulate
 
@@ -1596,15 +1624,23 @@ class mt_pipe_commands:
         self.make_folder(bwa_folder)
         self.make_folder(mgm_folder)
         self.make_folder(final_folder)
-
+        
+        tut_keyword = "assembly"
+        
         # this assembles contigs
         spades = ">&2 echo Spades Contig assembly | "
         spades += self.tool_path_obj.Python + " "
         spades += self.tool_path_obj.Spades + " --rna"
-        if self.read_mode == "paired":
-            spades += " -1 " + os.path.join(dep_loc, "pair_1.fastq")  # in1 (pair 1)
-            spades += " -2 " + os.path.join(dep_loc, "pair_2.fastq")  # in2 (pair 2)
-        spades += " -s " + os.path.join(dep_loc, "singletons.fastq")  # in_single (singletons)
+        if(self.tutorial_keyword == tut_keyword):
+            if self.read_mode == "paired":
+                spades += " -1 " + self.sequence_path_1  # in1 (pair 1)
+                spades += " -2 " + self.sequence_path_2  # in2 (pair 2)
+            spades += " -s " + self.sequence_single  # in_single (singletons)
+        else:
+            if self.read_mode == "paired":
+                spades += " -1 " + os.path.join(dep_loc, "pair_1.fastq")  # in1 (pair 1)
+                spades += " -2 " + os.path.join(dep_loc, "pair_2.fastq")  # in2 (pair 2)
+            spades += " -s " + os.path.join(dep_loc, "singletons.fastq")  # in_single (singletons)
         spades += " -o " + spades_folder  # out
 
         #if there is no output, bypass contigs. -> But this is a v2 upgrade.  
@@ -1713,20 +1749,69 @@ class mt_pipe_commands:
         self.make_folder(split_folder)
         self.make_folder(jobs_folder)
         
-        split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
-        split_fastq += "split -l " + str(int(self.tool_path_obj.GA_chunksize) * 4) + " "        
-        split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
-        split_fastq += "--additional-suffix .fastq" + " "
-        split_fastq += "-d" + " "
-        split_fastq += os.path.join(split_folder, category + "_")
+        tut_keyword == "GA"
         
-        make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, marker_file)
-        
-        COMMANDS_GA_prep_fastq = [
-            split_fastq + " && " + make_marker
-        ]
-        
+        if(self.tutorial_keyword == tut_keyword):
+            if(category == "pair_1"):
+            
+                split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
+                split_fastq += "split -l " + str(int(self.tool_path_obj.GA_chunksize) * 4) + " "        
+                split_fastq += self.sequence_path_1 + " "
+                split_fastq += "--additional-suffix .fastq" + " "
+                split_fastq += "-d" + " "
+                split_fastq += os.path.join(split_folder, category + "_")
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fastq = [
+                    split_fastq + " && " + make_marker
+                ]
+                
+            elif(category == "pair_2"):
+                split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
+                split_fastq += "split -l " + str(int(self.tool_path_obj.GA_chunksize) * 4) + " "        
+                split_fastq += self.sequence_path_2 + " "
+                split_fastq += "--additional-suffix .fastq" + " "
+                split_fastq += "-d" + " "
+                split_fastq += os.path.join(split_folder, category + "_")
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fastq = [
+                    split_fastq + " && " + make_marker
+                ]
+            elif(category == "singletons"):
+                split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
+                split_fastq += "split -l " + str(int(self.tool_path_obj.GA_chunksize) * 4) + " "        
+                split_fastq += self.sequence_single + " "
+                split_fastq += "--additional-suffix .fastq" + " "
+                split_fastq += "-d" + " "
+                split_fastq += os.path.join(split_folder, category + "_")
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fastq = [
+                    split_fastq + " && " + make_marker
+                ]
+     
+        else:
+            split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
+            split_fastq += "split -l " + str(int(self.tool_path_obj.GA_chunksize) * 4) + " "        
+            split_fastq += os.path.join(dep_loc, category + ".fastq") + " "
+            split_fastq += "--additional-suffix .fastq" + " "
+            split_fastq += "-d" + " "
+            split_fastq += os.path.join(split_folder, category + "_")
+            
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            COMMANDS_GA_prep_fastq = [
+                split_fastq + " && " + make_marker
+            ]
+            
         return COMMANDS_GA_prep_fastq
 
     def create_split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category, marker_file):
@@ -1741,19 +1826,35 @@ class mt_pipe_commands:
         self.make_folder(split_folder)
         self.make_folder(jobs_folder)
         
-        split_fasta = ">&2 echo splitting fasta for " + category + " | "
-        split_fasta += self.tool_path_obj.Python + " "    
-        split_fasta += self.tool_path_obj.File_splitter + " "
-        split_fasta += os.path.join(dep_folder, category +".fasta") + " "
-        split_fasta += os.path.join(split_folder, category) + " "
-        split_fasta += str(self.tool_path_obj.GA_chunksize)
         
-        make_marker = "touch" + " "
-        make_marker += os.path.join(jobs_folder, marker_file)
-        
-        COMMANDS_GA_prep_fasta = [
-            split_fasta + " && " + make_marker
-        ]
+        if(self.tutorial_keyword == "GA"):
+            split_fasta = ">&2 echo splitting fasta for " + category + " | "
+            split_fasta += self.tool_path_obj.Python + " "    
+            split_fasta += self.tool_path_obj.File_splitter + " "
+            split_fasta += self.seqeunce_contigs + " "
+            split_fasta += os.path.join(split_folder, category) + " "
+            split_fasta += str(self.tool_path_obj.GA_chunksize)
+            
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            COMMANDS_GA_prep_fasta = [
+                split_fasta + " && " + make_marker
+            ]
+        else:
+            split_fasta = ">&2 echo splitting fasta for " + category + " | "
+            split_fasta += self.tool_path_obj.Python + " "    
+            split_fasta += self.tool_path_obj.File_splitter + " "
+            split_fasta += os.path.join(dep_folder, category +".fasta") + " "
+            split_fasta += os.path.join(split_folder, category) + " "
+            split_fasta += str(self.tool_path_obj.GA_chunksize)
+            
+            make_marker = "touch" + " "
+            make_marker += os.path.join(jobs_folder, marker_file)
+            
+            COMMANDS_GA_prep_fasta = [
+                split_fasta + " && " + make_marker
+            ]
         
         return COMMANDS_GA_prep_fasta
 
