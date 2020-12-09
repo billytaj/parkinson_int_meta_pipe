@@ -2260,6 +2260,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         
     elif(tutorial_mode_string == "contigs"):
         print(dt.today(), "working on:", tutorial_mode_string)
+        assemble_contigs_path = os.path.join(output_folder_path, assemble_contigs_label)
         job_name = assemble_contigs_label
         command_list = commands.create_assemble_contigs_command(assemble_contigs_label, repop_job_label)
         launch_and_create_simple(assemble_contigs_label, job_name, commands, command_list)
@@ -2948,6 +2949,7 @@ if __name__ == "__main__":
     parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
     parser.add_argument("--verbose_mode", type=str, help = "Decide how to handle the interim files, Compress them, or leave them alone.  Values are: keep, compress, quiet")
     parser.add_argument("--tutorial", type = str, help = "tutorial operating mode for MetaPro")
+    
     args = parser.parse_args()
 
     if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
