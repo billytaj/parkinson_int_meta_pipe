@@ -1747,9 +1747,7 @@ class mt_pipe_commands:
         self.make_folder(split_folder)
         self.make_folder(jobs_folder)
         
-        tut_keyword == "GA"
-        
-        if(self.tutorial_keyword == tut_keyword):
+        if(self.tutorial_keyword == "GA"):
             if(category == "pair_1"):
             
                 split_fastq = ">&2 echo splitting fastq for " + category + " GA | "
