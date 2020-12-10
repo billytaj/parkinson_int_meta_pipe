@@ -2394,7 +2394,9 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         GA_BLAT_path = os.path.join(output_folder_path, GA_BLAT_label)
         GA_BLAT_jobs_folder = os.path.join(GA_BLAT_path, "data", "jobs")
         GA_BLAT_final_job_marker = os.path.join(GA_BLAT_jobs_folder, "all_BLAT")
-        if not (os.path.exists(GA_BLAT_final_job_marker)):
+        if (os.path.exists(GA_BLAT_final_job_marker)):
+            print(dt.today(), "BLAT was run, skipping")
+        else:
             marker_path_list = []
             for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
                 if(split_sample.endswith(".fasta")):
