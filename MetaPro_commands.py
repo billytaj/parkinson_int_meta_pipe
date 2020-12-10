@@ -65,7 +65,7 @@ class mt_pipe_commands:
                 print("Forward Reads:", self.sequence_path_1)
                 print("Reverse Reads:", self.sequence_path_2)
                 print("potential singletons:", self.sequence_single)
-                print("potential contigs:", self.seqeunce_contigs)
+                print("potential contigs:", self.sequence_contigs)
                 self.read_mode = "paired"
             
                 
@@ -1829,7 +1829,7 @@ class mt_pipe_commands:
             split_fasta = ">&2 echo splitting fasta for " + category + " | "
             split_fasta += self.tool_path_obj.Python + " "    
             split_fasta += self.tool_path_obj.File_splitter + " "
-            split_fasta += self.seqeunce_contigs + " "
+            split_fasta += self.sequence_contigs + " "
             split_fasta += os.path.join(split_folder, category) + " "
             split_fasta += str(self.tool_path_obj.GA_chunksize)
             
