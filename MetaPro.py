@@ -2376,7 +2376,6 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         check_all_job_markers(marker_path_list, final_checklist)
         
         cleanup_GA_BWA_start = time.time()
-        delete_folder_simple(GA_BWA_jobs_folder)
         
         GA_BWA_data_path = os.path.join(GA_BWA_path, "data")
         if(keep_all == "no" and keep_GA_BWA == "no"):
@@ -2487,7 +2486,6 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         
             
         cleanup_GA_BLAT_start = time.time()
-        delete_folder_simple(GA_BLAT_jobs_folder)
         if(keep_all == "no" and keep_GA_BLAT == "no"):
             delete_folder(GA_BLAT_path)
         elif(keep_all == "compress" or keep_GA_BLAT == "compress"):
@@ -2559,7 +2557,6 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             
         
         cleanup_GA_DIAMOND_start = time.time()
-        delete_folder_simple(GA_DIAMOND_jobs_folder)
         if(keep_all == "no" and keep_GA_DIAMOND == "no"):
             delete_folder(GA_DIAMOND_path)
         elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
