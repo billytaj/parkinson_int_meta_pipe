@@ -2393,97 +2393,102 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         GA_BLAT_start = time.time()
         GA_BLAT_path = os.path.join(output_folder_path, GA_BLAT_label)
         GA_BLAT_jobs_folder = os.path.join(GA_BLAT_path, "data", "jobs")
-
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
-                for fasta_db in os.listdir(paths.DNA_DB_Split):
-                    if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
-                        job_name = "BLAT_" + file_tag + "_" + fasta_db
-                        marker_file = file_tag + "_blat_" + fasta_db
-                        marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                        #This checker assume BLAT only exports a file when it's finished running
-                        if(os.path.exists(marker_path)):
-                            print(dt.today(), "BLAT job ran already, skipping:", marker_file)
-                            continue
-                        else:
-                            marker_path_list.append(marker_path)
-                            command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
-                            launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
-                            
+        GA_BLAT_final_job_marker = os.path.join(GA_BLAT_jobs_folder, "all_BLAT")
+        if not (os.path.exists(GA_BLAT_final_job_marker)):
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                    for fasta_db in os.listdir(paths.DNA_DB_Split):
+                        if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
+                            job_name = "BLAT_" + file_tag + "_" + fasta_db
+                            marker_file = file_tag + "_blat_" + fasta_db
+                            marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                            #This checker assume BLAT only exports a file when it's finished running
+                            if(os.path.exists(marker_path)):
+                                print(dt.today(), "BLAT job ran already, skipping:", marker_file)
+                                continue
+                            else:
+                                marker_path_list.append(marker_path)
+                                command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
+                                launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
                                 
-        print(dt.today(), "final BLAT job removal")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
-        
+                                    
+            print(dt.today(), "final BLAT job removal")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            
 
+                
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                    job_name = file_tag + "_cat"
+                    
+                    marker_file = file_tag + "_blat_cat"
+                    marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_BLAT_cat_command_v2(GA_BLAT_label, full_sample_path, marker_file)
+                        launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                    
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_cat.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+                
             
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
-                job_name = file_tag + "_cat"
-                
-                marker_file = file_tag + "_blat_cat"
-                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                    continue
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_BLAT_cat_command_v2(GA_BLAT_label, full_sample_path, marker_file)
-                    launch_only_with_hold(mp_store, BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
-                
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_cat.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
             
-        
-        
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                job_name = "BLAT_" + file_tag + "_pp"
-                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
-                marker_file = file_tag + "_blat_pp"
-                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                    continue
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, marker_file)
-                    launch_and_create_with_hold(mp_store, BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
-                
-        print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        
-        job_name = "GA_BLAT_copy_contigs"
-        marker_file = "blat_copy_contig_map"
-        marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-        if(os.path.exists(marker_path)):
-            print(dt.today(), "skipping:", marker_file)
-        else:
-            marker_path_list.append(marker_path)
-            command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
-            launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
-        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
-        
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    job_name = "BLAT_" + file_tag + "_pp"
+                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                    marker_file = file_tag + "_blat_pp"
+                    marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, marker_file)
+                        launch_and_create_with_hold(mp_store, BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                    
+            print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            
+            job_name = "GA_BLAT_copy_contigs"
+            marker_file = "blat_copy_contig_map"
+            marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:
+                marker_path_list.append(marker_path)
+                command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
+                launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
+            final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            delete_folder_simple(GA_BLAT_jobs_folder)
+            with open(GA_BLAT_final_job_marker, "w") as final_BLAT_marker:
+                print("all BLAT done")
+            
+            
             
         cleanup_GA_BLAT_start = time.time()
         if(keep_all == "no" and keep_GA_BLAT == "no"):
