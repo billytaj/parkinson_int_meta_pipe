@@ -155,6 +155,8 @@ def merge_fastas(path_0, path_1, section, header, extension, marker_path, bypass
     path_contents = os.listdir(path_0)
     final_fasta_file = os.path.join(path_1, header + "_" + section + extension)
     if(os.path.exists(marker_path)):
+        print(dt.today(), "job previously run, skipping:", marker_path)
+    else:
         with open(final_fasta_file, "w") as final_fasta:
             for content in path_contents:
                 item = os.path.join(path_0, content)
@@ -200,8 +202,7 @@ def merge_fastas(path_0, path_1, section, header, extension, marker_path, bypass
         print(dt.today(), "find it at:", final_fasta_file)
         open(marker_path, "a").close()
         return final_fasta_file
-    else:
-        print(dt.today(), "job previously run, skipping:", marker_path)
+    
     
 def export_gene_map(gene_map, export_path, header = None):
     final_gene_map_file = ""
@@ -224,13 +225,13 @@ def export_gene_map(gene_map, export_path, header = None):
             out_line += "\n"
             gene_map_out.write(out_line)
             
-def make_merge_fasta_process(process_store, path_0, path_1, header, tail):
+def make_merge_fasta_process(process_store, path_0, path_1, header, tail, marker_location):
     section = ["pair_1", "pair_2", "contigs", "singletons"]
     
     for item in section:
         #merge_fastas(path_0, path_1, item, header, tail)
         marker_path = os.path.join(marker_location, item + "_marge_fasta_" + header)
-        merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
+        merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail, marker_path))
         merge_process.start()
         process_store.append(merge_process)
         #final_fasta_file = os.path.join(path_1, header + "_" + item + tail)
@@ -540,10 +541,10 @@ if __name__ == "__main__":
         process_store = []
 
         #merge the annotated genes (for protein translation), and leftover contig + singletons
-        make_merge_leftover_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta")  #leftover reads
-        make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna")    #BLAT genes
-        make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")      #BWA genes
-        make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")            #DIAMOND proteins
+        make_merge_leftover_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta", job_location)  #leftover reads
+        make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna", job_location)    #BLAT genes
+        make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna", job_location)      #BWA genes
+        make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa", job_location)            #DIAMOND proteins
         
         #merge the gene maps, but group them by data context (pair1, pair2, singletons, contigs) for each tool (BWA, BLAT, DIAMOND)
         process = mp.Process(target = concatenate_gene_maps_v2, args = (bwa_path, mgr_bwa_singletons_gene_map, "singletons"))
@@ -642,10 +643,10 @@ if __name__ == "__main__":
         
         
         #merge the annotated genes (for protein translation), and leftover contig + singletons
-        make_merge_leftover_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta")  #leftover reads
-        make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna")    #BLAT genes
-        make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna")      #BWA genes
-        make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa")            #DIAMOND proteins
+        make_merge_leftover_fasta_process(process_store, diamond_path, export_path, "GA_leftover", ".fasta", job_location)  #leftover reads
+        make_merge_fasta_process(process_store, blat_path, final_path, "BLAT_annotated", ".fna", job_location)    #BLAT genes
+        make_merge_fasta_process(process_store, bwa_path, final_path, "BWA_annotated", ".fna", job_location)      #BWA genes
+        make_merge_fasta_process(process_store, diamond_path, final_path, "dmd", ".faa", job_location)            #DIAMOND proteins
         
         
         #merge the gene maps, but group them by data context (pair1, pair2, singletons, contigs) for each tool (BWA, BLAT, DIAMOND)
