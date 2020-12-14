@@ -1635,6 +1635,23 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                     launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                     
                     
+        #repop vectors
+        if check_bypass_log(output_folder, output_unique_vectors_singletons_label):
+            job_name = output_unique_vectors_singletons_label
+            command_list = commands.create_output_unique_vectors_singletons_command(output_label, quality_filter_label, vector_filter_label)
+            launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+        
+        if(read_mode == "paired"):
+            if check_bypass_log(output_folder, output_unique_vectors_pair_1_label):
+                job_name = output_unique_vectors_pair_1_label
+                command_list = commands.create_output_unique_vectors_pair_1_command(output_label, quality_filter_label, vector_filter_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                
+            if check_bypass_log(output_folder, output_unique_vectors_pair_2_label):
+                job_name = output_unique_hosts_pair_2_label
+                command_list = commands.create_output_unique_vectors_pair_2_command(output_label, quality_filter_label, vector_filter_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                
         print(dt.today(), "output report phase 1 launched.  waiting for sync")
         for item in mp_store:
             item.join()
@@ -1645,18 +1662,18 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         conditional_write_to_bypass_log(output_copy_gene_map_label, "outputs/final_results", "final_gene_map.tsv", output_folder_path)
         conditional_write_to_bypass_log(output_copy_taxa_label, "outputs/final_results", "taxa_classifications.tsv", output_folder_path)
         conditional_write_to_bypass_log(output_contig_stats_label, "outputs/final_results", "contig_stats.txt", output_folder_path)
+        conditional_write_to_bypass_log(output_unique_vectors_singletons_label, "outputs/data/4_full_vectors", "singleton_full_vectors.fastq", output_folder_path)
+        if(read_mode == "paired"):
+            conditional_write_to_bypass_log(output_unique_vectors_pair_1_label, "outputs/data/4_full_vectors", "pair_1_full_vectors.fastq", output_folder_path)
+            conditional_write_to_bypass_log(output_unique_vectors_pair_2_label, "outputs/data/4_full_vectors", "pair_2_full_vectors.fastq", output_folder_path)
+            
         if not (no_host):
-            conditional_write_to_bypass_log(output_unique_hosts_singletons_label, "outputs/data/1_unique_hosts", "singleton_hosts.fastq", output_folder_path)
+            conditional_write_to_bypass_log(output_unique_hosts_singletons_label, "outputs/data/2_full_hosts", "singleton_full_hosts.fastq", output_folder_path)
             if(read_mode == "paired"):
-                conditional_write_to_bypass_log(output_unique_hosts_pair_1_label, "outputs/data/1_unique_hosts", "pair_1_hosts.fastq", output_folder_path)
-                conditional_write_to_bypass_log(output_unique_hosts_pair_2_label, "outputs/data/1_unique_hosts", "pair_2_hosts.fastq", output_folder_path)
+                conditional_write_to_bypass_log(output_unique_hosts_pair_1_label, "outputs/data/2_full_hosts", "pair_1_full_hosts.fastq", output_folder_path)
+                conditional_write_to_bypass_log(output_unique_hosts_pair_2_label, "outputs/data/2_full_hosts", "pair_2_full_hosts.fastq", output_folder_path)
         #----------------------------------------------------------------------------
         #Phase 2
-        if not(no_host):
-            if check_bypass_log(output_folder, output_combine_hosts_label):
-                command_list = commands.create_output_combine_hosts_command(output_label)
-                launch_and_create_with_mp_store(mp_store, output_label, output_combine_hosts_label, commands, command_list)
-                
         if check_bypass_log(output_folder, output_network_gen_label):
             command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
             launch_and_create_with_mp_store(mp_store, output_label, output_network_gen_label, commands, command_list)
@@ -1670,8 +1687,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
             item.join()
         mp_store[:] = []
         conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv", output_folder_path)
-        if not (no_host):
-            conditional_write_to_bypass_log(output_combine_hosts_label, "outputs/2_full_hosts", "combined_hosts.fastq", output_folder_path)
         
         
         #-------------------------------------------------------------------
@@ -1926,6 +1941,9 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
     output_unique_hosts_singletons_label    = "output_unique_hosts_singletons"
     output_unique_hosts_pair_1_label        = "output_unique_hosts_pair_1"
     output_unique_hosts_pair_2_label        = "output_unique_hosts_pair_2"
+    output_unique_vectors_singletons_label  = "output_unique_vectors_singletons"
+    output_unique_vectors_pair_1_label      = "output_unique_vectors_pair_1"
+    output_unique_vectors_pair_2_label      = "output_unique_vectors_pair_2"
     output_combine_hosts_label              = "output_combine_hosts"
     output_per_read_scores_label            = "output_per_read_scores"
     output_contig_stats_label               = "output_contig_stats"
@@ -2857,9 +2875,8 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                 job_name = output_contig_stats_label
                 command_list = commands.create_output_contig_stats_command(output_label, assemble_contigs_label)
                 launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
-                
             
-                
+            #repop hosts
             if not(no_host):
                 if check_bypass_log(output_folder, output_unique_hosts_singletons_label):
                     job_name = output_unique_hosts_singletons_label
@@ -2876,6 +2893,23 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                         job_name = output_unique_hosts_pair_2_label
                         command_list = commands.create_output_unique_hosts_pair_2_command(output_label, quality_filter_label, host_filter_label)
                         launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+
+            #repop vectors
+            if check_bypass_log(output_folder, output_unique_vectors_singletons_label):
+                job_name = output_unique_vectors_singletons_label
+                command_list = commands.create_output_unique_vectors_singletons_command(output_label, quality_filter_label, vector_filter_label)
+                launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+            
+            if(read_mode == "paired"):
+                if check_bypass_log(output_folder, output_unique_vectors_pair_1_label):
+                    job_name = output_unique_vectors_pair_1_label
+                    command_list = commands.create_output_unique_vectors_pair_1_command(output_label, quality_filter_label, vector_filter_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
+                    
+                if check_bypass_log(output_folder, output_unique_vectors_pair_2_label):
+                    job_name = output_unique_hosts_pair_2_label
+                    command_list = commands.create_output_unique_vectors_pair_2_command(output_label, quality_filter_label, vector_filter_label)
+                    launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                         
                         
             print(dt.today(), "output report phase 1 launched.  waiting for sync")
@@ -2885,11 +2919,6 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             
             #----------------------------------------------------------------------------
             #Phase 2
-            if not(no_host):
-                if check_bypass_log(output_folder, output_combine_hosts_label):
-                    command_list = commands.create_output_combine_hosts_command(output_label)
-                    launch_and_create_with_mp_store(mp_store, output_label, output_combine_hosts_label, commands, command_list)
-                    
             if check_bypass_log(output_folder, output_network_gen_label):
                 command_list = commands.create_output_network_generation_command(output_label, GA_final_merge_label, taxon_annotation_label, ec_annotation_label)
                 launch_and_create_with_mp_store(mp_store, output_label, output_network_gen_label, commands, command_list)

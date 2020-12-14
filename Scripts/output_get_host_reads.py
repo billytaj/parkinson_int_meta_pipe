@@ -14,6 +14,8 @@
 #-> a .clstr file (the one you want to get the duplicate reads from)
 #-> the name of the output (with the extension ending in .fastq)
 
+#Dec 14, 2020:  this also works for vectors, and anything that needs reversing.
+
 import os
 import sys
 import pandas as pd
