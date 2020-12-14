@@ -546,7 +546,7 @@ def decode_and_reform(gene_map_0):
 
 
 def scrub_and_merge(gene_map_0, gene_map_1):
-    #clean the score bits off, and merge
+    #used for contigs + singletons only.  There won't be duplicate reads.  It's impossible.  so we take shortcuts
     clean_gene_map_0 = decode_and_reform(gene_map_0)
     clean_gene_map_1 = decode_and_reform(gene_map_1)
     
@@ -808,7 +808,7 @@ if __name__ == "__main__":
         
         
         #merge all gene maps
-        contigs_and_singletons_gene_map, other_reads = reconcile_paired_gene_map_v2(contig_gene_map, singletons_gene_map, "cs")    
+        contigs_and_singletons_gene_map = scrub_and_merge(contig_gene_map, singletons_gene_map)    
         
         final_gene_map = final_gene_map_merge(contigs_and_singletons_gene_map, paired_gene_map)
         
