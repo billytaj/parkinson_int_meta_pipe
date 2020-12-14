@@ -2867,7 +2867,7 @@ class mt_pipe_commands:
         
         return [get_unique_vectors_reads_pair_1, repop_pair_1_vectors]
         
-    def create_output_unique_hosts_pair_2_command(self, current_stage_name, quality_stage, vectors_stage):
+    def create_output_unique_vectors_pair_2_command(self, current_stage_name, quality_stage, vectors_stage):
         #only call if we had hosts to filter
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
