@@ -1816,7 +1816,8 @@ class mt_pipe_commands:
         final_merge += dep_2_path + " "
         final_merge += data_folder + " "
         final_merge += final_folder + " "
-        final_merge += self.read_mode
+        final_merge += self.read_mode + " "
+        final_merge += jobs_folder
         
         make_marker = ">&2 echo " + str(dt.today()) + " GA final merge | "
         make_marker += "touch" + " "
