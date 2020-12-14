@@ -2850,7 +2850,7 @@ class mt_pipe_commands:
         self.make_folder(full_vectors_folder)
         self.make_folder(final_folder)
         
-        get_unique_vectors_reads_pair_1 = ">&2 echo get pair 1 host reads for stats | " 
+        get_unique_vectors_reads_pair_1 = ">&2 echo get pair 1 vector reads for stats | " 
         get_unique_vectors_reads_pair_1 += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_pair_1 += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_vectors_reads_pair_1 += os.path.join(vectors_folder, "pair_1.fastq") + " "
@@ -2884,7 +2884,7 @@ class mt_pipe_commands:
         self.make_folder(full_vectors_folder)
         self.make_folder(final_folder)
         
-        get_unique_vectors_reads_pair_2 = ">&2 echo get pair 2 host reads for stats | " 
+        get_unique_vectors_reads_pair_2 = ">&2 echo get pair 2 vector reads for stats | " 
         get_unique_vectors_reads_pair_2 += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_pair_2 += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_vectors_reads_pair_2 += os.path.join(vectors_folder, "pair_2.fastq") + " "
