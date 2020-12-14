@@ -290,11 +290,12 @@ def merge_all_proteins(path, gene_transcripts_dict, export_path):
         #    proteins_out.write(out_line)
         #SeqIO.write(gene_transcripts_list, proteins_out, "fasta")
         
-def handle_final_proteins(final_path, export_path):
+def handle_final_proteins(final_path, export_path, job_location):
     #just a function dump so we can do this step in parallel with other things
 
     #scrub for duplicates (because seqIO index doesn't like duplicates)
-    bwa_blat_proteins_file = merge_fastas(final_path, final_path, "all", "BWA_BLAT_proteins", ".fna")
+    marker_path = os.path.join(job_location, "final_proteins")
+    bwa_blat_proteins_file = merge_fastas(final_path, final_path, "all", "BWA_BLAT_proteins", ".fna", marker_path)
     unique_fna_file = "unique_" + os.path.basename(bwa_blat_proteins_file)
     real_unique_fna_file = os.path.join(final_path, unique_fna_file)
     scrub_duplicates(bwa_blat_proteins_file, real_unique_fna_file)
@@ -491,10 +492,14 @@ def export_leftover_paired_reads(all_paired_reads, pair_1_df, pair_2_df, export_
     pair_2_leftover.to_csv(pair_2_export_path, mode = "w", sep= "\n", header = False, index = False, quoting = 3)
     
     
-def make_second_merge_process(process_store, path_0, path_1, header, tail):
+def make_second_merge_process(process_store, path_0, path_1, header, tail, job_location):
     section = ["BWA_annotated", "BLAT_annotated"]
     for item in section:
-        merge_fastas(path_0, path_1, item, header, tail)
+        marker_path = os.path.join(job_location, item + "_2nd_merge")
+        if(os.path.exists(marker_path)):
+            print(dt.today(), "job ran, skipping:", marker_path)
+        else:
+            merge_fastas(path_0, path_1, item, header, tail, marker_path)
         #merge_process = mp.Process(target = merge_fastas, args = (path_0, path_1, item, header, tail))
         #merge_process.start()
         #process_store.append(merge_process)    
@@ -514,6 +519,61 @@ def final_gene_map_merge(gene_map_0, gene_map_1):
             final_gene_map[gene] = gene_map_1[gene]
             
     return final_gene_map
+    
+    
+def decode_and_reform(gene_map_0):
+    final_gene_map = dict()
+    for gene in gene_map_0:
+        reads = gene_map_0[gene][2:]
+        gene_length = gene_map_0[gene][0]
+        num_reads = gene_map_0[gene][1]
+        read_list = []
+        for read in reads:
+            if("<bitscore>" in read):
+            
+                read_name = read.split("<bitscore>")[0]
+                read_list.append(read_name)
+            elif("<AS_score>" in read):
+                read_name = read.split("<AS_score>")[0]
+                read_list.append(read_name)
+            
+            #time.sleep(5)
+            #print("orig read:", read)
+            #print("read name extracted:", read_name)
+            
+        final_gene_map[gene] = [gene_length, num_reads] + read_list
+    return final_gene_map    
+
+
+def scrub_and_merge(gene_map_0, gene_map_1):
+    #clean the score bits off, and merge
+    clean_gene_map_0 = decode_and_reform(gene_map_0)
+    clean_gene_map_1 = decode_and_reform(gene_map_1)
+    
+    count = 0
+    #for gene in clean_gene_map_0:
+    #    print(clean_gene_map_0[gene])
+        
+    #print("delay")
+    #time.sleep(60)
+        
+    
+    export_gene_map(clean_gene_map_0, sys.argv[6], "v4_cleaned_contigs")
+    export_gene_map(clean_gene_map_1, sys.argv[6], "v4_cleaned_singles")
+    
+    final_gene_map = clean_gene_map_0.copy()
+    for gene in clean_gene_map_1:
+        if(gene in final_gene_map):
+            new_reads = clean_gene_map_1[gene][2:]
+            old_reads = clean_gene_map_0[gene][2:]
+            gene_length = final_gene_map[gene][0]
+            combined_reads = list(set(old_reads + new_reads))
+            final_gene_map[gene] = [gene_length, len(combined_reads)] + combined_reads
+            
+        else:
+            final_gene_map[gene] = clean_gene_map_1[gene]
+            
+    return final_gene_map    
     
     
     
@@ -599,19 +659,21 @@ if __name__ == "__main__":
         contig_gene_map     = merge_dicts(contig_gene_map_list)
         
         #merge all gene maps
-        final_gene_map, other_reads = reconcile_paired_gene_map_v2(contig_gene_map, singletons_gene_map, "cs")    
+        #final_gene_map, other_reads = reconcile_paired_gene_map_v2(contig_gene_map, singletons_gene_map, "cs")    
+        final_gene_map = scrub_and_merge(contig_gene_map, singletons_gene_map)    
         
         print(dt.today(), "done converting")
         
         #secondary combine on the genes (BWA and BLAT)
-        make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
+        
+        make_second_merge_process(process_store, final_path, final_path, "all", ".fna", job_location)
         
         for item in process_store:
             item.join()
         process_store[:] = []
         
         #convert genes to proteins, and merge with diamond's export
-        handle_final_proteins(final_path, export_path)
+        handle_final_proteins(final_path, export_path, job_location)
         
         export_gene_map(final_gene_map, export_path)
         
