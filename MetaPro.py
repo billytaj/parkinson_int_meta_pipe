@@ -2397,6 +2397,8 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         if (os.path.exists(GA_BLAT_final_job_marker)):
             print(dt.today(), "BLAT was run, skipping")
         else:
+            
+        
             marker_path_list = []
             for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
                 if(split_sample.endswith(".fasta")):
@@ -2487,10 +2489,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
             check_all_job_markers(marker_path_list, final_checklist)
             delete_folder_simple(GA_BLAT_jobs_folder)
-            with open(GA_BLAT_final_job_marker, "w") as final_BLAT_marker:
-                print("all BLAT done")
-            
-            
+            open(GA_BLAT_final_job_marker, "a").close()
             
         cleanup_GA_BLAT_start = time.time()
         if(keep_all == "no" and keep_GA_BLAT == "no"):
