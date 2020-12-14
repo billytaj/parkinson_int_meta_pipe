@@ -1651,7 +1651,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                 
             if check_bypass_log(output_folder, output_unique_vectors_pair_2_label):
-                job_name = output_unique_hosts_pair_2_label
+                job_name = output_unique_vectors_pair_2_label
                 command_list = commands.create_output_unique_vectors_pair_2_command(output_label, quality_filter_label, vector_filter_label)
                 launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                 
@@ -2910,7 +2910,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                     launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                     
                 if check_bypass_log(output_folder, output_unique_vectors_pair_2_label):
-                    job_name = output_unique_hosts_pair_2_label
+                    job_name = output_unique_vectors_pair_2_label
                     command_list = commands.create_output_unique_vectors_pair_2_command(output_label, quality_filter_label, vector_filter_label)
                     launch_and_create_with_mp_store(mp_store, output_label, job_name, commands, command_list)
                         
