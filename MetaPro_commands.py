@@ -3002,7 +3002,7 @@ class mt_pipe_commands:
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         ea_folder           = os.path.join(self.Output_Path, enzyme_annotation_stage, "final_results")
         full_hosts_folder   = os.path.join(data_folder, "2_full_hosts")
-        full_vectors_folder   = os.path.join(data_folder, "4_full_vectors")
+        full_vectors_folder = os.path.join(data_folder, "4_full_vectors")
         final_folder        = os.path.join(subfolder, "final_results")
 
         self.make_folder(subfolder)
