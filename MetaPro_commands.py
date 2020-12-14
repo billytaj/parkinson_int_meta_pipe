@@ -2794,11 +2794,12 @@ class mt_pipe_commands:
         
         return [get_unique_host_reads_pair_2, repop_pair_2_hosts]
 #-------------------------------------------------------------------------------------------
-    def create_output_unique_vectors_singletons_command(self, current_stage_name, quality_stage, vectors_stage):
+    def create_output_unique_vectors_singletons_command(self, current_stage_name, quality_stage, host_stage, vectors_stage):
         #only call if we had hosts to filter
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
         quality_folder          = os.path.join(self.Output_Path, quality_stage, "final_results")
+        host_folder             = os.path.join(self.Output_Path, host_stage, "final_results")
         vectors_folder          = os.path.join(self.Output_Path, vectors_stage, "final_results")
         data_folder             = os.path.join(subfolder, "data")
         unique_vectors_folder   = os.path.join(data_folder, "3_unique_vectors")
@@ -2816,7 +2817,7 @@ class mt_pipe_commands:
         get_unique_vectors_reads_singletons += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_singletons += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_vectors_reads_singletons += os.path.join(vectors_folder, "singletons.fastq") + " "
-        get_unique_vectors_reads_singletons += os.path.join(quality_folder, "singletons.fastq") + " "
+        get_unique_vectors_reads_singletons += os.path.join(host_folder, "singletons.fastq") + " "
         get_unique_vectors_reads_singletons += os.path.join(unique_vectors_folder, "singletons_vectors.fastq")
         
         
@@ -2833,11 +2834,12 @@ class mt_pipe_commands:
         
         return [get_unique_vectors_reads_singletons, repop_singletons_vectors]
         
-    def create_output_unique_vectors_pair_1_command(self, current_stage_name, quality_stage, vectors_stage):
+    def create_output_unique_vectors_pair_1_command(self, current_stage_name, quality_stage, host_stage, vectors_stage):
         #only call if we had hosts to filter
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
         quality_folder          = os.path.join(self.Output_Path, quality_stage, "final_results")
+        host_folder             = os.path.join(self.Output_Path, host_stage, "final_results")
         vectors_folder          = os.path.join(self.Output_Path, vectors_stage, "final_results")
         data_folder             = os.path.join(subfolder, "data")
         unique_vectors_folder   = os.path.join(data_folder, "3_unique_vectors")
@@ -2854,10 +2856,10 @@ class mt_pipe_commands:
         get_unique_vectors_reads_pair_1 += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_pair_1 += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_vectors_reads_pair_1 += os.path.join(vectors_folder, "pair_1.fastq") + " "
-        get_unique_vectors_reads_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " "
+        get_unique_vectors_reads_pair_1 += os.path.join(host_folder, "pair_1.fastq") + " "
         get_unique_vectors_reads_pair_1 += os.path.join(unique_vectors_folder, "pair_1_vectors.fastq")
         
-        repop_pair_1_vectors = ">&2 echo repopulating pair 1 hosts | " 
+        repop_pair_1_vectors = ">&2 echo repopulating pair 1 vectors | " 
         repop_pair_1_vectors += self.tool_path_obj.Python + " "
         repop_pair_1_vectors += self.tool_path_obj.duplicate_repopulate + " "
         repop_pair_1_vectors += os.path.join(quality_folder, "pair_1_match.fastq") + " "
@@ -2867,11 +2869,12 @@ class mt_pipe_commands:
         
         return [get_unique_vectors_reads_pair_1, repop_pair_1_vectors]
         
-    def create_output_unique_vectors_pair_2_command(self, current_stage_name, quality_stage, vectors_stage):
+    def create_output_unique_vectors_pair_2_command(self, current_stage_name, quality_stage, host_stage, vectors_stage):
         #only call if we had hosts to filter
         subfolder               = os.path.join(self.Output_Path, current_stage_name)
         data_folder             = os.path.join(subfolder, "data")
         quality_folder          = os.path.join(self.Output_Path, quality_stage, "final_results")
+        host_folder             = os.path.join(self.Output_Path, host_stage, "final_results")
         vectors_folder          = os.path.join(self.Output_Path, vectors_stage, "final_results")
         data_folder             = os.path.join(subfolder, "data")
         unique_vectors_folder   = os.path.join(data_folder, "3_unique_vectors")
@@ -2888,7 +2891,7 @@ class mt_pipe_commands:
         get_unique_vectors_reads_pair_2 += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_pair_2 += self.tool_path_obj.get_unique_host_reads + " "
         get_unique_vectors_reads_pair_2 += os.path.join(vectors_folder, "pair_2.fastq") + " "
-        get_unique_vectors_reads_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " "
+        get_unique_vectors_reads_pair_2 += os.path.join(host_folder, "pair_2.fastq") + " "
         get_unique_vectors_reads_pair_2 += os.path.join(unique_vectors_folder, "pair_2_vectors.fastq")
         
         repop_pair_2_vectors = ">&2 echo repopulating pair 2 vectors | " 
