@@ -69,11 +69,12 @@ if __name__ == "__main__":
     raw_sequence        = sys.argv[1]   #in: the raw, unfiltered input
     quality_location    = sys.argv[2]   #in: th 
     host_location       = sys.argv[3]   #output repop
-    repop_location      = sys.argv[4]   #repop'd 
-    gene_map_location   = sys.argv[5]
-    ec_location         = sys.argv[6]
-    output_file         = sys.argv[7]
-    operating_mode      = sys.argv[8]
+    vectors_location    = sys.argv[4]
+    repop_location      = sys.argv[5]   #repop'd 
+    gene_map_location   = sys.argv[6]
+    ec_location         = sys.argv[7]
+    output_file         = sys.argv[8]
+    operating_mode      = sys.argv[9]
     
     qc_s = ""
     if(operating_mode == "single"):
@@ -90,7 +91,11 @@ if __name__ == "__main__":
     
     host_p1         = os.path.join(host_location, "pair_1_full_hosts.fastq")
     host_p2         = os.path.join(host_location, "pair_2_full_hosts.fastq")
-    host_s          = os.path.join(host_location, "singletons_full_hosts.fastq")
+    host_s          = os.path.join(host_location, "singletons_full_hosts.fastq")    
+    
+    vectors_p1      = os.path.join(vectors_location, "pair_1_full_vectors.fastq")
+    vectors_p2      = os.path.join(vectors_location, "pair_2_full_vectors.fastq")
+    vectors_s       = os.path.join(vectors_location, "singletons_full_vectors.fastq")
     
     rRNA_p1         = os.path.join(repop_location, "pair_1_rRNA.fastq")
     rRNA_p2         = os.path.join(repop_location, "pair_2_rRNA.fastq")
@@ -110,6 +115,7 @@ if __name__ == "__main__":
     check_paired_data(host_p1, host_p2, "host")
     check_paired_data(rRNA_p1, rRNA_p2, "rRNA+tRNA")
     check_paired_data(mRNA_p1, mRNA_p2, "putative_mRNA")
+    check_paired_data(vectors_p1, vectors_p2, "vectors")
     
 
     headings = []
@@ -134,6 +140,14 @@ if __name__ == "__main__":
     headings.append("% host reads in sample")
     host_pct = host_read_counts / raw_sequence_count
     data.append("%.2f" % (host_pct * 100))
+    
+    headings.append("vector reads found in sample")
+    vectors_read_counts = fastq_count(vectors_p1) + fastq_count(vectors_s)
+    data.append(str(int(vectors_read_counts)))
+    
+    headings.append("% vector reads in sample")
+    vectors_pct = vectors_read_counts / raw_sequence_count
+    data.append("%.2f" % (vectors_pct * 100))
 
     headings.append("rRNA + tRNA reads")
     rRNA_sequence_count = fastq_count(rRNA_p1) + fastq_count(rRNA_s)
