@@ -214,7 +214,21 @@ def launch_only_simple(command_obj, commands):
     )
     process.start()
     process.join()
-
+    
+def subdivide_and_launch(mp_store, job_location, job_label, command_obj, commands):
+    #just launches a job.  no multi-process.
+    job_counter = 0
+    for item in commands:
+        new_job_label = job_label + "_" + str(job_counter)
+        job_counter += 1
+        process = mp.Process(
+            target=command_obj.create_and_launch,
+            args=(job_location, new_job_label, item)
+        )
+        process.start()
+        mp_store.append(process)
+    
+    
 def launch_only_with_hold(mp_store, mem_threshold, job_limit, job_delay, job_name, command_obj, command):
     #launch a job in launch-only mode
     job_submitted = False
@@ -960,8 +974,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     #if not check_where_resume(repop_job_path, None, rRNA_filter_path):
     if check_bypass_log(output_folder_path, repop_job_label):
         job_name = repop_job_label
-        command_list = commands.create_repop_command(repop_job_label, quality_filter_label, rRNA_filter_label)
-        launch_and_create_simple(repop_job_label, job_name, commands, command_list)
+        command_list = commands.create_repop_command_v2_step_1(repop_job_label, quality_filter_label, rRNA_filter_label)
+        subdivide_and_launch(repop_job_label, job_name, commands, command_list)
+    
+        job_name = repop_job_label
+        command_list = commands.create_repop_command_v2_step_2(repop_job_label, quality_filter_label, rRNA_filter_label)
+        subdivide_and_launch(repop_job_label, job_name, commands, command_list)
+    
+        
     
         write_to_bypass_log(output_folder_path, repop_job_label)
         

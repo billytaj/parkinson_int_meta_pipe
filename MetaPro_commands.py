@@ -1604,6 +1604,219 @@ class mt_pipe_commands:
                 ]
 
         return COMMANDS_Repopulate
+        
+    def create_repop_command_v2_step_1(self, stage_name, preprocess_stage_name, dependency_stage_name):
+        # This stage reintroduces the duplicate reads into the data.  We need it to count towards things.
+        # Due to time, and hierarchical importance, we're leaving this stage alone.
+        # Leaving it alone in a tangled state
+        # But the issue is that by leaving it alone, we violate the design plan
+        # The fix? We have to detect if preprocess has been run.  If so, pull the missing data there
+        # if not,
+        # What has to happen here:
+        # -> detect if we've run the preprocess stage.
+        # -> if it's run, grab data
+        # -> if not, run our own custom preprocess up to what we need
+        dep_loc                 = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        subfolder               = os.path.join(self.Output_Path, stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        repop_folder            = os.path.join(data_folder, "0_repop")
+        final_folder            = os.path.join(subfolder, "final_results")
+        preprocess_subfolder    = os.path.join(self.Output_Path, preprocess_stage_name)
+        
+        tut_keyword = "repop"
+
+        # we ran a previous preprocess.  grab files
+        # need 3, 5(clstr only), and mRNA from the 2nd stage.
+        hq_path                 = os.path.join(preprocess_subfolder, "final_results")
+        cluster_path            = os.path.join(preprocess_subfolder, "final_results")
+        singleton_path          = os.path.join(preprocess_subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(repop_folder)
+        self.make_folder(final_folder)
+
+        repop_singletons = ">&2 echo " + str(dt.today()) + " Duplication repopulation singletons mRNA| "
+        repop_singletons += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        #the reference data to be drawn from 
+        if self.read_mode == "single":
+            repop_singletons += os.path.join(singleton_path, "singletons_hq.fastq") + " "
+        elif self.read_mode == "paired":
+            repop_singletons += os.path.join(hq_path, "singletons_with_duplicates.fastq") + " "
+        
+        repop_singletons += os.path.join(dep_loc, "mRNA", "singletons.fastq") + " "  # in -> rRNA filtration output
+        repop_singletons += os.path.join(cluster_path, "singletons_unique.fastq.clstr") + " "  # in -> duplicates filter output
+
+        
+        if self.read_mode == "single":
+            repop_singletons += os.path.join(final_folder, "singletons.fastq")  # out
+        elif self.read_mode == "paired":
+            repop_singletons += os.path.join(repop_folder, "singletons.fastq")  # out
+            
+            
+
+        repop_singletons_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulations singletons rRNA | "
+        repop_singletons_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        if self.read_mode == "single":
+            repop_singletons_rRNA += os.path.join(singleton_path, "singletons_hq.fastq") + " "
+        elif self.read_mode == "paired":
+            repop_singletons_rRNA += os.path.join(hq_path, "singletons_with_duplicates.fastq") + " "
+        repop_singletons_rRNA += os.path.join(dep_loc, "other", "singletons_other.fastq") + " "  # in -> rRNA filtration output
+        repop_singletons_rRNA += os.path.join(cluster_path, "singletons_unique.fastq.clstr") + " "  # in -> duplicates filter output
+        if self.read_mode == "single":
+            repop_singletons_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq")  # out
+        elif self.read_mode == "paired":
+            repop_singletons_rRNA += os.path.join(repop_folder, "singletons_rRNA.fastq")  # out
+
+        repop_pair_1 = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 1 mRNA | "
+        repop_pair_1 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_1 += os.path.join(hq_path, "pair_1_match.fastq") + " "
+        if(self.tutorial_keyword == tut_keyword):
+            repop_pair_1 += self.sequence_path_1 + " "
+        else:
+            repop_pair_1 += os.path.join(dep_loc, "mRNA", "pair_1.fastq") + " "
+        repop_pair_1 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
+        repop_pair_1 += os.path.join(repop_folder, "pair_1.fastq")
+
+        repop_pair_1_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 1 rRNA | "
+        repop_pair_1_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_1_rRNA += os.path.join(hq_path, "pair_1_match.fastq") + " "
+        repop_pair_1_rRNA += os.path.join(dep_loc, "other", "pair_1_other.fastq") + " "
+        repop_pair_1_rRNA += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
+        repop_pair_1_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq")
+
+        repop_pair_2 = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
+        repop_pair_2 += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_2 += os.path.join(hq_path, "pair_2_match.fastq") + " "
+        if(self.tutorial_keyword == tut_keyword):
+            repop_pair_2 += self.sequence_path_2 + " "
+        else:
+            repop_pair_2 += os.path.join(dep_loc, "mRNA", "pair_2.fastq") + " "
+        repop_pair_2 += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
+        repop_pair_2 += os.path.join(repop_folder, "pair_2.fastq")
+
+        repop_pair_2_rRNA = ">&2 echo " + str(dt.today()) + " Duplication repopulation pair 2 | "
+        repop_pair_2_rRNA += self.tool_path_obj.Python + " " + self.tool_path_obj.duplicate_repopulate + " "
+        repop_pair_2_rRNA += os.path.join(hq_path, "pair_2_match.fastq") + " "
+        repop_pair_2_rRNA += os.path.join(dep_loc, "other", "pair_2_other.fastq") + " "
+        repop_pair_2_rRNA += os.path.join(cluster_path, "pair_1_unique.fastq.clstr") + " "
+        repop_pair_2_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq")
+
+        singleton_repop_filter = ">&2 echo filtering mRNA for new singletons | "
+        singleton_repop_filter += self.tool_path_obj.Python + " "
+        singleton_repop_filter += self.tool_path_obj.orphaned_read_filter + " "
+        singleton_repop_filter += os.path.join(repop_folder, "pair_1.fastq") + " "
+        singleton_repop_filter += os.path.join(repop_folder, "pair_2.fastq") + " "
+        singleton_repop_filter += os.path.join(repop_folder, "singletons.fastq") + " "
+        singleton_repop_filter += os.path.join(final_folder, "pair_1.fastq") + " "
+        singleton_repop_filter += os.path.join(final_folder, "pair_2.fastq") + " "
+        singleton_repop_filter += os.path.join(final_folder, "singletons.fastq")
+    
+        singleton_repop_filter_rRNA = ">&2 echo filtering rRNA for new singletons | "  
+        singleton_repop_filter_rRNA += self.tool_path_obj.Python + " "
+        singleton_repop_filter_rRNA += self.tool_path_obj.orphaned_read_filter + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "singletons_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq")
+        
+        if(self.tutorial_keyword == tut_keyword):
+            if self.read_mode == "single":
+                COMMANDS_Repopulate = [
+                    repop_singletons
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_Repopulate = [
+                    repop_singletons,
+                    repop_pair_1,
+                    repop_pair_2,
+                    singleton_repop_filter
+                ]
+        
+        else:
+            if self.read_mode == "single":
+                COMMANDS_Repopulate = [
+                    repop_singletons,
+                    repop_singletons_rRNA
+                ]
+            elif self.read_mode == "paired":
+                COMMANDS_Repopulate = [
+                    repop_singletons,
+                    repop_singletons_rRNA,
+                    repop_pair_1,
+                    repop_pair_1_rRNA,
+                    repop_pair_2,
+                    repop_pair_2_rRNA#,
+                    #singleton_repop_filter,
+                    #singleton_repop_filter_rRNA
+                ]
+
+        return COMMANDS_Repopulate        
+    def create_repop_command_v2_step_2(self, stage_name, preprocess_stage_name, dependency_stage_name):
+        # This stage reintroduces the duplicate reads into the data.  We need it to count towards things.
+        # Due to time, and hierarchical importance, we're leaving this stage alone.
+        # Leaving it alone in a tangled state
+        # But the issue is that by leaving it alone, we violate the design plan
+        # The fix? We have to detect if preprocess has been run.  If so, pull the missing data there
+        # if not,
+        # What has to happen here:
+        # -> detect if we've run the preprocess stage.
+        # -> if it's run, grab data
+        # -> if not, run our own custom preprocess up to what we need
+        dep_loc                 = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        subfolder               = os.path.join(self.Output_Path, stage_name)
+        data_folder             = os.path.join(subfolder, "data")
+        repop_folder            = os.path.join(data_folder, "0_repop")
+        final_folder            = os.path.join(subfolder, "final_results")
+        preprocess_subfolder    = os.path.join(self.Output_Path, preprocess_stage_name)
+        
+        tut_keyword = "repop"
+
+        # we ran a previous preprocess.  grab files
+        # need 3, 5(clstr only), and mRNA from the 2nd stage.
+        hq_path                 = os.path.join(preprocess_subfolder, "final_results")
+        cluster_path            = os.path.join(preprocess_subfolder, "final_results")
+        singleton_path          = os.path.join(preprocess_subfolder, "final_results")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(repop_folder)
+        self.make_folder(final_folder)
+
+        
+
+        singleton_repop_filter = ">&2 echo filtering mRNA for new singletons | "
+        singleton_repop_filter += self.tool_path_obj.Python + " "
+        singleton_repop_filter += self.tool_path_obj.orphaned_read_filter + " "
+        singleton_repop_filter += os.path.join(repop_folder, "pair_1.fastq") + " "
+        singleton_repop_filter += os.path.join(repop_folder, "pair_2.fastq") + " "
+        singleton_repop_filter += os.path.join(repop_folder, "singletons.fastq") + " "
+        singleton_repop_filter += os.path.join(final_folder, "pair_1.fastq") + " "
+        singleton_repop_filter += os.path.join(final_folder, "pair_2.fastq") + " "
+        singleton_repop_filter += os.path.join(final_folder, "singletons.fastq")
+    
+        singleton_repop_filter_rRNA = ">&2 echo filtering rRNA for new singletons | "  
+        singleton_repop_filter_rRNA += self.tool_path_obj.Python + " "
+        singleton_repop_filter_rRNA += self.tool_path_obj.orphaned_read_filter + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_1_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "pair_2_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(repop_folder, "singletons_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_1_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(final_folder, "pair_2_rRNA.fastq") + " "
+        singleton_repop_filter_rRNA += os.path.join(final_folder, "singletons_rRNA.fastq")
+        
+        if(not self.tutorial_keyword == tut_keyword):
+            if self.read_mode == "paired":
+                COMMANDS_Repopulate = [
+                    singleton_repop_filter,
+                    singleton_repop_filter_rRNA
+                ]
+
+        return COMMANDS_Repopulate 
+
+
 
     def create_assemble_contigs_command(self, stage_name, dependency_stage_name):
         subfolder           = os.path.join(self.Output_Path, stage_name)
