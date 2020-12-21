@@ -816,7 +816,7 @@ if __name__ == "__main__":
         
         
         #secondary combine on the genes (BWA and BLAT)
-        make_second_merge_process(process_store, final_path, final_path, "all", ".fna")
+        make_second_merge_process(process_store, final_path, final_path, "all", ".fna", job_location)
         
         for item in process_store:
             item.join()
@@ -824,7 +824,7 @@ if __name__ == "__main__":
         
         
         #convert genes to proteins, and merge with diamond's export
-        handle_final_proteins(final_path, export_path)
+        handle_final_proteins(final_path, export_path, job_location)
         
         export_gene_map(final_gene_map, export_path)
         
