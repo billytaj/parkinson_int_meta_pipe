@@ -14,7 +14,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/a
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/assembly_flush_bad_contigs.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/assembly_make_contig_map.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/ea_combine_v4.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/ea_combine_v5.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/ga_BLAT_generic_v2.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/ga_BWA_generic_v2.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/add_vector_repop/Scripts/ga_Diamond_generic_v2.py /pipeline/Scripts
