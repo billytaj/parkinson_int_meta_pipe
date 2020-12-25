@@ -334,6 +334,7 @@ class tool_path_obj:
 
             self.DETECT_job_limit = DETECT_job_limit_default
             self.Infernal_job_limit = Infernal_job_limit_default
+            self.Barrnap_job_limit = Barrnap_job_limit_default
             
             self.keep_all = keep_all_default
             self.keep_quality = keep_quality_default
@@ -359,8 +360,9 @@ class tool_path_obj:
             self.BLAT_pp_job_delay = BLAT_pp_job_delay_default
             self.DIAMOND_pp_job_delay = DIAMOND_pp_job_delay_default
             self.DETECT_job_delay = DETECT_job_delay_default
-            
+            self.TA_job_delay = TA_job_delay_default
             self.TA_mem_threshold = TA_mem_threshold_default
+            self.TA_job_limit = TA_job_limit_default
             self.filter_stringency = filter_stringency_default
             self.GA_chunksize = GA_chunksize_default
             
