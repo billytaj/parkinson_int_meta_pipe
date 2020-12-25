@@ -344,7 +344,7 @@ class tool_path_obj:
             self.keep_GA_BWA = keep_GA_BWA_default
             self.keep_GA_BLAT = keep_GA_BLAT_default
             self.keep_GA_DIAMOND = keep_GA_DIAMOND_default
-            self.keep_GA_final = GA_final_default
+            self.keep_GA_final = keep_GA_final_default
             self.keep_TA = keep_TA_default
             self.keep_EC = keep_EC_default
             self.keep_outputs = keep_outputs_default
