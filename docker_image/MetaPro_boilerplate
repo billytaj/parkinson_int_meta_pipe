@@ -294,4 +294,8 @@ RUN mkdir mgm \
 && tar -xvf MetaGeneMark.tar && mv MetaGeneMark_linux_64/mgm/* /pipeline_tools/mgm \
 && chmod 755 /pipeline_tools/mgm/gmhmmp
 
-
+WORKDIR /pipeline_tools
+RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip \
+&& unzip fastqc_v0.11.9.zip \
+&& chmod 755 /pipeline_tools/FastQC/fastqc \ 
+&& rm fastqc_v0.11.9.zip

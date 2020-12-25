@@ -339,7 +339,7 @@ class tool_path_obj:
             self.keep_host = keep_host_default
             self.keep_vector = keep_vector_default
             self.keep_rRNA = keep_rRNA_default
-            self.keep_repop = self.keep_repop_default
+            self.keep_repop = keep_repop_default
             self.keep_assemble_contigs = keep_assemble_contigs_default
             self.keep_GA_BWA = keep_GA_BWA_default
             self.keep_GA_BLAT = keep_GA_BLAT_default
