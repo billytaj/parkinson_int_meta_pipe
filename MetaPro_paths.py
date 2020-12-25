@@ -360,6 +360,7 @@ class tool_path_obj:
             self.DIAMOND_pp_job_delay = DIAMOND_pp_job_delay_default
             self.DETECT_job_delay = DETECT_job_delay_default
             
+            self.TA_mem_threshold = TA_mem_threshold_default
             self.filter_stringency = filter_stringency_default
             self.GA_chunksize = GA_chunksize_default
             
