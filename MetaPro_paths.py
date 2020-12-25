@@ -323,6 +323,7 @@ class tool_path_obj:
             self.DIAMOND_pp_mem_threshold = DIAMOND_pp_mem_default
             self.DETECT_mem_threshold = DETECT_mem_default
             self.Infernal_mem_threshold = Infernal_mem_default
+            self.Barrnap_mem_threshold = Barrnap_mem_default
             self.rRNA_chunksize = rRNA_chunksize_default
             self.BWA_job_limit = BWA_job_limit_default
             self.BLAT_job_limit = BLAT_job_limit_default
