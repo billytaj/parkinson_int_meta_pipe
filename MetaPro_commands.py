@@ -395,8 +395,9 @@ class mt_pipe_commands:
         bwa_hr_singletons += self.tool_path_obj.BWA + " mem -t "
         bwa_hr_singletons += self.Threads_str + " "
         bwa_hr_singletons += Host_Contaminants + " "
-        bwa_hr_singletons += os.path.join(quality_folder, "singletons.fastq")
-        bwa_hr_singletons += " > " + os.path.join(host_removal_folder, "singletons_no_host.sam")
+        bwa_hr_singletons += os.path.join(quality_folder, "singletons.fastq") + " " 
+        bwa_hr_singletons += ">" + " "
+        bwa_hr_singletons += os.path.join(host_removal_folder, "singletons_no_host.sam")
         
         #Tutorial-use only.  
         bwa_hr_tut_singletons = ">&2 echo BWA host remove on singletons | "
