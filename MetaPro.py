@@ -705,8 +705,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 
                 for item in os.listdir(fasta_path):
                     root_name = item.split(".")[0]
-                    final_marker_file = root_name + "_barrnap_cat"
-                    final_marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                    final_marker_file = root_name + "_barrnap_concat"
+                    final_marker_path = os.path.join(rRNA_filter_jobs_folder, final_marker_file)
                     barrnap_arc_out_file = os.path.join(barrnap_path, root_name + "_arc.barrnap_out")
                     barrnap_bac_out_file = os.path.join(barrnap_path, root_name + "_bac.barrnap_out")
                     barrnap_euk_out_file = os.path.join(barrnap_path, root_name + "_euk.barrnap_out")
@@ -732,7 +732,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                     
                     
                     if(os.path.exists(final_marker_path)):
-                        print(dt.today(), "skipping barrnap.  data already merged")
+                        print(dt.today(), "skipping barrnap.  data already merged", final_marker_path)
                         continue
                     else:
                         if((barrnap_arc_out_size > 0) and (os.path.exists(marker_path_arc))):
