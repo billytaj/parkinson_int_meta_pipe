@@ -115,14 +115,34 @@ if __name__ == "__main__":
         count+= 1
     
     selected_heatmap_df = selected_heatmap_df.groupby(["Superpathway"]).sum()           #collapse the rows, grouped by the superpath`
-    plt.subplots(figsize = (25,10))                                                     #set the image size    
-    heatmap = sns.heatmap(selected_heatmap_df, cmap="Blues")                           #maek the heatmap.  Use a colour palette
-    heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation = 40, ha = "right")     #make the labels pretty
-    heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation = 40, ha = "right")
-    heatmap.figure.savefig(output_dir + "enzyme_superpathway_heatmap.jpg")              #export it
-    selected_heatmap_df.to_csv(output_dir + "enzyme_superpathway_heatmap.csv", mode="w")
+    plt.subplots(figsize = (50,20))                                                     #set the image size 
     
     
+     
+    
+    new_cmap = sns.color_palette("deep")
+    sns.set(font_scale = 3)
+    #heatmap = sns.heatmap(selected_heatmap_df, cmap="Blues")                           #maek the heatmap.  Use a colour palette
+    heatmap = sns.heatmap(selected_heatmap_df, cmap="rocket_r")#new_cmap)                           #maek the heatmap.  Use a colour palette
+    
+    x_labels = heatmap.get_xticklabels()
+    test_x  = []
+    for item in x_labels:
+        test_x.append(textwrap.fill(item.get_text(), wrap_text))
+        
+    test_y = []
+    y_labels = heatmap.get_yticklabels()
+    for item in y_labels:
+        test_y.append(textwrap.fill(item.get_text(), wrap_text))
+    
+    #heatmap.set_ylabel("Chicken", font_size = 50)
+    font_size = 20
+    plt.ylabel("Superpathway", fontsize = font_size)
+    
+    heatmap.set_xticklabels(test_x, rotation = 40, ha = "right", fontsize = font_size)     #make the labels pretty
+    heatmap.set_yticklabels(test_y, rotation = 0, ha = "right", fontsize = font_size)
+    heatmap.figure.savefig(colour_palette + "_enzyme_superpathway_heatmap.jpg")              #export it
+    selected_heatmap_df.to_csv("enzyme_superpathway_heatmap.csv", mode="w")
     #redraw heatmap without unclassifieds
     if("Unclassified" in fixed_rpkm_df.columns):
         fixed_rpkm_df.drop(columns = ["Unclassified"], inplace = True)
@@ -139,10 +159,25 @@ if __name__ == "__main__":
             count+= 1
         
         selected_heatmap_df = selected_heatmap_df.groupby(["Superpathway"]).sum()           #collapse the rows, grouped by the superpath`
-        plt.subplots(figsize = (25,10))                                                     #set the image size    
-        heatmap = sns.heatmap(selected_heatmap_df, cmap="Blues")                           #maek the heatmap.  Use a colour palette
-        heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation = 40, ha = "right")     #make the labels pretty
-        heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation = 40, ha = "right")
+        plt.subplots(figsize = (50,20))                                                     #set the image size    
+        heatmap = sns.heatmap(selected_heatmap_df, cmap="rocket_r")                           #maek the heatmap.  Use a colour palette
+        
+        x_labels = heatmap.get_xticklabels()
+        test_x  = []
+        for item in x_labels:
+            test_x.append(textwrap.fill(item.get_text(), wrap_text))
+            
+        test_y = []
+        y_labels = heatmap.get_yticklabels()
+        for item in y_labels:
+            test_y.append(textwrap.fill(item.get_text(), wrap_text))
+        
+        #heatmap.set_ylabel("Chicken", font_size = 50)
+        font_size = 20
+        plt.ylabel("Superpathway", fontsize = font_size)
+            
+        heatmap.set_xticklabels(test_x, rotation = 40, ha = "right", fontsize = font_size)     #make the labels pretty
+        heatmap.set_yticklabels(test_y, rotation = 0, ha = "right", fontsize = font_size)
         heatmap.figure.savefig(output_dir + "enzyme_superpathway_heatmap_no_unclassified.jpg")              #export it
         selected_heatmap_df.to_csv(output_dir + "enzyme_superpathway_heatmap_no_unclassified.csv", mode="w")    
     
