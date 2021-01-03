@@ -1189,7 +1189,7 @@ class mt_pipe_commands:
         make_marker += os.path.join(jobs_folder, marker_file)
         
 
-        return [cat_command + " && " + make_marker, rm_arc, rm_bac, rm_euk, rm_mit]
+        return [cat_command + " && " + make_marker + " && " + rm_arc  + " && " + rm_bac  + " && " +  rm_euk  + " && " +  rm_mit]
         
         
     def create_rRNA_filter_barrnap_pp_command(self, stage_name, category, fastq_name, marker_file):
