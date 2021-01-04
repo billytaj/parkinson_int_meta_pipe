@@ -975,11 +975,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     if check_bypass_log(output_folder_path, repop_job_label):
         job_name = repop_job_label
         command_list = commands.create_repop_command_v2_step_1(repop_job_label, quality_filter_label, rRNA_filter_label)
-        subdivide_and_launch(repop_job_label, job_name, commands, command_list)
+        subdivide_and_launch(mp_store, repop_job_label, job_name, commands, command_list)
     
         job_name = repop_job_label
         command_list = commands.create_repop_command_v2_step_2(repop_job_label, quality_filter_label, rRNA_filter_label)
-        subdivide_and_launch(repop_job_label, job_name, commands, command_list)
+        subdivide_and_launch(mp_store, repop_job_label, job_name, commands, command_list)
     
         
     
