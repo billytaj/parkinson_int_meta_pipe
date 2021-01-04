@@ -223,7 +223,7 @@ def subdivide_and_launch(mp_store, job_location, job_label, command_obj, command
         job_counter += 1
         process = mp.Process(
             target=command_obj.create_and_launch,
-            args=(job_location, new_job_label, item)
+            args=(job_location, new_job_label, [item])
         )
         process.start()
         mp_store.append(process)
@@ -977,10 +977,17 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         command_list = commands.create_repop_command_v2_step_1(repop_job_label, quality_filter_label, rRNA_filter_label)
         subdivide_and_launch(mp_store, repop_job_label, job_name, commands, command_list)
     
+        for p_item in mp_store:
+            p_item.join()
+        mp_store[:] = []
+        
         job_name = repop_job_label
         command_list = commands.create_repop_command_v2_step_2(repop_job_label, quality_filter_label, rRNA_filter_label)
         subdivide_and_launch(mp_store, repop_job_label, job_name, commands, command_list)
     
+        for p_item in mp_store:
+            p_item.join()
+        mp_store[:] = []
         
     
         write_to_bypass_log(output_folder_path, repop_job_label)
