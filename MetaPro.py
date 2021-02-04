@@ -42,6 +42,8 @@ def delete_folder(folder_path):
     if (os.path.exists(os.path.join(folder_path, "data"))):
         print("deleting", os.path.join(folder_path, "data"))
         shutil.rmtree(os.path.join(folder_path, "data"))
+    else:
+        print("can't delete folder: doesn't exist:", folder_path)
         
 def compress_folder(folder_path):
     zip_loc = os.path.join(folder_path, "data")
@@ -1024,12 +1026,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         
         cleanup_assemble_contigs_start = time.time()
         
-        assemble_contigs_data_path = os.path.join(assemble_contigs_path, "data")
         if(keep_all == "no" and keep_assemble_contigs == "no"):
-            delete_folder(assemble_contigs_data_path)
+            delete_folder(assemble_contigs_path)
         elif(keep_all == "compress" or keep_assemble_contigs == "compress"):
             compress_folder(assemble_contigs_path)
-            delete_folder(assemble_contigs_data_path)
+            delete_folder(assemble_contigs_path)
         cleanup_assemble_contigs_end = time.time()
         
         
@@ -1151,12 +1152,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         
         cleanup_GA_BWA_start = time.time()
         delete_folder_simple(GA_BWA_jobs_folder)
-        GA_BWA_data_path = os.path.join(GA_BWA_path, "data")
         if(keep_all == "no" and keep_GA_BWA == "no"):
-            delete_folder(GA_BWA_data_path)
+            delete_folder(GA_BWA_path)
         elif(keep_all == "compress" or keep_GA_BWA == "compress"):
             compress_folder(GA_BWA_path)
-            delete_folder(GA_BWA_data_path)
+            delete_folder(GA_BWA_path)
         cleanup_GA_BWA_end = time.time()
     GA_BWA_end = time.time()
     print("GA BWA:", '%1.1f' % (GA_BWA_end - GA_BWA_start - (cleanup_GA_BWA_end - cleanup_GA_BWA_start)), "s")
