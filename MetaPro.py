@@ -1500,10 +1500,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
             
     cleanup_TA_start = time.time()
     if(keep_all == "no" and keep_TA == "no"):
-        delete_folder(taxon_annotation_path)
+        delete_folder(TA_path)
     elif(keep_all == "compress" or keep_TA == "compress"):
-        compress_folder(taxon_annotation_path)
-        delete_folder(taxon_annotation_path)
+        compress_folder(TA_path)
+        delete_folder(TA_path)
     cleanup_TA_end = time.time()
     TA_end = time.time()
     print("TA:", '%1.1f' % (TA_end - TA_start - (cleanup_TA_end - cleanup_TA_start)), "s")
