@@ -240,12 +240,21 @@ class tool_path_obj:
         TA_job_limit_default = 40
         
         
-        
+        #identity_cutoff= 85
+    #length_cutoff= 0.65
+    #score_cutoff= 60
         if config:
             self.target_rank                = self.value_assignment(config, "Settings", "target_rank", "genus")
             self.adapterremoval_minlength   = self.value_assignment(config, "Settings", "AdapterRemoval_minlength", 30)
             self.show_unclassified          = self.value_assignment(config, "Settings", "Show_unclassified", "No")
             self.RPKM_cutoff                = self.value_assignment(config, "Settings", "RPKM_cutoff", 0.01)
+            self.BWA_cigar_cutoff           = self.value_assignment(config, "Settings", "BWA_cigar_cutoff", 90)
+            self.BLAT_identity_cutoff       = self.value_assignment(config, "Settings", "BLAT_identity_cutoff", 85)
+            self.BLAT_length_cutoff         = self.value_assignment(config, "Settings", "BLAT_length_cutoff", 0.65)
+            self.BLAT_score_cutoff          = self.value_assignment(config, "Settings", "BLAT_score_cutoff", 60)            
+            self.DIAMOND_identity_cutoff    = self.value_assignment(config, "Settings", "DIAMOND_identity_cutoff", 85)
+            self.DIAMOND_length_cutoff      = self.value_assignment(config, "Settings", "DIAMOND_length_cutoff", 0.65)
+            self.DIAMOND_score_cutoff       = self.value_assignment(config, "Settings", "DIAMOND_score_cutoff", 60)
             #-----------------------------------------------------------------------------------------------    
             
             self.BWA_mem_threshold          = self.value_assignment(config, "Settings", "BWA_mem_threshold", BWA_mem_default)

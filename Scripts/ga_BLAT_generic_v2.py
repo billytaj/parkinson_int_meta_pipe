@@ -107,7 +107,7 @@ def sortbyscore(line):
 # add BLAT-aligned reads that meet threshold
 # to the aligned geneID<->readID(s) dict:
 
-def make_gene_map(hits, contig2read_map):                         # fail-mapped contig/readIDs=
+def make_gene_map(identity_cutoff, length_cutoff, score_cutoff, hits, contig2read_map):                         # fail-mapped contig/readIDs=
     # sort alignment list by high score:
     gene2read_map = dict()
     mapped = set()
@@ -115,10 +115,9 @@ def make_gene_map(hits, contig2read_map):                         # fail-mapped 
     query_details_dict = dict()
 
     # BLAT threshold:
-    identity_cutoff= 85
-    #identity_cutoff= 80
-    length_cutoff= 0.65
-    score_cutoff= 60
+    #identity_cutoff= 85
+    #length_cutoff= 0.65
+    #score_cutoff= 60
 
     repeat_reads = 0
     disagreements = 0
@@ -308,25 +307,31 @@ def export_seqs(reads_in_dict, output_name):
             
 
 if __name__ == "__main__":
-
-    DNA_DB              = sys.argv[1]   # INPUT: DNA db used for BLAT alignement
-    contig2read_file    = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
+    identity_cut        = sys.argv[1]
+    length_cut          = sys.argv[2]
+    score_cut           = sys.argv[3]
+    
+    DNA_DB              = sys.argv[4]   # INPUT: DNA db used for BLAT alignement
+    contig2read_file    = sys.argv[5]   # INPUT: [contigID, #reads, readIDs ...]
     #old_gene2read_file  = sys.argv[3]   # INPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
                                         # ->OUTPUT: [BWA&BLAT-aligned geneID, length, #reads, readIDs ...]
-    mapped_gene_file    = sys.argv[3]   # OUTPUT: BWA&BLAT-aligned geneIDs and aa seqs (.fna; fasta-format)
-    new_gene2read_file  = sys.argv[4]   # OUTPUT: new gene2read_file instead of overwriting the old map
+    mapped_gene_file    = sys.argv[6]   # OUTPUT: BWA&BLAT-aligned geneIDs and aa seqs (.fna; fasta-format)
+    new_gene2read_file  = sys.argv[7]   # OUTPUT: new gene2read_file instead of overwriting the old map
     
-    reads_in            = sys.argv[5]   # INPUT: sequence in general
-    blat_in             = sys.argv[6]
-    reads_out           = sys.argv[7]
+    reads_in            = sys.argv[8]   # INPUT: sequence in general
+    blat_in             = sys.argv[9]
+    reads_out           = sys.argv[10]
 
-
+    identity_cutoff = int(identity_cut)
+    length_cutoff = float(length_cut)
+    score_cutoff = int(score_cut)
+    
     input_safety = check_file_safety(reads_in) and check_file_safety(blat_in)
     
     if(input_safety):
         contig2read_map = import_contig_map(contig2read_file)
         blat_hits, reads_in_dict = get_blat_details(blat_in, reads_in)
-        mapped_reads, gene2read_map = make_gene_map(blat_hits, contig2read_map) 
+        mapped_reads, gene2read_map = make_gene_map(identity_cutoff, length_cutoff, score_cutoff, blat_hits, contig2read_map) 
         unmapped_reads = get_full_unmapped_reads(mapped_reads, reads_in_dict)
         
         write_gene_map(DNA_DB, new_gene2read_file, gene2read_map, mapped_gene_file)

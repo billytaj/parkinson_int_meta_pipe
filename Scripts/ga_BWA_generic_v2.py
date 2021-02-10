@@ -108,7 +108,7 @@ def filter_common_contigs(contig2read_map, contig_reads):
 # =	Read Match; the nucleotide is present in the reference.
 # X	Read Mismatch; the nucleotide is present in the reference.
 
-def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_map):#, contig2read_map_uniq):                                      # Set of unmapped contig/readIDs=
+def gene_map(cigar_cutoff, sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_map):#, contig2read_map_uniq):                                      # Set of unmapped contig/readIDs=
                                                         #  gene_map(BWA .sam file)
     # tracking BWA-assigned & unassigned:
     query_details_dict = dict() #details about the match that we care about
@@ -152,7 +152,7 @@ def gene_map(sam, contig2read_map):#, mapped_reads, gene2read_map, contig2read_m
                     
                 # does query alignment meet threshold?:
                 cigar_match_score = get_match_score(line_parts[5])
-                if(cigar_match_score < 90):
+                if(cigar_match_score < cigar_cutoff):
                     inner_details_dict["match"] = False
                     query_details_dict[query] = inner_details_dict
                 else:
@@ -275,22 +275,23 @@ def write_gene_map(DNA_DB, gene2read_file, gene2read_map, mapped_gene_file):
         SeqIO.write(genes, outfile, "fasta") 
     
 if __name__ == "__main__":
-    DNA_DB              = sys.argv[1]       # INPUT: DNA db used for BWA alignement
-    contig2read_file    = sys.argv[2]       # INPUT: [contigID, #reads, readIDs ...]
-    gene2read_out       = sys.argv[3]       # OUTPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
-    mapped_gene_file    = sys.argv[4]       # OUTPUT: genes mapped by BWA.
+    cigar_cut           = sys.argv[1]
+    DNA_DB              = sys.argv[2]       # INPUT: DNA db used for BWA alignement
+    contig2read_file    = sys.argv[3]       # INPUT: [contigID, #reads, readIDs ...]
+    gene2read_out       = sys.argv[4]       # OUTPUT: [BWA-aligned geneID, length, #reads, readIDs ...]
+    mapped_gene_file    = sys.argv[5]       # OUTPUT: genes mapped by BWA.
     
-    reads_in            = sys.argv[5]   
-    bwa_in              = sys.argv[6]
-    reads_out           = sys.argv[7]
+    reads_in            = sys.argv[6]   
+    bwa_in              = sys.argv[7]
+    reads_out           = sys.argv[8]
     
     input_safety = check_file_safety(reads_in) and check_file_safety(bwa_in)
-    
+    cigar_cutoff = int(cigar_cut)
     if(input_safety):
         contig2read_map, contig_reads = import_contig2read(contig2read_file)
         #contig2read_map_uniq, contig_unique_reads = filter_common_contigs(contig2read_map, contig_reads)
         # tracking BWA-assigned:
-        unmapped_reads, mapped_reads, gene2read_map = gene_map(bwa_in, contig2read_map)
+        unmapped_reads, mapped_reads, gene2read_map = gene_map(cigar_cutoff, bwa_in, contig2read_map)
         
         write_gene_map(DNA_DB, gene2read_out, gene2read_map, mapped_gene_file)
         write_unmapped_reads(unmapped_reads, reads_in, reads_out)

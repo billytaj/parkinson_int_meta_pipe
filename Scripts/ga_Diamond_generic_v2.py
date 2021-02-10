@@ -97,7 +97,7 @@ def sortbyscore(line):
     
 # add DMD-aligned reads that meet threshold
 # to the aligned gene/protID<->readID(s) dict:
-def form_prot_map(hits, contig2read_map): 
+def form_prot_map(identity_cutoff, length_cutoff, score_cutoff, hits, contig2read_map): 
     # sort alignment list by high score:
     prot2read_map = dict()
     mapped = set()
@@ -105,10 +105,9 @@ def form_prot_map(hits, contig2read_map):
     query_details_dict = dict()
 
     # BLAT threshold:
-    identity_cutoff= 85
-    #identity_cutoff= 80
-    length_cutoff= 0.65
-    score_cutoff= 60
+    #identity_cutoff= 85
+    #length_cutoff= 0.65
+    #score_cutoff= 60
 
     repeat_reads = 0
     disagreements = 0
@@ -279,16 +278,23 @@ def write_unmapped_seqs(unmapped_reads, reads_in, reads_out):
         
 #####################################
 if __name__ == "__main__":
+    identity_cut            = sys.argv[1]
+    length_cut              = sys.argv[2]
+    score_cut               = sys.argv[3]
 
-    Prot_DB                 = sys.argv[1]   # INPUT: AA db used for DIAMOND alignement
-    contig2read_file        = sys.argv[2]   # INPUT: [contigID, #reads, readIDs ...]
-    new_gene2read_file      = sys.argv[3]   # OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
-    prot_file               = sys.argv[4]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
+    Prot_DB                 = sys.argv[4]   # INPUT: AA db used for DIAMOND alignement
+    contig2read_file        = sys.argv[5]   # INPUT: [contigID, #reads, readIDs ...]
+    new_gene2read_file      = sys.argv[6]   # OUTPUT: [BWA&BLAT&DMD-aligned gene/protID, length, #reads, readIDs ...]
+    prot_file               = sys.argv[7]   # OUTPUT: BWA&BLAT&DMD-aligned gene/protIDs and aa seqs (.faa; fasta-format)
     
     
-    reads_in    = sys.argv[5]
-    dmd_in      = sys.argv[6]
-    reads_out   = sys.argv[7]
+    reads_in    = sys.argv[8]
+    dmd_in      = sys.argv[9]
+    reads_out   = sys.argv[10]
+    
+    identity_cutoff = int(identity_cut)
+    length_cutoff = float(length_cut)
+    score_cutoff = int(score_cut)
     
     input_safety = check_file_safety(reads_in) and check_file_safety(dmd_in)
     
@@ -298,7 +304,7 @@ if __name__ == "__main__":
         
         
         dmd_hits = get_dmd_hit_details(dmd_in, reads_in)
-        unmapped_reads, mapped_reads, prot2read_map = form_prot_map(dmd_hits, contig2read_map)
+        unmapped_reads, mapped_reads, prot2read_map = form_prot_map(identity_cutoff, length_cutoff, score_cutoff, md_hits, contig2read_map)
         write_proteins_genemap(prot2read_map, Prot_DB, new_gene2read_file, prot_file)
         
         
