@@ -373,6 +373,13 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     
     #------------------------------------------------------------------------
     
+    BWA_cigar_cutoff        = paths.BWA_cigar_cutoff
+    BLAT_identity_cutoff    = paths.BLAT_identity_cutoff
+    BLAT_length_cutoff      = paths.BLAT_length_cutoff
+    BLAT_score_cutoff       = paths.BLAT_score_cutoff
+    DIAMOND_identity_cutoff = paths.DIAMOND_identity_cutoff
+    DIAMOND_length_cutoff   = paths.DIAMOND_length_cutoff
+    DIAMOND_score_cutoff    = paths.DIAMOND_score_cutoff
     
     print("============================================================")
     print("data cleaner options:")
@@ -426,6 +433,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     print("Filter stringency:", filter_stringency)
     print("rRNA filter Chunk size:", rRNA_chunks)
     print("GA chunk size:", GA_chunksize)
+    print("===================================================")
+    print("BWA cigar cutoff:", BWA_cigar_cutoff)
+    print("BLAT identity cutoff:", BLAT_identity_cutoff)
+    print("BLAT length cutoff:", BLAT_length_cutoff)
+    print("BLAT score cutoff:", BLAT_score_cutoff)
+    print("DIAMOND identity cutoff:", DIAMOND_identity_cutoff)
+    print("DIAMOND length cutoff:", DIAMOND_length_cutoff)
+    print("DIAMOND score cutoff:", DIAMOND_score_cutoff)
     print("---------------------------------")
     if not single_path == "":
         read_mode = "single"
