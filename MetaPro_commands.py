@@ -2130,7 +2130,7 @@ class mt_pipe_commands:
         map_read_bwa = ">&2 echo " + str(dt.today()) + " GA BWA PP generic: " + sample_root_name + " | "
         map_read_bwa += self.tool_path_obj.Python + " "
         map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
-        map_read_bwa += self.tool_path_obj.BWA_cigar_cutoff + " "
+        map_read_bwa += str(self.tool_path_obj.BWA_cigar_cutoff) + " "
         map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
         map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
         map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
@@ -2257,9 +2257,9 @@ class mt_pipe_commands:
         blat_pp = ">&2 echo " + str(dt.today()) + " BLAT post-processing " + sample_root_name + " | "
         blat_pp += self.tool_path_obj.Python + " "
         blat_pp += self.tool_path_obj.Map_reads_gene_BLAT + " "
-        blat_pp += self.tool_path_obj.BLAT_identity_cutoff + " "
-        blat_pp += self.tool_path_obj.BLAT_length_cutoff + " "
-        blat_pp += self.tool_path_obj.BLAT_score_cutoff + " "
+        blat_pp += str(self.tool_path_obj.BLAT_identity_cutoff) + " "
+        blat_pp += str(self.tool_path_obj.BLAT_length_cutoff) + " "
+        blat_pp += str(self.tool_path_obj.BLAT_score_cutoff) + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
         blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
         blat_pp += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " "
@@ -2357,9 +2357,9 @@ class mt_pipe_commands:
         diamond_pp = ">&2 echo " + str(dt.today()) + " DIAMOND post process " + sample_root_name + " | "
         diamond_pp += self.tool_path_obj.Python + " "
         diamond_pp += self.tool_path_obj.Map_reads_prot_DMND + " "
-        diamond_pp += self.tool_path_obj.DIAMOND_identity_cutoff + " "
-        diamond_pp += self.tool_path_obj.DIAMOND_length_cutoff + " "
-        diamond_pp += self.tool_path_obj.DIAMOND_score_cutoff + " "
+        diamond_pp += str(self.tool_path_obj.DIAMOND_identity_cutoff) + " "
+        diamond_pp += str(self.tool_path_obj.DIAMOND_length_cutoff) + " "
+        diamond_pp += str(self.tool_path_obj.DIAMOND_score_cutoff) + " "
         diamond_pp += self.tool_path_obj.Prot_DB_reads + " "                # IN
         diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
         diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_gene_map.tsv") + " "      # OUT
