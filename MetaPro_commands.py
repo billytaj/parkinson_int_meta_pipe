@@ -2177,7 +2177,10 @@ class mt_pipe_commands:
         map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
         map_read_bwa += str(self.tool_path_obj.BWA_cigar_cutoff) + " "
         map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
-        map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
+        if(self.sequence_contigs == "None"):
+            map_read_bwa += "None" + " "
+        else:        
+            map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
         map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
         map_read_bwa += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " " #OUT
         map_read_bwa += reads_in + " "

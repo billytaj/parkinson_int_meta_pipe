@@ -2334,8 +2334,6 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             sys.exit("mgm did not run.  look into it.  Proabably a license issue. pipeline stopping here")
         
     elif(tutorial_mode_string == "GA"):
-    def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category, marker_file):
-    def create_split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category, marker_file):
         GA_BWA_start = time.time()
         GA_BWA_path = os.path.join(output_folder_path, GA_BWA_label)
         GA_BWA_jobs_folder = os.path.join(GA_BWA_path, "data", "jobs")
@@ -2360,11 +2358,11 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         for section in sections: 
             extension = ""
             if(section == "singletons"):
-                extension = os.path.splitext(sequence_single)[1]
+                extension = os.path.splitext(single_path)[1]
             elif(section == "pair_1"):
-                extension = os.path.splitext(sequence_path_1)[1]
+                extension = os.path.splitext(pair_1_path)[1]
             elif(section == "pair_2"):
-                extension = os.path.splitext(sequence_path_2)[1]
+                extension = os.path.splitext(pair_2_path)[1]
             
             extension_mode = ""
             if((extension == ".fa") or (extension == ".fasta")):
@@ -2382,9 +2380,9 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                 job_name = "GA_prep_split_" + section
                 command_list = ""
                 if(extension_mode == "fasta"):
-                    command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
-                elif(extension_mode == "fastq"):
                     command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
+                elif(extension_mode == "fastq"):
+                    command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
                 launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
                 
                 
@@ -3071,7 +3069,7 @@ if __name__ == "__main__":
         sys.exit()
 
     config_file     = args.config if args.config else ""
-    contig          = args.contig if args.contig else ""
+    contig          = args.contig if args.contig else "None"
     pair_1          = args.pair1 if args.pair1 else ""
     pair_2          = args.pair2 if args.pair2 else ""
     single          = args.single if args.single else ""
