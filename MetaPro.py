@@ -2334,7 +2334,8 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             sys.exit("mgm did not run.  look into it.  Proabably a license issue. pipeline stopping here")
         
     elif(tutorial_mode_string == "GA"):
-    
+    def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category, marker_file):
+    def create_split_ga_fasta_data_command(self, stage_name, dependency_stage_name, category, marker_file):
         GA_BWA_start = time.time()
         GA_BWA_path = os.path.join(output_folder_path, GA_BWA_label)
         GA_BWA_jobs_folder = os.path.join(GA_BWA_path, "data", "jobs")
@@ -2345,25 +2346,48 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping", marker_file)
         else:
-            job_name = "GA_prep_split_contigs"
-            marker_path_list.append(marker_path)
-            command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs", marker_file)
-            launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
-        
+            if(contig_path != "None"):
+                job_name = "GA_prep_split_contigs"
+                marker_path_list.append(marker_path)
+                command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs", marker_file)
+                launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
+            else:
+                print(dt.today(), "no contigs supplied to GA. skipping: GA prep split contigs")
         
         sections = ["singletons"]
         if(read_mode == "paired"):
             sections.extend(["pair_1", "pair_2"])
         for section in sections: 
-            marker_file = "GA_split_fastq_" + section
+            extension = ""
+            if(section == "singletons"):
+                extension = os.path.splitext(sequence_single)[1]
+            elif(section == "pair_1"):
+                extension = os.path.splitext(sequence_path_1)[1]
+            elif(section == "pair_2"):
+                extension = os.path.splitext(sequence_path_2)[1]
+            
+            extension_mode = ""
+            if((extension == ".fa") or (extension == ".fasta")):
+                marker_file = "GA_split_fasta_" + section
+                extension_mode = "fasta"
+            if((extension == ".fastq") or (extension == ".fq")):
+                marker_file = "GA_split_fastq_" + section
+                extension_mode = "fastq"
+                
             marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
             if(os.path.exists(marker_path)):
                 print(dt.today(), "skipping", marker_file)
             else:
                 marker_path_list.append(marker_path)
                 job_name = "GA_prep_split_" + section
-                command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
+                command_list = ""
+                if(extension_mode == "fasta"):
+                    command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
+                elif(extension_mode == "fastq"):
+                    command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
                 launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
+                
+                
         
         for item in mp_store:
             item.join()
@@ -2372,7 +2396,12 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
 
             
         #-------------------------------------------------------------------------
-        sections = ["contigs", "singletons"]
+        
+        sections = ["singletons"]
+        if(contig_path != "None"):
+            sections.append("contigs")
+            print(dt.today(), "adding contigs to list of things to GA: BWA", sections)
+            
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
         
@@ -2403,9 +2432,9 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         check_all_job_markers(marker_path_list, final_checklist)
             
         marker_path_list = []
-        sections = ["contigs", "singletons"]
-        if read_mode == "paired":
-            sections.extend(["pair_1", "pair_2"])
+        #sections = ["contigs", "singletons"]
+        #if read_mode == "paired":
+        #    sections.extend(["pair_1", "pair_2"])
         for section in sections:
             for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))
@@ -2426,14 +2455,17 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        marker_file = "BWA_copy_contig_map"
-        marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
-        if(os.path.exists(marker_path)):
-            print(dt.today(), "skipping:", marker_file)
-        else:   
-            marker_path_list.append(marker_path)
-            command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label, marker_file)
-            launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
+        if(contig_path != "None"):
+            marker_file = "BWA_copy_contig_map"
+            marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:   
+                marker_path_list.append(marker_path)
+                command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label, marker_file)
+                launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
+        else:
+            print(dt.today(), "skipping copy contig map.  There's no contigs, afterall")
         
         final_checklist = os.path.join(GA_BWA_path, "GA_BWA_pp.txt")
         check_all_job_markers(marker_path_list, final_checklist)
@@ -2539,16 +2571,18 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             for item in mp_store:
                 item.join()
             mp_store[:] = []
-            
-            job_name = "GA_BLAT_copy_contigs"
-            marker_file = "blat_copy_contig_map"
-            marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-            if(os.path.exists(marker_path)):
-                print(dt.today(), "skipping:", marker_file)
-            else:
-                marker_path_list.append(marker_path)
-                command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
-                launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
+            if(contig_path != "None"):
+                job_name = "GA_BLAT_copy_contigs"
+                marker_file = "blat_copy_contig_map"
+                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
+                    launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
+                
+                
             final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
             check_all_job_markers(marker_path_list, final_checklist)
             delete_folder_simple(GA_BLAT_jobs_folder)

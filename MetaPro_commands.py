@@ -2038,19 +2038,64 @@ class mt_pipe_commands:
         
         
         if(self.tutorial_keyword == "GA"):
-            split_fasta = ">&2 echo splitting fasta for " + category + " | "
-            split_fasta += self.tool_path_obj.Python + " "    
-            split_fasta += self.tool_path_obj.File_splitter + " "
-            split_fasta += self.sequence_contigs + " "
-            split_fasta += os.path.join(split_folder, category) + " "
-            split_fasta += str(self.tool_path_obj.GA_chunksize)
-            
-            make_marker = "touch" + " "
-            make_marker += os.path.join(jobs_folder, marker_file)
-            
-            COMMANDS_GA_prep_fasta = [
-                split_fasta + " && " + make_marker
-            ]
+            if(category == "singletons"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_single + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+                
+            elif(category == "contigs"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_contigs + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+            elif(category == "pair_1"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_path_1 + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+            elif(category == "pair_2"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_path_2 + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+                
         else:
             split_fasta = ">&2 echo splitting fasta for " + category + " | "
             split_fasta += self.tool_path_obj.Python + " "    
