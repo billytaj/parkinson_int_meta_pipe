@@ -2309,7 +2309,10 @@ class mt_pipe_commands:
         blat_pp += str(self.tool_path_obj.BLAT_length_cutoff) + " "
         blat_pp += str(self.tool_path_obj.BLAT_score_cutoff) + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
-        blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
+        if(self.sequence_contigs == "None"):
+            blat_pp += "None" + " "
+        else:
+            blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
         blat_pp += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " "
         blat_pp += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "
         blat_pp += query_file + " "
@@ -2409,7 +2412,10 @@ class mt_pipe_commands:
         diamond_pp += str(self.tool_path_obj.DIAMOND_length_cutoff) + " "
         diamond_pp += str(self.tool_path_obj.DIAMOND_score_cutoff) + " "
         diamond_pp += self.tool_path_obj.Prot_DB_reads + " "                # IN
-        diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
+        if(self.sequence_contigs == "None"):
+            diamond_pp += "None" + " "
+        else:
+            diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
         diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_gene_map.tsv") + " "      # OUT
         diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_proteins.faa") + " "      # OUT
         
