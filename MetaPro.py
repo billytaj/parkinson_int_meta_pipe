@@ -2636,44 +2636,44 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             open(GA_DIAMOND_final_job_marker, "a").close()
             
             
-        #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
-        print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                job_name = "DIAMOND_pp_" + file_tag
-                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
-                marker_file = file_tag + "_diamond_pp"
-                marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                    continue
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path, marker_file)
-                    launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
-                                    
-        print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND_pp.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
-   
+            #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
+            print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    job_name = "DIAMOND_pp_" + file_tag
+                    full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                    marker_file = file_tag + "_diamond_pp"
+                    marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path, marker_file)
+                        launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
+                                        
+            print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND_pp.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+       
+                
             
-        
-        cleanup_GA_DIAMOND_start = time.time()
-        if(keep_all == "no" and keep_GA_DIAMOND == "no"):
-            delete_folder(GA_DIAMOND_path)
-        elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
-            compress_folder(GA_DIAMOND_path)
-            delete_folder(GA_DIAMOND_path)
-        cleanup_GA_DIAMOND_end = time.time()
-        GA_DIAMOND_end = time.time()
-        print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
-        print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
+            cleanup_GA_DIAMOND_start = time.time()
+            if(keep_all == "no" and keep_GA_DIAMOND == "no"):
+                delete_folder(GA_DIAMOND_path)
+            elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
+                compress_folder(GA_DIAMOND_path)
+                delete_folder(GA_DIAMOND_path)
+            cleanup_GA_DIAMOND_end = time.time()
+            GA_DIAMOND_end = time.time()
+            print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
+            print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
         
         
         GA_final_merge_start = time.time()
