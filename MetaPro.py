@@ -2603,30 +2603,37 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         GA_DIAMOND_path = os.path.join(output_folder_path, GA_DIAMOND_label)
         GA_DIAMOND_tool_output_path = os.path.join(GA_DIAMOND_path, "data", "0_diamond")
         GA_DIAMOND_jobs_folder = os.path.join(GA_DIAMOND_path, "data", "jobs")
-        #if not check_where_resume(None, GA_DIAMOND_tool_output_path, GA_BLAT_path, file_check_bypass = True):
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                job_name = "DIAMOND_" + file_tag
-                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
-                marker_file = file_tag + "_diamond"
-                marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_path)
-                    continue
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path, marker_file)
-                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
-                
-        print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
+        
+        GA_DIAMOND_final_job_marker = os.path.join(GA_DIAMOND_path, "all_dmd")
+        if (os.path.exists(GA_DIAMOND_final_job_marker)):
+            print(dt.today(), "DMD was run, skipping")
+        else:
+            
+            #if not check_where_resume(None, GA_DIAMOND_tool_output_path, GA_BLAT_path, file_check_bypass = True):
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    job_name = "DIAMOND_" + file_tag
+                    full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                    marker_file = file_tag + "_diamond"
+                    marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_path)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path, marker_file)
+                        launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
+                    
+            print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            open(GA_DIAMOND_final_job_marker, "a").close()
             
             
         #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
