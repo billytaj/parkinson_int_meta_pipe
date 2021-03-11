@@ -2577,6 +2577,8 @@ class mt_pipe_commands:
         self.make_folder(jobs_folder)
         self.make_folder(final_folder)
         
+        singletons_extension = os.path.splitext(self.sequence_single)[1]
+        
         if(operating_mode == "contigs"):
             patch_contig_name = self.tool_path_obj.Python + " "
             patch_contig_name += self.tool_path_obj.ta_contig_name_convert + " "
@@ -2613,7 +2615,10 @@ class mt_pipe_commands:
             centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
             
             if(self.tutorial_keyword == "TA"):
-                centrifuge_on_reads += " -U " + self.sequence_single
+                if(singletons_extension == ".fa" or singletons_extension == ".fasta"):
+                    centrifuge_on_reads += "-f -U " + self.sequence_single
+                else:
+                    centrifuge_on_reads += " -U " + self.sequence_single
                 if self.read_mode == "paired":
                     centrifuge_on_reads += " -1 " + self.sequence_path_1
                     centrifuge_on_reads += " -2 " + self.sequence_path_2
