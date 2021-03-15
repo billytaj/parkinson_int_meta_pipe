@@ -4,6 +4,8 @@
 #We also wanted to make it as explicit as possible, so it's easy to understand.
 
 import sys
+import os
+from datetime import datetime as dt
 
 def import_classifications(input_file, contig2read_map):
     #list of dictionaries
@@ -82,6 +84,8 @@ if __name__ == "__main__":
     contig2read_map = dict()
     if(os.path.exists(contig2read_file)):
         contig2read_map = import_contig2read_map(contig2read_file)
+    else:
+        print(dt.today(), "no contigs to consider.  continuing")
     
     #import each classification result
     Input_classifications = []
