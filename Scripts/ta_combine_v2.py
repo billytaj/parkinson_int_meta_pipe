@@ -89,9 +89,12 @@ if __name__ == "__main__":
     
     #import each classification result
     Input_classifications = []
-    Input_classifications.append(import_classifications(ga_taxon_results_0, contig2read_map))
-    Input_classifications.append(import_classifications(ga_taxon_results_1, contig2read_map))
-    Input_classifications.append(import_classifications(ga_taxon_results_2, contig2read_map))
+    if(os.path.exists(ga_taxon_results_0)):
+        Input_classifications.append(import_classifications(ga_taxon_results_0, contig2read_map))
+    if(os.path.exists(ga_taxon_results_1)):
+        Input_classifications.append(import_classifications(ga_taxon_results_1, contig2read_map))
+    if(os.path.exists(ga_taxon_results_2)):
+        Input_classifications.append(import_classifications(ga_taxon_results_2, contig2read_map))
     Input_classifications.append(import_classifications(kaiju_results, contig2read_map))
     Input_classifications.append(import_classifications(centrifuge_results, contig2read_map))
 
