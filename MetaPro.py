@@ -2719,6 +2719,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             #----------------------------------------------
             #centrifuge is too much of a RAM hog.  can't run more than 1 at a time
             sections = ["reads"]
+            print("sections for TA centrifuge:", sections)
             for section in sections:
                 marker_file = "TA_centrifuge_" + section
                 marker_path = os.path.join(TA_jobs_folder, marker_file)
@@ -2726,11 +2727,18 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                 if(os.path.exists(marker_path)):
                     print(dt.today(), "skipping:", marker_file)
                 else:
+                    print(dt.today(), "running:", marker_file)
                     marker_path_list.append(marker_path)
                     command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
                     launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
                     
-            sections = ["contigs", "singletons"]
+            sections = ["singletons"]
+            if(contig_path != "None"):
+                sections.append("contigs")
+                print(dt.today(), "adding contigs to list of things to TA", sections)
+            else:
+                print(dt.today(), "not adding contigs to TA")
+                
             if read_mode == "paired":
                 sections.extend(["paired"])
                 
@@ -2761,18 +2769,22 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             #--------------------------------------------------
             # stage 2
             marker_path_list = []
-            sections = ["contigs"]
-            for section in sections:
-                marker_file = "TA_centrifuge_" + section
-                marker_path = os.path.join(TA_jobs_folder, marker_file)
-                
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
-                    launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
             
+            if(contig_path != "None"):
+                sections = ["contigs"]
+                for section in sections:
+                    marker_file = "TA_centrifuge_" + section
+                    marker_path = os.path.join(TA_jobs_folder, marker_file)
+                    
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                        launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+            else:
+                print(dt.today(), "skipping TA centrifuge contigs")
+                
             marker_file = "TA_kaiju_pp"
             marker_path = os.path.join(TA_jobs_folder, marker_file)
             if(os.path.exists(marker_file)):

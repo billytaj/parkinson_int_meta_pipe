@@ -79,8 +79,10 @@ if __name__ == "__main__":
     centrifuge_results = sys.argv[7]
     
     #import the contig map
-    contig2read_map = import_contig2read_map(contig2read_file)
-
+    contig2read_map = dict()
+    if(os.path.exists(contig2read_file)):
+        contig2read_map = import_contig2read_map(contig2read_file)
+    
     #import each classification result
     Input_classifications = []
     Input_classifications.append(import_classifications(ga_taxon_results_0, contig2read_map))

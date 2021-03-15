@@ -2550,7 +2550,8 @@ class mt_pipe_commands:
         
         cat_kaiju = ">&2 echo merging all kaiju results | "
         cat_kaiju += "cat "
-        cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
+        if(self.sequence_contigs != "None"):
+            cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
         cat_kaiju += os.path.join(kaiju_folder, "singletons.tsv")
         if self.read_mode == "paired":
             cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
@@ -2616,7 +2617,7 @@ class mt_pipe_commands:
             
             if(self.tutorial_keyword == "TA"):
                 if(singletons_extension == ".fa" or singletons_extension == ".fasta"):
-                    centrifuge_on_reads += "-f -U " + self.sequence_single
+                    centrifuge_on_reads += " -f -U " + self.sequence_single
                 else:
                     centrifuge_on_reads += " -U " + self.sequence_single
                 if self.read_mode == "paired":
@@ -2672,7 +2673,8 @@ class mt_pipe_commands:
         cat_centrifuge = ">&2 echo combining all centrifuge results | "
         cat_centrifuge += "cat "
         cat_centrifuge += os.path.join(centrifuge_folder, "reads.tsv") + " "
-        cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
+        if(self.sequence_contigs != "None"):
+            cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
         cat_centrifuge += " > " + os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
 
         make_marker = "touch" + " "
