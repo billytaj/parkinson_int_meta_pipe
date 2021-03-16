@@ -1928,7 +1928,11 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
     print("---------------------------------")
     if not single_path == "":
         read_mode = "single"
-        quality_encoding = determine_encoding(single_path)
+        extension = os.path.splitext(single_path)[1]
+        if(extension == ".fa" or extension == ".fasta"):
+            quality_encoding = 33 #this is default because it doesn't actually matter for fasta
+        else:
+            quality_encoding = determine_encoding(single_path)
         print("ENCODING USED:", quality_encoding)
         print("OPERATING IN SINGLE-ENDED MODE")
     else:
