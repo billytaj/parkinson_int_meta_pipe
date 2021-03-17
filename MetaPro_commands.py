@@ -2753,8 +2753,7 @@ class mt_pipe_commands:
         wevote_collect += self.tool_path_obj.Python + " "
         wevote_collect += self.tool_path_obj.Wevote_parser + " "
         wevote_collect += os.path.join(wevote_folder, "wevote_WEVOTE_Details.txt") + " "
-        wevote_collect += os.path.join(final_folder, "taxonomic_classifications.tsv") + " "
-        wevote_collect += self.sequence_contigs
+        wevote_collect += os.path.join(final_folder, "taxonomic_classifications.tsv")
         
         constrain = ">&2 echo Constraining the Taxonomic Annotation | " 
         constrain += self.tool_path_obj.Python + " " + self.tool_path_obj.Constrain_classification + " "

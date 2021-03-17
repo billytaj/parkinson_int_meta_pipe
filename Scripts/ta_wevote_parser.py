@@ -9,13 +9,13 @@ import pandas as pd
 if __name__ == "__main__":
     wevote_file = sys.argv[1]
     output_file = sys.argv[2]
-    contigs = sys.argv[3]
+    
     
     
     wevote_df = pd.read_csv(wevote_file, sep = "\t", header = None)
-    if(contigs == "None"):
+    try:
         wevote_df.columns = ["read_id", "tool_count", "tools_can_classify", "agreed", "score", "junk", "tool_3", "tool_4", "assignment"]
-    else:
+    except ValueError:
         wevote_df.columns = ["read_id", "tool_count", "tools_can_classify", "agreed", "score", "junk", "tool_0", "tool_1", "tool_2", "tool_3", "tool_4", "assignment"]
     wevote_df = wevote_df[["read_id", "assignment"]]
     wevote_df.to_csv(output_file, sep = "\t", index = False, header = None)
