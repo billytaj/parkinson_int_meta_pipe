@@ -2038,19 +2038,64 @@ class mt_pipe_commands:
         
         
         if(self.tutorial_keyword == "GA"):
-            split_fasta = ">&2 echo splitting fasta for " + category + " | "
-            split_fasta += self.tool_path_obj.Python + " "    
-            split_fasta += self.tool_path_obj.File_splitter + " "
-            split_fasta += self.sequence_contigs + " "
-            split_fasta += os.path.join(split_folder, category) + " "
-            split_fasta += str(self.tool_path_obj.GA_chunksize)
-            
-            make_marker = "touch" + " "
-            make_marker += os.path.join(jobs_folder, marker_file)
-            
-            COMMANDS_GA_prep_fasta = [
-                split_fasta + " && " + make_marker
-            ]
+            if(category == "singletons"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_single + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+                
+            elif(category == "contigs"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_contigs + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+            elif(category == "pair_1"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_path_1 + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+            elif(category == "pair_2"):
+                split_fasta = ">&2 echo splitting fasta for " + category + " | "
+                split_fasta += self.tool_path_obj.Python + " "    
+                split_fasta += self.tool_path_obj.File_splitter + " "
+                split_fasta += self.sequence_path_2 + " "
+                split_fasta += os.path.join(split_folder, category) + " "
+                split_fasta += str(self.tool_path_obj.GA_chunksize)
+                
+                make_marker = "touch" + " "
+                make_marker += os.path.join(jobs_folder, marker_file)
+                
+                COMMANDS_GA_prep_fasta = [
+                    split_fasta + " && " + make_marker
+                ]
+                
         else:
             split_fasta = ">&2 echo splitting fasta for " + category + " | "
             split_fasta += self.tool_path_obj.Python + " "    
@@ -2132,7 +2177,10 @@ class mt_pipe_commands:
         map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
         map_read_bwa += str(self.tool_path_obj.BWA_cigar_cutoff) + " "
         map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
-        map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
+        if(self.sequence_contigs == "None"):
+            map_read_bwa += "None" + " "
+        else:        
+            map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
         map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
         map_read_bwa += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " " #OUT
         map_read_bwa += reads_in + " "
@@ -2261,7 +2309,10 @@ class mt_pipe_commands:
         blat_pp += str(self.tool_path_obj.BLAT_length_cutoff) + " "
         blat_pp += str(self.tool_path_obj.BLAT_score_cutoff) + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
-        blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
+        if(self.sequence_contigs == "None"):
+            blat_pp += "None" + " "
+        else:
+            blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
         blat_pp += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " "
         blat_pp += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "
         blat_pp += query_file + " "
@@ -2361,7 +2412,10 @@ class mt_pipe_commands:
         diamond_pp += str(self.tool_path_obj.DIAMOND_length_cutoff) + " "
         diamond_pp += str(self.tool_path_obj.DIAMOND_score_cutoff) + " "
         diamond_pp += self.tool_path_obj.Prot_DB_reads + " "                # IN
-        diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
+        if(self.sequence_contigs == "None"):
+            diamond_pp += "None" + " "
+        else:
+            diamond_pp += os.path.join(dep_loc, "contig_map.tsv") + " "         # IN
         diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_gene_map.tsv") + " "      # OUT
         diamond_pp += os.path.join(final_folder, sample_root_name + "_diamond_proteins.faa") + " "      # OUT
         
@@ -2496,7 +2550,8 @@ class mt_pipe_commands:
         
         cat_kaiju = ">&2 echo merging all kaiju results | "
         cat_kaiju += "cat "
-        cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
+        if(self.sequence_contigs != "None"):
+            cat_kaiju += os.path.join(kaiju_folder, "contigs.tsv") + " "
         cat_kaiju += os.path.join(kaiju_folder, "singletons.tsv")
         if self.read_mode == "paired":
             cat_kaiju += " " + os.path.join(kaiju_folder, "pairs.tsv")
@@ -2522,6 +2577,8 @@ class mt_pipe_commands:
         self.make_folder(centrifuge_folder)
         self.make_folder(jobs_folder)
         self.make_folder(final_folder)
+        
+        singletons_extension = os.path.splitext(self.sequence_single)[1]
         
         if(operating_mode == "contigs"):
             patch_contig_name = self.tool_path_obj.Python + " "
@@ -2559,7 +2616,10 @@ class mt_pipe_commands:
             centrifuge_on_reads += " -x " + self.tool_path_obj.Centrifuge_db
             
             if(self.tutorial_keyword == "TA"):
-                centrifuge_on_reads += " -U " + self.sequence_single
+                if(singletons_extension == ".fa" or singletons_extension == ".fasta"):
+                    centrifuge_on_reads += " -f -U " + self.sequence_single
+                else:
+                    centrifuge_on_reads += " -U " + self.sequence_single
                 if self.read_mode == "paired":
                     centrifuge_on_reads += " -1 " + self.sequence_path_1
                     centrifuge_on_reads += " -2 " + self.sequence_path_2
@@ -2613,7 +2673,8 @@ class mt_pipe_commands:
         cat_centrifuge = ">&2 echo combining all centrifuge results | "
         cat_centrifuge += "cat "
         cat_centrifuge += os.path.join(centrifuge_folder, "reads.tsv") + " "
-        cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
+        if(self.sequence_contigs != "None"):
+            cat_centrifuge += os.path.join(centrifuge_folder, "contigs.tsv")
         cat_centrifuge += " > " + os.path.join(centrifuge_folder, "merged_centrifuge.tsv")
 
         make_marker = "touch" + " "

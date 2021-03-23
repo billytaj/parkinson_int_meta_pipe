@@ -1928,7 +1928,11 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
     print("---------------------------------")
     if not single_path == "":
         read_mode = "single"
-        quality_encoding = determine_encoding(single_path)
+        extension = os.path.splitext(single_path)[1]
+        if(extension == ".fa" or extension == ".fasta"):
+            quality_encoding = 33 #this is default because it doesn't actually matter for fasta
+        else:
+            quality_encoding = determine_encoding(single_path)
         print("ENCODING USED:", quality_encoding)
         print("OPERATING IN SINGLE-ENDED MODE")
     else:
@@ -2334,7 +2338,6 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             sys.exit("mgm did not run.  look into it.  Proabably a license issue. pipeline stopping here")
         
     elif(tutorial_mode_string == "GA"):
-    
         GA_BWA_start = time.time()
         GA_BWA_path = os.path.join(output_folder_path, GA_BWA_label)
         GA_BWA_jobs_folder = os.path.join(GA_BWA_path, "data", "jobs")
@@ -2345,25 +2348,48 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping", marker_file)
         else:
-            job_name = "GA_prep_split_contigs"
-            marker_path_list.append(marker_path)
-            command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs", marker_file)
-            launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
-        
+            if(contig_path != "None"):
+                job_name = "GA_prep_split_contigs"
+                marker_path_list.append(marker_path)
+                command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, "contigs", marker_file)
+                launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
+            else:
+                print(dt.today(), "no contigs supplied to GA. skipping: GA prep split contigs")
         
         sections = ["singletons"]
         if(read_mode == "paired"):
             sections.extend(["pair_1", "pair_2"])
         for section in sections: 
-            marker_file = "GA_split_fastq_" + section
+            extension = ""
+            if(section == "singletons"):
+                extension = os.path.splitext(single_path)[1]
+            elif(section == "pair_1"):
+                extension = os.path.splitext(pair_1_path)[1]
+            elif(section == "pair_2"):
+                extension = os.path.splitext(pair_2_path)[1]
+            
+            extension_mode = ""
+            if((extension == ".fa") or (extension == ".fasta")):
+                marker_file = "GA_split_fasta_" + section
+                extension_mode = "fasta"
+            if((extension == ".fastq") or (extension == ".fq")):
+                marker_file = "GA_split_fastq_" + section
+                extension_mode = "fastq"
+                
             marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
             if(os.path.exists(marker_path)):
                 print(dt.today(), "skipping", marker_file)
             else:
                 marker_path_list.append(marker_path)
                 job_name = "GA_prep_split_" + section
-                command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
+                command_list = ""
+                if(extension_mode == "fasta"):
+                    command_list = commands.create_split_ga_fasta_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
+                elif(extension_mode == "fastq"):
+                    command_list = commands.create_split_ga_fastq_data_command(GA_BWA_label, assemble_contigs_label, section, marker_file)
                 launch_and_create_with_mp_store(mp_store, GA_BWA_label, job_name, commands, command_list)
+                
+                
         
         for item in mp_store:
             item.join()
@@ -2372,7 +2398,12 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
 
             
         #-------------------------------------------------------------------------
-        sections = ["contigs", "singletons"]
+        
+        sections = ["singletons"]
+        if(contig_path != "None"):
+            sections.append("contigs")
+            print(dt.today(), "adding contigs to list of things to GA: BWA", sections)
+            
         if read_mode == "paired":
             sections.extend(["pair_1", "pair_2"])
         
@@ -2403,9 +2434,9 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         check_all_job_markers(marker_path_list, final_checklist)
             
         marker_path_list = []
-        sections = ["contigs", "singletons"]
-        if read_mode == "paired":
-            sections.extend(["pair_1", "pair_2"])
+        #sections = ["contigs", "singletons"]
+        #if read_mode == "paired":
+        #    sections.extend(["pair_1", "pair_2"])
         for section in sections:
             for split_sample in os.listdir(os.path.join(GA_BWA_path, "data", "0_read_split", section)):
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))
@@ -2426,14 +2457,17 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         for item in mp_store:
             item.join()
         mp_store[:] = []
-        marker_file = "BWA_copy_contig_map"
-        marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
-        if(os.path.exists(marker_path)):
-            print(dt.today(), "skipping:", marker_file)
-        else:   
-            marker_path_list.append(marker_path)
-            command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label, marker_file)
-            launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
+        if(contig_path != "None"):
+            marker_file = "BWA_copy_contig_map"
+            marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+            if(os.path.exists(marker_path)):
+                print(dt.today(), "skipping:", marker_file)
+            else:   
+                marker_path_list.append(marker_path)
+                command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label, marker_file)
+                launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
+        else:
+            print(dt.today(), "skipping copy contig map.  There's no contigs, afterall")
         
         final_checklist = os.path.join(GA_BWA_path, "GA_BWA_pp.txt")
         check_all_job_markers(marker_path_list, final_checklist)
@@ -2539,16 +2573,18 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             for item in mp_store:
                 item.join()
             mp_store[:] = []
-            
-            job_name = "GA_BLAT_copy_contigs"
-            marker_file = "blat_copy_contig_map"
-            marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-            if(os.path.exists(marker_path)):
-                print(dt.today(), "skipping:", marker_file)
-            else:
-                marker_path_list.append(marker_path)
-                command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
-                launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
+            if(contig_path != "None"):
+                job_name = "GA_BLAT_copy_contigs"
+                marker_file = "blat_copy_contig_map"
+                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping:", marker_file)
+                else:
+                    marker_path_list.append(marker_path)
+                    command_list = commands.create_BLAT_copy_contig_map_command(GA_BLAT_label, GA_BWA_label, marker_file)
+                    launch_and_create_simple(GA_BLAT_label, job_name, commands, command_list)
+                
+                
             final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_pp.txt")
             check_all_job_markers(marker_path_list, final_checklist)
             delete_folder_simple(GA_BLAT_jobs_folder)
@@ -2571,70 +2607,77 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         GA_DIAMOND_path = os.path.join(output_folder_path, GA_DIAMOND_label)
         GA_DIAMOND_tool_output_path = os.path.join(GA_DIAMOND_path, "data", "0_diamond")
         GA_DIAMOND_jobs_folder = os.path.join(GA_DIAMOND_path, "data", "jobs")
-        #if not check_where_resume(None, GA_DIAMOND_tool_output_path, GA_BLAT_path, file_check_bypass = True):
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                job_name = "DIAMOND_" + file_tag
-                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
-                marker_file = file_tag + "_diamond"
-                marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_path)
-                    continue
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path, marker_file)
-                    launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
-                
-        print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
-            
-            
-        #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
-        print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                job_name = "DIAMOND_pp_" + file_tag
-                full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
-                marker_file = file_tag + "_diamond_pp"
-                marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                    continue
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path, marker_file)
-                    launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
-                                    
-        print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
-        for item in mp_store:
-            item.join()
-        mp_store[:] = []
-        final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND_pp.txt")
-        check_all_job_markers(marker_path_list, final_checklist)
-   
-            
         
-        cleanup_GA_DIAMOND_start = time.time()
-        if(keep_all == "no" and keep_GA_DIAMOND == "no"):
-            delete_folder(GA_DIAMOND_path)
-        elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
-            compress_folder(GA_DIAMOND_path)
-            delete_folder(GA_DIAMOND_path)
-        cleanup_GA_DIAMOND_end = time.time()
-        GA_DIAMOND_end = time.time()
-        print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
-        print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
+        GA_DIAMOND_final_job_marker = os.path.join(GA_DIAMOND_path, "all_dmd")
+        if (os.path.exists(GA_DIAMOND_final_job_marker)):
+            print(dt.today(), "DMD was run, skipping")
+        else:
+            
+            #if not check_where_resume(None, GA_DIAMOND_tool_output_path, GA_BLAT_path, file_check_bypass = True):
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    job_name = "DIAMOND_" + file_tag
+                    full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                    marker_file = file_tag + "_diamond"
+                    marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_path)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_DIAMOND_annotate_command_v2(GA_DIAMOND_label, full_sample_path, marker_file)
+                        launch_and_create_with_hold(mp_store, DIAMOND_mem_threshold, DIAMOND_job_limit, DIAMOND_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
+                    
+            print(dt.today(), "All DIAMOND jobs launched.  waiting for join")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+            open(GA_DIAMOND_final_job_marker, "a").close()
+            
+            
+            #if not check_where_resume(GA_DIAMOND_path, None, GA_DIAMOND_tool_output_path, file_check_bypass = True):
+            print(dt.today(), "DIAMOND PP threads used:", real_thread_count/2)
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BLAT_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    job_name = "DIAMOND_pp_" + file_tag
+                    full_sample_path = os.path.join(os.path.join(GA_BLAT_path, "final_results", split_sample))
+                    marker_file = file_tag + "_diamond_pp"
+                    marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_DIAMOND_pp_command_v2(GA_DIAMOND_label, GA_BLAT_label, full_sample_path, marker_file)
+                        launch_and_create_with_hold(mp_store, DIAMOND_pp_mem_threshold, DIAMOND_pp_job_limit, DIAMOND_pp_job_delay, GA_DIAMOND_label, job_name, commands, command_list)
+                                        
+            print(dt.today(), "DIAMOND pp jobs submitted.  waiting for sync")
+            for item in mp_store:
+                item.join()
+            mp_store[:] = []
+            final_checklist = os.path.join(GA_DIAMOND_path, "GA_DIAMOND_pp.txt")
+            check_all_job_markers(marker_path_list, final_checklist)
+       
+                
+            
+            cleanup_GA_DIAMOND_start = time.time()
+            if(keep_all == "no" and keep_GA_DIAMOND == "no"):
+                delete_folder(GA_DIAMOND_path)
+            elif(keep_all == "compress" or keep_GA_DIAMOND == "compress"):
+                compress_folder(GA_DIAMOND_path)
+                delete_folder(GA_DIAMOND_path)
+            cleanup_GA_DIAMOND_end = time.time()
+            GA_DIAMOND_end = time.time()
+            print("GA DIAMOND:", '%1.1f' % (GA_DIAMOND_end - GA_DIAMOND_start - (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start)), "s")
+            print("GA DIAMOND cleanup:", '%1.1f' % (cleanup_GA_DIAMOND_end - cleanup_GA_DIAMOND_start), "s")
         
         
         GA_final_merge_start = time.time()
@@ -2680,6 +2723,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             #----------------------------------------------
             #centrifuge is too much of a RAM hog.  can't run more than 1 at a time
             sections = ["reads"]
+            print("sections for TA centrifuge:", sections)
             for section in sections:
                 marker_file = "TA_centrifuge_" + section
                 marker_path = os.path.join(TA_jobs_folder, marker_file)
@@ -2687,11 +2731,18 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
                 if(os.path.exists(marker_path)):
                     print(dt.today(), "skipping:", marker_file)
                 else:
+                    print(dt.today(), "running:", marker_file)
                     marker_path_list.append(marker_path)
                     command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
                     launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
                     
-            sections = ["contigs", "singletons"]
+            sections = ["singletons"]
+            if(contig_path != "None"):
+                sections.append("contigs")
+                print(dt.today(), "adding contigs to list of things to TA", sections)
+            else:
+                print(dt.today(), "not adding contigs to TA")
+                
             if read_mode == "paired":
                 sections.extend(["paired"])
                 
@@ -2722,18 +2773,22 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             #--------------------------------------------------
             # stage 2
             marker_path_list = []
-            sections = ["contigs"]
-            for section in sections:
-                marker_file = "TA_centrifuge_" + section
-                marker_path = os.path.join(TA_jobs_folder, marker_file)
-                
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
-                    launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
             
+            if(contig_path != "None"):
+                sections = ["contigs"]
+                for section in sections:
+                    marker_file = "TA_centrifuge_" + section
+                    marker_path = os.path.join(TA_jobs_folder, marker_file)
+                    
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_TA_centrifuge_command(taxon_annotation_label, rRNA_filter_label, assemble_contigs_label, section, marker_file)
+                        launch_and_create_with_hold(mp_store, TA_mem_threshold, TA_job_limit, TA_job_delay, taxon_annotation_label, marker_file, commands, command_list)
+            else:
+                print(dt.today(), "skipping TA centrifuge contigs")
+                
             marker_file = "TA_kaiju_pp"
             marker_path = os.path.join(TA_jobs_folder, marker_file)
             if(os.path.exists(marker_file)):
@@ -3037,7 +3092,7 @@ if __name__ == "__main__":
         sys.exit()
 
     config_file     = args.config if args.config else ""
-    contig          = args.contig if args.contig else ""
+    contig          = args.contig if args.contig else "None"
     pair_1          = args.pair1 if args.pair1 else ""
     pair_2          = args.pair2 if args.pair2 else ""
     single          = args.single if args.single else ""
