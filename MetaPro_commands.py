@@ -31,6 +31,7 @@ class mt_pipe_commands:
                 self.sequence_path_2 = ""
                 print("Reads:", self.sequence_single)
                 self.read_mode = "single"
+                self.sequence_contigs = ""
             else:
                 self.sequence_single = ""
                 self.sequence_path_1 = sequence_path_1
@@ -38,6 +39,7 @@ class mt_pipe_commands:
                 print("Forward Reads:", self.sequence_path_1)
                 print("Reverse Reads:", self.sequence_path_2)
                 self.read_mode = "paired"
+                self.sequence_contigs = ""
             
         else:
             print("MetaPro is in TUTORIAL MODE:", tutorial_keyword)
@@ -2309,6 +2311,7 @@ class mt_pipe_commands:
         blat_pp += str(self.tool_path_obj.BLAT_length_cutoff) + " "
         blat_pp += str(self.tool_path_obj.BLAT_score_cutoff) + " "
         blat_pp += self.tool_path_obj.DNA_DB + " "
+        
         if(self.sequence_contigs == "None"):
             blat_pp += "None" + " "
         else:
