@@ -2811,17 +2811,23 @@ class mt_pipe_commands:
         return COMMANDS_DETECT
 
     def create_EC_PRIAM_command(self, current_stage_name, ga_final_merge_stage, marker_file):
+        #april 06, 2021: This one's a little tricky.  PRIAM has a user-prompt (and no args) to auto-resume.  
+        #We must feed it the bash "Yes" in order to activate it.  So, mind the mess
         subfolder           = os.path.join(self.Output_Path, current_stage_name)
         data_folder         = os.path.join(subfolder, "data")
         final_merge_folder  = os.path.join(self.Output_Path, ga_final_merge_stage, "final_results")
         PRIAM_folder        = os.path.join(data_folder, "1_priam")
         jobs_folder    = os.path.join(data_folder, "jobs")
 
-        self.make_folder(PRIAM_folder)
+        PRIAM_command = ">&2 echo running PRIAM | "
+        
+        if(os.path.exists(PRIAM_folder)):
+            PRIAM_command += "yes | "
+        else:
+            self.make_folder(PRIAM_folder)
         self.make_folder(jobs_folder)
         
-
-        PRIAM_command = ">&2 echo running PRIAM | "
+        
         PRIAM_command += self.tool_path_obj.Java + " "
         PRIAM_command += self.tool_path_obj.Priam
         PRIAM_command += " -n " + "proteins_priam" + " "

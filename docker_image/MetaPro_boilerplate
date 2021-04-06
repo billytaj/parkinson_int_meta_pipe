@@ -192,12 +192,15 @@ RUN wget https://sourceforge.net/projects/samtools/files/samtools/1.8/samtools-1
 
 #-------------------------------------------------------
 # Install SPAdes
-RUN wget http://cab.spbu.ru/files/release3.11.1/SPAdes-3.11.1-Linux.tar.gz -O SPAdes.tar.gz \
+#RUN wget http://cab.spbu.ru/files/release3.11.1/SPAdes-3.11.1-Linux.tar.gz -O SPAdes.tar.gz \
+RUN wget http://cab.spbu.ru/files/release3.15.2/SPAdes-3.15.2-Linux.tar.gz -O SPAdes.tar.gz \
 && tar --remove-files -xzvf SPAdes.tar.gz \
 && rm SPAdes.tar.gz \
 && mkdir SPAdes \
-&& mv SPAdes-3.11.1-Linux/* SPAdes \
-&& rm -r SPAdes-3.11.1-Linux
+#&& mv SPAdes-3.11.1-Linux/* SPAdes \
+&& mv SPAdes-3.15.2-Linux/* SPAdes \
+#&& rm -r SPAdes-3.11.1-Linux
+&& rm -r SPAdes-3.15.2-Linux
 
 
 #---------------------------------------------------
