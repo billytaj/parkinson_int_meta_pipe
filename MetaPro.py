@@ -1560,11 +1560,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping:", marker_file)
         else:
-            if(os.path.exists(ec_priam_path)):
-                print(dt.today(), "starting with a fresh PRIAM run")
-                shutil.rmtree(ec_priam_path)
-                
+
             command_list = commands.create_EC_PRIAM_command(ec_annotation_label, GA_final_merge_label, marker_file)
+            if(os.path.exists(ec_priam_path)):
+                print(dt.today(), "attempting PRIAM auto-resume")
+                print("command:", command_list)
             launch_and_create_with_mp_store(mp_store, ec_annotation_label, marker_file, commands, command_list)
         
       

@@ -73,8 +73,6 @@ ADD https://raw.githubusercontent.com/billytaj/parkinson_int_meta_pipe/develop/m
 
 RUN chmod -R 555 /pipeline
 
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get install -y expect
-
 
 WORKDIR /
 CMD ["bash"]
