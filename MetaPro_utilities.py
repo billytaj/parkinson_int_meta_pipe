@@ -116,12 +116,12 @@ class mp_util:
             print(dt.today(), "no bypass log.  running:", message)
             return True
             
-    def conditional_write_to_bypass_log(self, label, stage_folder, file_name, output_folder_path): 
+    def conditional_write_to_bypass_log(self, label, stage_folder, file_name): 
         #convenience for checking if a file exists, and writing to the bypass log
-        if self.check_bypass_log (output_folder, label):
-            file_path = os.path.join(output_folder, stage_folder, file_name)
+        if self.check_bypass_log (self.output_folder_path, label):
+            file_path = os.path.join(self.output_folder_path, stage_folder, file_name)
             if(os.path.exists(file_path)):
-                self.write_to_bypass_log(output_folder_path, label)
+                self.write_to_bypass_log(self.output_folder_path, label)
         
 
     # Used to determine quality encoding of fastq sequences.
@@ -342,3 +342,17 @@ class mp_util:
         elif(keep_all == "compress" or keep_stage == "compress"):
             self.compress_folder(analysis_path)
             self.delete_folder(analysis_path)
+
+
+    def launch_stage_simple(self, job_label, job_path, commands, command_list, keep_all, keep_job):
+        #wrapper for simple job launches (quality, host)
+        
+        if self.check_bypass_log(job_path, command_list):
+            self.launch_and_create_simple(job_label, job_label, commands, command_list)
+            
+            self.write_to_bypass_log(self.output_folder_path, job_label)
+            cleanup_job_start = time.time()
+            self.clean_or_compress(job_path, keep_all, keep_job)
+            cleanup_job_end = time.time()    
+
+            return cleanup_job_start, cleanup_job_end

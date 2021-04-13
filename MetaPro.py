@@ -275,15 +275,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     quality_start = time.time()
     quality_path = os.path.join(output_folder_path, quality_filter_label)
     #if not check_where_resume(quality_path):
-    if mp_util.check_bypass_log(output_folder, quality_filter_label):
-        command_list = commands.create_quality_control_command(quality_filter_label)
-        job_name = quality_filter_label
-        mp_util.launch_and_create_simple(quality_filter_label, job_name, commands, command_list) 
-        mp_util.write_to_bypass_log(output_folder_path, quality_filter_label)
-        cleanup_quality_start = time.time()
-        mp_util.clean_or_compress(quality_path, keep_all, keep_quality)
-        
-        cleanup_quality_end = time.time()
+    command_list = commands.create_quality_control_command(quality_filter_label)
+    cleanup_quality_start, cleanup_quality_end = mp_util.launch_stage_simple(quality_filter_label, quality_path, commands, command_list, keep_all, keep_quality)
     quality_end = time.time()
     print("quality filter:", '%1.1f' % (quality_end - quality_start - (cleanup_quality_end - cleanup_quality_start)), "s")
     print("quality filter cleanup:", '%1.1f' %(cleanup_quality_end - cleanup_quality_start), "s")
@@ -295,16 +288,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         host_start = time.time()
         host_path = os.path.join(output_folder_path, host_filter_label)
         #if not check_where_resume(host_path, None, quality_path):
-        if mp_util.check_bypass_log(output_folder_path, host_filter_label):
-            job_name = host_filter_label
-            command_list = commands.create_host_filter_command(host_filter_label, quality_filter_label)
-            mp_util.launch_and_create_simple(host_filter_label, job_name, commands, command_list)
-            
-            mp_util.write_to_bypass_log(output_folder_path, host_filter_label)
-            cleanup_host_start = time.time()
-            mp_util.clean_or_compress(host_path, keep_all, keep_host)
-            cleanup_host_end = time.time()
-                
+        command_list = commands.create_host_filter_command(host_filter_label, quality_filter_label)
+        cleanup_host_start, cleanup_host_end = mp_util.launch_stage_simple(host_filter_label, host_path, commands, command_list, keep_all, keep_host)
         host_end = time.time()
         print("host filter:", '%1.1f' % (host_end - host_start - (cleanup_host_end - cleanup_host_start)), "s")
         print("host filter cleanup:", '%1.1f' %(cleanup_host_end - cleanup_host_start),"s")
@@ -316,26 +301,15 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     if no_host:
         #get dep args from quality filter
         #if not check_where_resume(vector_path, None, quality_path):
-        if mp_util.check_bypass_log(output_folder_path, vector_filter_label):        
-            job_name = vector_filter_label
-            command_list = commands.create_vector_filter_command(vector_filter_label, quality_filter_label)
-            mp_util.launch_and_create_simple(vector_filter_label, job_name, commands, command_list)
-            mp_util.write_to_bypass_log(output_folder_path, vector_filter_label)
-            cleanup_vector_start = time.time()
-            mp_util.clean_or_compress(vector_path, keep_all, keep_vector)
+        command_list = commands.create_vector_filter_command(vector_filter_label, quality_filter_label)
+        cleanup_vector_start, cleanup_vector_end = mp_util.launch_stage_simple(vector_filter_label, vector_path, commands, command_list, keep_all, keep_vector)
 
-            cleanup_vector_end = time.time()
     else:
         #get the dep args from host filter
         #if not check_where_resume(vector_path, None, host_path):
-        if mp_util.check_bypass_log(output_folder_path, vector_filter_label):
-            job_name = vector_filter_label
-            command_list = commands.create_vector_filter_command(vector_filter_label, host_filter_label)
-            mp_util.launch_and_create_simple(vector_filter_label, job_name, commands, command_list)
-            mp_util.write_to_bypass_log(output_folder_path, vector_filter_label)
-            cleanup_vector_start = time.time()
-            mp_util.clean_or_compress(vector_path, keep_all, keep_vector)
-            cleanup_vector_end = time.time()
+        command_list = commands.create_vector_filter_command(vector_filter_label, host_filter_label)
+        cleanup_vector_start, cleanup_vector_end = mp_util.launch_stage_simple(vector_filter_label, vector_path, commands, command_list, keep_all, keep_vector)
+        
     vector_end = time.time()
     print("vector filter:", '%1.1f' % (vector_end - vector_start - (cleanup_vector_end - cleanup_vector_start)), "s")
     print("vector filter cleanup:", '%1.1f' % (cleanup_vector_end - cleanup_vector_start), "s")
@@ -422,75 +396,40 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 concurrent_job_count = 0
                 batch_count = 0
                 marker_path_list = []
-                
+                barrnap_org_list = ["arc", "bac", "euk", "mit"] #walk through all 4 types of organisms for barrnap
                 for item in os.listdir(fasta_path):
                     root_name = item.split(".")[0]
                     final_marker_file = root_name + "_barrnap_concat"
                     final_marker_path = os.path.join(rRNA_filter_jobs_folder, final_marker_file)
-                    barrnap_arc_out_file = os.path.join(barrnap_path, root_name + "_arc.barrnap_out")
-                    barrnap_bac_out_file = os.path.join(barrnap_path, root_name + "_bac.barrnap_out")
-                    barrnap_euk_out_file = os.path.join(barrnap_path, root_name + "_euk.barrnap_out")
-                    barrnap_mit_out_file = os.path.join(barrnap_path, root_name + "_mit.barrnap_out")
                     final_barrnap_out    = os.path.join(barrnap_path, root_name + ".barrnap_out")
-                    fasta_file = os.path.join(fasta_path, root_name + ".fasta")
-                    fastq_file = os.path.join(split_path, root_name + ".fastq")
-                    barrnap_mrna_file   = os.path.join(mRNA_path, root_name + "_barrnap_mRNA.fastq")
-                    marker_file_arc = root_name + "_barrnap_arc"
-                    marker_file_bac = root_name + "_barrnap_bac"
-                    marker_file_euk = root_name + "_barrnap_euk"
-                    marker_file_mit = root_name + "_barrnap_mit"
-                    
-                    marker_path_arc = os.path.join(rRNA_filter_jobs_folder, marker_file_arc)
-                    marker_path_bac = os.path.join(rRNA_filter_jobs_folder, marker_file_bac)
-                    marker_path_euk = os.path.join(rRNA_filter_jobs_folder, marker_file_euk)
-                    marker_path_mit = os.path.join(rRNA_filter_jobs_folder, marker_file_mit)
-                    
-                    barrnap_arc_out_size    = os.stat(barrnap_arc_out_file).st_size if (os.path.exists(barrnap_arc_out_file)) else 0
-                    barrnap_bac_out_size    = os.stat(barrnap_bac_out_file).st_size if (os.path.exists(barrnap_bac_out_file)) else 0
-                    barrnap_euk_out_size    = os.stat(barrnap_euk_out_file).st_size if (os.path.exists(barrnap_euk_out_file)) else 0
-                    barrnap_mit_out_size    = os.stat(barrnap_mit_out_file).st_size if (os.path.exists(barrnap_mit_out_file)) else 0
-                    
-                    
-                    if(os.path.exists(final_marker_path)):
-                        print(dt.today(), "skipping barrnap.  data already merged", final_marker_path)
-                        continue
-                    else:
-                        if((barrnap_arc_out_size > 0) and (os.path.exists(marker_path_arc))):
-                            print(dt.today(), "barrnap arc already run.  skipping:", item) 
+                    for barrnap_org in barrnap_org_list:
+                        barrnap_out_file = os.path.join(barrnap_path, root_name + "_" + barrnap_org + ".barrnap_out")
+                        fasta_file = os.path.join(fasta_path, root_name + ".fasta")
+                        fastq_file = os.path.join(split_path, root_name + ".fastq")
+                        barrnap_mrna_file   = os.path.join(mRNA_path, root_name + "_barrnap_mRNA.fastq")
+                        marker_file = root_name + "_barrnap_" + barrnap_org
+                        marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
+                        barrnap_out_size = os.stat(barrnap_out_file).st_size if (os.path.exists(barrnap_out_file)) else 0
+                        
+                        if(os.path.exists(final_marker_path)):
+                            print(dt.today(), "skipping barrnap.  data already merged", final_marker_path)
                             continue
                         else:
-                            job_name = root_name + "_barrnap_arc"
-                            marker_path_list.append(marker_path_arc)
-                            command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name, marker_file_arc)
-                            mp_util.launch_only_with_hold(Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                            
-                            
-                        if((barrnap_bac_out_size > 0) and (os.path.exists(marker_path_bac))):
-                            print(dt.today(), "barrnap bac already run.  skipping:", item) 
-                            continue
-                        else:
-                            job_name = root_name + "_barrnap_bac"
-                            marker_path_list.append(marker_path_bac)
-                            command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name, marker_file_bac)
-                            mp_util.launch_only_with_hold(Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                            
-                        if((barrnap_euk_out_size > 0) and (os.path.join(marker_path_euk))):
-                            print(dt.today(), "barrnap euk already run.  skipping:", item) 
-                            continue
-                        else:
-                            job_name = root_name + "_barrnap_euk"
-                            marker_path_list.append(marker_path_euk)
-                            command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file_euk)
-                            mp_util.launch_only_with_hold(Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
-                            
-                        if((barrnap_mit_out_size > 0) and (os.path.join(marker_path_mit))):
-                            print(dt.today(), "barrnap mit already run.  skipping:", item) 
-                            continue
-                        else:
-                            job_name = root_name + "_barrnap_mit"
-                            marker_path_list.append(marker_path_mit)
-                            command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file_mit)
-                            mp_util.launch_only_with_hold(Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                            if((barrnap_out_size > 0) and (os.path.exists(marker_path))):
+                                continue
+                            else:
+                                marker_path_list.append(marker_path)
+                                command_list = ""
+                                if(barrnap_org == "arc"):
+                                    command_list = commands.create_rRNA_filter_barrnap_arc_command("rRNA_filter", section, root_name, marker_file)
+                                elif(barrnap_org == "bac"):
+                                    command_list = commands.create_rRNA_filter_barrnap_bac_command("rRNA_filter", section, root_name, marker_file)
+                                elif(barrnap_org == "euk"):
+                                    command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file)
+                                elif(barrnap_org == "mit"):
+                                    command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file)
+                                mp_util.launch_only_with_hold(Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
+                                
                 print(dt.today(), "waiting for Barrnap jobs to finish")
                 mp_util.wait_for_mp_store()
 
@@ -506,7 +445,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         marker_file = root_name + "_barrnap_cat"
                         marker_path = os.path.join(rRNA_filter_jobs_folder, marker_file)
                         final_barrnap_out    = os.path.join(barrnap_path, root_name + ".barrnap_out")
-                        final_barrnap_out_size  = os.stat(final_barrnap_out).st_size if (os.path.exists(final_barrnap_out)) else 0
+                        #final_barrnap_out_size  = os.stat(final_barrnap_out).st_size if (os.path.exists(final_barrnap_out)) else 0
                         
                         if(os.path.exists(marker_path)):
                             print(dt.today(), "barrnap already merged. skipping:", item)
@@ -1325,20 +1264,20 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         print(dt.today(), "output report phase 1 launched.  waiting for sync")
         mp_util.wait_for_mp_store()
         
-        mp_util.conditional_write_to_bypass_log(output_per_read_scores_label, "outputs/final_results", "input_per_seq_quality_report.csv", output_folder_path)
-        mp_util.conditional_write_to_bypass_log(output_copy_gene_map_label, "outputs/final_results", "final_gene_map.tsv", output_folder_path)
-        mp_util.conditional_write_to_bypass_log(output_copy_taxa_label, "outputs/final_results", "taxa_classifications.tsv", output_folder_path)
-        mp_util.conditional_write_to_bypass_log(output_contig_stats_label, "outputs/final_results", "contig_stats.txt", output_folder_path)
-        mp_util.conditional_write_to_bypass_log(output_unique_vectors_singletons_label, "outputs/data/4_full_vectors", "singletons_full_vectors.fastq", output_folder_path)
+        mp_util.conditional_write_to_bypass_log(output_per_read_scores_label, "outputs/final_results", "input_per_seq_quality_report.csv")
+        mp_util.conditional_write_to_bypass_log(output_copy_gene_map_label, "outputs/final_results", "final_gene_map.tsv")
+        mp_util.conditional_write_to_bypass_log(output_copy_taxa_label, "outputs/final_results", "taxa_classifications.tsv")
+        mp_util.conditional_write_to_bypass_log(output_contig_stats_label, "outputs/final_results", "contig_stats.txt")
+        mp_util.conditional_write_to_bypass_log(output_unique_vectors_singletons_label, "outputs/data/4_full_vectors", "singletons_full_vectors.fastq")
         if(read_mode == "paired"):
-            mp_util.conditional_write_to_bypass_log(output_unique_vectors_pair_1_label, "outputs/data/4_full_vectors", "pair_1_full_vectors.fastq", output_folder_path)
-            mp_util.conditional_write_to_bypass_log(output_unique_vectors_pair_2_label, "outputs/data/4_full_vectors", "pair_2_full_vectors.fastq", output_folder_path)
+            mp_util.conditional_write_to_bypass_log(output_unique_vectors_pair_1_label, "outputs/data/4_full_vectors", "pair_1_full_vectors.fastq")
+            mp_util.conditional_write_to_bypass_log(output_unique_vectors_pair_2_label, "outputs/data/4_full_vectors", "pair_2_full_vectors.fastq")
             
         if not (no_host):
-            mp_util.conditional_write_to_bypass_log(output_unique_hosts_singletons_label, "outputs/data/2_full_hosts", "singletons_full_hosts.fastq", output_folder_path)
+            mp_util.conditional_write_to_bypass_log(output_unique_hosts_singletons_label, "outputs/data/2_full_hosts", "singletons_full_hosts.fastq")
             if(read_mode == "paired"):
-                mp_util.conditional_write_to_bypass_log(output_unique_hosts_pair_1_label, "outputs/data/2_full_hosts", "pair_1_full_hosts.fastq", output_folder_path)
-                mp_util.conditional_write_to_bypass_log(output_unique_hosts_pair_2_label, "outputs/data/2_full_hosts", "pair_2_full_hosts.fastq", output_folder_path)
+                mp_util.conditional_write_to_bypass_log(output_unique_hosts_pair_1_label, "outputs/data/2_full_hosts", "pair_1_full_hosts.fastq")
+                mp_util.conditional_write_to_bypass_log(output_unique_hosts_pair_2_label, "outputs/data/2_full_hosts", "pair_2_full_hosts.fastq")
         #----------------------------------------------------------------------------
         #Phase 2
         if mp_util.check_bypass_log(output_folder, output_network_gen_label):
@@ -2410,7 +2349,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             EC_DETECT_start = time.time()
             ec_detect_path = os.path.join(ec_annotation_path, "data", "0_detect")
             #if not check_where_resume(job_label = None, full_path = ec_detect_path, dep_job_path = GA_DIAMOND_path):
-            if check_bypass_log(output_folder_path, ec_annotation_detect_label):
+            if mp_util.check_bypass_log(output_folder_path, ec_annotation_detect_label):
                 marker_file = "ec_detect"
                 marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_file)
                 if(os.path.exists(marker_path)):
@@ -2448,7 +2387,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             # DIAMOND EC annotation 
             EC_DIAMOND_start = time.time()
             ec_diamond_path = os.path.join(ec_annotation_path, "data", "2_diamond")
-            if check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
+            if mp_util.check_bypass_log(output_folder_path, ec_annotation_DIAMOND_label):
                 marker_file = "ec_diamond"
                 marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_file)
                 if(os.path.exists(marker_path)):
@@ -2478,7 +2417,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
             # EC post process
             EC_post_start = time.time()
             #if not (check_where_resume(ec_annotation_path, None, GA_DIAMOND_path)):
-            if check_bypass_log(output_folder_path, ec_annotation_pp_label):
+            if mp_util.check_bypass_log(output_folder_path, ec_annotation_pp_label):
                 
                 marker_file = "ec_post"
                 marker_path = os.path.join(ec_annotation_path, "data", "jobs", marker_file)
