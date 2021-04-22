@@ -90,7 +90,7 @@ class mp_util:
 
 
     def check_bypass_log(self, folder_path, message):
-        stop_message = "stop_" + message
+        stop_message = "stop_" + str(message)
         bypass_keys_list = list()
         bypass_log_path = os.path.join(folder_path, "bypass_log.txt")
         if(os.path.exists(bypass_log_path)):
@@ -346,13 +346,19 @@ class mp_util:
 
     def launch_stage_simple(self, job_label, job_path, commands, command_list, keep_all, keep_job):
         #wrapper for simple job launches (quality, host)
+        cleanup_job_start = 0
+        cleanup_job_end = 0
+        print("job path:", job_path)
         
-        if self.check_bypass_log(job_path, command_list):
+        if self.check_bypass_log(self.output_folder_path, job_label):
+            print(dt.today(), "NEW CHECK running:", job_label)
             self.launch_and_create_simple(job_label, job_label, commands, command_list)
             
             self.write_to_bypass_log(self.output_folder_path, job_label)
             cleanup_job_start = time.time()
             self.clean_or_compress(job_path, keep_all, keep_job)
             cleanup_job_end = time.time()    
+        else:
+            print(dt.today(), "skipping job:", job_label)
 
-            return cleanup_job_start, cleanup_job_end
+        return cleanup_job_start, cleanup_job_end
