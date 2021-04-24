@@ -29,6 +29,41 @@ import pandas as pd
 import shutil
 from datetime import datetime as dt
 import psutil as psu
+import threading as th
+import queue as q
+
+def cat_blat_files(blatout_queue, blat_location, segment_name):
+    stop_flag = False
+    if not (os.path.exists(blat_location)):
+        os.makedirs(blat_location)
+
+    blatout_final_file = os.path.join(blat_location, segment_name + ".blatout")
+    while(not stop_flag):
+        blatout_path = blatout_queue.get()
+        if(blatout_path == "stop"):
+            stop_flag = True
+        else:
+            file_exist_flag = False
+
+            while (not file_exist_flag):    #wait for the file to exist
+                if(os.path.exists(blatout_path)):
+                    file_exist_flag = True
+                else:
+                    time.sleep(1)
+
+            if(os.path.exists(blatout_final_file)):
+                with open(blatout_final_file, "a") as outfile:
+                    with open(blatout_path, "r") as infile:
+                        for line in infile:
+                            outfile.write(line)
+            else:
+                with open(blatout_final_file, "w") as outfile:
+                    with open(blatout_path, "r") as infile:
+                        for line in infile:
+                            outfile.write(line)
+
+            os.remove(blatout_path)
+                
 
 def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode):
     #make our util obj
@@ -792,11 +827,19 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                blat_file_queue = q.Queue()
+                blat_merge_thread = th.Thread(target = cat_blat_files, args = (blat_file_queue, os.path.join(GA_BLAT_path, "data", "1_blat_merge", file_tag)))
+                blat_merge_thread.setDaemon(True)
+                blat_merge_thread.start()
+
                 for fasta_db in os.listdir(paths.DNA_DB_Split):
                     if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                         job_name = "BLAT_" + file_tag + "_" + fasta_db
                         marker_file = file_tag + "_blat_" + fasta_db
                         marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                        blatout_path = os.path.join(GA_BLAT_path, "data", "0_blat", marker_file + ".blatout")
+                        blat_file_queue.put(blatout_path)
+                        blat_merge_thread = th.Thread
                         #This checker assume BLAT only exports a file when it's finished running
                         if(os.path.exists(marker_path)):
                             print(dt.today(), "BLAT job ran already, skipping:", marker_file)
@@ -805,7 +848,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
-                            
+                blat_file_queue.put("stop")            
                                 
         print(dt.today(), "final BLAT job removal")
         mp_util.wait_for_mp_store()
@@ -814,7 +857,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_label)
         
 
-        
+"""        
     if  mp_util.check_bypass_log(output_folder_path, GA_BLAT_cat_label):
         marker_path_list = []
         for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
@@ -839,7 +882,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_cat.txt")
         mp_util.check_all_job_markers(marker_path_list, final_checklist)
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_cat_label)
-        
+"""        
     
     
     if mp_util.check_bypass_log(output_folder_path, GA_BLAT_pp_label):
