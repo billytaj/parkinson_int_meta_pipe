@@ -33,35 +33,44 @@ import threading as th
 import queue as q
 
 def cat_blat_files(blatout_queue, blat_location, segment_name):
+    print(dt.today(), "merge thread launched:", segment_name)
     stop_flag = False
     if not (os.path.exists(blat_location)):
         os.makedirs(blat_location)
 
     blatout_final_file = os.path.join(blat_location, segment_name + ".blatout")
     while(not stop_flag):
+        
         blatout_path = blatout_queue.get()
+        #print(dt.today(), segment_name , "merge thread queue:", blatout_path)
         if(blatout_path == "stop"):
             stop_flag = True
+            #print(dt.today(), segment_name, "merge thread stop command received")
         else:
             file_exist_flag = False
-
+           
             while (not file_exist_flag):    #wait for the file to exist
                 if(os.path.exists(blatout_path)):
                     file_exist_flag = True
                 else:
-                    time.sleep(1)
-
+                    #print(dt.today(), segment_name, "waiting for file to exist:", blatout_path)
+                    time.sleep(0.001)
+                    
+            print(dt.today(), segment_name, "file found:", blatout_path)
             if(os.path.exists(blatout_final_file)):
+                #print(dt.today(), segment_name, "appending to old file")
                 with open(blatout_final_file, "a") as outfile:
                     with open(blatout_path, "r") as infile:
                         for line in infile:
                             outfile.write(line)
             else:
+                #print(dt.today(), segment_name, "new file needed")
                 with open(blatout_final_file, "w") as outfile:
                     with open(blatout_path, "r") as infile:
                         for line in infile:
                             outfile.write(line)
 
+            print(dt.today(), "deleting:", blatout_path)
             os.remove(blatout_path)
                 
 
@@ -828,7 +837,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 file_tag = os.path.splitext(file_tag)[0]
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
                 blat_file_queue = q.Queue()
-                blat_merge_thread = th.Thread(target = cat_blat_files, args = (blat_file_queue, os.path.join(GA_BLAT_path, "data", "1_blat_merge", file_tag)))
+                blat_merge_thread = th.Thread(target = cat_blat_files, args = (blat_file_queue, os.path.join(GA_BLAT_path, "data", "1_blat_merge"), file_tag))
                 blat_merge_thread.setDaemon(True)
                 blat_merge_thread.start()
 
@@ -837,17 +846,24 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         job_name = "BLAT_" + file_tag + "_" + fasta_db
                         marker_file = file_tag + "_blat_" + fasta_db
                         marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                        blatout_path = os.path.join(GA_BLAT_path, "data", "0_blat", marker_file + ".blatout")
-                        blat_file_queue.put(blatout_path)
-                        blat_merge_thread = th.Thread
+                        blatout_path = os.path.join(GA_BLAT_path, "data", "0_blat", file_tag + "_"+fasta_db + ".blatout")
+                        if(os.path.exists(blatout_path)):
+                            #recover from a restart.  there will be files that have been missed.  thread would have deleted the file
+                            
+                            blat_file_queue.put(blatout_path)
+                            #time.sleep(2)
+                        
                         #This checker assume BLAT only exports a file when it's finished running
                         if(os.path.exists(marker_path)):
                             print(dt.today(), "BLAT job ran already, skipping:", marker_file)
                             continue
                         else:
+                            blat_file_queue.put(blatout_path)
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                            
+                        #time.sleep(2)
                 blat_file_queue.put("stop")            
                                 
         print(dt.today(), "final BLAT job removal")
@@ -857,7 +873,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_label)
         
 
-"""        
+    """        
     if  mp_util.check_bypass_log(output_folder_path, GA_BLAT_cat_label):
         marker_path_list = []
         for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
@@ -882,7 +898,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_cat.txt")
         mp_util.check_all_job_markers(marker_path_list, final_checklist)
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_cat_label)
-"""        
+    """        
     
     
     if mp_util.check_bypass_log(output_folder_path, GA_BLAT_pp_label):

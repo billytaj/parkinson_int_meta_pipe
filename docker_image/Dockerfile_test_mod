@@ -9,7 +9,6 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/c
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/MetaPro_paths.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/MetaPro_commands.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Config.ini /pipeline
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/Detect_2.2.8.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/Detect_2.2.9.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/assembly_deduplicate.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/assembly_flush_bad_contigs.py /pipeline/Scripts
@@ -33,7 +32,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/c
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/output_parse_sam.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/output_reformat_rpkm_table.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/output_get_host_reads.py /pipeline/Scripts
-ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/output_table_with_taxonomy_v2.py /pipeline/Scripts
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/output_table_with_taxonomy_v3.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/read_BLAT_filter_v3.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/read_orphan.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/cleanup_0/Scripts/read_remove_tag.py /pipeline/Scripts
