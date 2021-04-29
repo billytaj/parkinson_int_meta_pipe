@@ -51,20 +51,24 @@ def cat_blat_files(blatout_queue, blat_location, segment_name):
            
             while (not file_exist_flag):    #wait for the file to exist
                 if(os.path.exists(blatout_path)):
+                    
                     file_exist_flag = True
                 else:
                     #print(dt.today(), segment_name, "waiting for file to exist:", blatout_path)
-                    time.sleep(0.001)
+                    time.sleep(1) #can't go any faster.  the file needs time to be populated, or else the file is skipped
                     
+            blatout_file_size = os.stat(blatout_path).st_size
+            print("BLATOUT os stat", blatout_file_size)    
+            
             print(dt.today(), segment_name, "file found:", blatout_path)
             if(os.path.exists(blatout_final_file)):
-                #print(dt.today(), segment_name, "appending to old file")
+                print(dt.today(), segment_name, "appending to old file")
                 with open(blatout_final_file, "a") as outfile:
                     with open(blatout_path, "r") as infile:
                         for line in infile:
                             outfile.write(line)
             else:
-                #print(dt.today(), segment_name, "new file needed")
+                print(dt.today(), segment_name, "new file needed")
                 with open(blatout_final_file, "w") as outfile:
                     with open(blatout_path, "r") as infile:
                         for line in infile:
@@ -827,8 +831,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     # BLAT gene annotation
     GA_BLAT_start = time.time()
     GA_BLAT_path = os.path.join(output_folder_path, GA_BLAT_label)
+    GA_BLAT_data_folder = os.path.join(GA_BLAT_path, "data")
     GA_BLAT_jobs_folder = os.path.join(GA_BLAT_path, "data", "jobs")
-
+    mp_util.make_folder(GA_BLAT_path)
+    mp_util.make_folder(GA_BLAT_data_folder)
+    mp_util.make_folder(GA_BLAT_jobs_folder)
+    
     if mp_util.check_bypass_log(output_folder_path, GA_BLAT_label):
         marker_path_list = []
         for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
@@ -858,6 +866,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             print(dt.today(), "BLAT job ran already, skipping:", marker_file)
                             continue
                         else:
+                            print(dt.today(), "RUNNING:", marker_file)
                             blat_file_queue.put(blatout_path)
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
@@ -873,33 +882,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_label)
         
 
-    """        
-    if  mp_util.check_bypass_log(output_folder_path, GA_BLAT_cat_label):
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
-                job_name = file_tag + "_cat"
-                
-                marker_file = file_tag + "_blat_cat"
-                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                    continue
-                else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_BLAT_cat_command_v2(GA_BLAT_label, full_sample_path, marker_file)
-                    mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
-                
-        mp_util.wait_for_mp_store()
 
-        final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT_cat.txt")
-        mp_util.check_all_job_markers(marker_path_list, final_checklist)
-        mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_cat_label)
-    """        
-    
     
     if mp_util.check_bypass_log(output_folder_path, GA_BLAT_pp_label):
         marker_path_list = []
