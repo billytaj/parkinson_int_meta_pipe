@@ -867,10 +867,11 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             continue
                         else:
                             print(dt.today(), "RUNNING:", marker_file)
-                            blat_file_queue.put(blatout_path)
+                            
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                            blat_file_queue.put(blatout_path)
                             
                         #time.sleep(2)
                 blat_file_queue.put("stop")            
