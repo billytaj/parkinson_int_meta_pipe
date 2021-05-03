@@ -1351,7 +1351,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
        
         print(dt.today(), "output report phase 2 launched.  waiting for sync")
         mp_util.wait_for_mp_store()
-        mp_util.conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv", output_folder_path)
+        mp_util.conditional_write_to_bypass_log(output_network_gen_label, "outputs/final_results", "RPKM_table.tsv")
         
         
         #-------------------------------------------------------------------
@@ -1374,8 +1374,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         
         print(dt.today(), "output report phase 3 launched.  waiting for sync")
         mp_util.wait_for_mp_store()
-        mp_util.conditional_write_to_bypass_log(output_read_count_label, "outputs/final_results", "read_count.tsv", output_folder_path)
-        mp_util.conditional_write_to_bypass_log(output_ec_heatmap_label, "outputs/final_results", "EC_coverage.csv", output_folder_path)
+        mp_util.conditional_write_to_bypass_log(output_read_count_label, "outputs/final_results", "read_count.tsv")
+        mp_util.conditional_write_to_bypass_log(output_ec_heatmap_label, "outputs/final_results", "EC_coverage.csv")
 
         
     cleanup_cytoscape_start = time.time()
