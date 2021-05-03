@@ -32,23 +32,30 @@ import psutil as psu
 import threading as th
 import queue as q
 
-def cat_blat_files(blatout_queue, blat_location, segment_name):
+def cat_blat_files(blatout_queue, raw_blat_location, segment_name):
     print(dt.today(), "merge thread launched:", segment_name)
     stop_flag = False
+    blat_location = os.path.join(raw_blat_location, "data", "1_blat_merge")
     if not (os.path.exists(blat_location)):
         os.makedirs(blat_location)
-
     blatout_final_file = os.path.join(blat_location, segment_name + ".blatout")
+    
     while(not stop_flag):
         
         blatout_path = blatout_queue.get()
+        database_part = blatout_path.split("g__")[1]
+        database_part = "g__" + database_part.strip(".blatout")
+        marker_file = segment_name + "_blat_" + database_part
+        marker_path = os.path.join(raw_blat_location, "data", "jobs", marker_file)
+        print("marker path:", marker_path)
+        
         #print(dt.today(), segment_name , "merge thread queue:", blatout_path)
         if(blatout_path == "stop"):
             stop_flag = True
             #print(dt.today(), segment_name, "merge thread stop command received")
         else:
             file_exist_flag = False
-           
+            marker_exists_flag = False
             while (not file_exist_flag):    #wait for the file to exist
                 if(os.path.exists(blatout_path)):
                     
@@ -56,6 +63,11 @@ def cat_blat_files(blatout_queue, blat_location, segment_name):
                 else:
                     #print(dt.today(), segment_name, "waiting for file to exist:", blatout_path)
                     time.sleep(1) #can't go any faster.  the file needs time to be populated, or else the file is skipped
+            while (not marker_exists_flag):
+                if(os.path.exists(marker_path)):
+                    marker_exists_flag = True
+                else:
+                    time.sleep(1)
                     
             blatout_file_size = os.stat(blatout_path).st_size
             print("BLATOUT os stat", blatout_file_size)    
@@ -66,16 +78,23 @@ def cat_blat_files(blatout_queue, blat_location, segment_name):
                 with open(blatout_final_file, "a") as outfile:
                     with open(blatout_path, "r") as infile:
                         for line in infile:
-                            outfile.write(line)
+                            if("\n" in line):
+                                outfile.write(line)
+                            else:
+                                outfile.write(line + "\n")
+                                
             else:
                 print(dt.today(), segment_name, "new file needed")
                 with open(blatout_final_file, "w") as outfile:
                     with open(blatout_path, "r") as infile:
                         for line in infile:
-                            outfile.write(line)
+                            if("\n" in line):
+                                outfile.write(line)
+                            else:
+                                outfile.write(line + "\n")
 
-            print(dt.today(), "deleting:", blatout_path)
-            os.remove(blatout_path)
+            #print(dt.today(), "deleting:", blatout_path)
+            #os.remove(blatout_path)
                 
 
 def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode):
@@ -845,7 +864,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 file_tag = os.path.splitext(file_tag)[0]
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
                 blat_file_queue = q.Queue()
-                blat_merge_thread = th.Thread(target = cat_blat_files, args = (blat_file_queue, os.path.join(GA_BLAT_path, "data", "1_blat_merge"), file_tag))
+                blat_merge_thread = th.Thread(target = cat_blat_files, args = (blat_file_queue, os.path.join(GA_BLAT_path), file_tag))
                 blat_merge_thread.setDaemon(True)
                 blat_merge_thread.start()
 
@@ -873,7 +892,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
                             blat_file_queue.put(blatout_path)
                             
-                        #time.sleep(2)
+                        #time.sleep(20000)
                 blat_file_queue.put("stop")            
                                 
         print(dt.today(), "final BLAT job removal")
