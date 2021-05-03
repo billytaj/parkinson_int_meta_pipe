@@ -41,19 +41,19 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name):
     blatout_final_file = os.path.join(blat_location, segment_name + ".blatout")
     
     while(not stop_flag):
-        
         blatout_path = blatout_queue.get()
-        database_part = blatout_path.split("g__")[1]
-        database_part = "g__" + database_part.strip(".blatout")
-        marker_file = segment_name + "_blat_" + database_part
-        marker_path = os.path.join(raw_blat_location, "data", "jobs", marker_file)
-        print("marker path:", marker_path)
         
         #print(dt.today(), segment_name , "merge thread queue:", blatout_path)
         if(blatout_path == "stop"):
             stop_flag = True
             #print(dt.today(), segment_name, "merge thread stop command received")
         else:
+            database_part = blatout_path.split("g__")[1]
+            database_part = "g__" + database_part.strip(".blatout")
+            marker_file = segment_name + "_blat_" + database_part
+            marker_path = os.path.join(raw_blat_location, "data", "jobs", marker_file)
+            print("marker path:", marker_path)
+        
             file_exist_flag = False
             marker_exists_flag = False
             while (not file_exist_flag):    #wait for the file to exist
@@ -886,7 +886,6 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             continue
                         else:
                             print(dt.today(), "RUNNING:", marker_file)
-                            
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
