@@ -94,7 +94,7 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name):
                                 outfile.write(line + "\n")
 
             #print(dt.today(), "deleting:", blatout_path)
-            #os.remove(blatout_path)
+            os.remove(blatout_path)
                 
 
 def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode):
