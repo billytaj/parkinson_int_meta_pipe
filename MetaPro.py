@@ -67,10 +67,11 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name):
                 if(os.path.exists(marker_path)):
                     marker_exists_flag = True
                 else:
-                    time.sleep(1)
+                    #print(dt.today(), "waiting for marker to exist:", marker_path)
+                    time.sleep(0.001)
                     
             blatout_file_size = os.stat(blatout_path).st_size
-            print("BLATOUT os stat", blatout_file_size)    
+            #print("BLATOUT os stat", blatout_file_size)    
             
             print(dt.today(), segment_name, "file found:", blatout_path)
             if(os.path.exists(blatout_final_file)):
@@ -868,30 +869,40 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 blat_merge_thread.setDaemon(True)
                 blat_merge_thread.start()
 
+                delay_count = 0
                 for fasta_db in os.listdir(paths.DNA_DB_Split):
                     if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                         job_name = "BLAT_" + file_tag + "_" + fasta_db
                         marker_file = file_tag + "_blat_" + fasta_db
                         marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
                         blatout_path = os.path.join(GA_BLAT_path, "data", "0_blat", file_tag + "_"+fasta_db + ".blatout")
-                        if(os.path.exists(blatout_path)):
-                            #recover from a restart.  there will be files that have been missed.  thread would have deleted the file
-                            
-                            blat_file_queue.put(blatout_path)
-                            #time.sleep(2)
+                        
                         
                         #This checker assume BLAT only exports a file when it's finished running
                         if(os.path.exists(marker_path)):
+                            if(os.path.exists(blatout_path)):
+                                #recover from a restart.  there will be files that have been missed.  thread would have deleted the file
+                                print(dt.today(), "file still exists. adding to merge thread:", blatout_path)
+                                blat_file_queue.put(blatout_path)
+                                
+                            else:
+                                print(dt.today(), "file doesn't exist anymore already merged", blatout_path)
+                                
                             print(dt.today(), "BLAT job ran already, skipping:", marker_file)
+                            #time.sleep(1)
                             continue
+                            
                         else:
                             print(dt.today(), "RUNNING:", marker_file)
+                            
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
                             blat_file_queue.put(blatout_path)
+                        
                             
-                        #time.sleep(20000)
+                            
+                        
                 blat_file_queue.put("stop")            
                                 
         print(dt.today(), "final BLAT job removal")
