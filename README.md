@@ -18,11 +18,14 @@ This pipeline comes with a config.ini file.  The user is meant to change, config
 Our config file is written with Python's ConfigParser, using the basic interpretation.  
 The docker invocation command should look like:
 
-> docker run 
+> docker run python3 /pipeline/MetaPro.py -c $config -1 $forward_read -2 $reverse_read -o <output>
+
+if you are invoking the pipeline using Singularity
+
 
 The following is an outline of wwhat each of the sections mean:
 
-## Parameters
+# Parameters
 ---
 * Output_Folder
 Output_Folder is where the user would indicate to the pipeline where you want the output files to be dumped
@@ -30,12 +33,12 @@ Output_Folder is where the user would indicate to the pipeline where you want th
 * Threads
 Threads is the number of threads that the pipeline is allowed to use.  The pipeline is dependent on threads and parallelization to operate efficiently
 
-## Configuration File
+# Configuration File
 ---
 The configuration file is an essential portion of MetaPro's operation.  It governs the internal settings, and tool paths 
 that MetaPro will use in the analysis of the sample data.
 
-## Sequences
+# Sequences
 ---
 * Single
 Single is for single reads.  Only fill this in if your sequence is a single file
@@ -153,15 +156,57 @@ MetaPro runs in a Singularity instance.  As of writing (Sept 28, 2018), Singular
 The "keep" and "quiet" settings to verbose_mode will use additional time to compress (keep) or delete (quiet) the interim files produced by the pipeline.  If the performance of a single run is the priority, the "verbose" option should be used to avoid this overhead. 
 
 
-# Adding a module
+## Guide to outputs
 ---
-The pipeline framework is designed with the mindset that modules will want to be swapped.  The framework has 4 critical design components that should be considered:
-- The pipeline generates shellscripts which it runs inside a python process through MetaPro_commands.py.  Each stage is a new command.  Each command is its own class function.
-- The pipeline's control flow is controlled entirely by the main program: MetaPro.py.  The main program is responsible for the auto-resume, stage-dependency synchronization, file management system, and auto-kill features.
-- The pipeline's external tool paths are controlled by the MetaPro paths file.  This file is a single large object, where the MetaPro Commands file instantiates to use the tools.
-- Every stage ends with its final results placed inside a folder called "final_results"
+MetaPro produces many outputs for the user to use.  They can be found in the outputs -> final_results directory
+The following is a guide to the information each file contains 
+- Gene map
+The Gene map shows all of the genes and proteins that have been identified by either BWA, BLAT, or DIAMOND.
+The map shows every read that has been identified to those genes/proteins.
+The columns in the Gene map are: 
+-- Gene ID / Protein accession
+-- Length of the gene / protein
+-- Number of reads annotated to the gene/protein
+-- The read IDs that annotated to the gene/protein
 
-To add a module, the editor is expected to do the following:
-- 1) Either add a new member function to the MetaPro Commands class, or make a new class entirely
-- 2) Slot in the new stage at the appropriate section.  Should it be dependent on another stage, the pipeline already has examples of dependency-reliant stage integration
-Note:  Changes to the pipeline code will not persist in the Docker Container's default location of /pipeline.  To keep the changes, a local copy will have to be used.  The 
+- RPKM table
+The RPKM table shows the abundance of each gene, expressed as RPKM of the reads annotated to the gene/protein.
+The columns are:
+-- The ID of the gene/protein
+-- The length of the gene/protein
+-- The number of reads associated with each gene/protein
+-- The ECs associated with each gene/protein (delineated with a "|" to show multiple ECs per gene/protein)
+-- The RPKM of the gene/protein
+-- The rest of the columns are taxa, representing at least 1% of the sample (on default), and the RPKM associated by taxa.
+
+- EC heatmap RPKM
+This table is not meant to be used externally.  It is for generating the EC heatmap
+This table contains no new information from RPKM, and is a transformed table to flatten the data where there are multiple ECs per gene/protein
+
+- Taxa Classifications
+This table shows the taxa classification for every putative read that MetaPro processed.
+The columns are:
+-- Classified/Unclassified.  C is classified, U is unclassified.  
+-- The read ID
+-- The full taxonomic tree of the read
+
+- Cytoscape Network
+This table is the import table to CytoScape.  It will display enzyme information, expressed in RPKM of the supplied taxa
+-- The EC label that is being represented
+-- The total RPKM
+-- The RPKM, broken down by taxa representing at least 1% (on default)
+-- The piechart display information
+
+## Guide to other outputs
+---
+MetaPro produces interim files that are then constructed into reports we think they user will likely want.  However, we cannot predict every use-case.  Therefore, this section describes the outputs of the intermediate steps, so that the user may be able to use MetaPro's outputs for their own needs.
+
+Each step of MetaPro will contain a directory called "final_results".  This folder contains the final outputs of the step.
+
++ Quality Filter
+Depending on if the input data was single-ended or paired-ended, MetaPro will produce different files
+-- singletons.fastq (The remaining reads after they have been filtered by the quality-filter stage)
+-- singletons.unique.fastq.clstr
+
+
+
