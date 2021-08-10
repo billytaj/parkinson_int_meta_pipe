@@ -102,6 +102,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     #make our util obj
     mp_util = mpu.mp_util(output_folder_path)
     paths = mpp.tool_path_obj(config_path)
+    segmented_chocophlan_flag = True
+    if(paths.DNA_DB.endswith(".fasta")):
+        segmented_chocophlan_flag = False
     no_host = args_pack["no_host"]
     verbose_mode = args_pack["verbose_mode"]
     rRNA_chunks = int(paths.rRNA_chunksize)
@@ -793,8 +796,23 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                     continue
                 else:
                     marker_path_list.append(marker_path)
-                    command_list = commands.create_BWA_annotate_command_v2(GA_BWA_label, full_sample_path, marker_file)
-                    mp_util.launch_and_create_with_hold(BWA_mem_threshold, BWA_job_limit, BWA_job_delay, GA_BWA_label, job_name, commands, command_list)
+                    ref_path = paths.DNA_DB_Split
+                    
+                    command_list = ""
+                    if (ref_path.endswith(".fasta")):
+                        #aug 10, 2021: new bigger chocophlan (from humann3) is in segments because we can't index it as a whole.  
+                        #if the DB is still an old version, the tag should just say "chocophlan".  otherwise, it will say the chocophlan chunk name
+                        ref_tag = os.path.basename(ref_path)
+                        ref_tag = ref_tag.strip(".fasta")
+                        command_list = commands.create_BWA_annotate_command_v2(GA_BWA_label, ref_path, ref_tag, full_sample_path, marker_file)
+                        mp_util.launch_and_create_with_hold(BWA_mem_threshold, BWA_job_limit, BWA_job_delay, GA_BWA_label, job_name, commands, command_list)
+                    else:
+                        split_db = os.listdir(ref_path)
+                        for db_segments in split_db:
+                            segment_ref_path = os.path.join(ref_path, db_segments)
+                            ref_tag = db_segments.strip(".fasta")
+                            command_list = commands.create_BWA_annotate_command_v2(GA_BWA_label, segment_ref_path, ref_tag, full_sample_path, marker_file)
+                            mp_util.launch_and_create_with_hold(BWA_mem_threshold, BWA_job_limit, BWA_job_delay, GA_BWA_label, job_name, commands, command_list)
 
         print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
         mp_util.wait_for_mp_store()
@@ -812,16 +830,46 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "data", "0_read_split", section, split_sample))
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
-                job_name = "BWA_pp" + "_" + file_tag
-                marker_file = file_tag + "_bwa_pp"
-                marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                    continue
+                
+                
+                ref_path = paths.DNA_DB_Split
+                if (ref_path.endswith(".fasta")):
+                    ref_tag = os.path.basename(ref_path)
+                    ref_tag = ref_tag.strip(".fasta")
+            
+                
+                    job_name = "BWA_pp" + "_" + file_tag + "_" + ref_tag
+                    marker_file = file_tag + "_" + ref_tag +  "_bwa_pp"
+                    marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+                    
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_BWA_pp_command_v2(GA_BWA_label, assemble_contigs_label, ref_tag, full_sample_path, marker_file)
+                        mp_util.launch_and_create_with_hold(BWA_pp_mem_threshold, BWA_pp_job_limit, BWA_pp_job_delay, GA_BWA_label, job_name, commands, command_list)
+                        
                 else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_BWA_pp_command_v2(GA_BWA_label, assemble_contigs_label, full_sample_path, marker_file)
-                    mp_util.launch_and_create_with_hold(BWA_pp_mem_threshold, BWA_pp_job_limit, BWA_pp_job_delay, GA_BWA_label, job_name, commands, command_list)
+                    split_db = os.listdir(ref_path)
+                    for db_segments in split_db:
+                        segment_ref_path = os.path.join(ref_path, db_segments)
+                        ref_tag = db_segments.strip(".fasta")
+                        job_name = "BWA_pp" + "_" + file_tag + "_" + ref_tag
+                        marker_file = file_tag + "_" + ref_tag + "_bwa_pp"
+                        marker_path = os.path.join(GA_BWA_jobs_folder, marker_file)
+                        
+                        if(os.path.exists(marker_path)):
+                            print(dt.today(), "skipping:", marker_file)
+                            continue
+                        else:
+                            marker_path_list.append(marker_path)
+                            command_list = commands.create_BWA_pp_command_v2(GA_BWA_label, assemble_contigs_label, ref_tag, full_sample_path, marker_file)
+                            mp_util.launch_and_create_with_hold(BWA_pp_mem_threshold, BWA_pp_job_limit, BWA_pp_job_delay, GA_BWA_label, job_name, commands, command_list)
+                            
+                            
+                        
+                        
                         
         print(dt.today(), "all BWA PP jobs submitted.  waiting for sync")            
         mp_util.wait_for_mp_store()

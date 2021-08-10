@@ -2116,8 +2116,9 @@ class mt_pipe_commands:
         return COMMANDS_GA_prep_fasta
 
 
-    def create_BWA_annotate_command_v2(self, stage_name, query_file, marker_file):
+    def create_BWA_annotate_command_v2(self, stage_name, ref_path, ref_tag, query_file, marker_file):
         # meant to be called multiple times: query file is a split file
+        # aug 10, 2021: changed ref path to accomodate new split-chocophlan
         subfolder       = os.path.join(self.Output_Path, stage_name)
         data_folder     = os.path.join(subfolder, "data")
         bwa_folder      = os.path.join(data_folder, "1_bwa")
@@ -2133,11 +2134,11 @@ class mt_pipe_commands:
         
         bwa_job = ">&2 echo " + str(dt.today()) + " BWA on " + file_tag + " | "
         bwa_job += self.tool_path_obj.BWA + " mem -t " + self.Threads_str + " "
-        bwa_job += self.tool_path_obj.DNA_DB + " "
+        bwa_job += ref_path + " " #self.tool_path_obj.DNA_DB + " "
         #bwa_job += os.path.join(dep_loc, section_file) + " | "
         bwa_job += query_file + " | "
         bwa_job += self.tool_path_obj.SAMTOOLS + " view "
-        bwa_job += "> " + os.path.join(bwa_folder, file_tag + ".sam")
+        bwa_job += "> " + os.path.join(bwa_folder, file_tag +"_" + ref_tag + ".sam")
         
         #make_marker = ">&2 echo marking BWA job complete: " + file_tag + " | "
         make_marker = "touch" + " "
@@ -2148,9 +2149,11 @@ class mt_pipe_commands:
         ]
 
         return COMMANDS_BWA
-
         
-    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, query_file, marker_file):
+        
+        
+        
+    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, ref_tag, query_file, marker_file):
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
             
@@ -2171,8 +2174,8 @@ class mt_pipe_commands:
         self.make_folder(jobs_folder)
         
         reads_in    = query_file
-        bwa_in      = os.path.join(bwa_folder, sample_root_name + ".sam")
-        reads_out = os.path.join(final_folder, sample_root_name + ".fasta")
+        bwa_in      = os.path.join(bwa_folder, sample_root_name + "_" + ref_tag + ".sam")
+        reads_out = os.path.join(final_folder, sample_root_name + "_" + ref_tag + ".fasta")
             
         map_read_bwa = ">&2 echo " + str(dt.today()) + " GA BWA PP generic: " + sample_root_name + " | "
         map_read_bwa += self.tool_path_obj.Python + " "
@@ -2183,8 +2186,8 @@ class mt_pipe_commands:
             map_read_bwa += "None" + " "
         else:        
             map_read_bwa += os.path.join(dep_loc, "contig_map.tsv") + " "  # IN
-        map_read_bwa += os.path.join(final_folder, sample_root_name + "_gene_map.tsv") + " "  # OUT
-        map_read_bwa += os.path.join(final_folder, sample_root_name + "_mapped_genes.fna") + " " #OUT
+        map_read_bwa += os.path.join(final_folder, sample_root_name + "_" + ref_tag + "_gene_map.tsv") + " "  # OUT
+        map_read_bwa += os.path.join(final_folder, sample_root_name + "_" + ref_tag + "_mapped_genes.fna") + " " #OUT
         map_read_bwa += reads_in + " "
         map_read_bwa += bwa_in + " "
         map_read_bwa += reads_out
