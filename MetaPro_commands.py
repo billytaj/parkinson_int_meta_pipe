@@ -2153,7 +2153,7 @@ class mt_pipe_commands:
         
         
         
-    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, ref_tag, query_file, marker_file):
+    def create_BWA_pp_command_v2(self, stage_name, dependency_stage_name, ref_tag, ref_path, query_file, marker_file):
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
             
@@ -2181,7 +2181,7 @@ class mt_pipe_commands:
         map_read_bwa += self.tool_path_obj.Python + " "
         map_read_bwa += self.tool_path_obj.Map_reads_gene_BWA + " "
         map_read_bwa += str(self.tool_path_obj.BWA_cigar_cutoff) + " "
-        map_read_bwa += self.tool_path_obj.DNA_DB + " "  # IN
+        map_read_bwa += ref_path + " " #self.tool_path_obj.DNA_DB + " "  # IN
         if(self.sequence_contigs == "None"):
             map_read_bwa += "None" + " "
         else:        
