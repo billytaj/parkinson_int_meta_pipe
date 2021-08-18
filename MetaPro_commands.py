@@ -2288,9 +2288,9 @@ class mt_pipe_commands:
         
 
 
-    def create_BLAT_pp_command_v2(self, stage_name, query_file, dependency_stage_name, marker_file):
+    def create_BLAT_pp_command_v2(self, stage_name, query_file, dependency_stage_name, ref_file, marker_file):
         # this call is meant to be run after the BLAT calls have been completed.
-        
+        #aug 16, 2021: modded to consider the split-chocophlan
         sample_root_name = os.path.basename(query_file)
         sample_root_name = os.path.splitext(sample_root_name)[0]
         
@@ -2313,7 +2313,7 @@ class mt_pipe_commands:
         blat_pp += str(self.tool_path_obj.BLAT_identity_cutoff) + " "
         blat_pp += str(self.tool_path_obj.BLAT_length_cutoff) + " "
         blat_pp += str(self.tool_path_obj.BLAT_score_cutoff) + " "
-        blat_pp += self.tool_path_obj.DNA_DB + " "
+        blat_pp += ref_file + " " #self.tool_path_obj.DNA_DB + " "
         
         if(self.sequence_contigs == "None"):
             blat_pp += "None" + " "

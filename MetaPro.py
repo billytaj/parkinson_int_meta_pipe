@@ -977,8 +977,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         mp_util.check_all_job_markers(marker_path_list, final_checklist)
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_label)
         
-
-
+    #-------------------------------------------------
+    #BLAT pp
     
     if mp_util.check_bypass_log(output_folder_path, GA_BLAT_pp_label):
         marker_path_list = []
@@ -986,17 +986,44 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
             if(split_sample.endswith(".fasta")):
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
-                job_name = "BLAT_" + file_tag + "_pp"
-                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
-                marker_file = file_tag + "_blat_pp"
-                marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                if(os.path.exists(marker_path)):
-                    print(dt.today(), "skipping:", marker_file)
-                    continue
+                
+                ref_path = paths.DNA_DB
+                if (ref_path.endswith(".fasta")):
+                    #single chocophlan mode
+                    job_name = "BLAT_" + file_tag + "_pp"
+                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                    marker_file = file_tag + "_blat_pp"
+                    marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, ref_path, marker_file)
+                        mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                        
                 else:
-                    marker_path_list.append(marker_path)
-                    command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, marker_file)
-                    mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                    #split chocophlan mode
+                    #decode the chocophlan chunk, and supply the appropriate one.
+                    print("file tag:", file_tag.split("chocophlan"))
+                    choco_chunk = "chocophlan" + file_tag.split("chocophlan")[1]
+                    ref_file = os.path.join(ref_path, choco_chunk + ".fasta")
+                    print("BLAT file tag:", file_tag, "|chunk: ", ref_file)
+                    
+                    job_name = "BLAT_" + file_tag + "_" + choco_chunk + "_pp"
+                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                    marker_file = file_tag + "_" + choco_chunk + "_blat_pp"
+                    marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                    
+                    if(os.path.exists(marker_path)):
+                        print(dt.today(), "skipping:", marker_file)
+                        continue
+                    else:
+                        marker_path_list.append(marker_path)
+                        command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, ref_file, marker_file)
+                        mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                    
+                    #time.sleep(1)
                 
         print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
         mp_util.wait_for_mp_store()
