@@ -32,7 +32,7 @@ import psutil as psu
 import threading as th
 import queue as q
 
-def cat_blat_files(blatout_queue, raw_blat_location, segment_name):
+def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
     print(dt.today(), "merge thread launched:", segment_name)
     stop_flag = False
     blat_location = os.path.join(raw_blat_location, "data", "1_blat_merge")
@@ -45,8 +45,10 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name):
         
         #print(dt.today(), segment_name , "merge thread queue:", blatout_path)
         if(blatout_path == "stop"):
-            stop_flag = True
-            #print(dt.today(), segment_name, "merge thread stop command received")
+            if(blatout_queue.empty()):
+                stop_flag = True
+                print(dt.today(), segment_name, "merge thread stop command received")
+                done_queue.put("done")
         else:
             database_part = blatout_path.split("g__")[1]
             database_part = "g__" + database_part.strip(".blatout")
@@ -931,7 +933,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 file_tag = os.path.splitext(file_tag)[0]
                 full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
                 blat_file_queue = q.Queue()
-                blat_merge_thread = th.Thread(target = cat_blat_files, args = (blat_file_queue, os.path.join(GA_BLAT_path), file_tag))
+                blat_done_queue = q.Queue()
+                blat_merge_thread = th.Thread(target = cat_blat_files, args = (blat_file_queue, os.path.join(GA_BLAT_path), file_tag, blat_done_queue))
                 blat_merge_thread.setDaemon(True)
                 blat_merge_thread.start()
 
@@ -965,14 +968,28 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
                             blat_file_queue.put(blatout_path)
-                        
                             
-                            
-                        
-                blat_file_queue.put("stop")            
-                                
-        print(dt.today(), "final BLAT job removal")
-        mp_util.wait_for_mp_store()
+                       
+                
+                blat_file_queue.put("stop")
+                #mp_util.wait_for_mp_store()
+                #time.sleep(10)
+                done_flag = False
+                #wait for the blat merge queue to report it being finished
+                print(dt.today(), "waiting for merge process to tell us when it's finished")
+                while not(done_flag):
+                    done_sign = blat_done_queue.get()
+                    if(done_sign == "done"):
+                        done_flag = True
+                    time.sleep(1)
+                print(dt.today(), "merge process all finished!")
+                #blat_file_queue.put("stop")
+                                            
+        print(dt.today(), "final BLAT job removal. now waiting for mp-store flush")
+        mp_util.mp_store[:] = []
+        #note: this wait is disabled because we now have a separate thread.  it will hang if we enable it.
+        #mp_util.wait_for_mp_store()
+        print(dt.today(), "moving onto BLAT PP")
         final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT.txt")
         mp_util.check_all_job_markers(marker_path_list, final_checklist)
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_label)

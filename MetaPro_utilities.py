@@ -332,7 +332,12 @@ class mp_util:
 
 
     def wait_for_mp_store(self):
+        print(dt.today(), "closing down processes: ", len(self.mp_store))
+        count = 0
         for item in self.mp_store:
+            
+            print(dt.today(), "closed down: " + str(count) +  "/" + str(len(self.mp_store)) + "            ", end = "\r") 
+            count += 1
             item.join()
         self.mp_store[:] = []
 
