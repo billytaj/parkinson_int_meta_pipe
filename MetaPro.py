@@ -502,6 +502,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                                     command_list = commands.create_rRNA_filter_barrnap_euk_command("rRNA_filter", section, root_name, marker_file)
                                 elif(barrnap_org == "mit"):
                                     command_list = commands.create_rRNA_filter_barrnap_mit_command("rRNA_filter", section, root_name, marker_file)
+                                job_name = marker_file
+                                
                                 mp_util.launch_only_with_hold(Barrnap_mem_threshold, Barrnap_job_limit, Barrnap_job_delay, job_name, commands, command_list)
                                 
                 print(dt.today(), "waiting for Barrnap jobs to finish")
