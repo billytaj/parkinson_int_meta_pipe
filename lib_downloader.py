@@ -206,12 +206,12 @@ if __name__ == "__main__":
         #ChocoPhlan h3
         name = "chocophlan_h3_chunks"
         path = os.path.join(outdir, name, name+".tar.gz")
-        url = "https://compsysbio.org/metaprl_libs/"+name + "/" + name + ".tar.gz"
+        url = "https://compsysbio.org/metapro_libs/"+name + "/" + name + ".tar.gz"
         start_download(url, path, name, things_to_skip, bypass_log_file)
 
         name = "chocophlan_h3_unique"
         path = os.path.join(outdir, name, name+".tar.gz")
-        url = "https://compsysbio.org/metaprl_libs/"+name + "/" + name + ".tar.gz"
+        url = "https://compsysbio.org/metapro_libs/"+name + "/" + name + ".tar.gz"
         start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("kaiju" in files_to_download) or ("all" in files_to_download)):
