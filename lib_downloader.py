@@ -31,7 +31,8 @@ def get_file_with_resume(url, filepath, filename):
                             file_out.write(chunk)
                             local_filesize = os.path.getsize(filepath)
                             print(dt.today(), local_filesize, "/", remote_filesize, str(round(100*local_filesize/remote_filesize, 2)) + "%              ", end="\r")
-                            
+                    print(dt.today(), "finished download:", name)        
+                    
             elif(int(remote_filesize) == int(local_filesize)):
                 print(dt.today(), "skipping:", filename)
 
@@ -47,6 +48,7 @@ def get_file_with_resume(url, filepath, filename):
                                     file_out.write(chunk)
                                     local_filesize = os.path.getsize(filepath)
                                     print(dt.today(), local_filesize, "/", remote_filesize, str(round(100*local_filesize/remote_filesize, 2)) + "%              ", end="\r")
+                            print(dt.today(), "finished download:", name)
         else:
             #folder exists. file doesn't
             print(dt.today(), "Folder exists, file doesn't: new file download:", filename)
@@ -57,7 +59,7 @@ def get_file_with_resume(url, filepath, filename):
                             file_out.write(chunk)
                             local_filesize = os.path.getsize(filepath)
                             print(dt.today(), local_filesize, "/", remote_filesize, str(round(100*local_filesize/remote_filesize, 2)) + "%              ", end="\r")
-    
+                    print(dt.today(), "finished download:", name)
     else:   
         #folder doesn't exist. just download. make the dir too
         dirname = os.path.dirname(filepath)
@@ -74,24 +76,34 @@ def get_file_with_resume(url, filepath, filename):
                         local_filesize = os.path.getsize(filepath)
                         print(dt.today(), local_filesize, "/", remote_filesize, str(round(100*local_filesize/remote_filesize, 2)) + "%              ", end="\r")
 
-    
+                print(dt.today(), "finished download:", name)
            
-def start_download(url, path, name):
+def start_download(url, path, name, things_to_skip, bypass_log_file):
     print(dt.today(), "starting download:", name)
     get_file_with_resume(url, path, name)
-    print(dt.today(), "finished download:", name)
-    print(dt.today(), "extracting", name)
-    extract_path = os.path.dirname(path).split("/")
-    real_extract_path = extract_path[0]
-    for item in extract_path[1:-1]:
-        real_extract_path = os.path.join(real_extract_path, item)
-    #print(real_extract_path)
-
-    #time.sleep(10)
     
-    shutil.unpack_archive(path, outdir)
-    print(dt.today(), "finished extracting", name)
+    
+    if(not name in things_to_skip):
+        print(dt.today(), "extracting", name)
+        extract_path = os.path.dirname(path).split("/")
+        real_extract_path = extract_path[0]
+        for item in extract_path[1:-1]:
+            real_extract_path = os.path.join(real_extract_path, item)
+        bypass_log_file.write(name +"\n")
+        shutil.unpack_archive(path, outdir)
+        print(dt.today(), "finished extracting", name)
+    else:
+        print(dt.today(), "skipping extraction:", name)
     print("\n")
+
+def import_bypass_log(bypass_log_path):
+    things_to_skip = list()
+    if(os.path.exists(bypass_log_path)):
+        with open(bypass_log_path, "r") as bypass_log:
+            for line in bypass_log:
+                cleaned_item = line.strip("\n")
+                things_to_skip.append(cleaned_item)
+    return things_to_skip
 
 
 if __name__ == "__main__":
@@ -105,6 +117,19 @@ if __name__ == "__main__":
     outdir = sys.argv[1] # output dir. 
     if(outdir == "."):
         outdir = os.getcwd()
+    if(not os.path.isdir(outdir)):
+        print(dt.today(), "new directory. creating")
+        os.makedirs(outdir)
+        
+    bypass_log_file = ""
+    bypass_log_path = os.path.join(outdir, "bypass_log.txt")
+    things_to_skip = import_bypass_log(bypass_log_path)
+    if(os.path.exists(bypass_log_path)):
+    	bypass_log_file = open(bypass_log_path, "a")
+    else:
+    	bypass_log_file = open(bypass_log_path, "w")
+    	
+        
     print(dt.today(), "downloading all MetaPro libraries to:", outdir)
     print("len sys.argv:", len(sys.argv))
     if(len(sys.argv) > 2):
@@ -125,17 +150,16 @@ if __name__ == "__main__":
         # Detect V2
         name = "detect_v2_Support_libs"    
         path = os.path.join(outdir, "DETECTv2", "detect_v2.tar.gz")
-       
         url = "https://compsysbio.org/metapro_libs/DETECTv2/detect_v2.tar.gz"
-        start_download(url, path, name)
-
+        start_download(url, path, name, things_to_skip, bypass_log_file)
+        
     if(("ec_pathway" in files_to_download) or ("all" in files_to_download)):    
         #---------------------------------------------------------
         # EC_pathway
         name = "ec_pathway_file"
         path = os.path.join(outdir, "EC_pathway", "EC_pathway.tar.gz")
         url = "https://compsysbio.org/metapro_libs/EC_pathway/EC_pathway.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("priam" in files_to_download) or ("all" in files_to_download)):
         #---------------------------------------------------------
@@ -143,7 +167,7 @@ if __name__ == "__main__":
         name = "priam files"
         path = os.path.join(outdir, "PRIAM_db", "priam.tar.gz")
         url = "https://compsysbio.org/metapro_libs/PRIAM_db/priam.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("rfam" in files_to_download) or ("all" in files_to_download)):
         #---------------------------------------------------------
@@ -151,7 +175,7 @@ if __name__ == "__main__":
         name = "Rfam"
         path = os.path.join(outdir, "Rfam", "rfam.tar.gz")
         url = "https://compsysbio.org/metapro_libs/Rfam/rfam.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("wevote" in files_to_download) or ("all" in files_to_download)):
         #----------------------------------------------------------------
@@ -159,7 +183,7 @@ if __name__ == "__main__":
         name = "wevote"
         path = os.path.join(outdir, "WEVOTE_db", "wevote.tar.gz")
         url = "https://compsysbio.org/metapro_libs/WEVOTE_db/wevote.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("accession2taxid" in files_to_download) or ("all" in files_to_download)):
         #-------------------------------------------------------
@@ -167,7 +191,7 @@ if __name__ == "__main__":
         name = "accession2taxid"
         path = os.path.join(outdir, "accession2taxid", "accession2taxid.tar.gz")
         url = "https://compsysbio.org/metapro_libs/accession2taxid/accession2taxid.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("centrifuge" in files_to_download) or ("all" in files_to_download)):
         #--------------------------------------------
@@ -175,8 +199,7 @@ if __name__ == "__main__":
         name = "centrifuge"
         path = os.path.join(outdir, "centrifuge_db", "nt.tar.gz")
         url = "https://compsysbio.org/metapro_libs/centrifuge_db/nt.tar.gz"
-        start_download(url, path, name)
-
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("chocophlan_h3" in files_to_download) or ("all" in files_to_download)):
         #-------------------------------------------------------------
@@ -184,12 +207,12 @@ if __name__ == "__main__":
         name = "chocophlan_h3_chunks"
         path = os.path.join(outdir, name, name+".tar.gz")
         url = "https://compsysbio.org/metaprl_libs/"+name + "/" + name + ".tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
         name = "chocophlan_h3_unique"
         path = os.path.join(outdir, name, name+".tar.gz")
         url = "https://compsysbio.org/metaprl_libs/"+name + "/" + name + ".tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("kaiju" in files_to_download) or ("all" in files_to_download)):
         #-------------------------------------------------------------
@@ -197,7 +220,7 @@ if __name__ == "__main__":
         name = "kaiju_db"
         path = os.path.join(outdir, "kaiju_db", "kaiju.tar.gz")
         url = "https://compsysbio.org/metapro_libs/kaiju_db/kaiju.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("nr" in files_to_download) or ("all" in files_to_download)):
         #-------------------------------------------------------------
@@ -205,7 +228,7 @@ if __name__ == "__main__":
         name = "nr"
         path = os.path.join(outdir, "nr", "nr.tar.gz")
         url = "https://compsysbio.org/metapro_libs/nr/nr.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("path_to_superpath" in files_to_download) or ("all" in files_to_download)):
         #--------------------------------------------------------------
@@ -213,7 +236,7 @@ if __name__ == "__main__":
         name = "path_to_superpath"
         path = os.path.join(outdir, "path_to_superpath", "pathway_to_superpathway.tar.gz")
         url = "https://compsysbio.org/metapro_libs/path_to_superpath/pathway_to_superpathway.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("swissprot" in files_to_download) or ("all" in files_to_download)):
         #--------------------------------------------------------------
@@ -221,7 +244,7 @@ if __name__ == "__main__":
         name = "swissprot"
         path = os.path.join(outdir, "swiss_prot_db", "swiss_prot_db.tar.gz")
         url = "https://compsysbio.org/metapro_libs/swiss_prot_db/swiss_prot_db.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("trimmomatic" in files_to_download) or ("all" in files_to_download)):
         #--------------------------------------------------------------
@@ -229,7 +252,7 @@ if __name__ == "__main__":
         name = "trimmomatic"
         path = os.path.join(outdir, "trimmomatic_adapters", "trimmomatic_adapters.tar.gz")
         url = "https://compsysbio.org/metapro_libs/trimmomatic_adapters/trimmomatic_adapters.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
 
     if(("univec" in files_to_download) or ("all" in files_to_download)):
         #--------------------------------------------------------------------
@@ -237,4 +260,4 @@ if __name__ == "__main__":
         name = "univec"
         path = os.path.join(outdir, "univec_core", "UniVec_Core.tar.gz")
         url = "https://compsysbio.org/metapro_libs/univec_core/UniVec_Core.tar.gz"
-        start_download(url, path, name)
+        start_download(url, path, name, things_to_skip, bypass_log_file)
