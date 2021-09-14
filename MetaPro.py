@@ -982,7 +982,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 #else:
                 #    print(dt.today(), "interim merge thread def dead")
                 #print(dt.today(), "BLAT merge thread joined. waiting for mp_store to finish")
-                time.sleep(2)
+                #time.sleep(2)
                 # #mp_util.wait_for_mp_store()
                 # #time.sleep(10)
                 # done_flag = False
