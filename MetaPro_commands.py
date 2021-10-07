@@ -2245,7 +2245,7 @@ class mt_pipe_commands:
         blat_command += self.tool_path_obj.BLAT + " -noHead -minIdentity=90 -minScore=65 "
         blat_command += self.tool_path_obj.DNA_DB_Split + fasta_db + " "
         blat_command += query_file
-        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=2" + " "
+        blat_command += " -fine -q=rna -t=dna -out=blast8 -threads=40" + " "
         blat_command += os.path.join(blat_folder, sample_root_name + "_" + fasta_db + ".blatout")
         
         #make_marker = ">&2 echo marking BLAT job complete: " + sample_root_name + "_" + fasta_db + " | " 
