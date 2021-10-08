@@ -51,9 +51,11 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
                 done_queue.put("done")
                 break
         else:
-            database_part = blatout_path.split("g__")[1]
-            database_part = "g__" + database_part.strip(".blatout")
-            marker_file = segment_name + "_blat_" + database_part
+            print("BLATOUT path:", blatout_path)
+            #database_part = blatout_path.split("g__")[1]
+            #database_part = "g__" + database_part.strip(".blatout")
+            #marker_file = segment_name + "_blat_" + database_part
+            marker_file = blatout_path.split(".fasta")[0]
             marker_path = os.path.join(raw_blat_location, "data", "jobs", marker_file)
             print("marker path:", marker_path)
         
