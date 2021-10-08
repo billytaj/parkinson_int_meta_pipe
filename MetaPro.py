@@ -57,7 +57,7 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
             #marker_file = segment_name + "_blat_" + database_part
             marker_file = blatout_path.split(".fasta")[0]
             marker_path = os.path.join(raw_blat_location, "data", "jobs", marker_file)
-            print("marker path:", marker_path)
+            #print("marker path:", marker_path)
         
             file_exist_flag = False
             marker_exists_flag = False
@@ -972,6 +972,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                            #mp_util.launch_and_create_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, GA_BLAT_data_folder, job_name, commands, command_list)
                             blat_file_queue.put(blatout_path)
                             
                         #mp_util.limited_wait_for_mp_store(100)
