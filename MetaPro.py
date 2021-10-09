@@ -33,6 +33,8 @@ import threading as th
 import queue as q
 
 def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
+    #raw blat location now a package:
+    #<blatout path | marker file>
     print(dt.today(), "merge thread launched:", segment_name)
     stop_flag = False
     blat_location = os.path.join(raw_blat_location, "data", "1_blat_merge")
@@ -41,8 +43,9 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
     blatout_final_file = os.path.join(blat_location, segment_name + ".blatout")
     
     while(not stop_flag):
-        blatout_path = blatout_queue.get()
-        
+        raw_blatout_path = blatout_queue.get()
+        blatout_path = raw_blatout_path.split("|")[0]
+        marker_file = raw_blatout_path.split("|")[1]
         #print(dt.today(), segment_name , "merge thread queue:", blatout_path)
         if(blatout_path == "stop"):
             if(blatout_queue.empty()):
@@ -51,13 +54,8 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
                 done_queue.put("done")
                 break
         else:
-            print("BLATOUT path:", blatout_path)
-            #database_part = blatout_path.split("g__")[1]
-            #database_part = "g__" + database_part.strip(".blatout")
-            #marker_file = segment_name + "_blat_" + database_part
-            marker_file = blatout_path.split(".fasta")[0]
             marker_path = os.path.join(raw_blat_location, "data", "jobs", marker_file)
-            #print("marker path:", marker_path)
+            print("marker path:", marker_path)
         
             file_exist_flag = False
             marker_exists_flag = False
@@ -66,17 +64,19 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
                     
                     file_exist_flag = True
                 else:
-                    #print(dt.today(), segment_name, "waiting for file to exist:", blatout_path)
+                    print(dt.today(), segment_name, "waiting for file to exist:", blatout_path, end="\r") 
                     time.sleep(1) #can't go any faster.  the file needs time to be populated, or else the file is skipped
             while (not marker_exists_flag):
                 if(os.path.exists(marker_path)):
                     marker_exists_flag = True
                 else:
-                    #print(dt.today(), "waiting for marker to exist:", marker_path, end="\r")
+                    #print("BLATpath:", blatout_path)
+                    #print("mpath:", marker_path)
+                    print(dt.today(), "waiting for marker to exist:", marker_path, end="\r")
                     time.sleep(0.001)
                     
             blatout_file_size = os.stat(blatout_path).st_size
-            #print("BLATOUT os stat", blatout_file_size)    
+            print("BLATOUT os stat", blatout_file_size)    
             
             print(dt.today(), segment_name, "file found:", blatout_path)
             if(os.path.exists(blatout_final_file)):
@@ -950,14 +950,14 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         marker_file = file_tag + "_blat_" + fasta_db
                         marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
                         blatout_path = os.path.join(GA_BLAT_path, "data", "0_blat", file_tag + "_"+fasta_db + ".blatout")
-                        
+                        blat_queue_package = blatout_path+"|" + marker_file
                         
                         #This checker assume BLAT only exports a file when it's finished running
                         if(os.path.exists(marker_path)):
                             if(os.path.exists(blatout_path)):
                                 #recover from a restart.  there will be files that have been missed.  thread would have deleted the file
                                 print(dt.today(), "file still exists. adding to merge thread:", blatout_path)
-                                blat_file_queue.put(blatout_path)
+                                blat_file_queue.put(blat_queue_package)
                                 
                             else:
                                 print(dt.today(), "file doesn't exist anymore already merged", blatout_path)
@@ -972,8 +972,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                             marker_path_list.append(marker_path)
                             command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
                             mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
-                            #mp_util.launch_and_create_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, GA_BLAT_data_folder, job_name, commands, command_list)
-                            blat_file_queue.put(blatout_path)
+                            blat_file_queue.put(blat_queue_package)
                             
                         #mp_util.limited_wait_for_mp_store(100)
                 blat_file_queue.put("stop")
