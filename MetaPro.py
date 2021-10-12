@@ -44,16 +44,20 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
     
     while(not stop_flag):
         raw_blatout_path = blatout_queue.get()
-        blatout_path = raw_blatout_path.split("|")[0]
-        marker_file = raw_blatout_path.split("|")[1]
-        #print(dt.today(), segment_name , "merge thread queue:", blatout_path)
-        if(blatout_path == "stop"):
+        
+        if(raw_blatout_path == "stop"):
             if(blatout_queue.empty()):
                 stop_flag = True
                 print(dt.today(), segment_name, "merge thread stop command received")
                 done_queue.put("done")
                 break
         else:
+            blatout_path = raw_blatout_path.split("|")[0]
+            marker_file = raw_blatout_path.split("|")[1]
+            print("marker file", marker_file)
+            print("blatout:", blatout_path)
+            #time.sleep(10)
+            #print(dt.today(), segment_name , "merge thread queue:", blatout_path)
             marker_path = os.path.join(raw_blat_location, "data", "jobs", marker_file)
             print("marker path:", marker_path)
         
@@ -64,7 +68,7 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
                     
                     file_exist_flag = True
                 else:
-                    print(dt.today(), segment_name, "waiting for file to exist:", blatout_path, end="\r") 
+                    print(dt.today(), segment_name, "waiting for file to exist:", blatout_path, end='\r', flush=True) 
                     time.sleep(1) #can't go any faster.  the file needs time to be populated, or else the file is skipped
             while (not marker_exists_flag):
                 if(os.path.exists(marker_path)):
@@ -72,8 +76,8 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
                 else:
                     #print("BLATpath:", blatout_path)
                     #print("mpath:", marker_path)
-                    print(dt.today(), "waiting for marker to exist:", marker_path, end="\r")
-                    time.sleep(0.001)
+                    print(dt.today(), "waiting for marker to exist:", marker_path, end='\r', flush = True)
+                    time.sleep(1.001)
                     
             blatout_file_size = os.stat(blatout_path).st_size
             print("BLATOUT os stat", blatout_file_size)    
