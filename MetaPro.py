@@ -76,8 +76,8 @@ def cat_blat_files(blatout_queue, raw_blat_location, segment_name, done_queue):
                 else:
                     #print("BLATpath:", blatout_path)
                     #print("mpath:", marker_path)
-                    print(dt.today(), "waiting for marker to exist:", marker_path, end='\r', flush = True)
-                    time.sleep(1.001)
+                    #print(dt.today(), "waiting for marker to exist:", marker_path, end='\r', flush = True)
+                    time.sleep(0.001)
                     
             blatout_file_size = os.stat(blatout_path).st_size
             print("BLATOUT os stat", blatout_file_size)    
