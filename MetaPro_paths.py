@@ -175,6 +175,7 @@ class tool_path_obj:
         self.Map_reads_gene_BLAT        = os.path.join(script_path, "ga_BLAT_generic_v2.py")
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond_generic_v2.py")
         self.GA_final_merge             = os.path.join(script_path, "ga_Final_merge_v4.py")
+        self.GA_merge_fasta             = os.path.join(script_path, "ga_merge_fasta.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine_v5.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid_v3.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")

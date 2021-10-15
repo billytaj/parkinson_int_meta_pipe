@@ -910,6 +910,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
             marker_path_list.append(marker_path)
             command_list = commands.create_BWA_copy_contig_map_command(GA_BWA_label, assemble_contigs_label, marker_file)
             mp_util.launch_and_create_simple(GA_BWA_label, GA_BWA_label + "_copy_contig_map", commands, command_list)
+
+
+
+
         
         final_checklist = os.path.join(GA_BWA_path, "GA_BWA_pp.txt")
         mp_util.check_all_job_markers(marker_path_list, final_checklist)
@@ -2771,7 +2775,7 @@ if __name__ == "__main__":
     parser.add_argument("-con", "--contig",   type=str,   help="Tutorial use only: Path to the file containing the contig reads in fastq format")
     parser.add_argument("-o", "--output_folder", type=str, required=True, help="Path of the folder for the output of the pipeline")
     parser.add_argument("-t", "--num_threads", type=int, help="Maximum number of threads used by the pipeline")
-    parser.add_argument("--nhost", action='store_true', help="Skip the host read removal step of the pipeline")
+    parser.add_argument("--nhost", "--no-host", action='store_true', help="Skip the host read removal step of the pipeline")
     parser.add_argument("--verbose_mode", type=str, help = "Decide how to handle the interim files, Compress them, or leave them alone.  Values are: keep, compress, quiet")
     parser.add_argument("--tutorial", type = str, help = "tutorial operating mode for MetaPro")
     
