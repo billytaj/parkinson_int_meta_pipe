@@ -17,27 +17,34 @@ if __name__ == "__main__":
 
     #merge it all into a dict.  Let the duplicate IDs overwrite. it's the same data
     read_dict = dict()
+    ID = ""
+    seq = ""
     for item in dir_list:
         if(item.startswith(segment_name)):
             file_to_open = os.path.join(in_dir, item)
             with open(file_to_open, "r") as in_fasta:
                 line_is_ID = True
-                ID = ""
-                seq = ""
+                
                 for line in in_fasta:
-                    if(line_is_ID):
-                        ID = line.strip("\n")
-                        line_is_ID = False
+                    if(line.startswith(">")):
+                        if(ID == ""):
+                            ID = line.strip("\n")
+                        else:
+                            #new line. store the seq
+                            read_dict[ID] = seq
+                            ID = line.strip("\n")
+                            seq = ""
                     else:
-                        seq = line.strip("\n")
-                        line_is_ID = True
-                        read_dict[ID] = seq
+                        seq += line
+
+    #store the last entry
+    read_dict[ID] = seq
 
     #export it                    
     with open(out_path, "w") as out_fasta:
         for item in read_dict:
             out_line = item + "\n"
             out_fasta.write(out_line)
-            out_line = read_dict[item] + "\n"
+            out_line = read_dict[item]
             out_fasta.write(out_line)
     
