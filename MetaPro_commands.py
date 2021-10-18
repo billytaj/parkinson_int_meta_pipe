@@ -2163,6 +2163,7 @@ class mt_pipe_commands:
         data_folder     = os.path.join(subfolder, "data")
         bwa_folder      = os.path.join(data_folder, "1_bwa")
         split_folder    = os.path.join(data_folder, "0_read_split")
+        pp_folder       = os.path.join(data_folder, "2_bwa_pp")
         final_folder    = os.path.join(subfolder, "final_results")
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
         jobs_folder     = os.path.join(data_folder, "jobs")
@@ -2172,10 +2173,11 @@ class mt_pipe_commands:
         self.make_folder(bwa_folder)
         self.make_folder(final_folder)
         self.make_folder(jobs_folder)
+        self.make_folder(pp_folder)
         
         reads_in    = query_file
         bwa_in      = os.path.join(bwa_folder, sample_root_name + "_" + ref_tag + ".sam")
-        reads_out = os.path.join(final_folder, sample_root_name + "_" + ref_tag + ".fasta")
+        reads_out   = os.path.join(pp_folder, sample_root_name + "_" + ref_tag + ".fasta")
             
         map_read_bwa = ">&2 echo " + str(dt.today()) + " GA BWA PP generic: " + sample_root_name + " | "
         map_read_bwa += self.tool_path_obj.Python + " "
@@ -2191,16 +2193,28 @@ class mt_pipe_commands:
         map_read_bwa += reads_in + " "
         map_read_bwa += bwa_in + " "
         map_read_bwa += reads_out
-        
+
+
+        merge_bwa_fastas = ">&2 echo " + str(dt.today()) + " GA BWA merge leftover reads " + sample_root_name + " | "
+        merge_bwa_fastas += self.tool_path_obj.Python + " "
+        merge_bwa_fastas += self.tool_path_obj.GA_merge_fasta + " "
+        merge_bwa_fastas += pp_folder + " " 
+        merge_bwa_fastas += sample_root_name + " " 
+        merge_bwa_fastas += final_folder
+
+
         make_marker = ">&2 echo bwa pp complete: " + marker_file + " | " 
         make_marker += "touch" + " " 
         make_marker += os.path.join(jobs_folder, marker_file)
 
         COMMANDS_Annotate_BWA = [
-            map_read_bwa + " && " + make_marker
+            map_read_bwa + " && " + merge_bwa_fastas + " && " + make_marker
             #copy_contig_map
         ]
         return COMMANDS_Annotate_BWA
+
+
+ 
 
     def create_BWA_copy_contig_map_command(self, stage_name, dependency_stage_name, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
