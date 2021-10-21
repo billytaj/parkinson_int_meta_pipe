@@ -2280,12 +2280,12 @@ class mt_pipe_commands:
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         blat_folder         = os.path.join(data_folder, "0_blat")
-        blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
+        #blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
         jobs_folder         = os.path.join(data_folder, "jobs")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(blat_merge_folder)
+        #self.make_folder(blat_merge_folder)
         self.make_folder(jobs_folder)
 
         cat_command = ">&2 echo " + str(dt.today()) + " combining and deleting BLATout | "
@@ -2310,7 +2310,7 @@ class mt_pipe_commands:
         
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        blat_folder         = os.path.join(data_folder, "1_blat_merge")
+        blat_folder         = os.path.join(data_folder, "0_blat")
         final_folder        = os.path.join(subfolder, "final_results")
         dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
         jobs_folder         = os.path.join(data_folder, "jobs")
