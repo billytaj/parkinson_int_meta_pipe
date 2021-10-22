@@ -925,7 +925,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                 file_tag = os.path.basename(split_sample)
                 file_tag = os.path.splitext(file_tag)[0]
                 
-                ref_path = paths.DNA_DB
+                ref_path = paths.DNA_DB_Split
                 if (ref_path.endswith(".fasta")):
                     #single chocophlan mode
                     job_name = "BLAT_" + file_tag + "_pp"
@@ -941,28 +941,32 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                         mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
                         
                 else:
-                    #split chocophlan mode
-                    #decode the chocophlan chunk, and supply the appropriate one.
-                    print("file tag:", file_tag.split("chocophlan"))
-                    choco_chunk = file_tag
-                    ref_file = os.path.join(ref_path, choco_chunk + ".fasta")
-                    print("BLAT file tag:", file_tag, "|chunk: ", ref_file)
-                    
-                    job_name = "BLAT_" + file_tag + "_" + choco_chunk + "_pp"
-                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
-                    marker_file = file_tag + "_" + choco_chunk + "_blat_pp"
-                    marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                    
-                    if(os.path.exists(marker_path)):
-                        print(dt.today(), "skipping:", marker_file)
-                        continue
-                    else:
-                        marker_path_list.append(marker_path)
-                        command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, ref_file, marker_file)
-                        print("Command list:", command_list)
-                        time.sleep(10)
-                        mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
-                    
+                    for fasta_db in os.listdir(ref_path):
+                        if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
+                            #split chocophlan mode
+                            #decode the chocophlan chunk, and supply the appropriate one.
+                            #print("file tag:", file_tag.split("chocophlan"))
+                            choco_chunk = fasta_db.split(".fasta")[0]
+                            ref_file = os.path.join(ref_path, fasta_db)
+                            #print("BLAT file tag:", file_tag, "|chunk: ", ref_file)
+                            
+                            job_name = "BLAT_" + file_tag + "_" + choco_chunk + "_pp"
+                            full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+                            #print("query file:", full_sample_path)
+                            marker_file = file_tag + "_" + choco_chunk + "_blat_pp"
+                            print("MARKER FILE:", marker_file)
+                            marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                            
+                            if(os.path.exists(marker_path)):
+                                print(dt.today(), "skipping:", marker_file)
+                                continue
+                            else:
+                                marker_path_list.append(marker_path)
+                                command_list = commands.create_BLAT_pp_command_v3(GA_BLAT_label, full_sample_path, GA_BWA_label, ref_file, marker_file)
+                                print("Command list:", command_list)
+                                #time.sleep(10)
+                                mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                            #time.sleep(10)
 
                 
         print(dt.today(), "submitted all BLAT pp jobs.  waiting for sync")
