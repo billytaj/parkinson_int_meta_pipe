@@ -2280,12 +2280,12 @@ class mt_pipe_commands:
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
         blat_folder         = os.path.join(data_folder, "0_blat")
-        blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
+        #blat_merge_folder   = os.path.join(data_folder, "1_blat_merge")
         jobs_folder         = os.path.join(data_folder, "jobs")
 
         self.make_folder(subfolder)
         self.make_folder(data_folder)
-        self.make_folder(blat_merge_folder)
+        #self.make_folder(blat_merge_folder)
         self.make_folder(jobs_folder)
 
         cat_command = ">&2 echo " + str(dt.today()) + " combining and deleting BLATout | "
@@ -2310,7 +2310,7 @@ class mt_pipe_commands:
         
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
-        blat_folder         = os.path.join(data_folder, "1_blat_merge")
+        blat_folder         = os.path.join(data_folder, "0_blat")
         final_folder        = os.path.join(subfolder, "final_results")
         dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
         jobs_folder         = os.path.join(data_folder, "jobs")
@@ -2346,6 +2346,55 @@ class mt_pipe_commands:
         COMMANDS_Annotate_BLAT_Post = [blat_pp + " && " + make_marker]
 
         return COMMANDS_Annotate_BLAT_Post
+        
+    def create_BLAT_pp_command_v3(self, stage_name, reads_in, dependency_stage_name, ref_file, marker_file):
+        # this call is meant to be run after the BLAT calls have been completed.
+        #aug 16, 2021: modded to consider the split-chocophlan
+        #oct 22, 2021: modded to consider that we now use a compact form of splitting to cut down on file numbers
+        sample_root_name = os.path.basename(reads_in)
+        sample_root_name = os.path.splitext(sample_root_name)[0]
+        sample_ref_root_name = os.path.basename(ref_file)
+        no_ext_ref_root_name = sample_ref_root_name.strip(".fasta")
+        
+        
+        subfolder           = os.path.join(self.Output_Path, stage_name)
+        data_folder         = os.path.join(subfolder, "data")
+        blat_folder         = os.path.join(data_folder, "0_blat")
+        final_folder        = os.path.join(subfolder, "final_results")
+        dep_loc             = os.path.join(self.Output_Path, dependency_stage_name, "final_results")  # implied to be BWA
+        jobs_folder         = os.path.join(data_folder, "jobs")
+
+        self.make_folder(subfolder)
+        self.make_folder(data_folder)
+        self.make_folder(blat_folder)
+        self.make_folder(final_folder)
+        self.make_folder(jobs_folder)
+
+        blat_pp = ">&2 echo " + str(dt.today()) + " BLAT post-processing " + sample_root_name + " | "
+        blat_pp += self.tool_path_obj.Python + " "
+        blat_pp += self.tool_path_obj.Map_reads_gene_BLAT + " "
+        blat_pp += str(self.tool_path_obj.BLAT_identity_cutoff) + " "
+        blat_pp += str(self.tool_path_obj.BLAT_length_cutoff) + " "
+        blat_pp += str(self.tool_path_obj.BLAT_score_cutoff) + " "
+        blat_pp += ref_file + " " #self.tool_path_obj.DNA_DB + " "
+        
+        if(self.sequence_contigs == "None"):
+            blat_pp += "None" + " "
+        else:
+            blat_pp += os.path.join(dep_loc, "contig_map.tsv") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + "_" + no_ext_ref_root_name + "_mapped_genes.fna") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + "_" + no_ext_ref_root_name + "_gene_map.tsv") + " "
+        blat_pp += reads_in + " "
+        blat_pp += os.path.join(blat_folder, sample_root_name + "_" + sample_ref_root_name+ ".blatout") + " "
+        blat_pp += os.path.join(final_folder, sample_root_name + "_" + no_ext_ref_root_name + ".fasta") + " "
+        
+        make_marker = ">&2 echo BLAT pp complete: " + marker_file + " | "
+        make_marker += "touch" + " " 
+        make_marker += os.path.join(jobs_folder, marker_file)
+
+        COMMANDS_Annotate_BLAT_Post = [blat_pp + " && " + make_marker]
+
+        return COMMANDS_Annotate_BLAT_Post        
 
     def create_BLAT_copy_contig_map_command(self, stage_name, dependency_stage_name, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
