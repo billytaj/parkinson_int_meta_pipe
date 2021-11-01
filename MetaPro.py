@@ -2677,14 +2677,7 @@ if __name__ == "__main__":
     parser.add_argument("--tutorial", type = str, help = "tutorial operating mode for MetaPro")
     
     args = parser.parse_args()
-
-    if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
-        print("You must specify both forward and reverse reads for a paired-end run")
-        sys.exit()
-    elif args.single and (args.pair1 or args.pair2):
-        print("You cannot specify both paired-end and single-end reads in a single run.")
-        sys.exit()
-
+    
     config_file     = args.config if args.config else ""
     contig          = args.contig if args.contig else "None"
     pair_1          = args.pair1 if args.pair1 else ""
@@ -2695,6 +2688,14 @@ if __name__ == "__main__":
     no_host         = args.nhost if args.nhost else False
     verbose_mode    = args.verbose_mode if args.verbose_mode else "quiet"
     tutorial_mode   = args.tutorial if args.tutorial else "none"
+
+    if(tutorial_mode == "none"):
+        if (args.pair1 and not args.pair2) or (args.pair2 and not args.pair1):
+            print("You must specify both forward and reverse reads for a paired-end run")
+            sys.exit()
+        elif args.single and (args.pair1 or args.pair2):
+            print("You cannot specify both paired-end and single-end reads in a single run.")
+            sys.exit()
 
     if not (os.path.exists(output_folder)):
         print("output folder does not exist.  Now building directory.")
