@@ -1474,6 +1474,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     print("Outputs cleanup:", '%1.1f' % (cleanup_cytoscape_end - cleanup_cytoscape_start), "s")
     
 
+#-------------------------------------------------------------------------------
 def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode_string): 
     paths = mpp.tool_path_obj(config_path)
     mp_util = mpu.mp_util(output_folder_path)
@@ -1589,7 +1590,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
     print("rRNA filter Chunk size:", rRNA_chunks)
     print("GA chunk size:", GA_chunksize)
     print("---------------------------------")
-    if not single_path == "":
+    if ((not single_path == "") and (pair_1_path == "") and (pair_2_path == "")):
         read_mode = "single"
         extension = os.path.splitext(single_path)[1]
         if(extension == ".fa" or extension == ".fasta"):
