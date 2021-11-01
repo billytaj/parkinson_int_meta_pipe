@@ -786,7 +786,7 @@ class mt_pipe_commands:
         copy_pair_2 = "cp " + os.path.join(blat_containment_vector_folder, "pair_2_no_vectors.fastq") + " "
         copy_pair_2 += os.path.join(final_folder, "pair_2.fastq")
         
-        if(self.tutorial_keyword == "vectors"):
+        if(self.tutorial_keyword == "vectors" or self.tutorial_keyword == "vector"):
             if self.read_mode == "single":
                 COMMANDS_vector = [
                     copy_vector,

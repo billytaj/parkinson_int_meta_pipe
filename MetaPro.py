@@ -1683,7 +1683,7 @@ def tutorial_main(config_path, pair_1_path, pair_2_path, single_path, contig_pat
         command_list = commands.create_host_filter_command(host_filter_label, quality_filter_label)
         mp_util.launch_and_create_simple(host_filter_label, job_name, commands, command_list)
         
-    elif(tutorial_mode_string == "vector"):
+    elif(tutorial_mode_string == "vectors" or tutorial_mode_string == "vector"):
         print(dt.today(), "working on:", tutorial_mode_string)
         job_name = vector_filter_label
         command_list = commands.create_vector_filter_command(vector_filter_label, quality_filter_label)
