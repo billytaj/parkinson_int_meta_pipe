@@ -2220,7 +2220,7 @@ class mt_pipe_commands:
             #copy_contig_map
         ]
 
-        if("chunk" in ref_file):
+        if("chunk" in ref_path):
             COMMANDS_Annotate_BWA = [
                 map_read_bwa + " && " + make_marker
             ]
