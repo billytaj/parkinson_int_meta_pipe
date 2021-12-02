@@ -938,7 +938,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                     else:
                         marker_path_list.append(marker_path)
                         command_list = commands.create_BLAT_pp_command_v2(GA_BLAT_label, full_sample_path, GA_BWA_label, ref_path, marker_file)
-                        mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                        #mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                        mp_util.launch_only_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, job_name, commands, command_list)
                         
                 else:
                     for fasta_db in os.listdir(ref_path):
@@ -965,7 +966,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
                                 command_list = commands.create_BLAT_pp_command_v3(GA_BLAT_label, full_sample_path, GA_BWA_label, ref_file, marker_file)
                                 print("Command list:", command_list)
                                 #time.sleep(10)
-                                mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                                #mp_util.launch_and_create_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, GA_BLAT_label, job_name, commands, command_list)
+                                mp_util.launch_only_with_hold(BLAT_pp_mem_threshold, BLAT_pp_job_limit, BLAT_pp_job_delay, job_name, commands, command_list)
                             #time.sleep(10)
 
                 

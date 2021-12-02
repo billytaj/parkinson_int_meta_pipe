@@ -291,6 +291,8 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.
 && chmod 755 /pipeline_tools/FastQC/fastqc \ 
 && rm fastqc_v0.11.9.zip
 
+#----------------------------------------
+#Add MPI libs
 
 #------------------------------------------------------------------------------------------
 # Install Python3
@@ -306,4 +308,5 @@ RUN apt-get autoclean \
 && pip3 install pillow \
 && pip3 install psutil \
 && pip3 install hanging_threads \
-&& pip3 install requests
+&& pip3 install requests \
+&& pip3 install mpi4py
