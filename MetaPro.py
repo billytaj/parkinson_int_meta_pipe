@@ -55,7 +55,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     Barrnap_mem_threshold = int(paths.Barrnap_mem_threshold)
     DETECT_mem_threshold = int(paths.DETECT_mem_threshold)
     TA_mem_threshold = int(paths.TA_mem_threshold)
-    filter_stringency = paths.filter_stringency
+    repop_mem_threshold = int(paths.repop_mem_threshold)
+    
     
     
     BWA_job_limit = int(paths.BWA_job_limit)
@@ -68,6 +69,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     Barrnap_job_limit = int(paths.Barrnap_job_limit)
     DETECT_job_limit = int(paths.DETECT_job_limit)
     TA_job_limit = int(paths.TA_job_limit)
+    repop_job_limit = int(paths.repop_job_limit)
     
     Infernal_job_delay      = float(paths.Infernal_job_delay)
     Barrnap_job_delay       = float(paths.Barrnap_job_delay)
@@ -79,6 +81,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     DIAMOND_pp_job_delay    = float(paths.DIAMOND_pp_job_delay)
     DETECT_job_delay        = float(paths.DETECT_job_delay)
     TA_job_delay            = float(paths.TA_job_delay)
+    repop_job_delay         = float(paths.repop_job_delay)
+
+    filter_stringency = paths.filter_stringency
     
     #-----------------------------------------------------
     keep_all                = paths.keep_all
@@ -628,12 +633,12 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     if mp_util.check_bypass_log(output_folder_path, repop_job_label):
         job_name = repop_job_label
         command_list = commands.create_repop_command_v2_step_1(repop_job_label, quality_filter_label, rRNA_filter_label)
-        mp_util.subdivide_and_launch(repop_job_label, job_name, commands, command_list)
+        mp_util.subdivide_and_launch(repop_job_delay, repop_mem_threshold, repop_job_limit, repop_job_label, job_name, commands, command_list)
         mp_util.wait_for_mp_store()
         
         if(read_mode == "paired"):
             job_name = repop_job_label
-            command_list = commands.create_repop_command_v2_step_2(repop_job_label, quality_filter_label, rRNA_filter_label)
+            command_list = commands.create_repop_command_v2_step_2(repop_job_delay, repop_mem_threshold, repop_job_limit, repop_job_label, quality_filter_label, rRNA_filter_label)
             mp_util.subdivide_and_launch(repop_job_label, job_name, commands, command_list)
             mp_util.wait_for_mp_store()
         
