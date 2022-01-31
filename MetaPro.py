@@ -899,48 +899,89 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     mp_util.make_folder(GA_BLAT_path)
     mp_util.make_folder(GA_BLAT_data_folder)
     mp_util.make_folder(GA_BLAT_jobs_folder)
+    blat_finished_flag = False
     
     if mp_util.check_bypass_log(output_folder_path, GA_BLAT_label):
-        marker_path_list = []
-        for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
-            if(split_sample.endswith(".fasta")):
-                file_tag = os.path.basename(split_sample)
-                file_tag = os.path.splitext(file_tag)[0]
-                full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
+        while (not blat_finished_flag):
+            marker_path_list = []
+            for split_sample in os.listdir(os.path.join(GA_BWA_path, "final_results")):
+                if(split_sample.endswith(".fasta")):
+                    file_tag = os.path.basename(split_sample)
+                    file_tag = os.path.splitext(file_tag)[0]
+                    full_sample_path = os.path.join(os.path.join(GA_BWA_path, "final_results", split_sample))
 
-                delay_count = 0
-                for fasta_db in os.listdir(paths.DNA_DB_Split):
-                    if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
-                        job_name = "BLAT_" + file_tag + "_" + fasta_db
-                        marker_file = file_tag + "_blat_" + fasta_db
-                        marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
-                        blatout_path = os.path.join(GA_BLAT_path, "data", "0_blat", file_tag + "_"+fasta_db + ".blatout")
-                        blat_queue_package = blatout_path+"|" + marker_file
+                    delay_count = 0
+                    for fasta_db in os.listdir(paths.DNA_DB_Split):
+                        if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
+                            job_name = "BLAT_" + file_tag + "_" + fasta_db
+                            marker_file = file_tag + "_blat_" + fasta_db
+                            marker_path = os.path.join(GA_BLAT_jobs_folder, marker_file)
+                            blatout_path = os.path.join(GA_BLAT_path, "data", "0_blat", file_tag + "_"+fasta_db + ".blatout")
+                            blat_queue_package = blatout_path+"|" + marker_file
+                            
+                            #This checker assume BLAT only exports a file when it's finished running
+                            #this assumption is true, but the export isn't instantaneous.  The cluster will end, regardless if it's still exporting. creating artifacts
+                            if(os.path.exists(marker_path)):
+                                if(os.path.exists(blatout_path)):
+                                    #check the integrity of the blatout job.
+                                    with open(blatout_path, "r") as blatout_file:
+                                        last_line = blatout_file.readlines()[-1]
+                                        line_split = last_line.split("\t")
+                                        line_size = len(line_split)
+                                        if(line_size != 12):
+                                            #job needs to be re-run
+                                            os.remove(marker_file)
+                                            print(dt.today(), "RUNNING:", marker_file)
+                                
+                                            marker_path_list.append(marker_path)
+                                            command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
+                                            mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                                        else:
+                                            #print(dt.today(), job_name, ": OK")
+                                            continue
+
                         
-                        #This checker assume BLAT only exports a file when it's finished running
-                        if(os.path.exists(marker_path)):
-                            if(os.path.exists(blatout_path)):
-                                #recover from a restart.  there will be files that have been missed.  thread would have deleted the file
-                                print(dt.today(), "file still exists. adding to merge thread:", blatout_path)
-                                #blat_file_queue.put(blat_queue_package)
+                                    
+                                else:
+                                    #job file exists, but the blatout is missing. re-run
+                                    os.remove(marker_file)
+                                    print(dt.today(), "missing blatout file: re-RUNNING:", marker_file)
+                        
+                                    marker_path_list.append(marker_path)
+                                    command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
+                                    mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                                    
+                                
                                 
                             else:
-                                print(dt.today(), "file doesn't exist anymore already merged", blatout_path)
+                                print(dt.today(), "RUNNING:", marker_file)
                                 
-                            print(dt.today(), "BLAT job ran already, skipping:", marker_file)
-                            #time.sleep(1)
-                            continue
+                                marker_path_list.append(marker_path)
+                                command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
+                                mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+
+            #---------------------------------------------------------------------------
+            #need to scan the BLATOUTs before we progress.  Artifacts of broken BLAT runs exist. 
+            blatout_dir = os.path.join(GA_BLAT_data_folder, "0_blat")
+            blatout_list = os.listdir(blatout_dir)
+            blat_bad_job_count = 0
+            for item in blatout_list:
+                if(item.endswith(".blatout")):
+                    blatout_path = os.path.join(blatout_dir, item)
+                    with open(blatout_path, "r") as blatout_file:
+                        last_line = blatout_file.readlines()[-1]
+                        line_split = last_line.split("\t")
+                        line_size = len(line_split)
+                        if(line_size != 12):
+                            os.remove(blatout_path)
+                            blat_bad_job_count += 1
                             
                         else:
-                            print(dt.today(), "RUNNING:", marker_file)
-                            
-                            marker_path_list.append(marker_path)
-                            command_list = commands.create_BLAT_annotate_command_v2(GA_BLAT_label, full_sample_path, fasta_db, marker_file)
-                            mp_util.launch_only_with_hold(BLAT_mem_threshold, BLAT_job_limit, BLAT_job_delay, job_name, commands, command_list)
+                            continue
+            if(blat_bad_job_count == 0):
+                blat_finished_flag = True
 
-        #---------------------------------------------------------------------------
 
-        
         print(dt.today(), "final BLAT job removal. now waiting for mp-store flush")
         #note: this wait is disabled because we now have a separate thread.  it will hang if we enable it.
         print(dt.today(), "flushing mp_store")
@@ -950,6 +991,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         final_checklist = os.path.join(GA_BLAT_path, "GA_BLAT.txt")
         mp_util.check_all_job_markers(marker_path_list, final_checklist)
         mp_util.write_to_bypass_log(output_folder_path, GA_BLAT_label)
+
+        
         
     #-------------------------------------------------
     #BLAT pp
