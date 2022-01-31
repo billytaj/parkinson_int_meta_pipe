@@ -224,7 +224,7 @@ class tool_path_obj:
         BWA_pp_job_limit_default = 40
         BLAT_pp_job_limit_default = 40
         DIAMOND_pp_job_limit_default = 40
-        repop_job_limit_default = 4 
+        repop_job_limit_default = 1
         TA_job_limit_default = 40
 
 

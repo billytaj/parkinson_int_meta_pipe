@@ -638,8 +638,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         
         if(read_mode == "paired"):
             job_name = repop_job_label
-            command_list = commands.create_repop_command_v2_step_2(repop_job_delay, repop_mem_threshold, repop_job_limit, repop_job_label, quality_filter_label, rRNA_filter_label)
-            mp_util.subdivide_and_launch(repop_job_label, job_name, commands, command_list)
+            command_list = commands.create_repop_command_v2_step_2(repop_job_label, quality_filter_label, rRNA_filter_label)
+            mp_util.subdivide_and_launch(repop_job_delay, repop_mem_threshold, repop_job_limit, repop_job_label, job_name, commands, command_list)
             mp_util.wait_for_mp_store()
         
         mp_util.write_to_bypass_log(output_folder_path, repop_job_label)
