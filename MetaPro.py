@@ -1138,9 +1138,9 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         if(os.path.exists(marker_path)):
             print(dt.today(), "skipping: GA final merge")
         else:
-            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label, assemble_contigs_label, marker_file)
+            command_list = commands.create_GA_final_merge_command(GA_final_merge_label, assemble_contigs_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label,  marker_file)
             job_name = "GA_final_merge"
-            mp_util.launch_and_create_simple(GA_final_merge_label, job_name, commands, command_list)
+            mp_util.subdivide_and_launch(GA_final_merge_label, job_name, commands, command_list)
         
         #check if all_proteins.faa was generated
         all_proteins_path = os.path.join(output_folder_path, GA_final_merge_label, "final_results", "all_proteins.faa")

@@ -2558,10 +2558,10 @@ class mt_pipe_commands:
         subfolder       = os.path.join(self.Output_Path, current_stage_name)
         data_folder     = os.path.join(subfolder, "data")
         final_folder    = os.path.join(subfolder, "final_results")
-        dep_0_path      = os.path.join(self.Output_Path, dep_0_name, "final_results")
-        dep_1_path      = os.path.join(self.Output_Path, dep_1_name, "final_results")
-        dep_2_path      = os.path.join(self.Output_Path, dep_2_name, "final_results")
-        dep_3_path      = os.path.join(self.Output_Path, dep_3_name, "final_results")
+        dep_0_path      = os.path.join(self.Output_Path, dep_0_name, "final_results")   #assemble-contigs
+        dep_1_path      = os.path.join(self.Output_Path, dep_1_name, "final_results")   #bwa
+        dep_2_path      = os.path.join(self.Output_Path, dep_2_name, "final_results")   #blat
+        dep_3_path      = os.path.join(self.Output_Path, dep_3_name, "final_results")   #dmd
         jobs_folder     = os.path.join(data_folder, "jobs")
         
         self.make_folder(subfolder)
@@ -2569,16 +2569,27 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         self.make_folder(jobs_folder)
         
-        final_merge = self.tool_path_obj.Python + " "
-        final_merge += self.tool_path_obj.GA_final_merge + " "
-        final_merge += dep_3_path + " "
-        final_merge += dep_0_path + " "
-        final_merge += dep_1_path + " "
-        final_merge += dep_2_path + " "
-        final_merge += data_folder + " "
-        final_merge += final_folder + " "
-        final_merge += self.read_mode + " "
-        final_merge += jobs_folder
+        final_merge_fasta = self.tool_path_obj.Python + " "
+        final_merge_fasta += self.tool_path_obj.GA_final_merge_fasta + " "
+        final_merge_fasta += dep_0_path + " "
+        final_merge_fasta += dep_3_path + " "
+        final_merge_fasta += final_folder
+        
+        final_merge_proteins = self.tool_path_obj.Python + " "
+        final_merge_proteins += self.tool_path_obj.GA_final_merge_proteins + " "
+        final_merge_proteins += dep_1_path + " "
+        final_merge_proteins += dep_2_path + " "
+        final_merge_proteins += dep_3_path + " "
+        final_merge_proteins += final_folder
+        
+        final_merge_proteins = self.tool_path_obj.Python + " "
+        final_merge_proteins += self.tool_path_obj.GA_final_merge_maps + " "
+        final_merge_proteins += dep_1_path + " "
+        final_merge_proteins += dep_2_path + " "
+        final_merge_proteins += dep_3_path + " "
+        final_merge_proteins += final_folder
+        
+        
         
         make_marker = ">&2 echo " + str(dt.today()) + " GA final merge | "
         make_marker += "touch" + " "
@@ -2586,7 +2597,9 @@ class mt_pipe_commands:
         
         
         COMMANDS_ga_final_merge = [
-            final_merge + " && " + make_marker
+            final_merge_maps,
+            final_merge_fasta,
+            final_merge_proteins + " && " + make_marker
         ]
         
         return COMMANDS_ga_final_merge
