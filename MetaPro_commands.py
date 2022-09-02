@@ -2569,11 +2569,12 @@ class mt_pipe_commands:
         self.make_folder(final_folder)
         self.make_folder(jobs_folder)
         
-        final_merge_fasta = self.tool_path_obj.Python + " "
-        final_merge_fasta += self.tool_path_obj.GA_final_merge_fasta + " "
-        final_merge_fasta += dep_0_path + " "
-        final_merge_fasta += dep_3_path + " "
-        final_merge_fasta += final_folder
+        final_merge_fastq = self.tool_path_obj.Python + " "
+        final_merge_fastq += self.tool_path_obj.GA_final_merge_fasta + " "
+        final_merge_fastq += dep_0_path + " "
+        final_merge_fastq += dep_3_path + " "
+        final_merge_fastq += self.read_mode + " "
+        final_merge_fastq += final_folder
         
         final_merge_proteins = self.tool_path_obj.Python + " "
         final_merge_proteins += self.tool_path_obj.GA_final_merge_proteins + " "
@@ -2582,12 +2583,12 @@ class mt_pipe_commands:
         final_merge_proteins += dep_3_path + " "
         final_merge_proteins += final_folder
         
-        final_merge_proteins = self.tool_path_obj.Python + " "
-        final_merge_proteins += self.tool_path_obj.GA_final_merge_maps + " "
-        final_merge_proteins += dep_1_path + " "
-        final_merge_proteins += dep_2_path + " "
-        final_merge_proteins += dep_3_path + " "
-        final_merge_proteins += final_folder
+        final_merge_maps = self.tool_path_obj.Python + " "
+        final_merge_maps += self.tool_path_obj.GA_final_merge_maps + " "
+        final_merge_maps += dep_1_path + " "
+        final_merge_maps += dep_2_path + " "
+        final_merge_maps += dep_3_path + " "
+        final_merge_maps += final_folder
         
         
         
@@ -2598,7 +2599,7 @@ class mt_pipe_commands:
         
         COMMANDS_ga_final_merge = [
             final_merge_maps,
-            final_merge_fasta,
+            final_merge_fastq,
             final_merge_proteins + " && " + make_marker
         ]
         

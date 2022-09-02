@@ -120,7 +120,7 @@ class tool_path_obj:
             #self.Blastdbcmd     = self.value_assignment(config, "Tools", "Blastdbcmd", os.path.join(tool_path, "BLAST_p/blastdbcmd"))
             self.Makeblastdb    = self.value_assignment(config, "Tools", "Makeblastdb", os.path.join(tool_path, "BLAST_p/makeblastdb"))
             self.Barrnap        = self.value_assignment(config, "Tools", "Barrnap", os.path.join(tool_path, "Barrnap/bin/barrnap"))
-            self.Infernal       = self.value_assignment(config, "Tools", "Infernal", os.path.join(tool_path, "infernal/cmscan"))
+            self.Infernal       = self.value_assignment(config, "Tools", "Infernal", os.path.join(tool_path, "infernal/cmsearch"))
             self.Kaiju          = self.value_assignment(config, "Tools", "Kaiju", os.path.join(tool_path, "kaiju/kaiju"))
             self.Centrifuge     = self.value_assignment(config, "Tools", "Centrifuge", os.path.join(tool_path, "centrifuge/centrifuge"))
             self.Priam          = self.value_assignment(config, "Tools", "Priam", os.path.join(tool_path, "PRIAM_search/PRIAM_search.jar"))
@@ -176,9 +176,9 @@ class tool_path_obj:
         self.Map_reads_prot_DMND        = os.path.join(script_path, "ga_Diamond_generic_v2.py")
         self.GA_final_merge             = os.path.join(script_path, "ga_Final_merge_v4.py")
         self.GA_merge_fasta             = os.path.join(script_path, "ga_merge_fasta.py")
-        self.GA_final_merge_fasta       = os.path.join(script_path, "ga_final_merge_fasta.py")
+        self.GA_final_merge_fasta       = os.path.join(script_path, "ga_final_merge_fastq.py")
         self.GA_final_merge_proteins    = os.path.join(script_path, "ga_final_merge_proteins.py")
-        self.GA_final_merge_maps        = os.path.join(script_path, "ga_final_merge_maps.py")
+        self.GA_final_merge_maps        = os.path.join(script_path, "ga_final_merge_map.py")
         self.EC_Annotation_Post         = os.path.join(script_path, "ea_combine_v5.py")
         self.Annotated_taxid            = os.path.join(script_path, "ta_taxid_v3.py")
         self.Constrain_classification   = os.path.join(script_path, "ta_constrain_taxonomy_v2.py")
@@ -211,40 +211,44 @@ class tool_path_obj:
         Infernal_mem_default = 50
         Barrnap_mem_default = 50
         repop_mem_default = 50
-        TA_mem_threshold_default = 75
+        TA_mem_threshold_default = 50
         BWA_pp_mem_default = 50
         BLAT_pp_mem_default = 50
         DIAMOND_pp_mem_default = 50
+        GA_final_merge_mem_default = 5 
         
-        
+        cpu_default = os.cpu_count()
         rRNA_chunksize_default = 50000
-        BWA_job_limit_default = 80
-        BLAT_job_limit_default = 80
-        DIAMOND_job_limit_default = 80
-        DETECT_job_limit_default = 1000
-        Infernal_job_limit_default = 1000
-        Barrnap_job_limit_default = 1000
-        BWA_pp_job_limit_default = 40
-        BLAT_pp_job_limit_default = 40
-        DIAMOND_pp_job_limit_default = 40
-        repop_job_limit_default = 1
-        TA_job_limit_default = 40
+        
+        BWA_job_limit_default               = cpu_default
+        BLAT_job_limit_default              = cpu_default
+        DIAMOND_job_limit_default           = cpu_default
+        DETECT_job_limit_default            = cpu_default
+        Infernal_job_limit_default          = 1000
+        Barrnap_job_limit_default           = 1000
+        BWA_pp_job_limit_default            = cpu_default
+        BLAT_pp_job_limit_default           = cpu_default
+        DIAMOND_pp_job_limit_default        = cpu_default
+        GA_final_merge_job_limit_default    = cpu_default
+        repop_job_limit_default             = 1
+        TA_job_limit_default                = cpu_default
 
 
         
         
         
-        Barrnap_job_delay_default = 5
-        Infernal_job_delay_default = 5
-        BWA_job_delay_default = 5
-        BLAT_job_delay_default = 5
-        DIAMOND_job_delay_default = 5
-        DETECT_job_delay_default = 5
-        BWA_pp_job_delay_default = 5
-        BLAT_pp_job_delay_default = 5
-        DIAMOND_pp_job_delay_default = 5
-        repop_job_delay_default = 10
-        TA_job_delay_default = 5
+        Barrnap_job_delay_default           = 5
+        Infernal_job_delay_default          = 5
+        BWA_job_delay_default               = 5
+        BLAT_job_delay_default              = 5
+        DIAMOND_job_delay_default           = 5
+        DETECT_job_delay_default            = 5
+        BWA_pp_job_delay_default            = 5
+        BLAT_pp_job_delay_default           = 5
+        DIAMOND_pp_job_delay_default        = 5
+        GA_final_merge_job_delay_default    = 5
+        repop_job_delay_default             = 10
+        TA_job_delay_default                = 5
 
         keep_all_default = "yes"
         keep_quality_default = "no"
@@ -289,17 +293,18 @@ class tool_path_obj:
             self.DIAMOND_score_cutoff       = self.value_assignment(config, "Settings", "DIAMOND_score_cutoff", DIAMOND_score_default)
             #-----------------------------------------------------------------------------------------------    
             
-            self.BWA_mem_threshold          = self.value_assignment(config, "Settings", "BWA_mem_threshold", BWA_mem_default)
-            self.BLAT_mem_threshold         = self.value_assignment(config, "Settings", "BLAT_mem_threshold", BLAT_mem_default)
-            self.DIAMOND_mem_threshold      = self.value_assignment(config, "Settings", "DIAMOND_mem_threshold", DIAMOND_mem_default)
-            self.DETECT_mem_threshold       = self.value_assignment(config, "Settings", "DETECT_mem_threshold", DETECT_mem_default)
-            self.Infernal_mem_threshold     = self.value_assignment(config, "Settings", "Infernal_mem_threshold", Infernal_mem_default)
-            self.Barrnap_mem_threshold      = self.value_assignment(config, "Settings", "Barrnap_mem_threshold", Barrnap_mem_default)
-            self.BWA_pp_mem_threshold       = self.value_assignment(config, "Settings", "BWA_pp_mem_threshold", BWA_pp_mem_default)
-            self.BLAT_pp_mem_threshold      = self.value_assignment(config, "Settings", "BLAT_pp_mem_threshold", BLAT_pp_mem_default)
-            self.DIAMOND_pp_mem_threshold   = self.value_assignment(config, "Settings", "DIAMOND_pp_mem_threshold", DIAMOND_pp_mem_default)
-            self.TA_mem_threshold           = self.value_assignment(config, "Settings", "TA_mem_threshold", TA_mem_threshold_default)
-            self.repop_mem_threshold        = self.value_assignment(config, "Settings", "repop_mem_threshold", repop_mem_default)
+            self.BWA_mem_threshold              = self.value_assignment(config, "Settings", "BWA_mem_threshold", BWA_mem_default)
+            self.BLAT_mem_threshold             = self.value_assignment(config, "Settings", "BLAT_mem_threshold", BLAT_mem_default)
+            self.DIAMOND_mem_threshold          = self.value_assignment(config, "Settings", "DIAMOND_mem_threshold", DIAMOND_mem_default)
+            self.DETECT_mem_threshold           = self.value_assignment(config, "Settings", "DETECT_mem_threshold", DETECT_mem_default)
+            self.Infernal_mem_threshold         = self.value_assignment(config, "Settings", "Infernal_mem_threshold", Infernal_mem_default)
+            self.Barrnap_mem_threshold          = self.value_assignment(config, "Settings", "Barrnap_mem_threshold", Barrnap_mem_default)
+            self.BWA_pp_mem_threshold           = self.value_assignment(config, "Settings", "BWA_pp_mem_threshold", BWA_pp_mem_default)
+            self.BLAT_pp_mem_threshold          = self.value_assignment(config, "Settings", "BLAT_pp_mem_threshold", BLAT_pp_mem_default)
+            self.DIAMOND_pp_mem_threshold       = self.value_assignment(config, "Settings", "DIAMOND_pp_mem_threshold", DIAMOND_pp_mem_default)
+            self.GA_final_merge_mem_threshold   = self.value_assignment(config, "Settings", "GA_final_merge_mem_threshold", GA_final_merge_mem_default)
+            self.TA_mem_threshold               = self.value_assignment(config, "Settings", "TA_mem_threshold", TA_mem_threshold_default)
+            self.repop_mem_threshold            = self.value_assignment(config, "Settings", "repop_mem_threshold", repop_mem_default)
                 
             #-----------------------------------------------------------------------------------------------    
             
@@ -313,6 +318,7 @@ class tool_path_obj:
             self.BWA_pp_job_limit           = self.value_assignment(config, "Settings", "BWA_pp_job_limit", BWA_pp_job_limit_default)
             self.BLAT_pp_job_limit          = self.value_assignment(config, "Settings", "BLAT_pp_job_limit", BLAT_pp_job_limit_default)
             self.DIAMOND_pp_job_limit       = self.value_assignment(config, "Settings", "DIAMOND_pp_job_limit", DIAMOND_pp_job_limit_default)
+            self.GA_final_merge_job_limit   = self.value_assignment(config, "Settings", "GA_final_merge_job_limit", GA_final_merge_job_limit_default)
             self.TA_job_limit               = self.value_assignment(config, "Settings", "TA_job_limit", TA_job_limit_default)
             self.repop_job_limit            = self.value_assignment(config, "Settings", "repop_job_limit", repop_job_limit_default)
             
@@ -327,6 +333,7 @@ class tool_path_obj:
             self.BWA_pp_job_delay           = self.value_assignment(config, "Settings", "BWA_pp_job_delay", BWA_pp_job_delay_default)
             self.BLAT_pp_job_delay          = self.value_assignment(config, "Settings", "BLAT_pp_job_delay", BLAT_pp_job_delay_default)
             self.DIAMOND_pp_job_delay       = self.value_assignment(config, "Settings", "DIAMOND_pp_job_delay", DIAMOND_pp_job_delay_default)
+            self.GA_final_merge_job_delay   = self.value_assignment(config, "Settings", "GA_final_merge_job_delay", GA_final_merge_job_delay_default)
             self.TA_job_delay               = self.value_assignment(config, "Settings", "TA_job_delay", TA_job_delay_default)
             self.repop_job_delay            = self.value_assignment(config, "Settings", "repop_job_delay", repop_job_delay_default)
 
