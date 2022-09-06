@@ -37,7 +37,8 @@ class mp_util:
         self.output_folder_path = output_folder_path
 
     def mem_checker(self, threshold):
-        #threshold is a percentage
+        #threshold is a percentage for available memory.  
+        
         mem = psu.virtual_memory()
         available_mem = mem.available
         total_mem = mem.total
