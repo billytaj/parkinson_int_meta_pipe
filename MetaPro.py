@@ -1138,8 +1138,10 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     GA_FINAL_MERGE_path = os.path.join(output_folder_path, GA_final_merge_label)
     if mp_util.check_bypass_log(output_folder_path, GA_final_merge_label):
         marker_file = "GA_final_merge"
-        marker_path = os.path.join(GA_FINAL_MERGE_path, "data", "jobs", "GA_final_merge")
-        if(os.path.exists(marker_path)):
+        marker_path_p = os.path.join(GA_FINAL_MERGE_path, "data", "jobs", "GA_final_merge_proteins")
+        marker_path_m = os.path.join(GA_FINAL_MERGE_path, "data", "jobs", "GA_final_merge_maps")
+        marker_path_f = os.path.join(GA_FINAL_MERGE_path, "data", "jobs", "GA_final_merge_fastq")
+        if(os.path.exists(marker_path_p) and os.path.exists(marker_path_m) and os.path.exists(marker_path_f)):
             print(dt.today(), "skipping: GA final merge")
         else:
             command_list = commands.create_GA_final_merge_command(GA_final_merge_label, assemble_contigs_label, GA_BWA_label, GA_BLAT_label, GA_DIAMOND_label,  marker_file)
@@ -1148,17 +1150,19 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         
         #check if all_proteins.faa was generated
         all_proteins_path = os.path.join(output_folder_path, GA_final_merge_label, "final_results", "all_proteins.faa")
-        if(os.path.getsize(all_proteins_path) > 0):
-            mp_util.write_to_bypass_log(output_folder_path, GA_final_merge_label)
-            print(dt.today(), "All_proteins.faa is OK.  Continuing")
-        else:
-            sys.exit("GA final merge failed.  proteins weren't translated")
+        if(os.path.exists(marker_path_p)):
+            if(os.path.getsize(all_proteins_path) > 0):
+                mp_util.write_to_bypass_log(output_folder_path, GA_final_merge_label)
+                print(dt.today(), "All_proteins.faa is OK.  Continuing")
+            else:
+                sys.exit("GA final merge failed.  proteins weren't translated")
             
     GA_final_merge_end = time.time()
     print("GA final merge:", '%1.1f' % (GA_final_merge_end - GA_final_merge_start), "s")
     mp_util.clean_or_compress(GA_FINAL_MERGE_path, keep_all, keep_GA_final)
     
     # ------------------------------------------------------
+
     # Taxonomic annotation
     TA_start = time.time()
     TA_path = os.path.join(output_folder_path, taxon_annotation_label)
@@ -1405,6 +1409,7 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
         
             
         if not(no_host):
+            print(dt.today(), "repopulating hosts for output")
             if mp_util.check_bypass_log(output_folder, output_unique_hosts_singletons_label):
                 job_name = output_unique_hosts_singletons_label
                 command_list = commands.create_output_unique_hosts_singletons_command(output_label, quality_filter_label, host_filter_label)

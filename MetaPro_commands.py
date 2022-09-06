@@ -2592,15 +2592,23 @@ class mt_pipe_commands:
         
         
         
-        make_marker = ">&2 echo " + str(dt.today()) + " GA final merge | "
-        make_marker += "touch" + " "
-        make_marker += os.path.join(jobs_folder, marker_file)
+        make_marker_p = ">&2 echo " + str(dt.today()) + " GA final merge | "
+        make_marker_p += "touch" + " "
+        make_marker_p += os.path.join(jobs_folder, marker_file + "_proteins")
+        
+        make_marker_f = ">&2 echo " + str(dt.today()) + " GA final merge | "
+        make_marker_f += "touch" + " "
+        make_marker_f += os.path.join(jobs_folder, marker_file + "_fastq")
+        
+        make_marker_m = ">&2 echo " + str(dt.today()) + " GA final merge | "
+        make_marker_m += "touch" + " "
+        make_marker_m += os.path.join(jobs_folder, marker_file + "_maps")
         
         
         COMMANDS_ga_final_merge = [
-            final_merge_maps,
-            final_merge_fastq,
-            final_merge_proteins + " && " + make_marker
+            final_merge_maps + " && " + make_marker_m,
+            final_merge_fastq + " && " + make_marker_f,
+            final_merge_proteins + " && " + make_marker_p
         ]
         
         return COMMANDS_ga_final_merge
@@ -3233,15 +3241,23 @@ class mt_pipe_commands:
         self.make_folder(full_vectors_folder)
         self.make_folder(final_folder)
         
-        
         get_unique_vectors_reads_singletons = ">&2 echo get singleton vectors reads for stats | "
         get_unique_vectors_reads_singletons += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_singletons += self.tool_path_obj.get_unique_host_reads + " "
-        get_unique_vectors_reads_singletons += os.path.join(vectors_folder, "singletons.fastq") + " "
-        get_unique_vectors_reads_singletons += os.path.join(host_folder, "singletons.fastq") + " "
-        get_unique_vectors_reads_singletons += os.path.join(unique_vectors_folder, "singletons_vectors.fastq")
+            
         
+        if(self.no_host_flag):
+            get_unique_vectors_reads_singletons += os.path.join(vectors_folder, "singletons.fastq") + " "
+            get_unique_vectors_reads_singletons += os.path.join(quality_folder, "singletons.fastq") + " "
+            get_unique_vectors_reads_singletons += os.path.join(unique_vectors_folder, "singletons_vectors.fastq")
+            
+        else:
         
+            get_unique_vectors_reads_singletons += os.path.join(vectors_folder, "singletons.fastq") + " "
+            get_unique_vectors_reads_singletons += os.path.join(host_folder, "singletons.fastq") + " "
+            get_unique_vectors_reads_singletons += os.path.join(unique_vectors_folder, "singletons_vectors.fastq")
+            
+            
         repop_singletons_vectors = ">&2 echo repopulating singletons vectors | " 
         repop_singletons_vectors += self.tool_path_obj.Python + " "
         repop_singletons_vectors += self.tool_path_obj.duplicate_repopulate + " "
@@ -3276,9 +3292,16 @@ class mt_pipe_commands:
         get_unique_vectors_reads_pair_1 = ">&2 echo get pair 1 vector reads for stats | " 
         get_unique_vectors_reads_pair_1 += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_pair_1 += self.tool_path_obj.get_unique_host_reads + " "
-        get_unique_vectors_reads_pair_1 += os.path.join(vectors_folder, "pair_1.fastq") + " "
-        get_unique_vectors_reads_pair_1 += os.path.join(host_folder, "pair_1.fastq") + " "
-        get_unique_vectors_reads_pair_1 += os.path.join(unique_vectors_folder, "pair_1_vectors.fastq")
+        
+        if(self.no_host_flag):
+            get_unique_vectors_reads_pair_1 += os.path.join(vectors_folder, "pair_1.fastq") + " "
+            get_unique_vectors_reads_pair_1 += os.path.join(quality_folder, "pair_1.fastq") + " "
+            get_unique_vectors_reads_pair_1 += os.path.join(unique_vectors_folder, "pair_1_vectors.fastq")
+
+        else:
+            get_unique_vectors_reads_pair_1 += os.path.join(vectors_folder, "pair_1.fastq") + " "
+            get_unique_vectors_reads_pair_1 += os.path.join(host_folder, "pair_1.fastq") + " "
+            get_unique_vectors_reads_pair_1 += os.path.join(unique_vectors_folder, "pair_1_vectors.fastq")
         
         repop_pair_1_vectors = ">&2 echo repopulating pair 1 vectors | " 
         repop_pair_1_vectors += self.tool_path_obj.Python + " "
@@ -3311,10 +3334,16 @@ class mt_pipe_commands:
         get_unique_vectors_reads_pair_2 = ">&2 echo get pair 2 vector reads for stats | " 
         get_unique_vectors_reads_pair_2 += self.tool_path_obj.Python + " "
         get_unique_vectors_reads_pair_2 += self.tool_path_obj.get_unique_host_reads + " "
-        get_unique_vectors_reads_pair_2 += os.path.join(vectors_folder, "pair_2.fastq") + " "
-        get_unique_vectors_reads_pair_2 += os.path.join(host_folder, "pair_2.fastq") + " "
-        get_unique_vectors_reads_pair_2 += os.path.join(unique_vectors_folder, "pair_2_vectors.fastq")
         
+        if(self.no_host_flag):
+            get_unique_vectors_reads_pair_2 += os.path.join(vectors_folder, "pair_2.fastq") + " "
+            get_unique_vectors_reads_pair_2 += os.path.join(quality_folder, "pair_2.fastq") + " "
+            get_unique_vectors_reads_pair_2 += os.path.join(unique_vectors_folder, "pair_2_vectors.fastq")
+        else:
+            get_unique_vectors_reads_pair_2 += os.path.join(vectors_folder, "pair_2.fastq") + " "
+            get_unique_vectors_reads_pair_2 += os.path.join(host_folder, "pair_2.fastq") + " "
+            get_unique_vectors_reads_pair_2 += os.path.join(unique_vectors_folder, "pair_2_vectors.fastq")
+            
         repop_pair_2_vectors = ">&2 echo repopulating pair 2 vectors | " 
         repop_pair_2_vectors += self.tool_path_obj.Python + " "
         repop_pair_2_vectors += self.tool_path_obj.duplicate_repopulate + " "
