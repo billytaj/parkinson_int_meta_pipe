@@ -18,7 +18,9 @@
 #It also controls the import of the configuration file.  
 
 
-import os.path
+import os
+import sys
+from datetime import datetime as dt
 from configparser import ConfigParser, ExtendedInterpolation
 
 class tool_path_obj:
@@ -32,6 +34,38 @@ class tool_path_obj:
             value = default
         
         return value
+
+    def check_dmd_valid(self):
+        #if there's a .dmnd file
+        #if it's sufficiently big
+        dir_name = os.path.dirname(self.Prot_DB)
+        basename = os.path.basename(self.Prot_DB)
+        print("dir name:", dir_name)
+        file_name = basename.split(".")[0]
+        print("file name:", file_name)#, "extension:", extension)
+        
+        
+        print(self.Prot_DB)
+        if not(os.path.exists(self.Prot_DB)):
+            sys.exit("file does not exists")
+        else:
+            print(dt.today(), self.Prot_DB, "exists")
+        dmd_index_path = os.path.join(dir_name, file_name + ".dmnd")
+        db_size = os.path.getsize(self.Prot_DB)
+        
+        if(os.path.exists(dmd_index_path)):
+            if(os.path.getsize(dmd_index_path) >= db_size * 0.9):
+                print(dt.today(), "DMD index is ok")
+
+        
+
+    #def check_bwa_valid(self):
+        #if it's a fastq
+        #if it's been indexed (all files present)
+
+    #def check_blat_valid(self):
+        #check that there's at least 1 fasta in the dict
+
 
     def __init__ (self, config_path):
         print("CHECKING CONFIG")
@@ -100,7 +134,11 @@ class tool_path_obj:
             self.path_to_superpath  = os.path.join(custom_database_path,    "pathway_to_superpathway.csv")
             self.mgm_model          = os.path.join(tool_path,               "mgm/MetaGeneMark_v1.mod")
             self.enzyme_db          = os.path.join(custom_database_path,    "FREQ_EC_pairs_3_mai_2020.txt")
-            
+
+        #-------------------------------------------------------
+        # test DBs
+        self.check_dmd_valid()
+
         #----------------------------------------------------------
         # external tools
         
