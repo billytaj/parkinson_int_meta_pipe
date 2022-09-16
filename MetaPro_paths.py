@@ -34,7 +34,15 @@ class tool_path_obj:
             value = default
         
         return value
-
+        
+    def check_file_valid(self, file_0):
+        #checks that a file is there, and larger than 0kb
+        ok_flag = False
+        if (os.path.exists(file_0)):
+            if(os.path.getsize(file_0) > 0):
+                ok_flag = True
+        return ok_flag
+        
     def check_dmd_valid(self):
         #if there's a .dmnd file
         #if it's sufficiently big
@@ -59,13 +67,60 @@ class tool_path_obj:
 
         
 
-    #def check_bwa_valid(self):
-        #if it's a fastq
+    def check_bwa_valid(self):
+        file_list = os.listdir(self.DNA_DB)
+        ok_flag = False
+        file_count = 0
+        for item in file_list:
+            if(item.endswith(".fasta")):
+            
+                ext_0 = ".amb"
+                ext_1 = ".ann"
+                ext_2 = ".bwt"
+                ext_3 = ".pac"
+                ext_4 = ".sa"
+                
+                file_0 = os.path.join(self.DNA_DB, item + ext_0)
+                file_1 = os.path.join(self.DNA_DB, item + ext_1)
+                file_2 = os.path.join(self.DNA_DB, item + ext_2)
+                file_3 = os.path.join(self.DNA_DB, item + ext_3)
+                file_4 = os.path.join(self.DNA_DB, item + ext_4)
+                
+                ok_flag = self.check_file_valid(file_0)
+                ok_flag = self.check_file_valid(file_1)
+                ok_flag = self.check_file_valid(file_2)
+                ok_flag = self.check_file_valid(file_3)
+                ok_flag = self.check_file_valid(file_4)
+                file_count += 1
+        if(file_count == 0):
+            print(dt.today(), "Error: no fasta files found. BWA only accepts .fasta extensions")
+                
+        if(not ok_flag):
+            sys.exit("BWA database has not been fully indexed. try reindexing the database")
+        else:
+            print(dt.today(), "BWA database OK")
+            
+            
+        #if it's a fastq or fasta
         #if it's been indexed (all files present)
 
-    #def check_blat_valid(self):
+    def check_blat_valid(self):
         #check that there's at least 1 fasta in the dict
-
+        file_list = os.listdir(self.DNA_DB_Split)
+        ok_flag = False
+        file_count = 0
+        for item in file_list:
+            if(item.endswith(".fasta")):
+                ok_flag = self.check_file_valid(os.path.join(self.DNA_DB_Split, item))
+                file_count += 1
+        if(file_count == 0):
+            print(dt.today(), "Error: no fasta file found.  BLAT accepts .fasta extensions only")
+            sys.exit()
+        if(ok_flag):
+           print(dt.today(), "BLAT database OK")
+        else:
+            sys.exit("Error with BLAT db. there's an empty fasta file")
+       
 
     def __init__ (self, config_path):
         print("CHECKING CONFIG")
@@ -138,6 +193,8 @@ class tool_path_obj:
         #-------------------------------------------------------
         # test DBs
         self.check_dmd_valid()
+        self.check_bwa_valid()
+        self.check_blat_valid()
 
         #----------------------------------------------------------
         # external tools
