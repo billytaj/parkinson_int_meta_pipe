@@ -21,10 +21,18 @@ import queue as q
 #makes for a neat package/capsule
 
 class mp_stage:
-    def __init__ (self, config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, read_mode, threads, args_pack, tutorial_mode_string = None):
+    def __init__ (self, config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode_string = None):
         #make our util obj
         #refresher: self -> instance var.  not self: class var (shared among class obj instances)
+        
+        #---------------------------------------------------------
+        #Operational flags and state-recorders
+        
+            
+        self.contigs_present = True  #for the contig/assembly bypasser
+        
         tutorial_string = tutorial_mode_string
+        self.output_folder_path = output_folder_path
         self.mp_util = mpu.mp_util(self.output_folder_path)
         self.paths = mpp.tool_path_obj(config_path)
         self.segmented_chocophlan_flag = True
@@ -39,7 +47,18 @@ class mp_stage:
         self.pair_2_path = pair_2_path
         self.single_path = single_path
         self.contig_path = contig_path
-        self.read_mode = read_mode
+        
+        self.read_mode = "none"
+        if not single_path == "":
+            self.read_mode = "single"
+            quality_encoding = self.mp_util.determine_encoding(single_path)
+            print("ENCODING USED:", quality_encoding)
+            print("OPERATING IN SINGLE-ENDED MODE")
+        else:
+            self.read_mode = "paired"
+            quality_encoding = self.mp_util.determine_encoding(pair_1_path)
+            print("ENCODING USED:", quality_encoding)
+            print("OPERATING IN PAIRED-MODE")
         
         self.BWA_mem_threshold              = int(self.paths.BWA_mem_threshold)
         self.BLAT_mem_threshold             = int(self.paths.BLAT_mem_threshold)
@@ -245,17 +264,7 @@ class mp_stage:
         self.cleanup_cytoscape_end          = 0
         
 
-
-        if not single_path == "":
-            read_mode = "single"
-            quality_encoding = self.mp_util.determine_encoding(single_path)
-            print("ENCODING USED:", quality_encoding)
-            print("OPERATING IN SINGLE-ENDED MODE")
-        else:
-            read_mode = "paired"
-            quality_encoding = self.mp_util.determine_encoding(pair_1_path)
-            print("ENCODING USED:", quality_encoding)
-            print("OPERATING IN PAIRED-MODE")
+        
             
         #number of threads to use/limit
         self.read_thread_count = threads
@@ -675,14 +684,44 @@ class mp_stage:
             if(os.path.exists(mgm_file)):
                 self.mp_util.write_to_bypass_log(self.output_folder_path, self.assemble_contigs_label)
             else:
-                sys.exit("mgm did not run.  look into it.  pipeline stopping here")
+
+                done_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "pipeline_state", "stage_7_terminate")
+                if(os.path.exists(done_file)):
+                    print(dt.today(), "SPADes ran, but no contigs were created.  moving files to compensate")
+                    contig_map_path = os.path.join(self.assemble_contigs_path, "final_results", "contig_map.tsv")
+                    contig_path = os.path.join(self.assemble_contigs_path, "final_results", "contigs.fasta")
+                    s_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "singletons.fastq")
+                    p1_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "pair_1.fastq")
+                    p2_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "pair_2.fastq")
+                    s_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "singletons.fastq")
+                    p1_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "pair_1.fastq")
+                    p2_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "pair_2.fastq")
+                    make_map = open(contig_map_path, "w")
+                    make_contig = open(contig_path, "w")
+                    shutil.copyfile(s_src_path, s_dest_path)
+                    shutil.copyfile(p1_src_path, p1_dest_path)
+                    shutil.copyfile(p2_src_path, p2_dest_path)
+                    self.contigs_present = False
+                    self.mp_util.write_to_bypass_log(self.output_folder_path, self.assemble_contigs_label)
+
+                else:    
+                    sys.exit("mgm did not run.  look into it.  pipeline stopping here")
             
             self.cleanup_assemble_contigs_start = time.time()
             self.mp_util.clean_or_compress(self.assemble_contigs_path, self.keep_all, self.keep_assemble_contigs)
 
             self.cleanup_assemble_contigs_end = time.time()
         
-        
+        else:
+            mgm_file = os.path.join(self.assemble_contigs_path, "data", "1_mgm", "gene_report.txt")
+            if(os.path.exists(mgm_file)):
+                self.contigs_present = True
+            else:
+                done_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "pipeline_state", "stage_7_terminate")
+                if(os.path.exists(done_file)):
+                    self.contigs_present = False
+                
+                
         self.assemble_contigs_end = time.time()
         print("assemble contigs:", '%1.1f' % (self.assemble_contigs_end - self.assemble_contigs_start - (self.cleanup_assemble_contigs_end - self.cleanup_assemble_contigs_start)), "s")    
         print("assemble contigs cleanup:", '%1.1f' % (self.cleanup_assemble_contigs_end - self.cleanup_assemble_contigs_start), "s")
@@ -693,23 +732,25 @@ class mp_stage:
         #2) modularity
         if self.mp_util.check_bypass_log(self.output_folder_path, self.GA_split_label):
             marker_path_list = []
-            marker_file = "GA_split_fasta_contigs"
-            marker_path = os.path.join(self.GA_BWA_jobs_folder, marker_file)
-            if(os.path.exists(marker_path)):
-                print(dt.today(), "skipping", marker_file)
+            if(self.contigs_present):
+                marker_file = "GA_split_fasta_contigs"
+                marker_path = os.path.join(self.GA_split_jobs_folder, marker_file)
+                if(os.path.exists(marker_path)):
+                    print(dt.today(), "skipping", marker_file)
+                else:
+                    job_name = "GA_prep_split_contigs"
+                    marker_path_list.append(marker_path)
+                    command_list = self.commands.create_split_ga_fasta_data_command(self.GA_split_label, self.assemble_contigs_label, "contigs", marker_file)
+                    self.mp_util.launch_and_create_with_mp_store(self.GA_split_label, job_name, self.commands, command_list)
             else:
-                job_name = "GA_prep_split_contigs"
-                marker_path_list.append(marker_path)
-                command_list = self.commands.create_split_ga_fasta_data_command(self.GA_split_label, self.assemble_contigs_label, "contigs", marker_file)
-                self.mp_util.launch_and_create_with_mp_store(self.GA_split_label, job_name, self.commands, command_list)
-            
+                print(dt.today(), "no contigs present. skipping split")
             
             sections = ["singletons"]
             if(self.read_mode == "paired"):
                 sections.extend(["pair_1", "pair_2"])
             for section in sections: 
                 marker_file = "GA_split_fastq_" + section
-                marker_path = os.path.join(self.GA_BWA_jobs_folder, marker_file)
+                marker_path = os.path.join(self.GA_split_jobs_folder, marker_file)
                 if(os.path.exists(marker_path)):
                     print(dt.today(), "skipping", marker_file)
                 else:
@@ -721,21 +762,25 @@ class mp_stage:
 
             final_checklist = os.path.join(self.GA_split_path, "GA_split.txt")
             self.mp_util.check_all_job_markers(marker_path_list, final_checklist)
+            self.mp_util.write_to_bypass_log(self.output_folder_path, self.GA_split_label)
             
     def mp_GA_BWA(self):
         self.GA_BWA_start = time.time()
         
         marker_path_list = []
-        if not self.mp_util.check_where_resume(self.GA_BWA_path, None, self.assemble_contigs_path):
+        if not self.mp_util.check_where_resume(self.GA_BWA_path, None, self.GA_split_path):
         
             #-------------------------------------------------------------------------
-            sections = ["contigs", "singletons"]
+            sections = ["singletons"]
             if self.read_mode == "paired":
                 sections.extend(["pair_1", "pair_2"])
+            if(self.contigs_present):
+                
+                sections.extend(["contigs"])
             
             for section in sections:
-                for split_sample in os.listdir(os.path.join(self.GA_BWA_path, "data", "0_read_split", section)):
-                    full_sample_path = os.path.join(os.path.join(self.GA_BWA_path, "data", "0_read_split", section, split_sample))
+                for split_sample in os.listdir(os.path.join(self.GA_split_path, "final_results", section)):
+                    full_sample_path = os.path.join(os.path.join(self.GA_split_path, "final_results",section, split_sample))
                     print("split sample:", full_sample_path)
                     file_tag = os.path.basename(split_sample)
                     file_tag = os.path.splitext(file_tag)[0]
@@ -791,12 +836,17 @@ class mp_stage:
     def mp_GA_BWA_pp(self):                
         if self.mp_util.check_bypass_log(self.output_folder_path, self.GA_BWA_pp_label):
             marker_path_list = []
-            sections = ["contigs", "singletons"]
+            sections = ["singletons"]
             if self.read_mode == "paired":
                 sections.extend(["pair_1", "pair_2"])
+                
+            if(self.contigs_present):
+                sections.extend(["contigs"])
+                
+                
             for section in sections:
-                for split_sample in os.listdir(os.path.join(self.GA_BWA_path, "data", "0_read_split", section)):
-                    full_sample_path = os.path.join(os.path.join(self.GA_BWA_path, "data", "0_read_split", section, split_sample))
+                for split_sample in os.listdir(os.path.join(self.GA_split_path, "final_results", section)):
+                    full_sample_path = os.path.join(os.path.join(self.GA_split_path, "final_results",section, split_sample))
                     file_tag = os.path.basename(split_sample)
                     file_tag = os.path.splitext(file_tag)[0]
                     
@@ -863,13 +913,15 @@ class mp_stage:
         if self.mp_util.check_bypass_log(self.output_folder_path, self.GA_BWA_merge_label):
             #merge 
             marker_path_list = []
-            sections = ["contigs", "singletons"]
+            sections = ["singletons"]
             if self.read_mode == "paired":
                 sections.extend(["pair_1", "pair_2"])
-                
+            if(self.contigs_present):
+                sections.extend(["contigs"])
+            
             for section in sections:
-                for split_sample in os.listdir(os.path.join(self.GA_BWA_path, "data", "0_read_split", section)):
-                    full_sample_path = os.path.join(os.path.join(self.GA_BWA_path, "data", "0_read_split", section, split_sample))
+                for split_sample in os.listdir(os.path.join(self.GA_split_path, "final_results", section)):
+                    full_sample_path = os.path.join(os.path.join(self.GA_split_path, "final_results",section, split_sample))
                     print("split sample:", full_sample_path)
                     file_tag = os.path.basename(split_sample)
                     file_tag = os.path.splitext(file_tag)[0]
