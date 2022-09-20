@@ -77,19 +77,34 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     metapro_stage_obj.mp_GA_BWA_pp()
     metapro_stage_obj.mp_GA_BWA_merge()
     
+    #------------------------------------------------
+    # BLAT gene annotation
+    metapro_stage_obj.mp_GA_BLAT()
+    metapro_stage_obj.mp_GA_BLAT_pp()
+    metapro_stage_obj.mp_GA_BLAT_merge()
+    
+    #--------------------------------------------------
+    #DIAMOND gene annotation
+    metapro_stage_obj.mp_GA_dmd()
+    metapro_stage_obj.mp_GA_dmd_pp()
+    
+    #-------------------------------------------------
+    # final GA merge()
+    metapro_stage_obj.mp_GA_final_merge()
+    
     # ------------------------------------------------------
 
     # Taxonomic annotation
-    
+    metapro_stage_obj.mp_TA()
     
     
     # ------------------------------------------------------
     # Detect EC annotation
-    
+    metapro_stage_obj.mp_EC()
     
     # ------------------------------------------------------
     # RPKM Table and Cytoscape Network
-    
+    metapro_stage_obj.mp_output()
 
 
     
