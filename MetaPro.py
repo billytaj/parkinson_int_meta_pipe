@@ -93,8 +93,64 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
 
 
 def tutorial_main(config_file, pair_1, pair_2, single, contig, output_folder, num_threads, args_pack, tutorial_mode):
-    
-    
+    metapro_stage_obj = mps.mp_stage(config_file, pair_1, pair_2, single, contig, output_folder, num_threads, args_pack, tutorial_mode)
+    if(tutorial_mode == "quality"):
+         # The quality filter stage
+        metapro_stage_obj.mp_quality_filter()
+
+    elif(tutorial_mode == "host"):
+        # The host read filter stage
+        metapro_stage_obj.mp_host_filter()
+            
+    elif(tutorial_mode == "vector"):
+        # The vector contaminant filter stage
+        metapro_stage_obj.mp_vector_filter()
+
+    elif(tutorial_mode == "rRNA"):
+        # rRNA removal stage
+        metapro_stage_obj.mp_rRNA_filter()
+
+    elif(tutorial_mode == "repop"):
+        # Duplicate repopulation
+        metapro_stage_obj.mp_repop()
+
+    elif(tutorial_mode == "contigs"):
+        # Assemble contigs
+        metapro_stage_obj.mp_assemble()    
+
+    elif(tutorial_mode == "GA"):
+        # GA split
+        metapro_stage_obj.mp_GA_split()
+
+        # BWA gene annotation
+        
+        metapro_stage_obj.mp_GA_BWA()
+        metapro_stage_obj.mp_GA_BWA_pp()
+        metapro_stage_obj.mp_GA_BWA_merge()
+        
+        # BLAT gene annotation
+        metapro_stage_obj.mp_GA_BLAT()
+        metapro_stage_obj.mp_GA_BLAT_pp()
+        metapro_stage_obj.mp_GA_BLAT_merge()
+        
+        #DIAMOND gene annotation
+        metapro_stage_obj.mp_GA_dmd()
+        metapro_stage_obj.mp_GA_dmd_pp()
+        
+        # final GA merge()
+        metapro_stage_obj.mp_GA_final_merge()
+
+    elif(tutorial_mode == "TA"):
+        # Taxonomic annotation
+        metapro_stage_obj.mp_TA()
+
+    elif(tutorial_mode == "EC"):
+        # Detect EC annotation
+        metapro_stage_obj.mp_EC()
+    elif(tutorial_mode == "output"):
+        # RPKM Table and Cytoscape Network
+        metapro_stage_obj.mp_output()
+
     
     
 if __name__ == "__main__":
