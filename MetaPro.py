@@ -44,69 +44,55 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     # The subprocess is created from the commands object
 
     # The quality filter stage
-    #------------------------------------------------------------------------------
     metapro_stage_obj.mp_quality_filter()
 
     # The host read filter stage
-    #-------------------------------------------------------------------------
     metapro_stage_obj.mp_host_filter()
         
-    #-----------------------------------------------------------------
     # The vector contaminant filter stage
     metapro_stage_obj.mp_vector_filter()
-    
 
-    # ----------------------------------------------
     # rRNA removal stage
     metapro_stage_obj.mp_rRNA_filter()
 
-    #---------------------------------------------------------------------------------------------------------------------
     # Duplicate repopulation
     metapro_stage_obj.mp_repop()
-    # -------------------------------------------------------------
+
     # Assemble contigs
     metapro_stage_obj.mp_assemble()    
 
-    #-----------------------------------------------
+    # GA split
     metapro_stage_obj.mp_GA_split()
 
-    # ----------------------------------------------
     # BWA gene annotation
     
     metapro_stage_obj.mp_GA_BWA()
     metapro_stage_obj.mp_GA_BWA_pp()
     metapro_stage_obj.mp_GA_BWA_merge()
     
-    #------------------------------------------------
     # BLAT gene annotation
     metapro_stage_obj.mp_GA_BLAT()
     metapro_stage_obj.mp_GA_BLAT_pp()
     metapro_stage_obj.mp_GA_BLAT_merge()
     
-    #--------------------------------------------------
     #DIAMOND gene annotation
     metapro_stage_obj.mp_GA_dmd()
     metapro_stage_obj.mp_GA_dmd_pp()
     
-    #-------------------------------------------------
     # final GA merge()
     metapro_stage_obj.mp_GA_final_merge()
-    
-    # ------------------------------------------------------
 
     # Taxonomic annotation
     metapro_stage_obj.mp_TA()
-    
-    
-    # ------------------------------------------------------
+
     # Detect EC annotation
     metapro_stage_obj.mp_EC()
     
-    # ------------------------------------------------------
     # RPKM Table and Cytoscape Network
     metapro_stage_obj.mp_output()
 
 
+def tutorial_main(config_file, pair_1, pair_2, single, contig, output_folder, num_threads, args_pack, tutorial_mode):
     
     
     
@@ -117,7 +103,7 @@ if __name__ == "__main__":
     # There's a few operating modes, mainly "docker", and "singularity".  These modes edit the pipeline filepaths
 
     parser = ArgumentParser(description="MetaPro - Meta-omic sequence processing and analysis pipeline"
-                                        "Version 1.1.1 © 2022")
+                                        "Version 2.0.0 © 2022")
 
     parser.add_argument("-c", "--config",   type=str,   help="Path to the configureation file")
     parser.add_argument("-1", "--pair1",    type=str,   help="Path to the file containing the forward paired-end reads in fastq format")
