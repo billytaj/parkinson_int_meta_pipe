@@ -29,7 +29,7 @@ class mp_stage:
         #Operational flags and state-recorders
         
             
-        self.contigs_present = True  #for the contig/assembly bypasser
+        
         
         self.tutorial_string = tutorial_mode_string
         self.output_folder_path = output_folder_path
@@ -187,7 +187,8 @@ class mp_stage:
         
 
         #timing vars
-    
+        self.start_time                     = time.time()
+        self.end_time                       = 0
         self.quality_start                  = 0
         self.quality_end                    = 0
         self.cleanup_quality_start          = 0
@@ -315,6 +316,9 @@ class mp_stage:
         self.GA_BWA_jobs_folder     = os.path.join(self.GA_BWA_data_folder, "jobs")
         self.GA_BLAT_data_folder    = os.path.join(self.GA_BLAT_path, "data")
         self.GA_BLAT_jobs_folder    = os.path.join(self.GA_BLAT_data_folder, "jobs")
+        self.GA_DIAMOND_data_folder = os.path.join(self.GA_DIAMOND_path, "data")
+        self.GA_DIAMOND_jobs_folder = os.path.join(self.GA_DIAMOND_data_folder, "jobs")
+        
         self.TA_jobs_folder         = os.path.join(self.TA_path, "data", "jobs")
         self.ec_detect_path         = os.path.join(self.ec_annotation_path, "data", "0_detect")
         self.ec_priam_path          = os.path.join(self.ec_annotation_path, "data", "1_priam")
@@ -323,6 +327,25 @@ class mp_stage:
         self.ec_priam_out           = os.path.join(self.ec_annotation_path, "data", "jobs", "ec_priam")
         self.ec_diamond_out         = os.path.join(self.ec_annotation_path, "data", "jobs", "ec_diamond")
         
+        #special contig-bypasser logic vars
+        self.contigs_present = True  #for the contig/assembly bypasser
+        self.spades_done_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "pipeline_state", "stage_7_terminate")
+        self.spades_transcripts_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "transcripts.fasta")
+    
+    #--------------------------------------------------------------------------------
+    # helpers
+    def mp_contig_statecheck(self):
+        
+        if(os.path.exists(self.spades_done_file)):
+            if(os.path.exists(self.spades_transcripts_file)):
+                self.contigs_present = True
+                print(dt.today(), "contigs present")
+            else:
+                self.contigs_present = False
+                print(dt.today(), "contigs not present. but that's ok")
+        else:
+            sys.exit(dt.today(), "contig assembly incomplete. run the pipeline in --tutorial contigs to continue")
+    
 
     #--------------------------------------------------------------------------------------------------------------
     # main calls
@@ -779,71 +802,71 @@ class mp_stage:
             
     def mp_GA_BWA(self):
         self.GA_BWA_start = time.time()
-        
-        marker_path_list = []
-        if not self.mp_util.check_where_resume(self.GA_BWA_path, None, self.GA_split_path):
-        
-            #-------------------------------------------------------------------------
-            sections = ["singletons"]
-            if self.read_mode == "paired":
-                sections.extend(["pair_1", "pair_2"])
-            if(self.contigs_present):
-                
-                sections.extend(["contigs"])
+        if self.mp_util.check_bypass_log(self.output_folder_path, self.GA_BWA_label):
+            marker_path_list = []
+            if not self.mp_util.check_where_resume(self.GA_BWA_path, None, self.GA_split_path):
             
-            for section in sections:
-                for split_sample in os.listdir(os.path.join(self.GA_split_path, "final_results", section)):
-                    full_sample_path = os.path.join(os.path.join(self.GA_split_path, "final_results",section, split_sample))
-                    print("split sample:", full_sample_path)
-                    file_tag = os.path.basename(split_sample)
-                    file_tag = os.path.splitext(file_tag)[0]
-                    ref_path = self.paths.DNA_DB
-                        
-                    command_list = ""
-                    if (ref_path.endswith(".fasta")):
-                        ref_tag = os.path.basename(ref_path)
-                        ref_tag = ref_tag.strip(".fasta")
+                #-------------------------------------------------------------------------
+                sections = ["singletons"]
+                if self.read_mode == "paired":
+                    sections.extend(["pair_1", "pair_2"])
+                if(self.contigs_present):
                     
-                        file_tag = file_tag + "_" + ref_tag
-                        job_name = "BWA" + "_" + file_tag
-                        marker_file = file_tag + "_bwa"
-                        marker_path = os.path.join(self.GA_BWA_jobs_folder, marker_file)
-                    #this checker assumes that BWA only exports a file when it's finished running
-                        if(os.path.exists(marker_path)):
-                            print(dt.today(), "skipping:", marker_file)
-                            continue
-                        else:
-                            marker_path_list.append(marker_path)
-                        
-                            #aug 10, 2021: new bigger chocophlan (from humann3) is in segments because we can't index it as a whole.  
-                            #if the DB is still an old version, the tag should just say "chocophlan".  otherwise, it will say the chocophlan chunk name
+                    sections.extend(["contigs"])
+                
+                for section in sections:
+                    for split_sample in os.listdir(os.path.join(self.GA_split_path, "final_results", section)):
+                        full_sample_path = os.path.join(os.path.join(self.GA_split_path, "final_results",section, split_sample))
+                        print("split sample:", full_sample_path)
+                        file_tag = os.path.basename(split_sample)
+                        file_tag = os.path.splitext(file_tag)[0]
+                        ref_path = self.paths.DNA_DB
                             
-                            command_list = self.commands.create_BWA_annotate_command_v2(self.GA_BWA_label, ref_path, ref_tag, full_sample_path, marker_file)
-                            self.mp_util.launch_and_create_with_hold(self.BWA_mem_threshold, self.BWA_job_limit, self.BWA_job_delay, self.GA_BWA_label, job_name, self.commands, command_list)
-                    else:
-                        split_db = os.listdir(ref_path)
-                        for db_segments in split_db:
-                            if(db_segments.endswith(".fasta")):
-                                segment_ref_path = os.path.join(ref_path, db_segments)
-                                ref_tag = db_segments.strip(".fasta")
-                                segment_file_tag = file_tag + "_" + ref_tag
-                                job_name = "BWA" + "_" + segment_file_tag
-                                marker_file = segment_file_tag + "_bwa"
-                                marker_path = os.path.join(self.GA_BWA_jobs_folder, marker_file)
+                        command_list = ""
+                        if (ref_path.endswith(".fasta")):
+                            ref_tag = os.path.basename(ref_path)
+                            ref_tag = ref_tag.strip(".fasta")
+                        
+                            file_tag = file_tag + "_" + ref_tag
+                            job_name = "BWA" + "_" + file_tag
+                            marker_file = file_tag + "_bwa"
+                            marker_path = os.path.join(self.GA_BWA_jobs_folder, marker_file)
+                        #this checker assumes that BWA only exports a file when it's finished running
+                            if(os.path.exists(marker_path)):
+                                print(dt.today(), "skipping:", marker_file)
+                                continue
+                            else:
+                                marker_path_list.append(marker_path)
+                            
+                                #aug 10, 2021: new bigger chocophlan (from humann3) is in segments because we can't index it as a whole.  
+                                #if the DB is still an old version, the tag should just say "chocophlan".  otherwise, it will say the chocophlan chunk name
                                 
-                                if(os.path.exists(marker_path)):
-                                    print(dt.today(), "skipping:", marker_file)
-                                    continue
-                                else:
-                                    marker_path_list.append(marker_path)
-                                    command_list = self.commands.create_BWA_annotate_command_v2(self.GA_BWA_label, segment_ref_path, ref_tag, full_sample_path, marker_file)
-                                    self.mp_util.launch_and_create_with_hold(self.BWA_mem_threshold, self.BWA_job_limit, self.BWA_job_delay, self.GA_BWA_label, job_name, self.commands, command_list)
+                                command_list = self.commands.create_BWA_annotate_command_v2(self.GA_BWA_label, ref_path, ref_tag, full_sample_path, marker_file)
+                                self.mp_util.launch_and_create_with_hold(self.BWA_mem_threshold, self.BWA_job_limit, self.BWA_job_delay, self.GA_BWA_label, job_name, self.commands, command_list)
+                        else:
+                            split_db = os.listdir(ref_path)
+                            for db_segments in split_db:
+                                if(db_segments.endswith(".fasta")):
+                                    segment_ref_path = os.path.join(ref_path, db_segments)
+                                    ref_tag = db_segments.strip(".fasta")
+                                    segment_file_tag = file_tag + "_" + ref_tag
+                                    job_name = "BWA" + "_" + segment_file_tag
+                                    marker_file = segment_file_tag + "_bwa"
+                                    marker_path = os.path.join(self.GA_BWA_jobs_folder, marker_file)
+                                    
+                                    if(os.path.exists(marker_path)):
+                                        print(dt.today(), "skipping:", marker_file)
+                                        continue
+                                    else:
+                                        marker_path_list.append(marker_path)
+                                        command_list = self.commands.create_BWA_annotate_command_v2(self.GA_BWA_label, segment_ref_path, ref_tag, full_sample_path, marker_file)
+                                        self.mp_util.launch_and_create_with_hold(self.BWA_mem_threshold, self.BWA_job_limit, self.BWA_job_delay, self.GA_BWA_label, job_name, self.commands, command_list)
 
-            print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
-            self.mp_util.wait_for_mp_store()
-            final_checklist = os.path.join(self.GA_BWA_path, "GA_BWA.txt")
-            self.mp_util.check_all_job_markers(marker_path_list, final_checklist)
-            self.mp_util.write_to_bypass_log(self.output_folder_path, self.GA_BWA_label)
+                print(dt.today(), "all BWA jobs have launched.  waiting for them to finish")            
+                self.mp_util.wait_for_mp_store()
+                final_checklist = os.path.join(self.GA_BWA_path, "GA_BWA.txt")
+                self.mp_util.check_all_job_markers(marker_path_list, final_checklist)
+                self.mp_util.write_to_bypass_log(self.output_folder_path, self.GA_BWA_label)
     
     
     def mp_GA_BWA_pp(self):                
@@ -1141,8 +1164,7 @@ class mp_stage:
         # ------------------------------------------------------
         # Diamond gene annotation
         self.GA_DIAMOND_start = time.time()
-        GA_DIAMOND_tool_output_path = os.path.join(self.GA_DIAMOND_path, "data", "0_diamond")
-        GA_DIAMOND_jobs_folder = os.path.join(self.GA_DIAMOND_path, "data", "jobs")
+        #GA_DIAMOND_tool_output_path = os.path.join(self.GA_DIAMOND_path, "data", "0_diamond")
         #if not check_where_resume(None, self.GA_DIAMOND_tool_output_path, self.GA_BLAT_path, file_check_bypass = True):
         if self.mp_util.check_bypass_log(self.output_folder_path, self.GA_DIAMOND_label):
             marker_path_list = []
@@ -1153,7 +1175,7 @@ class mp_stage:
                     job_name = "DIAMOND_" + file_tag
                     full_sample_path = os.path.join(os.path.join(self.GA_BLAT_path, "final_results", split_sample))
                     marker_file = file_tag + "_diamond"
-                    marker_path = os.path.join(GA_DIAMOND_jobs_folder, marker_file)
+                    marker_path = os.path.join(self.GA_DIAMOND_jobs_folder, marker_file)
                     if(os.path.exists(marker_path)):
                         print(dt.today(), "skipping:", marker_path)
                         continue
@@ -1451,58 +1473,58 @@ class mp_stage:
         self.Cytoscape_start = time.time()
         #if not check_where_resume(network_path, None, self.ec_annotation_path):
         
-        if self.mp_util.check_bypass_log(self.output_folder, self.output_label):
+        if self.mp_util.check_bypass_log(self.output_folder_path, self.output_label):
             
             #phase 1
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_copy_gene_map_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_copy_gene_map_label):
                 job_name = self.output_copy_gene_map_label
                 command_list = self.commands.create_output_copy_gene_map_command(self.output_label, self.GA_final_merge_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                 
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_copy_taxa_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_copy_taxa_label):
                 job_name = self.output_copy_taxa_label
                 command_list = self.commands.create_output_copy_taxa_command(self.output_label, self.taxon_annotation_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
-            
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_contig_stats_label):
-                job_name = self.output_contig_stats_label
-                command_list = self.commands.create_output_contig_stats_command(self.output_label, self.assemble_contigs_label)
-                self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
+            if(self.contigs_present): 
+                if self.mp_util.check_bypass_log(self.output_folder_path, self.output_contig_stats_label):
+                    job_name = self.output_contig_stats_label
+                    command_list = self.commands.create_output_contig_stats_command(self.output_label, self.assemble_contigs_label)
+                    self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                 
             
                 
             if not(self.no_host):
                 print(dt.today(), "repopulating hosts for output")
-                if self.mp_util.check_bypass_log(self.output_folder, self.output_unique_hosts_singletons_label):
+                if self.mp_util.check_bypass_log(self.output_folder_path, self.output_unique_hosts_singletons_label):
                     job_name = self.output_unique_hosts_singletons_label
                     command_list = self.commands.create_output_unique_hosts_singletons_command(self.output_label, self.quality_filter_label, self.host_filter_label)
                     self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                 
                 if(self.read_mode == "paired"):
-                    if self.mp_util.check_bypass_log(self.output_folder, self.output_unique_hosts_pair_1_label):
+                    if self.mp_util.check_bypass_log(self.output_folder_path, self.output_unique_hosts_pair_1_label):
                         job_name = self.output_unique_hosts_pair_1_label
                         command_list = self.commands.create_output_unique_hosts_pair_1_command(self.output_label, self.quality_filter_label, self.host_filter_label)
                         self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                         
-                    if self.mp_util.check_bypass_log(self.output_folder, self.output_unique_hosts_pair_2_label):
+                    if self.mp_util.check_bypass_log(self.output_folder_path, self.output_unique_hosts_pair_2_label):
                         job_name = self.output_unique_hosts_pair_2_label
                         command_list = self.commands.create_output_unique_hosts_pair_2_command(self.output_label, self.quality_filter_label, self.host_filter_label)
                         self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                         
                         
             #repop vectors
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_unique_vectors_singletons_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_unique_vectors_singletons_label):
                 job_name = self.output_unique_vectors_singletons_label
                 command_list = self.commands.create_output_unique_vectors_singletons_command(self.output_label, self.quality_filter_label, self.host_filter_label, self.vector_filter_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
             
             if(self.read_mode == "paired"):
-                if self.mp_util.check_bypass_log(self.output_folder, self.output_unique_vectors_pair_1_label):
+                if self.mp_util.check_bypass_log(self.output_folder_path, self.output_unique_vectors_pair_1_label):
                     job_name = self.output_unique_vectors_pair_1_label
                     command_list = self.commands.create_output_unique_vectors_pair_1_command(self.output_label, self.quality_filter_label, self.host_filter_label, self.vector_filter_label)
                     self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                     
-                if self.mp_util.check_bypass_log(self.output_folder, self.output_unique_vectors_pair_2_label):
+                if self.mp_util.check_bypass_log(self.output_folder_path, self.output_unique_vectors_pair_2_label):
                     job_name = self.output_unique_vectors_pair_2_label
                     command_list = self.commands.create_output_unique_vectors_pair_2_command(self.output_label, self.quality_filter_label, self.host_filter_label, self.vector_filter_label)
                     self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
@@ -1526,11 +1548,11 @@ class mp_stage:
                     self.mp_util.conditional_write_to_bypass_log(self.output_unique_hosts_pair_2_label, "outputs/data/2_full_hosts", "pair_2_full_hosts.fastq")
             #----------------------------------------------------------------------------
             #Phase 2
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_network_gen_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_network_gen_label):
                 command_list = self.commands.create_output_network_generation_command(self.output_label, self.GA_final_merge_label, self.taxon_annotation_label, self.ec_annotation_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, self.output_network_gen_label, self.commands, command_list)
                 
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_taxa_groupby_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_taxa_groupby_label):
                 command_list = self.commands.create_output_taxa_groupby_command(self.output_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, self.output_taxa_groupby_label, self.commands, command_list)
         
@@ -1541,18 +1563,18 @@ class mp_stage:
             
             #-------------------------------------------------------------------
             #Phase 3
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_read_count_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_read_count_label):
                 job_name = self.output_read_count_label
                 command_list = self.commands.create_output_read_count_command(self.output_label, self.quality_filter_label, self.repop_job_label, self.GA_final_merge_label, self.ec_annotation_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                                 
 
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_per_read_scores_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_per_read_scores_label):
                 job_name = self.output_per_read_scores_label
                 command_list = self.commands.create_output_per_read_scores_command(self.output_label, self.quality_filter_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)
                 
-            if self.mp_util.check_bypass_log(self.output_folder, self.output_ec_heatmap_label):
+            if self.mp_util.check_bypass_log(self.output_folder_path, self.output_ec_heatmap_label):
                 job_name = self.output_ec_heatmap_label
                 command_list = self.commands.create_output_EC_heatmap_command(self.output_label)
                 self.mp_util.launch_and_create_with_mp_store(self.output_label, job_name, self.commands, command_list)    

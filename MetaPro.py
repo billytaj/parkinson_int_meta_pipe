@@ -119,6 +119,8 @@ def tutorial_main(config_file, pair_1, pair_2, single, contig, output_folder, nu
         metapro_stage_obj.mp_assemble()    
 
     elif(tutorial_mode == "GA"):
+        #check the contig state
+        metapro_stage_obj.mp_contig_statecheck()
         # GA split
         metapro_stage_obj.mp_GA_split()
 
@@ -148,6 +150,8 @@ def tutorial_main(config_file, pair_1, pair_2, single, contig, output_folder, nu
         # Detect EC annotation
         metapro_stage_obj.mp_EC()
     elif(tutorial_mode == "output"):
+        #check the contig state
+        metapro_stage_obj.mp_contig_statecheck()
         # RPKM Table and Cytoscape Network
         metapro_stage_obj.mp_output()
 
