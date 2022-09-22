@@ -106,12 +106,13 @@ class tool_path_obj:
 
     def check_blat_valid(self):
         #check that there's at least 1 fasta in the dict
-        file_list = os.listdir(self.DNA_DB_Split)
+        #but truth-be-told, this doesn't do anything, since BWA will use the same DB
+        file_list = os.listdir(self.DNA_DB)
         ok_flag = False
         file_count = 0
         for item in file_list:
             if(item.endswith(".fasta")):
-                ok_flag = self.check_file_valid(os.path.join(self.DNA_DB_Split, item))
+                ok_flag = self.check_file_valid(os.path.join(self.DNA_DB, item))
                 file_count += 1
         if(file_count == 0):
             print(dt.today(), "Error: no fasta file found.  BLAT accepts .fasta extensions only")
@@ -147,7 +148,7 @@ class tool_path_obj:
             self.Host               = self.value_assignment(config, "Databases", "Host",  os.path.join(database_path, "Mouse_cds/Mouse_cds.fasta"))
             self.Rfam               = self.value_assignment(config, "Databases", "Rfam", os.path.join(database_path, "Rfam/Rfam.cm"))
             self.DNA_DB             = self.value_assignment(config, "Databases", "DNA_DB", os.path.join(database_path, "ChocoPhlAn/ChocoPhlAn.fasta"))
-            self.DNA_DB_Split       = self.value_assignment(config, "Databases", "DNA_DB_Split", os.path.join(database_path, "ChocoPhlAn/ChocoPhlAn_split/"))
+            #self.DNA_DB_Split       = self.value_assignment(config, "Databases", "DNA_DB_Split", os.path.join(database_path, "ChocoPhlAn/ChocoPhlAn_split/"))
             self.Prot_DB            = self.value_assignment(config, "Databases", "Prot_DB", os.path.join(database_path, "nr/nr"))
             self.Prot_DB_reads      = self.value_assignment(config, "Databases", "Prot_DB_reads", os.path.join(database_path, "nr/nr"))
             self.accession2taxid    = self.value_assignment(config, "Databases", "accession2taxid", os.path.join(database_path, "accession2taxid/accession2taxid"))
