@@ -1009,7 +1009,7 @@ class mp_stage:
                     full_sample_path = os.path.join(os.path.join(self.GA_BWA_path, "final_results", split_sample))
 
                     delay_count = 0
-                    for fasta_db in os.listdir(self.paths.DNA_DB_Split):
+                    for fasta_db in os.listdir(self.paths.DNA_DB):
                         if fasta_db.endswith(".fasta") or fasta_db.endswith(".ffn") or fasta_db.endswith(".fsa") or fasta_db.endswith(".fas") or fasta_db.endswith(".fna"):
                             job_name = "BLAT_" + file_tag + "_" + fasta_db
                             marker_file = file_tag + "_blat_" + fasta_db
@@ -1059,7 +1059,7 @@ class mp_stage:
                     file_tag = os.path.basename(split_sample)
                     file_tag = os.path.splitext(file_tag)[0]
                     
-                    ref_path = self.paths.DNA_DB_Split  #the chocophlan chunks
+                    ref_path = self.paths.DNA_DB#_Split  #the chocophlan chunks
                     if (ref_path.endswith(".fasta")):
                         #single chocophlan mode
                         job_name = "BLAT_" + file_tag + "_pp"
