@@ -9,6 +9,7 @@ ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/g
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ga_merge_bug/MetaPro_paths.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ga_merge_bug/MetaPro_commands.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ga_merge_bug/MetaPro_utilities.py /pipeline
+ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ga_merge_bug/MetaPro_stages.py /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ga_merge_bug/Config.ini /pipeline
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ga_merge_bug/Scripts/Detect_2.2.9.py /pipeline/Scripts
 ADD https://raw.githubusercontent.com/billyc59/parkinson_int_meta_pipe/feature/ga_merge_bug/Scripts/assembly_deduplicate.py /pipeline/Scripts
