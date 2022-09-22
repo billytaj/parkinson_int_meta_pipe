@@ -123,8 +123,6 @@ class mt_pipe_commands:
             if return_code != 1:
                 raise
                 
-
-    
     def launch_only(self, command_list, command_list_length):
         #just launch the job.  Don't make a script file.
         #print(dt.today(), "inside launch_only:", len(command_list))
@@ -870,10 +868,6 @@ class mt_pipe_commands:
                 ]    
 
         return COMMANDS_vector
-
-   
-
-        
         
     def create_rRNA_filter_prep_command_v3(self, stage_name, category, dependency_name, marker_file):
         #split the data into tiny shards.  called once
@@ -1400,9 +1394,7 @@ class mt_pipe_commands:
         make_marker += os.path.join(jobs_folder, marker_file)
             
         return [rRNA_filtration + " && " + make_marker]
-
-    
-    
+  
     def create_rRNA_filter_final_cat_command(self, stage_name, category, marker_file):
         # 
         # Cat then final filter.  
@@ -1805,7 +1797,6 @@ class mt_pipe_commands:
         return COMMANDS_Repopulate 
 
 
-
     def create_assemble_contigs_command(self, stage_name, dependency_stage_name):
         subfolder           = os.path.join(self.Output_Path, stage_name)
         data_folder         = os.path.join(subfolder, "data")
@@ -1939,14 +1930,18 @@ class mt_pipe_commands:
    
     def create_split_ga_fastq_data_command(self, stage_name, dependency_stage_name, category, marker_file):
         subfolder       = os.path.join(self.Output_Path, stage_name)
+        final_folder    = os.path.join(subfolder, "final_results")
         data_folder     = os.path.join(subfolder, "data")
-        split_folder    = os.path.join(data_folder, "0_read_split", category)
+        split_folder    = os.path.join(final_folder, category)#, os.path.join(data_folder, "0_read_split", category)
         dep_loc         = os.path.join(self.Output_Path, dependency_stage_name, "final_results")
+        
         jobs_folder     = os.path.join(data_folder, "jobs")
         self.make_folder(subfolder)
+        self.make_folder(final_folder)
         self.make_folder(data_folder)
         self.make_folder(split_folder)
         self.make_folder(jobs_folder)
+        
         
         if(self.tutorial_keyword == "GA"):
             if(category == "pair_1"):

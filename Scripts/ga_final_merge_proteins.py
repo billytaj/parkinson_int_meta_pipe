@@ -57,6 +57,11 @@ def merge_fasta(dir, extension, context, dir_name, master_gene_dict):
                         else:
                             seq += cleaned_line
                     master_gene_dict[id] = seq
+    #Scrub the dict:
+    if '' in master_gene_dict.keys():
+        print("empty string found")
+        del master_gene_dict['']
+                    
                     
             
                     
@@ -64,13 +69,15 @@ def merge_fasta(dir, extension, context, dir_name, master_gene_dict):
                     
     
 def export_fasta(fasta_dict, export_path):
+    
     with open(export_path, "w") as out_file:
+        
         for item in fasta_dict.keys():
-            #print("writing:", item)
+            #print("writing:", [item])
             out_file.write(item + "\n")
             #print("writing:", fasta_dict[item])
             out_file.write(fasta_dict[item] + "\n")
-            
+            #time.sleep(1)
 
 def mem_checker(threshold):
     #threshold is a percentage
