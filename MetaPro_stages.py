@@ -769,6 +769,7 @@ class mp_stage:
         if self.mp_util.check_bypass_log(self.output_folder_path, self.GA_split_label):
             marker_path_list = []
             if(self.contigs_present):
+                print(dt.today(), "splitting contigs")
                 marker_file = "GA_split_fasta_contigs"
                 marker_path = os.path.join(self.GA_split_jobs_folder, marker_file)
                 if(os.path.exists(marker_path)):
