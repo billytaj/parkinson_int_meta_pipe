@@ -28,13 +28,11 @@ class mp_stage:
         #---------------------------------------------------------
         #Operational flags and state-recorders
         
-            
-        
-        
         self.tutorial_string = tutorial_mode_string
         self.output_folder_path = output_folder_path
         self.mp_util = mpu.mp_util(self.output_folder_path)
         self.paths = mpp.tool_path_obj(config_path)
+        self.GA_DB_mode = self.paths.GA_DB_mode
         self.segmented_chocophlan_flag = True
         if(self.paths.DNA_DB.endswith(".fasta")):
             self.segmented_chocophlan_flag = False
@@ -649,8 +647,6 @@ class mp_stage:
                         self.mp_util.write_to_bypass_log(self.output_folder_path, self.rRNA_filter_splitter_label + "_" + section)
                 else:
                     print(dt.today(), "not calling Infernal rRNA splitter on pair 2.  data handled by pair 1 as a combination")
-            
-                        
                         
             marker_path_list = []
             for section in reversed(sections):
@@ -711,37 +707,72 @@ class mp_stage:
         self.assemble_contigs_start = time.time()
         
         #if not check_where_resume(assemble_contigs_path, None, repop_job_path):
-        
+        mgm_gene_report = os.path.join(self.assemble_contigs_path, "data", "1_mgm", "gene_report.txt")
+        mgm_folder = os.path.join(self.assemble_contigs_path, "data", "1_mgm")
+        spades_done_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "pipeline_state", "stage_7_terminate")
+        spades_transcript_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "transcripts.fasta")
+
+        mgm_fail_flag = True
+        spades_fail_flag = True
+
         if self.mp_util.check_bypass_log(self.output_folder_path, self.assemble_contigs_label):
             job_name = self.assemble_contigs_label
             command_list = self.commands.create_assemble_contigs_command(self.assemble_contigs_label, self.repop_job_label)
             self.mp_util.launch_and_create_simple(self.assemble_contigs_label, job_name, self.commands, command_list)
-            mgm_file = os.path.join(self.assemble_contigs_path, "data", "1_mgm", "gene_report.txt")
-            if(os.path.exists(mgm_file)):
-                self.mp_util.write_to_bypass_log(self.output_folder_path, self.assemble_contigs_label)
+            
+            
+            if(os.path.exists(spades_done_file)):
+                if(os.path.exists(spades_transcript_file)):
+                    spades_fail_flag = False
+                    print(dt.today(), "SPADes OK")
+                else:
+                    spades_fail_flag = True
+                    print(dt.today(), "SPADes ran, but did not create contigs")
             else:
+                sys.exit(dt.today(), "SPADes did not run. this is not normal. Contact admin immediately")
 
-                done_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "pipeline_state", "stage_7_terminate")
-                if(os.path.exists(done_file)):
-                    print(dt.today(), "SPADes ran, but no contigs were created.  moving files to compensate")
-                    bypass_contig_map_path = os.path.join(self.assemble_contigs_path, "final_results", "contig_map.tsv")
-                    bypass_contig_path = os.path.join(self.assemble_contigs_path, "final_results", "contigs.fasta")
-                    s_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "singletons.fastq")
-                    p1_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "pair_1.fastq")
-                    p2_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "pair_2.fastq")
-                    s_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "singletons.fastq")
-                    p1_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "pair_1.fastq")
-                    p2_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "pair_2.fastq")
-                    make_map = open(bypass_contig_map_path, "w")
-                    make_contig = open(bypass_contig_path, "w")
-                    shutil.copyfile(s_src_path, s_dest_path)
-                    shutil.copyfile(p1_src_path, p1_dest_path)
-                    shutil.copyfile(p2_src_path, p2_dest_path)
-                    self.contigs_present = False
-                    self.mp_util.write_to_bypass_log(self.output_folder_path, self.assemble_contigs_label)
+            if(os.path.exists(mgm_gene_report)):
+                if(os.path.getsize(mgm_gene_report) > 0):
+                    mgm_fail_flag = False
+                    print(dt.today(), "MGM OK")
+                else:
+                    mgm_fail_flag = True
+                    print(dt.today(), "MGM produced an empty gene report. this is not normal")
+                    sys.exit("MGM_empty_report")
+            else:
+                mgm_fail_flag = True
+                print(dt.today(), "MGM did not produce a report. likely it didn't run")
 
-                else:    
-                    sys.exit("mgm did not run.  look into it.  pipeline stopping here")
+            if(spades_fail_flag and mgm_fail_flag):        
+                print(dt.today(), "moving contig files to compensate")
+                bypass_contig_map_path = os.path.join(self.assemble_contigs_path, "final_results", "contig_map.tsv")
+                bypass_contig_path = os.path.join(self.assemble_contigs_path, "final_results", "contigs.fasta")
+                s_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "singletons.fastq")
+                p1_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "pair_1.fastq")
+                p2_src_path = os.path.join(self.rRNA_filter_path, "final_results", "mRNA", "pair_2.fastq")
+                s_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "singletons.fastq")
+                p1_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "pair_1.fastq")
+                p2_dest_path = os.path.join(self.assemble_contigs_path, "final_results", "pair_2.fastq")
+                make_map = open(bypass_contig_map_path, "w")
+                make_contig = open(bypass_contig_path, "w")
+                shutil.copyfile(s_src_path, s_dest_path)
+                shutil.copyfile(p1_src_path, p1_dest_path)
+                shutil.copyfile(p2_src_path, p2_dest_path)
+                self.contigs_present = False
+                self.mp_util.write_to_bypass_log(self.output_folder_path, self.assemble_contigs_label)
+            elif(spades_fail_flag and (not mgm_fail_flag)):
+                print(dt.today(), "SPADes fails but MGM runs anyway: this shouldn't happen. contact admin")
+                sys.exit("SPADES_fail_MGM_ok")
+            elif((not spades_fail_flag) and mgm_fail_flag):
+                print(dt.today(), "SPADes ran fine, but MGM failed. Check your MetaGeneMark license")
+                sys.exit("SPADES_ok_MGM_fail")
+            else:
+                self.contigs_present = True
+                self.mp_util.write_to_bypass_log(self.output_folder_path, self.assemble_contigs_label)
+                
+
+            
+            
             
             self.cleanup_assemble_contigs_start = time.time()
             self.mp_util.clean_or_compress(self.assemble_contigs_path, self.keep_all, self.keep_assemble_contigs)
@@ -749,12 +780,15 @@ class mp_stage:
             self.cleanup_assemble_contigs_end = time.time()
         
         else:
-            mgm_file = os.path.join(self.assemble_contigs_path, "data", "1_mgm", "gene_report.txt")
-            if(os.path.exists(mgm_file)):
-                self.contigs_present = True
+            if(os.path.exists(mgm_gene_report)):
+                if(os.path.getsize(mgm_gene_report) == 0):
+                    sys.exit("MGM did not run. gene report is 0")
+                else:
+                    print(dt.today(), "MGM OK. contigs present")   
+                    self.contigs_present = True
             else:
-                done_file = os.path.join(self.assemble_contigs_path, "data", "0_spades", "pipeline_state", "stage_7_terminate")
-                if(os.path.exists(done_file)):
+                if(os.path.exists(spades_done_file)):
+                    print(dt.today(), "No contigs were assembled.")
                     self.contigs_present = False
                 
                 
@@ -987,7 +1021,7 @@ class mp_stage:
         self.mp_util.clean_or_compress(self.GA_BWA_path, self.keep_all, self.keep_GA_BWA)
         
         self.cleanup_GA_BWA_end = time.time()
-        GA_BWA_end = time.time()
+        self.GA_BWA_end = time.time()
         print("GA BWA:", '%1.1f' % (self.GA_BWA_end - self.GA_BWA_start - (self.cleanup_GA_BWA_end - self.cleanup_GA_BWA_start)), "s")
         print("GA BWA cleanup:", '%1.1f' % (self.cleanup_GA_BWA_end - self.cleanup_GA_BWA_start), "s")
 
@@ -1017,6 +1051,7 @@ class mp_stage:
                             marker_path = os.path.join(self.GA_BLAT_jobs_folder, marker_file)
                             blatout_path = os.path.join(self.GA_BLAT_path, "data", "0_blat", file_tag + "_"+fasta_db + ".blatout")
                             blat_queue_package = blatout_path+"|" + marker_file
+                            #ref_db = os.path.join(self.paths.DNA_DB, fasta_db)
                             
                             #This checker assume BLAT only exports a file when it's finished running
                             if(os.path.exists(marker_path)):

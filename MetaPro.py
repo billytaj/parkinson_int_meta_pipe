@@ -37,6 +37,7 @@ import queue as q
 
 def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode):
 
+    
     metapro_stage_obj = mps.mp_stage(config_path, pair_1_path, pair_2_path, single_path, contig_path, output_folder_path, threads, args_pack, tutorial_mode)
 
     # This is the format we use to launch each stage of the pipeline.
@@ -68,7 +69,8 @@ def main(config_path, pair_1_path, pair_2_path, single_path, contig_path, output
     
     metapro_stage_obj.mp_GA_BWA()
     metapro_stage_obj.mp_GA_BWA_pp()
-    metapro_stage_obj.mp_GA_BWA_merge()
+    if(metapro_stage_obj.GA_DB_mode == "multi"):
+        metapro_stage_obj.mp_GA_BWA_merge()
     
     # BLAT gene annotation
     metapro_stage_obj.mp_GA_BLAT()
@@ -163,7 +165,7 @@ if __name__ == "__main__":
     # There's a few operating modes, mainly "docker", and "singularity".  These modes edit the pipeline filepaths
 
     parser = ArgumentParser(description="MetaPro - Meta-omic sequence processing and analysis pipeline"
-                                        "Version 2.0.2 © 2022")
+                                        "Version 2.0.3 © 2022")
 
     parser.add_argument("-c", "--config",   type=str,   help="Path to the configureation file")
     parser.add_argument("-1", "--pair1",    type=str,   help="Path to the file containing the forward paired-end reads in fastq format")
